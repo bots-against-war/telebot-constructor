@@ -3,7 +3,7 @@ import logging
 
 from telebot_components.redis_utils.emulation import RedisEmulation
 
-from telebot_constructor.backend import TelebotConstructorApp
+from telebot_constructor.app import TelebotConstructorApp
 
 logging.basicConfig(level=logging.INFO)
 

@@ -2,6 +2,7 @@ import abc
 import asyncio
 import collections
 import logging
+from pathlib import Path
 from typing import Optional
 
 import telebot.api
@@ -85,10 +86,10 @@ class TelebotConstructorApp:
         routes = web.RouteTableDef()
 
         # bot config CRUD
-        @routes.post("/")
+        @routes.get("/")
         async def index(request: web.Request) -> web.Response:
-            # TODO: serve frontend from here
-            return web.Response(text="TBD")
+            static_dir = Path(__file__).parent / "../frontend/public"
+            return web.Response(body=(static_dir / "index.html").read_bytes(), content_type="text/html")
 
         @routes.post("/config")
         async def create_bot_config(request: web.Request) -> web.Response:

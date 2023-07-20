@@ -7,15 +7,72 @@
     <title>Telebot constructor</title>
 </head>
 
-<body>
-    <h1>hello there</h1>
-    <p>
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
-        magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-        consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
-        pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est
-        laborum.
-    </p>
+<body onload="reloadConfigs()">
+    <h1>Telebot constructor v0.0.1</h1>
+    <div>
+        <h3>Add bot</h3>
+        <form>
+            <label for="bot_prefix">Prefix</label><br>
+            <input type="text" id="bot_prefix" name="bot_prefix"><br>
+            <label for="bot_token">Token</label><br>
+            <input type="text" id="bot_token" name="bot_token"><br>
+        </form>
+        <button onclick="createNewConfig()">New bot</button>
+    </div>
+    <div id="container"></div>
 </body>
+
+<script>
+    async function reloadConfigs() {
+        const resp = await fetch("/config");
+        const existingConfigs = JSON.parse(await resp.text());
+        const container = document.getElementById("container");
+        container.innerHTML = "";
+        for (const config of existingConfigs) {
+            const configEntryNode = document.createElement("p");
+            configEntryNode.style.borderTop = "solid black 1px";
+            configEntryNode.innerHTML = `
+                <h3>${config.prefix}</h3>
+                <p>
+                    Token: <code>${config.token}</code>
+                </p>
+                <p>
+                    <button onclick="startBot('${config.prefix}')">Start</button>
+                    <button onclick="stopBot('${config.prefix}')">Stop</button>
+                    <div id="${config.prefix}-status"></div>
+                </p>
+            `;
+            container.appendChild(configEntryNode);
+        }
+    }
+
+    async function startBot(prefix) {
+        const resp = await fetch(`/start/${prefix}`, { method: "POST" });
+        const statusEl = document.getElementById(`${prefix}-status`);
+        statusEl.innerHTML = await resp.text();
+    }
+
+    async function stopBot(prefix) {
+        const resp = await fetch(`/stop/${prefix}`, { method: "POST" });
+        const statusEl = document.getElementById(`${prefix}-status`);
+        statusEl.innerHTML = await resp.text();
+    }
+
+    async function createNewConfig() {
+        const prefix = document.getElementById("bot_prefix").value;
+        const token = document.getElementById("bot_token").value;
+        if (prefix.length === 0 || token.length === 0) {
+            console.log("form not complete");
+            return;
+        }
+        const payload = JSON.stringify({ prefix, token });
+        console.log(payload)
+        const resp = await fetch("/config", { method: "POST", body: payload });
+        console.log(resp);
+        if (resp.ok) {
+            await reloadConfigs();
+        }
+    }
+</script>
 
 </html>
