@@ -6,6 +6,7 @@ authors = ["Igor Vaiman <gosha.vaiman@gmail.com>"]
 license = "GPL-3"
 readme = "README.md"
 packages = [{include = "telebot_constructor"}]
+include = ["telebot_constructor/static/*"]
 
 [tool.poetry-dynamic-versioning]
 enable = true

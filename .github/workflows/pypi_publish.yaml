@@ -25,6 +25,8 @@ jobs:
           poetry-version: 1.5.1
       - name: Install dynamic versioning plugin
         run: poetry self add "poetry-dynamic-versioning[plugin]"
+      - name: Build frontend static files
+        run: ./build_frontend.sh
       - name: Build package
         run: poetry build
       - name: Publish package
