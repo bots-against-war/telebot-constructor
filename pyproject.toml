@@ -7,6 +7,12 @@ license = "GPL-3"
 readme = "README.md"
 packages = [{include = "telebot_constructor"}]
 
+[tool.poetry-dynamic-versioning]
+enable = true
+vcs = "git"
+dirty = true
+style="semver"
+
 [tool.poetry.dependencies]
 python = "^3.10"
 telebot-components = "^0.8.12"
