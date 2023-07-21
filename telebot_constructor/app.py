@@ -1,11 +1,11 @@
 import asyncio
-import pydantic
 import json
 import logging
 import re
 from pathlib import Path
 from typing import Optional
 
+import pydantic
 import telebot.api
 from aiohttp import web
 from aiohttp_swagger import setup_swagger
@@ -43,6 +43,7 @@ class TelebotConstructorApp:
         )
         self.static_files_dir = static_files_dir_override or Path(__file__).parent / "static"
         self._runner: Optional[ConstructedBotRunner] = None
+        logger.info(f"Will serve static frontend files from {self.static_files_dir.absolute()}")
 
     @property
     def runner(self) -> ConstructedBotRunner:
