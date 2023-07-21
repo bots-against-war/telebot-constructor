@@ -1,4 +1,5 @@
 import asyncio
+from telebot.webhook import WebhookApp
 import json
 import logging
 import re
@@ -17,6 +18,7 @@ from telebot_constructor.construct import construct_bot
 from telebot_constructor.runners import (
     ConstructedBotRunner,
     PollingConstructedBotRunner,
+    WebhookAppConstructedBotRunner,
 )
 
 logger = logging.getLogger(__name__)
@@ -232,15 +234,8 @@ class TelebotConstructorApp:
         app.add_routes(routes)
         setup_swagger(app=app)
 
-    # public methods to run constructor in different scenarios
-
-    async def run_polling(self, port: int) -> None:
-        """For standalone run"""
-        logger.info("Running telebot constructor w/ polling")
-        self._runner = PollingConstructedBotRunner()
-
-        #########################################################################
-        # starting up bots that are marked as running in the DB
+    async def _ensure_running_bots(self) -> None:
+        """Ensure that all bots stored as running are indeed running; used mainly on startup"""
         usernames = await self.running_bots_store.list_keys()
         logger.info("Found %s usernames with bot running flags", len(usernames))
         for username in usernames:
@@ -254,8 +249,14 @@ class TelebotConstructorApp:
                     continue
                 bot_runner = await construct_bot(username=username, bot_name=bot_name, bot_config=bot_config)
                 await self.runner.start(username=username, bot_name=bot_name, bot_runner=bot_runner)
-        #########################################################################
 
+    # public methods to run constructor in different scenarios
+
+    async def run_polling(self, port: int) -> None:
+        """For standalone run"""
+        logger.info("Running telebot constructor w/ polling")
+        self._runner = PollingConstructedBotRunner()
+        await self._ensure_running_bots()
         aiohttp_app = web.Application()
         self.setup_roots(aiohttp_app)
         aiohttp_runner = web.AppRunner(aiohttp_app)
@@ -272,3 +273,8 @@ class TelebotConstructorApp:
             await telebot.api.session_manager.close_session()
             logger.debug("Cleanup completed")
             await aiohttp_runner.cleanup()
+
+    async def setup_on_webhook_app(self, webhook_app: WebhookApp) -> None:
+        self._runner = WebhookAppConstructedBotRunner(webhook_app)
+        await self._ensure_running_bots()
+        self.setup_roots(webhook_app.aiohttp_app)

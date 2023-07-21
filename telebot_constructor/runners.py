@@ -1,4 +1,5 @@
 import abc
+from telebot.webhook import WebhookApp
 import asyncio
 import collections
 
@@ -49,3 +50,28 @@ class PollingConstructedBotRunner(ConstructedBotRunner):
                     await task
                 except:
                     pass
+
+
+class WebhookAppConstructedBotRunner(ConstructedBotRunner):
+    """Runner for integrating constructed bots into an existing webhook app"""
+
+    def __init__(self, webhook_app: WebhookApp) -> None:
+        self.webhook_app = webhook_app
+        self.added_runners: dict[str, dict[str, BotRunner]] = collections.defaultdict(dict)
+        
+    async def start(self, username: str, bot_name: str, bot_runner: BotRunner) -> bool:
+        if await self.webhook_app.add_bot_runner(bot_runner):
+            self.added_runners[username][bot_name] = bot_runner
+            return True
+        else:
+            return False
+
+    async def stop(self, username: str, bot_name: str) -> bool:
+        bot_runner = self.added_runners.get(username, {}).get(bot_name)
+        if bot_runner is None:
+            return False
+        else:
+            return await self.webhook_app.remove_bot_runner(bot_runner)
+
+    async def cleanup(self) -> None:
+        pass
