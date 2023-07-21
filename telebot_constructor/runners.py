@@ -1,9 +1,9 @@
 import abc
-from telebot.webhook import WebhookApp
 import asyncio
 import collections
 
 from telebot.runner import BotRunner
+from telebot.webhook import WebhookApp
 
 
 class ConstructedBotRunner(abc.ABC):
@@ -48,7 +48,7 @@ class PollingConstructedBotRunner(ConstructedBotRunner):
                 task.cancel()
                 try:
                     await task
-                except:
+                except BaseException:
                     pass
 
 
@@ -58,7 +58,7 @@ class WebhookAppConstructedBotRunner(ConstructedBotRunner):
     def __init__(self, webhook_app: WebhookApp) -> None:
         self.webhook_app = webhook_app
         self.added_runners: dict[str, dict[str, BotRunner]] = collections.defaultdict(dict)
-        
+
     async def start(self, username: str, bot_name: str, bot_runner: BotRunner) -> bool:
         if await self.webhook_app.add_bot_runner(bot_runner):
             self.added_runners[username][bot_name] = bot_runner

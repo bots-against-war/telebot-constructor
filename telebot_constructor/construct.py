@@ -1,5 +1,3 @@
-from typing import Any
-
 from telebot import AsyncTeleBot
 from telebot import types as tg
 from telebot.runner import BotRunner

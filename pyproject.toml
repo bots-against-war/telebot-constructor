@@ -8,6 +8,9 @@ readme = "README.md"
 packages = [{include = "telebot_constructor"}]
 include = ["telebot_constructor/static/*"]
 
+[tool.poetry.group.dev.dependencies]
+pyproject-flake8 = "^6.0.0.post1"
+
 [tool.poetry-dynamic-versioning]
 enable = true
 vcs = "git"

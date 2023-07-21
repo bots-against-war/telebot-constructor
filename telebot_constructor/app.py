@@ -1,5 +1,4 @@
 import asyncio
-from telebot.webhook import WebhookApp
 import json
 import logging
 import re
@@ -9,7 +8,8 @@ from typing import Optional
 import pydantic
 import telebot.api
 from aiohttp import web
-from aiohttp_swagger import setup_swagger
+from aiohttp_swagger import setup_swagger  # type: ignore
+from telebot.webhook import WebhookApp
 from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.stores.generic import KeyDictStore, KeySetStore
 
