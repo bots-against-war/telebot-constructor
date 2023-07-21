@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "telebot-constructor"
 version = "0.0.0"
-description = "WIP"
+description = "No-code Telegram bot constructor"
 authors = ["Igor Vaiman <gosha.vaiman@gmail.com>"]
 license = "GPL-3"
 readme = "README.md"
