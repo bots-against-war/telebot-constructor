@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from pathlib import Path
 
 from telebot_components.redis_utils.emulation import RedisEmulation
 
@@ -9,7 +10,7 @@ logging.basicConfig(level=logging.INFO)
 
 
 async def main() -> None:
-    app = TelebotConstructorApp(redis=RedisEmulation())
+    app = TelebotConstructorApp(redis=RedisEmulation(), static_files_dir_override=Path("frontend/public"))
     await app.run_polling(port=8088)
 
 

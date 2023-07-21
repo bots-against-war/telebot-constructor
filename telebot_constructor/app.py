@@ -1,77 +1,51 @@
-import abc
 import asyncio
-import collections
+import json
 import logging
+import re
 from pathlib import Path
 from typing import Optional
 
+import pydantic
 import telebot.api
 from aiohttp import web
-from telebot.runner import BotRunner
+from aiohttp_swagger import setup_swagger  # type: ignore
+from telebot.webhook import WebhookApp
 from telebot_components.redis_utils.interface import RedisInterface
-from telebot_components.stores.generic import KeyDictStore
+from telebot_components.stores.generic import KeyDictStore, KeySetStore
 
+from telebot_constructor.bot_config import BotConfig
 from telebot_constructor.construct import construct_bot
+from telebot_constructor.runners import (
+    ConstructedBotRunner,
+    PollingConstructedBotRunner,
+    WebhookAppConstructedBotRunner,
+)
 
 logger = logging.getLogger(__name__)
-
-
-class ConstructedBotRunner(abc.ABC):
-    @abc.abstractmethod
-    async def start(self, username: str, bot_runner: BotRunner) -> bool:
-        ...
-
-    @abc.abstractmethod
-    async def stop(self, username: str, bot_prefix: str) -> bool:
-        ...
-
-    @abc.abstractmethod
-    async def cleanup(self) -> None:
-        ...
-
-
-class PollingConstructedBotRunner(ConstructedBotRunner):
-    """For standalone deployment without wrapping WebhookApp"""
-
-    def __init__(self) -> None:
-        self.running_bot_tasks: dict[str, dict[str, asyncio.Task[None]]] = collections.defaultdict(dict)
-        # TODO: store bot tokens in use to avoid polling the same bot from two bot runners
-
-    async def start(self, username: str, bot_runner: BotRunner) -> bool:
-        if bot_runner.bot_prefix in self.running_bot_tasks.get(username, {}):
-            return False
-
-        bot_running_task = asyncio.create_task(bot_runner.run_polling(), name=f"{username}-{bot_runner.bot_prefix}")
-        self.running_bot_tasks[username][bot_runner.bot_prefix] = bot_running_task
-        bot_running_task.add_done_callback(
-            lambda _task: self.running_bot_tasks[username].pop(bot_runner.bot_prefix, None)
-        )
-        return True
-
-    async def stop(self, username: str, bot_prefix: str) -> bool:
-        bot_running_task = self.running_bot_tasks.get(username, {}).get(bot_prefix, None)
-        if bot_running_task is None:
-            return False
-        else:
-            return bot_running_task.cancel()
-
-    async def cleanup(self) -> None:
-        for _username, tasks in self.running_bot_tasks.items():
-            for _bot_prefix, task in tasks.items():
-                task.cancel()
-                try:
-                    await task
-                except:
-                    pass
 
 
 class TelebotConstructorApp:
     STORE_PREFIX = "telebot-constructor"
 
-    def __init__(self, redis: RedisInterface) -> None:
-        # user id -> {bot prefix -> config}
-        self.bot_config_storage = KeyDictStore[dict](name="bot-config", prefix=self.STORE_PREFIX, redis=redis)
+    def __init__(self, redis: RedisInterface, static_files_dir_override: Optional[Path] = None) -> None:
+        # user id -> {bot name -> config}
+        self.bot_config_store = KeyDictStore[BotConfig](
+            name="bot-configs",
+            prefix=self.STORE_PREFIX,
+            redis=redis,
+            expiration_time=None,
+            dumper=BotConfig.model_dump_json,
+            loader=BotConfig.model_validate_json,
+        )
+        self.running_bots_store = KeySetStore[str](
+            name="bot-running",
+            prefix=self.STORE_PREFIX,
+            redis=redis,
+            expiration_time=None,
+        )
+        self.static_files_dir = static_files_dir_override or Path(__file__).parent / "static"
         self._runner: Optional[ConstructedBotRunner] = None
+        logger.info(f"Will serve static frontend files from {self.static_files_dir.absolute()}")
 
     @property
     def runner(self) -> ConstructedBotRunner:
@@ -80,64 +54,201 @@ class TelebotConstructorApp:
         return self._runner
 
     async def authenticate(self, request: web.Request) -> str:
-        return "admin"  # TODO: user id lookup based on access token / other auth method
+        return "admin"  # TODO: username lookup based on access token / other auth method
 
-    def create_routes(self) -> web.RouteTableDef:
+    VALID_BOT_NAME_RE = re.compile(r"^[0-9a-zA-Z\-_]{5,16}$")
+
+    def parse_bot_name(self, request: web.Request) -> str:
+        name = request.match_info.get("bot_name")
+        if name is None:
+            raise web.HTTPNotFound()
+        if not self.VALID_BOT_NAME_RE.match(name):
+            raise web.HTTPBadRequest(reason="Bot name must consist of 5-16 alphanumeric characters, hyphens and dashes")
+        return name
+
+    async def load_bot_config(self, username: str, bot_name: str) -> BotConfig:
+        config = await self.bot_config_store.get_subkey(username, bot_name)
+        if config is None:
+            raise web.HTTPNotFound(reason=f"No config found for bot name {bot_name!r}")
+        return config
+
+    def setup_roots(self, app: web.Application) -> None:
         routes = web.RouteTableDef()
 
-        # bot config CRUD
+        ##################################################################################
+        # static file routes
+
         @routes.get("/")
         async def index(request: web.Request) -> web.Response:
-            static_dir = Path(__file__).parent / "../frontend/public"
-            return web.Response(body=(static_dir / "index.html").read_bytes(), content_type="text/html")
+            return web.Response(body=(self.static_files_dir / "index.html").read_bytes(), content_type="text/html")
 
-        @routes.post("/config")
-        async def create_bot_config(request: web.Request) -> web.Response:
+        ##################################################################################
+        # bot configs CRUD
+
+        @routes.post("/constructor/config/{bot_name}")
+        async def upsert_new_bot_config(request: web.Request) -> web.Response:
+            """
+            ---
+            description: Create or update bot configuration
+            produces:
+            - application/json
+            responses:
+                "201":
+                    description: New bot is created, config is echoed back
+                "200":
+                    description: Bot config is updated, the old version of config is returned
+            """
             username = await self.authenticate(request)
-            bot_config = await request.json()
-            # TODO: pydantic validation for config
-            # TODO: do not store bot token in config directly, use secrets
-            bot_prefix = bot_config["prefix"]
-            await self.bot_config_storage.set_subkey(username, bot_prefix, bot_config)
-            return web.Response(text="OK")
+            bot_name = self.parse_bot_name(request)
+            existing_bot_config = await self.bot_config_store.get_subkey(username, bot_name)
+            try:
+                bot_config = BotConfig.model_validate(await request.json())
+            except json.JSONDecodeError:
+                raise web.HTTPBadRequest(reason="Request body must be valid JSON")
+            except pydantic.ValidationError as e:
+                raise web.HTTPBadRequest(text=e.json(include_context=False, include_url=False))
+            except Exception as e:
+                raise web.HTTPBadRequest(reason=str(e))
+            await self.bot_config_store.set_subkey(username, bot_name, bot_config)
+            if existing_bot_config is None:
+                return web.json_response(text=bot_config.model_dump_json(), status=201)
+            else:
+                return web.json_response(text=existing_bot_config.model_dump_json())
 
-        @routes.get("/config")
+        @routes.get("/constructor/config/{bot_name}")
+        async def get_bot_config(request: web.Request) -> web.Response:
+            """
+            ---
+            description: Get config for bot with a given name
+            produces:
+            - application/json
+            responses:
+                "200":
+                    description: OK
+                "404":
+                    description: No config found
+            """
+            username = await self.authenticate(request)
+            bot_name = self.parse_bot_name(request)
+            config = await self.load_bot_config(username, bot_name)
+            return web.json_response(text=config.model_dump_json())
+
+        @routes.delete("/constructor/config/{bot_name}")
+        async def remove_bot_config(request: web.Request) -> web.Response:
+            """
+            ---
+            description: Delete bot config; if the bot was running, it is stopped
+            produces:
+            - application/json
+            responses:
+                "200":
+                    description: Deleted bot config
+            """
+            username = await self.authenticate(request)
+            bot_name = self.parse_bot_name(request)
+            config = await self.load_bot_config(username, bot_name)
+            await self.runner.stop(username, bot_name)
+            await self.running_bots_store.remove(username, bot_name)
+            await self.bot_config_store.remove_subkey(username, bot_name)
+            return web.json_response(text=config.model_dump_json())
+
+        @routes.get("/constructor/config")
         async def list_bot_configs(request: web.Request) -> web.Response:
+            """
+            ---
+            description: List all bot configs
+            produces:
+            - application/json
+            responses:
+                "200":
+                    description: Bot name -> bot config mapping
+            """
             username = await self.authenticate(request)
-            bot_configs = await self.bot_config_storage.list_values(username)
-            return web.json_response(data=bot_configs)
+            bot_configs = await self.bot_config_store.load(username)
+            return web.json_response(
+                data={name: config.model_dump(mode="json") for name, config in bot_configs.items()}
+            )
 
-        # TODO: other update & delete...
+        ##################################################################################
+        # bot lifecycle control: start, stop, list running
 
-        # bot start / stop
-
-        @routes.post("/start/{bot_prefix}")
-        async def stop_bot(request: web.Request) -> web.Response:
+        @routes.post("/constructor/start/{bot_name}")
+        async def start_bot(request: web.Request) -> web.Response:
+            """
+            ---
+            description: Start bot
+            produces:
+            - text/plain
+            responses:
+                "201":
+                    description: Bot started
+                "200":
+                    description: Bot is already running
+            """
             username = await self.authenticate(request)
-            bot_prefix = request.match_info.get("bot_prefix")
-            if bot_prefix is None:
-                raise web.HTTPNotFound()
-            bot_config = await self.bot_config_storage.get_subkey(username, bot_prefix)
-            if bot_config is None:
-                raise web.HTTPNotFound()
-            bot_runner = await construct_bot(bot_config)
-            if await self.runner.start(username=username, bot_runner=bot_runner):
-                return web.Response(text="OK")
+            bot_name = self.parse_bot_name(request)
+            bot_config = await self.load_bot_config(username, bot_name)
+            bot_runner = await construct_bot(username, bot_name, bot_config)
+            if await self.runner.start(username=username, bot_name=bot_name, bot_runner=bot_runner):
+                await self.running_bots_store.add(username, bot_name)
+                return web.Response(text="Bot started", status=201)
             else:
-                return web.Response(text="Already running")
+                return web.Response(text="Bot is already running")
 
-        @routes.post("/stop/{bot_prefix}")
+        @routes.post("/constructor/stop/{bot_name}")
         async def stop_bot(request: web.Request) -> web.Response:
+            """
+            ---
+            description: Stop bot
+            produces:
+            - text/plain
+            responses:
+                "201":
+                    description: Bot stopped
+                "200":
+                    description: Bot was not running
+            """
             username = await self.authenticate(request)
-            bot_prefix = request.match_info.get("bot_prefix")
-            if bot_prefix is None:
-                raise web.HTTPNotFound()
-            if await self.runner.stop(username=username, bot_prefix=bot_prefix):
-                return web.Response(text="OK")
+            bot_name = self.parse_bot_name(request)
+            if await self.runner.stop(username=username, bot_name=bot_name):
+                await self.running_bots_store.remove(username, bot_name)
+                return web.Response(text="Bot stopped")
             else:
-                return web.Response(text="Bot not running")
+                return web.Response(text="Bot was not running")
 
-        return routes
+        @routes.get("/constructor/running")
+        async def list_running_bots(request: web.Request) -> web.Response:
+            """
+            ---
+            description: List running bots
+            produces:
+            - application/json
+            responses:
+                "200":
+                    description: List of running bots' names
+            """
+            username = await self.authenticate(request)
+            running_bots = await self.running_bots_store.all(username)
+            return web.json_response(data=sorted(running_bots))
+
+        app.add_routes(routes)
+        setup_swagger(app=app)
+
+    async def _ensure_running_bots(self) -> None:
+        """Ensure that all bots stored as running are indeed running; used mainly on startup"""
+        usernames = await self.running_bots_store.list_keys()
+        logger.info("Found %s usernames with bot running flags", len(usernames))
+        for username in usernames:
+            running_bots = await self.running_bots_store.all(username)
+            logger.info("Username %s has %s running bots: %s", usernames, len(running_bots), running_bots)
+            for bot_name in running_bots:
+                bot_config = await self.bot_config_store.get_subkey(username, bot_name)
+                if bot_config is None:
+                    logger.error(f"Bot {bot_name!r} is in running bots store, but has no config")
+                    await self.running_bots_store.remove(username, bot_name)
+                    continue
+                bot_runner = await construct_bot(username=username, bot_name=bot_name, bot_config=bot_config)
+                await self.runner.start(username=username, bot_name=bot_name, bot_runner=bot_runner)
 
     # public methods to run constructor in different scenarios
 
@@ -145,21 +256,9 @@ class TelebotConstructorApp:
         """For standalone run"""
         logger.info("Running telebot constructor w/ polling")
         self._runner = PollingConstructedBotRunner()
-
-        #########################################################################
-        # TODO: this can be slow for large amount of users! parallelize
-        usernames = await self.bot_config_storage.list_keys()
-        logger.info("Found %s usernames with bots", len(usernames))
-        for username in usernames:
-            bot_configs = await self.bot_config_storage.list_values(username)
-            logger.info("Username %s has %s bots", usernames, len(bot_configs))
-            for bot_config in bot_configs:
-                bot_runner = await construct_bot(config=bot_config)
-                await self.runner.start(username=username, bot_runner=bot_runner)
-        #########################################################################
-
+        await self._ensure_running_bots()
         aiohttp_app = web.Application()
-        aiohttp_app.add_routes(self.create_routes())
+        self.setup_roots(aiohttp_app)
         aiohttp_runner = web.AppRunner(aiohttp_app)
         await aiohttp_runner.setup()
         site = web.TCPSite(aiohttp_runner, "0.0.0.0", port)
@@ -174,3 +273,8 @@ class TelebotConstructorApp:
             await telebot.api.session_manager.close_session()
             logger.debug("Cleanup completed")
             await aiohttp_runner.cleanup()
+
+    async def setup_on_webhook_app(self, webhook_app: WebhookApp) -> None:
+        self._runner = WebhookAppConstructedBotRunner(webhook_app)
+        await self._ensure_running_bots()
+        self.setup_roots(webhook_app.aiohttp_app)

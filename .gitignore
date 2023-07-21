@@ -236,11 +236,6 @@ pip-selfcheck.json
 
 ### VisualStudioCode ###
 .vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-!.vscode/*.code-snippets
 
 # Local History for Visual Studio Code
 .history/
@@ -257,3 +252,4 @@ pip-selfcheck.json
 
 # Custom rules (everything added below won't be overriden by 'Generate .gitignore File' if you use 'Update' option)
 pypi-auth.sh
+telebot_constructor/static
