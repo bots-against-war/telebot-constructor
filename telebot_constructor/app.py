@@ -78,7 +78,7 @@ class TelebotConstructorApp:
         ##################################################################################
         # static file routes
 
-        @routes.get("/")
+        @routes.get("/constructor")
         async def index(request: web.Request) -> web.Response:
             return web.Response(body=(self.static_files_dir / "index.html").read_bytes(), content_type="text/html")
 
