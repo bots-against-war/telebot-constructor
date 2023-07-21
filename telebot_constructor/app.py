@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 
 class TelebotConstructorApp:
     STORE_PREFIX = "telebot-constructor"
+    URL_PREFIX = "/constructor"
 
     def __init__(self, redis: RedisInterface, static_files_dir_override: Optional[Path] = None) -> None:
         # user id -> {bot name -> config}
@@ -78,14 +79,14 @@ class TelebotConstructorApp:
         ##################################################################################
         # static file routes
 
-        @routes.get("/constructor")
+        @routes.get(self.URL_PREFIX + "/")
         async def index(request: web.Request) -> web.Response:
             return web.Response(body=(self.static_files_dir / "index.html").read_bytes(), content_type="text/html")
 
         ##################################################################################
         # bot configs CRUD
 
-        @routes.post("/constructor/config/{bot_name}")
+        @routes.post(self.URL_PREFIX + "/config/{bot_name}")
         async def upsert_new_bot_config(request: web.Request) -> web.Response:
             """
             ---
@@ -115,7 +116,7 @@ class TelebotConstructorApp:
             else:
                 return web.json_response(text=existing_bot_config.model_dump_json())
 
-        @routes.get("/constructor/config/{bot_name}")
+        @routes.get(self.URL_PREFIX + "/config/{bot_name}")
         async def get_bot_config(request: web.Request) -> web.Response:
             """
             ---
@@ -133,7 +134,7 @@ class TelebotConstructorApp:
             config = await self.load_bot_config(username, bot_name)
             return web.json_response(text=config.model_dump_json())
 
-        @routes.delete("/constructor/config/{bot_name}")
+        @routes.delete(self.URL_PREFIX + "/config/{bot_name}")
         async def remove_bot_config(request: web.Request) -> web.Response:
             """
             ---
@@ -152,7 +153,7 @@ class TelebotConstructorApp:
             await self.bot_config_store.remove_subkey(username, bot_name)
             return web.json_response(text=config.model_dump_json())
 
-        @routes.get("/constructor/config")
+        @routes.get(self.URL_PREFIX + "/config")
         async def list_bot_configs(request: web.Request) -> web.Response:
             """
             ---
@@ -172,7 +173,7 @@ class TelebotConstructorApp:
         ##################################################################################
         # bot lifecycle control: start, stop, list running
 
-        @routes.post("/constructor/start/{bot_name}")
+        @routes.post(self.URL_PREFIX + "/start/{bot_name}")
         async def start_bot(request: web.Request) -> web.Response:
             """
             ---
@@ -195,7 +196,7 @@ class TelebotConstructorApp:
             else:
                 return web.Response(text="Bot is already running")
 
-        @routes.post("/constructor/stop/{bot_name}")
+        @routes.post(self.URL_PREFIX + "/stop/{bot_name}")
         async def stop_bot(request: web.Request) -> web.Response:
             """
             ---
@@ -216,7 +217,7 @@ class TelebotConstructorApp:
             else:
                 return web.Response(text="Bot was not running")
 
-        @routes.get("/constructor/running")
+        @routes.get(self.URL_PREFIX + "/running")
         async def list_running_bots(request: web.Request) -> web.Response:
             """
             ---
@@ -232,7 +233,7 @@ class TelebotConstructorApp:
             return web.json_response(data=sorted(running_bots))
 
         app.add_routes(routes)
-        setup_swagger(app=app)
+        setup_swagger(app=app, swagger_url=f"{self.URL_PREFIX}/swagger")
 
     async def _ensure_running_bots(self) -> None:
         """Ensure that all bots stored as running are indeed running; used mainly on startup"""
