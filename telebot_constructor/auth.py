@@ -1,16 +1,15 @@
 import abc
-import secrets
-from telebot_constructor.static import static_file_content
 import datetime
+import secrets
 from pathlib import Path
 from typing import Optional
 
-from aiohttp import web, hdrs
+from aiohttp import hdrs, web
 from telebot import AsyncTeleBot
 from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.stores.generic import KeyValueStore
 
-from telebot_constructor.debug import DEBUG
+from telebot_constructor.static import static_file_content
 
 
 class Auth(abc.ABC):

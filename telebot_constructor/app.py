@@ -1,5 +1,4 @@
 import asyncio
-from telebot_constructor.static import static_file_content
 import json
 import logging
 import re
@@ -22,6 +21,7 @@ from telebot_constructor.runners import (
     PollingConstructedBotRunner,
     WebhookAppConstructedBotRunner,
 )
+from telebot_constructor.static import static_file_content
 
 logger = logging.getLogger(__name__)
 
