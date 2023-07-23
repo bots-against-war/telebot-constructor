@@ -80,7 +80,7 @@ class TelebotConstructorApp:
             raise web.HTTPNotFound(reason=f"No config found for bot name {bot_name!r}")
         return config
 
-    def setup_roots(self, app: web.Application) -> None:
+    async def setup_routes(self, app: web.Application) -> None:
         routes = web.RouteTableDef()
 
         ##################################################################################
@@ -247,6 +247,7 @@ class TelebotConstructorApp:
 
         app.add_routes(routes)
         setup_swagger(app=app, swagger_url=f"{self.URL_PREFIX}/swagger")
+        await self.auth.setup_routes(app)
 
     async def _ensure_running_bots(self) -> None:
         """Ensure that all bots stored as running are indeed running; used mainly on startup"""
@@ -272,7 +273,7 @@ class TelebotConstructorApp:
         self._runner = PollingConstructedBotRunner()
         await self._ensure_running_bots()
         aiohttp_app = web.Application()
-        self.setup_roots(aiohttp_app)
+        await self.setup_routes(aiohttp_app)
         aiohttp_runner = web.AppRunner(aiohttp_app)
         await aiohttp_runner.setup()
         site = web.TCPSite(aiohttp_runner, "0.0.0.0", port)
@@ -291,4 +292,4 @@ class TelebotConstructorApp:
     async def setup_on_webhook_app(self, webhook_app: WebhookApp) -> None:
         self._runner = WebhookAppConstructedBotRunner(webhook_app)
         await self._ensure_running_bots()
-        self.setup_roots(webhook_app.aiohttp_app)
+        await self.setup_routes(webhook_app.aiohttp_app)

@@ -1,16 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login (group chat auth) | Telebot constructor</title>
 </head>
-<body>
-    <div>
-        <div>
 
+<body>
+    <div class="container">
+        <div class="content">
+            <p style="text-align: center;">Access code</p>
+            <input id="access-code">
+            <div style="margin-top: 0.5em; width: 100%; display: flex; justify-content: center;">
+                <button style="font-size: large; font-family: inherit; font-weight: bold;" onclick="login()">Submit</button>
+            </div>
         </div>
     </div>
-    
 </body>
+<style>
+    body {
+        margin: 0 auto;
+        font-family: 'Courier New', Courier, monospace;
+    }
+
+    p {
+        margin: 0.2em;
+    }
+
+    .container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100vh;
+    }
+
+    .content {
+        width: min(95vw, 800px);
+        height: auto;
+        font-size: x-large;
+    }
+
+    input {
+        width: 100%;
+        font-size: inherit;
+    }
+</style>
+
+<script>
+
+    async function login() {
+        const code = document.getElementById("access-code").value;
+        if (code.length < 3) {
+            return;
+        }
+        const resp = await fetch(
+            "/constructor/group-chat-auth-login",
+            { method: "POST", body: JSON.stringify({ code }) }
+        );
+        if (resp.ok) {
+            window.location.reload()
+        }
+    }
+
+</script>
+
 </html>
