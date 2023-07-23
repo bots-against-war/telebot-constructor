@@ -1,4 +1,5 @@
 import asyncio
+from telebot_constructor.static import static_file_content
 import json
 import logging
 import re
@@ -13,6 +14,7 @@ from telebot.webhook import WebhookApp
 from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.stores.generic import KeyDictStore, KeySetStore
 
+from telebot_constructor.auth import Auth
 from telebot_constructor.bot_config import BotConfig
 from telebot_constructor.construct import construct_bot
 from telebot_constructor.runners import (
@@ -28,7 +30,12 @@ class TelebotConstructorApp:
     STORE_PREFIX = "telebot-constructor"
     URL_PREFIX = "/constructor"
 
-    def __init__(self, redis: RedisInterface, static_files_dir_override: Optional[Path] = None) -> None:
+    def __init__(self, redis: RedisInterface, auth: Auth, static_files_dir_override: Optional[Path] = None) -> None:
+        self.auth = auth
+        self.static_files_dir = static_files_dir_override or Path(__file__).parent / "static"
+        self._runner: Optional[ConstructedBotRunner] = None
+        logger.info(f"Will serve static frontend files from {self.static_files_dir.absolute()}")
+
         # user id -> {bot name -> config}
         self.bot_config_store = KeyDictStore[BotConfig](
             name="bot-configs",
@@ -44,9 +51,6 @@ class TelebotConstructorApp:
             redis=redis,
             expiration_time=None,
         )
-        self.static_files_dir = static_files_dir_override or Path(__file__).parent / "static"
-        self._runner: Optional[ConstructedBotRunner] = None
-        logger.info(f"Will serve static frontend files from {self.static_files_dir.absolute()}")
 
     @property
     def runner(self) -> ConstructedBotRunner:
@@ -55,7 +59,10 @@ class TelebotConstructorApp:
         return self._runner
 
     async def authenticate(self, request: web.Request) -> str:
-        return "admin"  # TODO: username lookup based on access token / other auth method
+        username = await self.auth.authenticate_request(request)
+        if username is None:
+            raise web.HTTPUnauthorized(reason="Authentication required")
+        return username
 
     VALID_BOT_NAME_RE = re.compile(r"^[0-9a-zA-Z\-_]{5,16}$")
 
@@ -79,9 +86,15 @@ class TelebotConstructorApp:
         ##################################################################################
         # static file routes
 
-        @routes.get(self.URL_PREFIX + "/")
+        @routes.get(self.URL_PREFIX)
         async def index(request: web.Request) -> web.Response:
-            return web.Response(body=(self.static_files_dir / "index.html").read_bytes(), content_type="text/html")
+            username = await self.auth.authenticate_request(request)
+            if username is None:
+                return await self.auth.unauthenticated_client_response(request, static_files_dir=self.static_files_dir)
+            return web.Response(
+                body=static_file_content(self.static_files_dir / "index.html"),
+                content_type="text/html",
+            )
 
         ##################################################################################
         # bot configs CRUD

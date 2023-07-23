@@ -21,3 +21,11 @@ Free & open-source Telegram bot constructor with no-code web UI, using as backen
      ```bash
      poetry config virtualenvs.in-project false --local
      ```
+
+
+### Running in debug mode
+
+```sh
+export TELEBOT_CONSTRUCTOR_DEBUG=1
+python run_polling.py
+```
