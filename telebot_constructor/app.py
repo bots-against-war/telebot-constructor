@@ -202,7 +202,10 @@ class TelebotConstructorApp:
             username = await self.authenticate(request)
             bot_name = self.parse_bot_name(request)
             bot_config = await self.load_bot_config(username, bot_name)
-            bot_runner = await construct_bot(username, bot_name, bot_config)
+            try:
+                bot_runner = await construct_bot(username, bot_name, bot_config)
+            except Exception as e:
+                raise web.HTTPBadRequest(reason=str(e))
             if await self.runner.start(username=username, bot_name=bot_name, bot_runner=bot_runner):
                 await self.running_bots_store.add(username, bot_name)
                 return web.Response(text="Bot started", status=201)
@@ -262,8 +265,11 @@ class TelebotConstructorApp:
                     logger.error(f"Bot {bot_name!r} is in running bots store, but has no config")
                     await self.running_bots_store.remove(username, bot_name)
                     continue
-                bot_runner = await construct_bot(username=username, bot_name=bot_name, bot_config=bot_config)
-                await self.runner.start(username=username, bot_name=bot_name, bot_runner=bot_runner)
+                try:
+                    bot_runner = await construct_bot(username=username, bot_name=bot_name, bot_config=bot_config)
+                    await self.runner.start(username=username, bot_name=bot_name, bot_runner=bot_runner)
+                except Exception:
+                    logger.exception(f"Error creating bot {bot_name} ({username = })")
 
     # public methods to run constructor in different scenarios
 

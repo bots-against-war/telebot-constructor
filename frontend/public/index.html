@@ -7,8 +7,9 @@
     <title>Telebot constructor</title>
 </head>
 
-<body onload="reloadConfigs()">
-    <h1>Telebot constructor v0.0.1</h1>
+<body onload="reloadConfigs()"
+    style="font-family: 'Courier New', Courier, monospace; width: min(95vw, 800px); margin: 0 auto;">
+    <h1>Telebot constructor</h1>
     <div>
         <h3>Add bot</h3>
         <form>
@@ -68,20 +69,24 @@
     }
 
     async function createNewConfig() {
-        const name = document.getElementById("bot_name").value;
-        const token = document.getElementById("bot_token").value;
+        const nameEl = document.getElementById("bot_name");
+        const tokenEl = document.getElementById("bot_token");
+        const name = nameEl.value;
+        const token = tokenEl.value;
         if (name.length === 0 || token.length === 0) {
             console.log("form not completed");
             return;
         }
         const payload = JSON.stringify({ token });
         console.log(payload);
-        const resp = await fetch(`/constructor/config/${name}`, { method: "POST", body: payload });
+        const resp = await fetch(`/constructor/config/${encodeURIComponent(name)}`, { method: "POST", body: payload });
         console.log(resp);
         if (resp.ok) {
+            nameEl.value = "";
+            tokenEl.value = "";
             await reloadConfigs();
         } else {
-            document.getElementById("newBotConfigStatus").innerHTML = await resp.text()
+            document.getElementById("newBotConfigStatus").innerHTML = await resp.text();
         }
     }
 </script>
