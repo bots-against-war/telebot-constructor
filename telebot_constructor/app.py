@@ -74,21 +74,21 @@ class TelebotConstructorApp:
 
     VALID_NAME_RE = re.compile(r"^[0-9a-zA-Z\-_]{5,16}$")
 
-    def parse_name_from_url(self, request: web.Request, url_part: str, errmsg_name: str) -> str:
+    def parse_name_from_url(self, request: web.Request, url_part: str, errmsg_name: str, validate: bool) -> str:
         name = request.match_info.get(url_part)
         if name is None:
             raise web.HTTPNotFound()
-        if not self.VALID_NAME_RE.match(name):
+        if validate and not self.VALID_NAME_RE.match(name):
             raise web.HTTPBadRequest(
                 reason=f"{errmsg_name} must consist of 5-16 alphanumeric characters, hyphens and dashes"
             )
         return name
 
     def parse_bot_name(self, request: web.Request) -> str:
-        return self.parse_name_from_url(request, url_part="bot_name", errmsg_name="Bot name")
+        return self.parse_name_from_url(request, url_part="bot_name", errmsg_name="Bot name", validate=True)
 
     def parse_secret_name(self, request: web.Request) -> str:
-        return self.parse_name_from_url(request, url_part="secret_name", errmsg_name="Secret name")
+        return self.parse_name_from_url(request, url_part="secret_name", errmsg_name="Secret name", validate=False)
 
     async def load_bot_config(self, username: str, bot_name: str) -> BotConfig:
         config = await self.bot_config_store.get_subkey(username, bot_name)
