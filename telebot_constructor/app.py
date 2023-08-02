@@ -80,6 +80,15 @@ class TelebotConstructorApp:
             raise web.HTTPNotFound(reason=f"No config found for bot name {bot_name!r}")
         return config
 
+    async def re_start_bot(self, username: str, bot_name: str, bot_config: BotConfig) -> None:
+        await self.runner.stop(username, bot_name)
+        try:
+            bot_runner = await construct_bot(username, bot_name, bot_config)
+        except Exception as e:
+            raise web.HTTPBadRequest(reason=str(e))
+        if not await self.runner.start(username=username, bot_name=bot_name, bot_runner=bot_runner):
+            raise web.HTTPInternalServerError(reason="Failed to start bot")
+
     async def setup_routes(self, app: web.Application) -> None:
         routes = web.RouteTableDef()
 
@@ -124,6 +133,9 @@ class TelebotConstructorApp:
             except Exception as e:
                 raise web.HTTPBadRequest(reason=str(e))
             await self.bot_config_store.set_subkey(username, bot_name, bot_config)
+
+            await self.re_start_bot(username, bot_name, bot_config)
+
             if existing_bot_config is None:
                 return web.json_response(text=bot_config.model_dump_json(), status=201)
             else:
@@ -202,15 +214,8 @@ class TelebotConstructorApp:
             username = await self.authenticate(request)
             bot_name = self.parse_bot_name(request)
             bot_config = await self.load_bot_config(username, bot_name)
-            try:
-                bot_runner = await construct_bot(username, bot_name, bot_config)
-            except Exception as e:
-                raise web.HTTPBadRequest(reason=str(e))
-            if await self.runner.start(username=username, bot_name=bot_name, bot_runner=bot_runner):
-                await self.running_bots_store.add(username, bot_name)
-                return web.Response(text="Bot started", status=201)
-            else:
-                return web.Response(text="Bot is already running")
+            await self.re_start_bot(username, bot_name, bot_config)
+            return web.Response(text="OK", status=201)
 
         @routes.post(self.URL_PREFIX + "/stop/{bot_name}")
         async def stop_bot(request: web.Request) -> web.Response:
@@ -252,7 +257,7 @@ class TelebotConstructorApp:
         setup_swagger(app=app, swagger_url=f"{self.URL_PREFIX}/swagger")
         await self.auth.setup_routes(app)
 
-    async def _ensure_running_bots(self) -> None:
+    async def _start_stored_bots(self) -> None:
         """Ensure that all bots stored as running are indeed running; used mainly on startup"""
         usernames = await self.running_bots_store.list_keys()
         logger.info("Found %s usernames with bot running flags", len(usernames))
@@ -277,7 +282,7 @@ class TelebotConstructorApp:
         """For standalone run"""
         logger.info("Running telebot constructor w/ polling")
         self._runner = PollingConstructedBotRunner()
-        await self._ensure_running_bots()
+        await self._start_stored_bots()
         aiohttp_app = web.Application()
         await self.setup_routes(aiohttp_app)
         aiohttp_runner = web.AppRunner(aiohttp_app)
@@ -297,5 +302,5 @@ class TelebotConstructorApp:
 
     async def setup_on_webhook_app(self, webhook_app: WebhookApp) -> None:
         self._runner = WebhookAppConstructedBotRunner(webhook_app)
-        await self._ensure_running_bots()
+        await self._start_stored_bots()
         await self.setup_routes(webhook_app.aiohttp_app)
