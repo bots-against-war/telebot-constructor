@@ -72,15 +72,23 @@ class TelebotConstructorApp:
             raise web.HTTPUnauthorized(reason="Authentication required")
         return username
 
-    VALID_BOT_NAME_RE = re.compile(r"^[0-9a-zA-Z\-_]{5,16}$")
+    VALID_NAME_RE = re.compile(r"^[0-9a-zA-Z\-_]{5,16}$")
 
-    def parse_bot_name(self, request: web.Request) -> str:
-        name = request.match_info.get("bot_name")
+    def parse_name_from_url(self, request: web.Request, url_part: str, errmsg_name: str) -> str:
+        name = request.match_info.get(url_part)
         if name is None:
             raise web.HTTPNotFound()
-        if not self.VALID_BOT_NAME_RE.match(name):
-            raise web.HTTPBadRequest(reason="Bot name must consist of 5-16 alphanumeric characters, hyphens and dashes")
+        if not self.VALID_NAME_RE.match(name):
+            raise web.HTTPBadRequest(
+                reason=f"{errmsg_name} must consist of 5-16 alphanumeric characters, hyphens and dashes"
+            )
         return name
+
+    def parse_bot_name(self, request: web.Request) -> str:
+        return self.parse_name_from_url(request, url_part="bot_name", errmsg_name="Bot name")
+
+    def parse_secret_name(self, request: web.Request) -> str:
+        return self.parse_name_from_url(request, url_part="secret_name", errmsg_name="Secret name")
 
     async def load_bot_config(self, username: str, bot_name: str) -> BotConfig:
         config = await self.bot_config_store.get_subkey(username, bot_name)
@@ -117,6 +125,61 @@ class TelebotConstructorApp:
                 body=static_file_content(self.static_files_dir / "index.html"),
                 content_type="text/html",
             )
+
+        ##################################################################################
+        # secrets C_UD
+
+        @routes.post(self.URL_PREFIX + "/secrets/{secret_name}")
+        async def upsert_secret(request: web.Request) -> web.Response:
+            """
+            ---
+            description: Create or update secret
+            responses:
+                "201":
+                    description: Success
+            """
+            username = await self.authenticate(request)
+            secret_name = self.parse_secret_name(request)
+            secret_value = await request.text()
+            await self.secret_store.save_secret(
+                secret_name=secret_name,
+                secret_value=secret_value,
+                owner_id=username,  # type: ignore
+                allow_update=True,
+            )
+            return web.Response()
+
+        @routes.delete(self.URL_PREFIX + "/secrets/{secret_name}")
+        async def delete_secret(request: web.Request) -> web.Response:
+            """
+            ---
+            description: Delete secret
+            responses:
+                "201":
+                    description: Success
+            """
+            username = await self.authenticate(request)
+            secret_name = self.parse_secret_name(request)
+            await self.secret_store.remove_secret(
+                secret_name=secret_name,
+                owner_id=username,  # type: ignore
+            )
+            return web.Response()
+
+        @routes.get(self.URL_PREFIX + "/secrets")
+        async def list_secret_names(request: web.Request) -> web.Response:
+            """
+            ---
+            description: List available secret names
+            produces:
+            - application/json
+            responses:
+                "201":
+                    description: List of string secret names
+            """
+            username = await self.authenticate(request)
+            secret_names = await self.secret_store.list_secrets(owner_id=username)  # type: ignore
+            return web.json_response(data=secret_names)
 
         ##################################################################################
         # bot configs CRUD
