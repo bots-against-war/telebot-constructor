@@ -12,6 +12,7 @@ from aiohttp_swagger import setup_swagger  # type: ignore
 from telebot.webhook import WebhookApp
 from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.stores.generic import KeyDictStore, KeySetStore
+from telebot_components.utils.secrets import SecretStore
 
 from telebot_constructor.auth import Auth
 from telebot_constructor.bot_config import BotConfig
@@ -30,8 +31,15 @@ class TelebotConstructorApp:
     STORE_PREFIX = "telebot-constructor"
     URL_PREFIX = "/constructor"
 
-    def __init__(self, redis: RedisInterface, auth: Auth, static_files_dir_override: Optional[Path] = None) -> None:
+    def __init__(
+        self,
+        redis: RedisInterface,
+        auth: Auth,
+        secret_store: SecretStore,
+        static_files_dir_override: Optional[Path] = None,
+    ) -> None:
         self.auth = auth
+        self.secret_store = secret_store
         self.static_files_dir = static_files_dir_override or Path(__file__).parent / "static"
         self._runner: Optional[ConstructedBotRunner] = None
         logger.info(f"Will serve static frontend files from {self.static_files_dir.absolute()}")
@@ -83,7 +91,12 @@ class TelebotConstructorApp:
     async def re_start_bot(self, username: str, bot_name: str, bot_config: BotConfig) -> None:
         await self.runner.stop(username, bot_name)
         try:
-            bot_runner = await construct_bot(username, bot_name, bot_config)
+            bot_runner = await construct_bot(
+                username=username,
+                bot_name=bot_name,
+                bot_config=bot_config,
+                secret_store=self.secret_store,
+            )
         except Exception as e:
             raise web.HTTPBadRequest(reason=str(e))
         if not await self.runner.start(username=username, bot_name=bot_name, bot_runner=bot_runner):
@@ -271,7 +284,12 @@ class TelebotConstructorApp:
                     await self.running_bots_store.remove(username, bot_name)
                     continue
                 try:
-                    bot_runner = await construct_bot(username=username, bot_name=bot_name, bot_config=bot_config)
+                    bot_runner = await construct_bot(
+                        username=username,
+                        bot_name=bot_name,
+                        bot_config=bot_config,
+                        secret_store=self.secret_store,
+                    )
                     await self.runner.start(username=username, bot_name=bot_name, bot_runner=bot_runner)
                 except Exception:
                     logger.exception(f"Error creating bot {bot_name} ({username = })")
