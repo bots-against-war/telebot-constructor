@@ -91,7 +91,7 @@ class GroupChatAuth(Auth):
         return "admin"  # all request are authenticated as the same user
 
     async def unauthenticated_client_response(self, request: web.Request, static_files_dir: Path) -> web.Response:
-        
+
         return web.Response(
             body=static_file_content(static_files_dir / "group_chat_auth_login.html"),
             content_type="text/html",
@@ -128,6 +128,3 @@ class GroupChatAuth(Auth):
             return web.Response(text="OK", status=200)
 
         app.router.add_post("/constructor/group-chat-auth-request-confirmation-code", request_confirmation_code)
-
-
-
