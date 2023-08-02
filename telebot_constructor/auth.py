@@ -91,14 +91,7 @@ class GroupChatAuth(Auth):
         return "admin"  # all request are authenticated as the same user
 
     async def unauthenticated_client_response(self, request: web.Request, static_files_dir: Path) -> web.Response:
-        if not (await self.access_code_store.exists(self.CONST_KEY)):
-            access_code = secrets.token_hex(16)
-            await self.access_code_store.save(self.CONST_KEY, access_code)
-            await self.bot.send_message(
-                chat_id=self.auth_chat_id,
-                text=f"🔑🔑🔑\nTelebot Constructor access code\n\n<pre>{access_code}</pre>",
-                parse_mode="HTML",
-            )
+        
         return web.Response(
             body=static_file_content(static_files_dir / "group_chat_auth_login.html"),
             content_type="text/html",
@@ -122,3 +115,19 @@ class GroupChatAuth(Auth):
             return web.Response(text="OK", headers={hdrs.SET_COOKIE: f"{self.ACCESS_TOKEN_COOKIE_NAME}={access_token}"})
 
         app.router.add_post("/constructor/group-chat-auth-login", login)
+
+        async def request_confirmation_code(request: web.Request) -> web.Response:
+            if not (await self.access_code_store.exists(self.CONST_KEY)):
+                access_code = secrets.token_hex(16)
+                await self.access_code_store.save(self.CONST_KEY, access_code)
+                await self.bot.send_message(
+                    chat_id=self.auth_chat_id,
+                    text=f"🔑🔑🔑\n\nTelebot Constructor access code\n\n<pre>{access_code}</pre>",
+                    parse_mode="HTML",
+                )
+            return web.Response(text="OK", status=200)
+
+        app.router.add_post("/constructor/group-chat-auth-request-confirmation-code", request_confirmation_code)
+
+
+

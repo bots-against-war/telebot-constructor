@@ -13,7 +13,8 @@
             <p style="text-align: center;">Access code</p>
             <input id="access-code">
             <div style="margin-top: 0.5em; width: 100%; display: flex; justify-content: center;">
-                <button style="font-size: large; font-family: inherit; font-weight: bold;" onclick="login()">Submit</button>
+                <button onclick="requestAccessCode()">Send code</button>
+                <button onclick="login()">Submit</button>
             </div>
         </div>
     </div>
@@ -42,6 +43,13 @@
         font-size: x-large;
     }
 
+    button {
+        font-size: large;
+        font-family: inherit;
+        font-weight: bold;
+        margin: 0 1em;
+    }
+
     input {
         width: 100%;
         font-size: inherit;
@@ -49,6 +57,13 @@
 </style>
 
 <script>
+    async function requestAccessCode() {
+        const resp = await fetch(
+            "/constructor/group-chat-auth-request-confirmation-code",
+            { method: "POST" }
+        );
+        console.log(resp);
+    }
 
     async function login() {
         const code = document.getElementById("access-code").value;
@@ -59,8 +74,9 @@
             "/constructor/group-chat-auth-login",
             { method: "POST", body: JSON.stringify({ code }) }
         );
+        console.log(resp);
         if (resp.ok) {
-            window.location.reload()
+            window.location.reload();
         }
     }
 
