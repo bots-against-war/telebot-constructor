@@ -10,8 +10,7 @@
 <body>
     <div class="container">
         <div class="content">
-            <p style="text-align: center;">Access code</p>
-            <input id="access-code">
+            <input id="access-code" placeholder="Access code">
             <div style="margin-top: 0.5em; width: 100%; display: flex; justify-content: center;">
                 <button onclick="requestAccessCode()">Send code</button>
                 <button onclick="login()">Submit</button>
@@ -57,9 +56,16 @@
 </style>
 
 <script>
+    let BASE_PATH
+    try {
+        BASE_PATH = buildTimeReplacedBasePath;
+    } catch {
+        BASE_PATH = "";
+    }
+    console.log("Base path = " = BASE_PATH)
+
     async function requestAccessCode() {
-        const resp = await fetch(
-            "/constructor/group-chat-auth-request-confirmation-code",
+        const resp = await fetch(BASE_PATH + "/group-chat-auth/request-confirmation-code",
             { method: "POST" }
         );
         console.log(resp);
@@ -70,8 +76,7 @@
         if (code.length < 3) {
             return;
         }
-        const resp = await fetch(
-            "/constructor/group-chat-auth-login",
+        const resp = await fetch(BASE_PATH + "/group-chat-auth/login",
             { method: "POST", body: JSON.stringify({ code }) }
         );
         console.log(resp);

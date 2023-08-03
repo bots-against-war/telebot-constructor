@@ -25,8 +25,16 @@
 </body>
 
 <script>
+    let BASE_PATH
+    try {
+        BASE_PATH = buildTimeReplacedBasePath;
+    } catch {
+        BASE_PATH = "";
+    }
+    console.log("Base path = " = BASE_PATH)
+
     async function reloadConfigs() {
-        const resp = await fetch("/constructor/config");
+        const resp = await fetch(BASE_PATH + "/api/config");
         const existingConfigs = JSON.parse(await resp.text());
         const container = document.getElementById("container");
         console.log(existingConfigs);
@@ -51,19 +59,19 @@
     }
 
     async function startBot(name) {
-        const resp = await fetch(`/constructor/start/${name}`, { method: "POST" });
+        const resp = await fetch(BASE_PATH + `/api/start/${name}`, { method: "POST" });
         const statusEl = document.getElementById(`${name}-status`);
         statusEl.innerHTML = await resp.text();
     }
 
     async function stopBot(name) {
-        const resp = await fetch(`/constructor/stop/${name}`, { method: "POST" });
+        const resp = await fetch(BASE_PATH + `/api/stop/${name}`, { method: "POST" });
         const statusEl = document.getElementById(`${name}-status`);
         statusEl.innerHTML = await resp.text();
     }
 
     async function removeBotConfig(name) {
-        const resp = await fetch(`/constructor/config/${name}`, { method: "DELETE" });
+        const resp = await fetch(BASE_PATH + `/api/config/${name}`, { method: "DELETE" });
         const statusEl = document.getElementById(`${name}-status`);
         await reloadConfigs();
     }
@@ -79,7 +87,7 @@
         }
         const payload = JSON.stringify({ token });
         console.log(payload);
-        const resp = await fetch(`/constructor/config/${encodeURIComponent(name)}`, { method: "POST", body: payload });
+        const resp = await fetch(BASE_PATH + `/api/config/${encodeURIComponent(name)}`, { method: "POST", body: payload });
         console.log(resp);
         if (resp.ok) {
             nameEl.value = "";
