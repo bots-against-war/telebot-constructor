@@ -1,2 +1,2 @@
-# replaced at build time when packaging to add base path to constructor app's paths
+# TODO: make configurable on build step with custom static code rewrite
 BASE_PATH = ""
