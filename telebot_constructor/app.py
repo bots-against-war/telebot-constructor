@@ -392,4 +392,4 @@ class TelebotConstructorApp:
         self._runner = WebhookAppConstructedBotRunner(webhook_app)
         await self._start_stored_bots()
         app = await self.create_constructor_web_app()
-        webhook_app.aiohttp_app.add_subapp(BASE_PATH, app)  # TODO: make prefix configurable at build time
+        webhook_app.aiohttp_app.add_subapp(BASE_PATH, app)
