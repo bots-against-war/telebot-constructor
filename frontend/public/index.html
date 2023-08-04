@@ -25,12 +25,7 @@
 </body>
 
 <script>
-    let BASE_PATH
-    try {
-        BASE_PATH = buildTimeReplacedBasePath;
-    } catch {
-        BASE_PATH = "";
-    }
+    const BASE_PATH = "";  // TODO: make configurable with Vite build step
     console.log("Base path = " = BASE_PATH)
 
     async function reloadConfigs() {
