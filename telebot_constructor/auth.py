@@ -1,6 +1,6 @@
 import abc
-import logging
 import datetime
+import logging
 import secrets
 from pathlib import Path
 from typing import Optional
@@ -118,7 +118,9 @@ class GroupChatAuth(Auth):
             self.logger.info("Confirmation code OK, issuing access token")
             if not await self.access_tokens_store.save(access_token, None):
                 raise web.HTTPInternalServerError()
-            return web.Response(text="OK", headers={hdrs.SET_COOKIE: f"{self.ACCESS_TOKEN_COOKIE_NAME}={access_token}; Path=/"})
+            return web.Response(
+                text="OK", headers={hdrs.SET_COOKIE: f"{self.ACCESS_TOKEN_COOKIE_NAME}={access_token}; Path=/"}
+            )
 
         app.router.add_post("/group-chat-auth/login", login)
 

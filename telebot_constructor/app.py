@@ -1,5 +1,4 @@
 import asyncio
-from telebot_constructor.build_time_config import BASE_PATH
 import json
 import logging
 import re
@@ -17,6 +16,7 @@ from telebot_components.utils.secrets import SecretStore
 
 from telebot_constructor.auth import Auth
 from telebot_constructor.bot_config import BotConfig
+from telebot_constructor.build_time_config import BASE_PATH
 from telebot_constructor.construct import construct_bot
 from telebot_constructor.runners import (
     ConstructedBotRunner,
@@ -76,9 +76,7 @@ class TelebotConstructorApp:
 
     def _validate_name(self, name: str) -> None:
         if not self.VALID_NAME_RE.match(name):
-            raise web.HTTPBadRequest(
-                reason=f"Name must consist of 3-32 alphanumeric characters, hyphens and dashes"
-            )
+            raise web.HTTPBadRequest(reason="Name must consist of 3-32 alphanumeric characters, hyphens and dashes")
 
     def parse_bot_name(self, request: web.Request) -> str:
         name = request.match_info.get("bot_name")
