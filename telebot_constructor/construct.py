@@ -1,6 +1,9 @@
+import logging
+
 from telebot import AsyncTeleBot
 from telebot import types as tg
 from telebot.runner import BotRunner
+from telebot_components.utils.secrets import SecretStore
 from telebot_components.constants import times
 from telebot_components.feedback import FeedbackHandler, FeedbackConfig, UserAnonymization, AntiSpam, AntiSpamConfig, \
     ServiceMessages
@@ -9,11 +12,30 @@ from telebot_components.stores.banned_users import BannedUsersStore
 
 from telebot_constructor.bot_config import BotConfig
 
+logger = logging.getLogger(__name__)
 
-async def construct_bot(username: str, bot_name: str, bot_config: BotConfig, redis: RedisInterface) -> BotRunner:
-    """Main heavy lifting function responsible for creating bot with all the necessary handlers / components / etc"""
-    bot = AsyncTeleBot(token=bot_config.token)
+
+async def construct_bot(username: str, bot_name: str, bot_config: BotConfig, secret_store: SecretStore, redis: RedisInterface) -> BotRunner:
+    """Core bot construction function responsible for turning a config into a functional bot"""
+    log_prefix = f"[{username}][{bot_name}] "
     bot_prefix = f"{username}-{bot_name}"
+
+    logger.info(log_prefix + "Constructing bot")
+
+    token = await secret_store.get_secret(bot_config.token_secret_name)
+    if token is None:
+        raise ValueError(f"Token name {bot_config.token_secret_name} does not correspond to a valid secret")
+    logger.info(log_prefix + "Loaded token from the secret store")
+    bot = AsyncTeleBot(token=token)
+
+    try:
+        bot_user = await bot.get_me()
+        logger.info(log_prefix + f"Bot user loaded: {bot_user.to_json()}")
+    except Exception:
+        logger.exception(log_prefix + "Error getting bot user, probably an invalid token")
+        raise ValueError("Failed to get bot user with getMe, the token is probably invalid")
+
+    # handlers setup (dummy)
 
     banned_store = BannedUsersStore(
         redis,
@@ -24,11 +46,6 @@ async def construct_bot(username: str, bot_name: str, bot_config: BotConfig, red
     @bot.message_handler(commands=["start"], func=banned_store.not_from_banned_user)
     async def dummy_start_handler(message: tg.Message) -> None:
         await bot.reply_to(message, "hello world")
-
-    try:
-        await bot.get_me()
-    except Exception:
-        raise ValueError("Failed to getMe the bot, the token is probably invalid")
 
     # region Feedback
     feedback_handler = FeedbackHandler(

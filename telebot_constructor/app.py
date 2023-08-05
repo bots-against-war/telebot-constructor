@@ -12,9 +12,11 @@ from aiohttp_swagger import setup_swagger  # type: ignore
 from telebot.webhook import WebhookApp
 from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.stores.generic import KeyDictStore, KeySetStore
+from telebot_components.utils.secrets import SecretStore
 
 from telebot_constructor.auth import Auth
 from telebot_constructor.bot_config import BotConfig
+from telebot_constructor.build_time_config import BASE_PATH
 from telebot_constructor.construct import construct_bot
 from telebot_constructor.runners import (
     ConstructedBotRunner,
@@ -28,10 +30,16 @@ logger = logging.getLogger(__name__)
 
 class TelebotConstructorApp:
     STORE_PREFIX = "telebot-constructor"
-    URL_PREFIX = "/constructor"
 
-    def __init__(self, redis: RedisInterface, auth: Auth, static_files_dir_override: Optional[Path] = None) -> None:
+    def __init__(
+        self,
+        redis: RedisInterface,
+        auth: Auth,
+        secret_store: SecretStore,
+        static_files_dir_override: Optional[Path] = None,
+    ) -> None:
         self.auth = auth
+        self.secret_store = secret_store
         self.static_files_dir = static_files_dir_override or Path(__file__).parent / "static"
         self._runner: Optional[ConstructedBotRunner] = None
         self.redis = redis
@@ -65,14 +73,24 @@ class TelebotConstructorApp:
             raise web.HTTPUnauthorized(reason="Authentication required")
         return username
 
-    VALID_BOT_NAME_RE = re.compile(r"^[0-9a-zA-Z\-_]{5,16}$")
+    VALID_NAME_RE = re.compile(r"^[0-9a-zA-Z\-_]{3,32}$")
+
+    def _validate_name(self, name: str) -> None:
+        if not self.VALID_NAME_RE.match(name):
+            raise web.HTTPBadRequest(reason="Name must consist of 3-32 alphanumeric characters, hyphens and dashes")
 
     def parse_bot_name(self, request: web.Request) -> str:
         name = request.match_info.get("bot_name")
         if name is None:
             raise web.HTTPNotFound()
-        if not self.VALID_BOT_NAME_RE.match(name):
-            raise web.HTTPBadRequest(reason="Bot name must consist of 5-16 alphanumeric characters, hyphens and dashes")
+        self._validate_name(name)
+        return name
+
+    def parse_secret_name(self, request: web.Request) -> str:
+        name = request.match_info.get("secret_name")
+        if name is None:
+            raise web.HTTPNotFound()
+        self._validate_name(name)
         return name
 
     async def load_bot_config(self, username: str, bot_name: str) -> BotConfig:
@@ -84,19 +102,25 @@ class TelebotConstructorApp:
     async def re_start_bot(self, username: str, bot_name: str, bot_config: BotConfig) -> None:
         await self.runner.stop(username, bot_name)
         try:
-            bot_runner = await construct_bot(username, bot_name, bot_config, self.redis)
+            bot_runner = await construct_bot(
+                username=username,
+                bot_name=bot_name,
+                bot_config=bot_config,
+                secret_store=self.secret_store,
+            )
         except Exception as e:
             raise web.HTTPBadRequest(reason=str(e))
         if not await self.runner.start(username=username, bot_name=bot_name, bot_runner=bot_runner):
             raise web.HTTPInternalServerError(reason="Failed to start bot")
 
-    async def setup_routes(self, app: web.Application) -> None:
+    async def create_constructor_web_app(self) -> web.Application:
+        app = web.Application()
         routes = web.RouteTableDef()
 
         ##################################################################################
         # static file routes
 
-        @routes.get(self.URL_PREFIX)
+        @routes.get("/")
         async def index(request: web.Request) -> web.Response:
             username = await self.auth.authenticate_request(request)
             if username is None:
@@ -107,9 +131,66 @@ class TelebotConstructorApp:
             )
 
         ##################################################################################
+        # secrets C_UD
+
+        @routes.post("/api/secrets/{secret_name}")
+        async def upsert_secret(request: web.Request) -> web.Response:
+            """
+            ---
+            description: Create or update secret
+            responses:
+                "201":
+                    description: Success
+            """
+            username = await self.authenticate(request)
+            secret_name = self.parse_secret_name(request)
+            secret_value = await request.text()
+            result = await self.secret_store.save_secret(
+                secret_name=secret_name,
+                secret_value=secret_value,
+                owner_id=username,  # type: ignore
+                allow_update=True,
+            )
+            return web.Response(text=result.message, status=200 if result.is_saved else 400)
+
+        @routes.delete("/api/secrets/{secret_name}")
+        async def delete_secret(request: web.Request) -> web.Response:
+            """
+            ---
+            description: Delete secret
+            responses:
+                "201":
+                    description: Success
+            """
+            username = await self.authenticate(request)
+            secret_name = self.parse_secret_name(request)
+            if await self.secret_store.remove_secret(
+                secret_name=secret_name,
+                owner_id=username,  # type: ignore
+            ):
+                return web.Response(text="Removed", status=200)
+            else:
+                return web.Response(text="Secret not found", status=404)
+
+        @routes.get("/api/secrets")
+        async def list_secret_names(request: web.Request) -> web.Response:
+            """
+            ---
+            description: List available secret names
+            produces:
+            - application/json
+            responses:
+                "201":
+                    description: List of string secret names
+            """
+            username = await self.authenticate(request)
+            secret_names = await self.secret_store.list_secrets(owner_id=username)  # type: ignore
+            return web.json_response(data=secret_names)
+
+        ##################################################################################
         # bot configs CRUD
 
-        @routes.post(self.URL_PREFIX + "/config/{bot_name}")
+        @routes.post("/api/config/{bot_name}")
         async def upsert_new_bot_config(request: web.Request) -> web.Response:
             """
             ---
@@ -142,7 +223,7 @@ class TelebotConstructorApp:
             else:
                 return web.json_response(text=existing_bot_config.model_dump_json())
 
-        @routes.get(self.URL_PREFIX + "/config/{bot_name}")
+        @routes.get("/api/config/{bot_name}")
         async def get_bot_config(request: web.Request) -> web.Response:
             """
             ---
@@ -160,7 +241,7 @@ class TelebotConstructorApp:
             config = await self.load_bot_config(username, bot_name)
             return web.json_response(text=config.model_dump_json())
 
-        @routes.delete(self.URL_PREFIX + "/config/{bot_name}")
+        @routes.delete("/api/config/{bot_name}")
         async def remove_bot_config(request: web.Request) -> web.Response:
             """
             ---
@@ -179,7 +260,7 @@ class TelebotConstructorApp:
             await self.bot_config_store.remove_subkey(username, bot_name)
             return web.json_response(text=config.model_dump_json())
 
-        @routes.get(self.URL_PREFIX + "/config")
+        @routes.get("/api/config")
         async def list_bot_configs(request: web.Request) -> web.Response:
             """
             ---
@@ -199,7 +280,7 @@ class TelebotConstructorApp:
         ##################################################################################
         # bot lifecycle control: start, stop, list running
 
-        @routes.post(self.URL_PREFIX + "/start/{bot_name}")
+        @routes.post("/api/start/{bot_name}")
         async def start_bot(request: web.Request) -> web.Response:
             """
             ---
@@ -218,7 +299,7 @@ class TelebotConstructorApp:
             await self.re_start_bot(username, bot_name, bot_config)
             return web.Response(text="OK", status=201)
 
-        @routes.post(self.URL_PREFIX + "/stop/{bot_name}")
+        @routes.post("/api/stop/{bot_name}")
         async def stop_bot(request: web.Request) -> web.Response:
             """
             ---
@@ -239,7 +320,7 @@ class TelebotConstructorApp:
             else:
                 return web.Response(text="Bot was not running")
 
-        @routes.get(self.URL_PREFIX + "/running")
+        @routes.get("/api/running")
         async def list_running_bots(request: web.Request) -> web.Response:
             """
             ---
@@ -255,8 +336,9 @@ class TelebotConstructorApp:
             return web.json_response(data=sorted(running_bots))
 
         app.add_routes(routes)
-        setup_swagger(app=app, swagger_url=f"{self.URL_PREFIX}/swagger")
+        setup_swagger(app=app, swagger_url="/swagger")
         await self.auth.setup_routes(app)
+        return app
 
     async def _start_stored_bots(self) -> None:
         """Ensure that all bots stored as running are indeed running; used mainly on startup"""
@@ -272,7 +354,12 @@ class TelebotConstructorApp:
                     await self.running_bots_store.remove(username, bot_name)
                     continue
                 try:
-                    bot_runner = await construct_bot(username=username, bot_name=bot_name, bot_config=bot_config, redis=self.redis)
+                    bot_runner = await construct_bot(
+                        username=username,
+                        bot_name=bot_name,
+                        bot_config=bot_config,
+                        secret_store=self.secret_store,
+                    )
                     await self.runner.start(username=username, bot_name=bot_name, bot_runner=bot_runner)
                 except Exception:
                     logger.exception(f"Error creating bot {bot_name} ({username = })")
@@ -284,8 +371,7 @@ class TelebotConstructorApp:
         logger.info("Running telebot constructor w/ polling")
         self._runner = PollingConstructedBotRunner()
         await self._start_stored_bots()
-        aiohttp_app = web.Application()
-        await self.setup_routes(aiohttp_app)
+        aiohttp_app = await self.create_constructor_web_app()
         aiohttp_runner = web.AppRunner(aiohttp_app)
         await aiohttp_runner.setup()
         site = web.TCPSite(aiohttp_runner, "0.0.0.0", port)
@@ -304,4 +390,5 @@ class TelebotConstructorApp:
     async def setup_on_webhook_app(self, webhook_app: WebhookApp) -> None:
         self._runner = WebhookAppConstructedBotRunner(webhook_app)
         await self._start_stored_bots()
-        await self.setup_routes(webhook_app.aiohttp_app)
+        app = await self.create_constructor_web_app()
+        webhook_app.aiohttp_app.add_subapp(BASE_PATH, app)
