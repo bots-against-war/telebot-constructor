@@ -3,19 +3,27 @@ import logging
 from telebot import AsyncTeleBot
 from telebot import types as tg
 from telebot.runner import BotRunner
-from telebot_components.utils.secrets import SecretStore
 from telebot_components.constants import times
-from telebot_components.feedback import FeedbackHandler, FeedbackConfig, UserAnonymization, AntiSpam, AntiSpamConfig, \
-    ServiceMessages
+from telebot_components.feedback import (
+    AntiSpam,
+    AntiSpamConfig,
+    FeedbackConfig,
+    FeedbackHandler,
+    ServiceMessages,
+    UserAnonymization,
+)
 from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.stores.banned_users import BannedUsersStore
+from telebot_components.utils.secrets import SecretStore
 
 from telebot_constructor.bot_config import BotConfig
 
 logger = logging.getLogger(__name__)
 
 
-async def construct_bot(username: str, bot_name: str, bot_config: BotConfig, secret_store: SecretStore, redis: RedisInterface) -> BotRunner:
+async def construct_bot(
+    username: str, bot_name: str, bot_config: BotConfig, secret_store: SecretStore, redis: RedisInterface
+) -> BotRunner:
     """Core bot construction function responsible for turning a config into a functional bot"""
     log_prefix = f"[{username}][{bot_name}] "
     bot_prefix = f"{username}-{bot_name}"

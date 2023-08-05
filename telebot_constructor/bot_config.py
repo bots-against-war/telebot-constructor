@@ -3,7 +3,6 @@ from typing import Optional
 
 from pydantic import BaseModel
 from telebot_components.constants import times
-from telebot_components.feedback import FeedbackConfig
 
 
 class FeedbackHandlerConfig(BaseModel):
@@ -17,4 +16,3 @@ class FeedbackHandlerConfig(BaseModel):
 class BotConfig(BaseModel):
     token_secret_name: str  # must correspond to a valid secret in secret store
     feedback_handler_config: Optional[FeedbackHandlerConfig] = None
-
