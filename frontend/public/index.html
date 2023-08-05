@@ -18,7 +18,12 @@
             <label for="bot_token">Token</label><br>
             <input type="text" id="bot_token" name="bot_token"><br>
         </form>
+        <h3>Feedback Handler</h3>
+        <label for="admin_chat_id">Admin chat ID</label><br>
+        <input type="text" id="admin_chat_id" name="admin_chat_id"><br>
+        <div class="button">
         <button onclick="createNewConfig()">New bot</button>
+        </div>
         <div id="newBotConfigStatus"></div>
     </div>
     <div id="container"></div>
@@ -71,19 +76,22 @@
     async function createNewConfig() {
         const nameEl = document.getElementById("bot_name");
         const tokenEl = document.getElementById("bot_token");
+        const adminChatIdEl = document.getElementById("admin_chat_id");
         const name = nameEl.value;
         const token = tokenEl.value;
+        const admin_chat_id = adminChatIdEl.value;
         if (name.length === 0 || token.length === 0) {
             console.log("form not completed");
             return;
         }
-        const payload = JSON.stringify({ token });
+        const payload = JSON.stringify({ token, admin_chat_id });
         console.log(payload);
         const resp = await fetch(`/constructor/config/${encodeURIComponent(name)}`, { method: "POST", body: payload });
         console.log(resp);
         if (resp.ok) {
             nameEl.value = "";
             tokenEl.value = "";
+            adminChatIdEl.value = "";
             await reloadConfigs();
         } else {
             document.getElementById("newBotConfigStatus").innerHTML = await resp.text();

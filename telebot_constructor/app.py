@@ -34,6 +34,7 @@ class TelebotConstructorApp:
         self.auth = auth
         self.static_files_dir = static_files_dir_override or Path(__file__).parent / "static"
         self._runner: Optional[ConstructedBotRunner] = None
+        self.redis = redis
         logger.info(f"Will serve static frontend files from {self.static_files_dir.absolute()}")
 
         # user id -> {bot name -> config}
@@ -83,7 +84,7 @@ class TelebotConstructorApp:
     async def re_start_bot(self, username: str, bot_name: str, bot_config: BotConfig) -> None:
         await self.runner.stop(username, bot_name)
         try:
-            bot_runner = await construct_bot(username, bot_name, bot_config)
+            bot_runner = await construct_bot(username, bot_name, bot_config, self.redis)
         except Exception as e:
             raise web.HTTPBadRequest(reason=str(e))
         if not await self.runner.start(username=username, bot_name=bot_name, bot_runner=bot_runner):
@@ -271,7 +272,7 @@ class TelebotConstructorApp:
                     await self.running_bots_store.remove(username, bot_name)
                     continue
                 try:
-                    bot_runner = await construct_bot(username=username, bot_name=bot_name, bot_config=bot_config)
+                    bot_runner = await construct_bot(username=username, bot_name=bot_name, bot_config=bot_config, redis=self.redis)
                     await self.runner.start(username=username, bot_name=bot_name, bot_runner=bot_runner)
                 except Exception:
                     logger.exception(f"Error creating bot {bot_name} ({username = })")
