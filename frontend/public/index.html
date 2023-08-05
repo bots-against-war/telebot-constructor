@@ -20,11 +20,11 @@
         </form>
         <h3>Feedback Handler</h3>
         <label for="admin_chat_id">Admin chat ID</label><br>
-        <input type="text" id="admin_chat_id" name="admin_chat_id"><br>
+        <input type="text" id="admin_chat_id" name="admin_chat_id"><br><br>
         <div class="button">
         <button onclick="createNewConfig()">New bot</button>
         </div>
-        <div id="newBotConfigStatus"></div>
+        <p id="newBotConfigStatus"></p>
     </div>
     <div id="container"></div>
 </body>
@@ -80,34 +80,53 @@
         const nameEl = document.getElementById("bot_name");
         const tokenEl = document.getElementById("bot_token");
         const adminChatIdEl = document.getElementById("admin_chat_id");
+
         const name = nameEl.value;
         const token = tokenEl.value;
+
+        let feedback_handler_config = {};
         const admin_chat_id = adminChatIdEl.value;
+        if (admin_chat_id) {
+            if (isNaN(admin_chat_id)) {
+                document.getElementById("newBotConfigStatus").innerHTML = "Admin chat ID must be a number";
+                return;
+            } else {
+                feedback_handler_config = { admin_chat_id: admin_chat_id };
+            }
+        }
+
+
         if (name.length === 0 || token.length === 0) {
             console.log("form not completed");
             return;
         }
-        await saveBotTokenToSecretStorage();
-        const payload = JSON.stringify({ token_secret_name: "bot_token", admin_chat_id: admin_chat_id ? admin_chat_id : null });
+
+        const token_secret_name = tokenEl.id;
+        const respToken = await fetch(BASE_PATH + `/api/secrets/${token_secret_name}`, { method: "POST", body: tokenEl.value });
+        if (!respToken.ok) {
+            document.getElementById("newBotConfigStatus").innerHTML = await respToken.text();
+            return;
+        }
+
+        const isObjectEmpty = (objectName) => {
+            return Object.keys(objectName).length === 0
+        }
+
+        const payload = JSON.stringify(
+            {
+                token_secret_name: token_secret_name,
+                feedback_handler_config: isObjectEmpty(feedback_handler_config) ? undefined : feedback_handler_config
+            }
+        );
         console.log(payload);
         const resp = await fetch(BASE_PATH + `/api/config/${encodeURIComponent(name)}`, { method: "POST", body: payload });
         console.log(resp);
+
         if (resp.ok) {
             nameEl.value = "";
             tokenEl.value = "";
             adminChatIdEl.value = "";
             await reloadConfigs();
-        } else {
-            document.getElementById("newBotConfigStatus").innerHTML = await resp.text();
-        }
-    }
-
-    async function saveBotTokenToSecretStorage() {
-        const token = document.getElementById("bot_token").value;
-        const resp = await fetch(BASE_PATH + `/api/secrets/bot_token`, { method: "POST", body: token });
-        console.log(resp);
-        if (resp.ok) {
-            return;
         } else {
             document.getElementById("newBotConfigStatus").innerHTML = await resp.text();
         }
