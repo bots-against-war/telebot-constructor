@@ -97,7 +97,7 @@
 
 
         if (name.length === 0 || token.length === 0) {
-            console.log("form not completed");
+            document.getElementById("newBotConfigStatus").innerHTML = `Form not completed. Name and token are required`;
             return;
         }
 

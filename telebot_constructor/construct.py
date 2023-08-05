@@ -46,13 +46,7 @@ async def construct_bot(
 
     # handlers setup (dummy)
 
-    banned_store = BannedUsersStore(
-        redis=redis,
-        bot_prefix=bot_prefix,
-        cached=False,
-    )
-
-    @bot.message_handler(commands=["start"], func=banned_store.not_from_banned_user)
+    @bot.message_handler(commands=["start"])
     async def dummy_start_handler(message: tg.Message) -> None:
         await bot.reply_to(message, "hello world")
 
@@ -94,6 +88,8 @@ async def construct_bot(
         await feedback_handler.setup(bot)
         background_jobs.extend(feedback_handler.background_jobs(base_url=None, server_listening_future=None))
     # endregion
+
+    logging.basicConfig(level=logging.DEBUG)
 
     return BotRunner(
         bot_prefix=bot_prefix,
