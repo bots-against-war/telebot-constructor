@@ -22,7 +22,7 @@ async def construct_bot(username: str, bot_name: str, bot_config: BotConfig, sec
 
     logger.info(log_prefix + "Constructing bot")
 
-    token = await secret_store.get_secret(bot_config.token_secret_name)
+    token = await secret_store.get_secret(secret_name=bot_config.token_secret_name, owner_id=username)  # type: ignore
     if token is None:
         raise ValueError(f"Token name {bot_config.token_secret_name} does not correspond to a valid secret")
     logger.info(log_prefix + "Loaded token from the secret store")

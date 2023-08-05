@@ -107,6 +107,7 @@ class TelebotConstructorApp:
                 bot_name=bot_name,
                 bot_config=bot_config,
                 secret_store=self.secret_store,
+                redis=self.redis,
             )
         except Exception as e:
             raise web.HTTPBadRequest(reason=str(e))
@@ -359,6 +360,7 @@ class TelebotConstructorApp:
                         bot_name=bot_name,
                         bot_config=bot_config,
                         secret_store=self.secret_store,
+                        redis=self.redis,
                     )
                     await self.runner.start(username=username, bot_name=bot_name, bot_runner=bot_runner)
                 except Exception:

@@ -31,7 +31,7 @@
 
 <script>
     const BASE_PATH = "";  // TODO: make configurable with Vite build step
-    console.log("Base path = " = BASE_PATH)
+    console.log(`Base path = ${BASE_PATH}`);
 
     async function reloadConfigs() {
         const resp = await fetch(BASE_PATH + "/api/config");
@@ -87,7 +87,8 @@
             console.log("form not completed");
             return;
         }
-        const payload = JSON.stringify({ token, admin_chat_id });
+        await saveBotTokenToSecretStorage();
+        const payload = JSON.stringify({ token_secret_name: "bot_token", admin_chat_id: admin_chat_id ? admin_chat_id : null });
         console.log(payload);
         const resp = await fetch(BASE_PATH + `/api/config/${encodeURIComponent(name)}`, { method: "POST", body: payload });
         console.log(resp);
@@ -96,6 +97,17 @@
             tokenEl.value = "";
             adminChatIdEl.value = "";
             await reloadConfigs();
+        } else {
+            document.getElementById("newBotConfigStatus").innerHTML = await resp.text();
+        }
+    }
+
+    async function saveBotTokenToSecretStorage() {
+        const token = document.getElementById("bot_token").value;
+        const resp = await fetch(BASE_PATH + `/api/secrets/bot_token`, { method: "POST", body: token });
+        console.log(resp);
+        if (resp.ok) {
+            return;
         } else {
             document.getElementById("newBotConfigStatus").innerHTML = await resp.text();
         }
