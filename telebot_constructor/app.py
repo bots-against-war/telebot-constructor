@@ -42,6 +42,7 @@ class TelebotConstructorApp:
         self.secret_store = secret_store
         self.static_files_dir = static_files_dir_override or Path(__file__).parent / "static"
         self._runner: Optional[ConstructedBotRunner] = None
+        self.redis = redis
         logger.info(f"Will serve static frontend files from {self.static_files_dir.absolute()}")
 
         # user id -> {bot name -> config}
@@ -106,6 +107,7 @@ class TelebotConstructorApp:
                 bot_name=bot_name,
                 bot_config=bot_config,
                 secret_store=self.secret_store,
+                redis=self.redis,
             )
         except Exception as e:
             raise web.HTTPBadRequest(reason=str(e))
@@ -358,6 +360,7 @@ class TelebotConstructorApp:
                         bot_name=bot_name,
                         bot_config=bot_config,
                         secret_store=self.secret_store,
+                        redis=self.redis,
                     )
                     await self.runner.start(username=username, bot_name=bot_name, bot_runner=bot_runner)
                 except Exception:

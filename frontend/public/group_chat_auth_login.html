@@ -57,7 +57,7 @@
 
 <script>
     const BASE_PATH = "";  // TODO: make configurable with Vite build step / custom replacement script
-    console.log("Base path = " = BASE_PATH)
+    console.log(`Base path = ${BASE_PATH}`);
 
     async function requestAccessCode() {
         const resp = await fetch(BASE_PATH + "/group-chat-auth/request-confirmation-code",

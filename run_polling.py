@@ -3,9 +3,10 @@ import logging
 import os
 from pathlib import Path
 
+from cryptography.fernet import Fernet
 from telebot import AsyncTeleBot
 from telebot_components.redis_utils.emulation import RedisEmulation
-from telebot_components.utils.secrets import TomlFileSecretStore
+from telebot_components.utils.secrets import RedisSecretStore
 
 from telebot_constructor.app import TelebotConstructorApp
 from telebot_constructor.auth import GroupChatAuth
@@ -22,7 +23,8 @@ async def main() -> None:
             bot=AsyncTeleBot(token=os.environ["GROUP_CHAT_AUTH_BOT_TOKEN"]),
             auth_chat_id=int(os.environ["GROUP_CHAT_AUTH_CHAT_ID"]),
         ),
-        secret_store=TomlFileSecretStore(path=Path("secrets.toml")),
+        # secret_store=TomlFileSecretStore(path=Path("secrets.toml")),
+        secret_store=RedisSecretStore(redis, Fernet.generate_key().decode("utf-8"), 10, 100, True),
         static_files_dir_override=Path("frontend/public"),
     )
     await app.run_polling(port=8088)
