@@ -2,7 +2,7 @@
   const BASE_PATH = ""; // TODO: make configurable with Vite build step
   console.log(`Base path = ${BASE_PATH}`);
 
-  $: existingConfigs = [{ name: "foo", token: "bar" }];
+  let existingConfigs;
 
   async function reloadConfigs() {
     // const resp = await fetch(BASE_PATH + "/api/config");
@@ -34,6 +34,7 @@
       method: "DELETE",
     });
     const statusEl = document.getElementById(`${name}-status`);
+    statusEl.innerHTML = await resp.text();
     await reloadConfigs();
   }
 
@@ -102,43 +103,49 @@
         await resp.text();
     }
   }
+
+  const initReloadConfigPromise = reloadConfigs();
 </script>
 
-<div on:load={reloadConfigs}>
-  <h1>Telebot constructor</h1>
+{#await initReloadConfigPromise}
+  Loading...
+{:then _}
   <div>
-    <div id="container">
-      {#each existingConfigs as config, i}
-        <h3>{config.name}</h3>
-        <p>
-          Token: <code>{config.token}</code>
-        </p>
-        <button on:click={() => startBot(config.name)}>Start</button>
-        <button on:click={() => stopBot(config.name)}>Stop</button>
-        <button on:click={() => removeBotConfig(config.name)}>Delete</button>
-        <div id="{config.name}-status" />
-      {/each}
+    <h1>Telebot constructor</h1>
+    <div>
+      <div id="container">
+        {#each existingConfigs as config, i}
+          <h3>{config.name}</h3>
+          <p>
+            Token: <code>{config.token}</code>
+          </p>
+          <button on:click={() => startBot(config.name)}>Start</button>
+          <button on:click={() => stopBot(config.name)}>Stop</button>
+          <button on:click={() => removeBotConfig(config.name)}>Delete</button>
+          <div id="{config.name}-status" />
+        {/each}
+      </div>
+      <h3>Add bot</h3>
+      <form>
+        <label for="bot_name">Name</label><br />
+        <input type="text" id="bot_name" name="bot_name" /><br />
+        <label for="bot_token">Token</label><br />
+        <input type="text" id="bot_token" name="bot_token" /><br />
+      </form>
+
+      <h3>Feedback Handler</h3>
+      <label for="admin_chat_id">Admin chat ID</label><br />
+      <input type="text" id="admin_chat_id" name="admin_chat_id" /><br /><br />
+
+      <div class="button">
+        <button on:click={createNewConfig}>New bot</button>
+        <button on:click={reloadConfigs}>Reload config</button>
+      </div>
+
+      <p id="newBotConfigStatus" />
     </div>
-    <h3>Add bot</h3>
-    <form>
-      <label for="bot_name">Name</label><br />
-      <input type="text" id="bot_name" name="bot_name" /><br />
-      <label for="bot_token">Token</label><br />
-      <input type="text" id="bot_token" name="bot_token" /><br />
-    </form>
-
-    <h3>Feedback Handler</h3>
-    <label for="admin_chat_id">Admin chat ID</label><br />
-    <input type="text" id="admin_chat_id" name="admin_chat_id" /><br /><br />
-
-    <div class="button">
-      <button on:click={createNewConfig}>New bot</button>
-      <button on:click={reloadConfigs}>Reload config</button>
-    </div>
-
-    <p id="newBotConfigStatus" />
   </div>
-</div>
+{/await}
 
 <style>
   h1 {
