@@ -1,15 +1,13 @@
 import asyncio
 import logging
-import os
 from pathlib import Path
 
 from cryptography.fernet import Fernet
-from telebot import AsyncTeleBot
 from telebot_components.redis_utils.emulation import RedisEmulation
 from telebot_components.utils.secrets import RedisSecretStore
 
 from telebot_constructor.app import TelebotConstructorApp
-from telebot_constructor.auth import GroupChatAuth, NoAuth
+from telebot_constructor.auth import NoAuth
 
 logging.basicConfig(level=logging.INFO)
 
