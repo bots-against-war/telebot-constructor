@@ -1,6 +1,8 @@
 import asyncio
+import fnmatch
 import json
 import logging
+import mimetypes
 import re
 from pathlib import Path
 from typing import Optional
@@ -117,19 +119,6 @@ class TelebotConstructorApp:
     async def create_constructor_web_app(self) -> web.Application:
         app = web.Application()
         routes = web.RouteTableDef()
-
-        ##################################################################################
-        # static file routes
-
-        @routes.get("/")
-        async def index(request: web.Request) -> web.Response:
-            username = await self.auth.authenticate_request(request)
-            if username is None:
-                return await self.auth.unauthenticated_client_response(request, static_files_dir=self.static_files_dir)
-            return web.Response(
-                body=static_file_content(self.static_files_dir / "index.html"),
-                content_type="text/html",
-            )
 
         ##################################################################################
         # secrets C_UD
@@ -335,6 +324,37 @@ class TelebotConstructorApp:
             username = await self.authenticate(request)
             running_bots = await self.running_bots_store.all(username)
             return web.json_response(data=sorted(running_bots))
+
+        ##################################################################################
+        # static file routes
+
+        @routes.get("/")
+        async def index(request: web.Request) -> web.Response:
+            username = await self.auth.authenticate_request(request)
+            if username is None:
+                return await self.auth.unauthenticated_client_response(request, static_files_dir=self.static_files_dir)
+            return web.Response(
+                body=static_file_content(self.static_files_dir / "index.html"),
+                content_type="text/html",
+            )
+
+        STATIC_FILE_GLOBS = ["baw.svg", "assets/*"]
+
+        @routes.get("/{tail:.+}")
+        async def serve_static_file(request: web.Request) -> web.Response:
+            static_file_path = request.match_info.get("tail")
+            if static_file_path is None:
+                raise web.HTTPNotFound()
+            if any(fnmatch.fnmatch(static_file_path, glob) for glob in STATIC_FILE_GLOBS):
+                mime_type, _ = mimetypes.guess_type(static_file_path, strict=False)
+                return web.Response(
+                    body=static_file_content(self.static_files_dir / static_file_path),
+                    content_type=mime_type,
+                )
+            else:
+                raise web.HTTPNotFound()
+
+        ##################################################################################
 
         app.add_routes(routes)
         setup_swagger(app=app, swagger_url="/swagger")
