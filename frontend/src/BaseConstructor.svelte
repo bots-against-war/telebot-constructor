@@ -5,12 +5,8 @@
   let existingConfigs;
 
   async function reloadConfigs() {
-    // const resp = await fetch(BASE_PATH + "/api/config");
-    // const existingConfigs = JSON.parse(await resp.text());
-    existingConfigs = [
-      { name: "bottie", token: "tokeen" },
-      { name: "second", token: "sec tok" },
-    ];
+    const resp = await fetch(BASE_PATH + "/api/config");
+    existingConfigs = JSON.parse(await resp.text());
   }
 
   async function startBot(name: string) {
@@ -40,67 +36,46 @@
 
   async function createNewConfig() {
     const nameEl = document.getElementById("bot_name");
-    const tokenEl = document.getElementById("bot_token");
+    const tokenSecretNameEl = document.getElementById("bot_token_secret_name");
     const adminChatIdEl = document.getElementById("admin_chat_id");
+    const statusEl = document.getElementById("newBotConfigStatus");
 
-    const name = nameEl.innerText;
-    const token = tokenEl.innerText;
+    const name = nameEl.value; // @ts-ignore
+    const tokenSecretName = tokenSecretNameEl.value; // @ts-ignore
 
-    let feedback_handler_config = {};
+    const botConfig = {
+      token_secret_name: tokenSecretName,
+    };
+
     const admin_chat_id = adminChatIdEl.innerText;
     if (admin_chat_id) {
       if (isNaN(parseInt(admin_chat_id))) {
-        document.getElementById("newBotConfigStatus").innerHTML =
-          "Admin chat ID must be a number";
+        statusEl.innerHTML = "Admin chat ID must be a number";
         return;
       } else {
-        feedback_handler_config = { admin_chat_id: admin_chat_id };
+        botConfig.feedback_handler_config = { admin_chat_id: admin_chat_id }; // @ts-ignore
       }
     }
 
-    if (name.length === 0 || token.length === 0) {
-      document.getElementById(
-        "newBotConfigStatus"
-      ).innerHTML = `Form not completed. Name and token are required`;
+    if (name.length === 0 || tokenSecretName.length === 0) {
+      statusEl.innerHTML = `Form not completed. Name and token are required`;
       return;
     }
 
-    const token_secret_name = tokenEl.id;
-    const respToken = await fetch(
-      BASE_PATH + `/api/secrets/${token_secret_name}`,
-      { method: "POST", body: tokenEl.innerText }
-    );
-    if (!respToken.ok) {
-      document.getElementById("newBotConfigStatus").innerHTML =
-        await respToken.text();
-      return;
-    }
-
-    const isObjectEmpty = (objectName) => {
-      return Object.keys(objectName).length === 0;
-    };
-
-    const payload = JSON.stringify({
-      token_secret_name: token_secret_name,
-      feedback_handler_config: isObjectEmpty(feedback_handler_config)
-        ? undefined
-        : feedback_handler_config,
-    });
-    console.log(payload);
+    console.log(botConfig);
     const resp = await fetch(
       BASE_PATH + `/api/config/${encodeURIComponent(name)}`,
-      { method: "POST", body: payload }
+      { method: "POST", body: JSON.stringify(botConfig) }
     );
     console.log(resp);
 
     if (resp.ok) {
       nameEl.innerText = "";
-      tokenEl.innerText = "";
+      tokenSecretNameEl.innerText = "";
       adminChatIdEl.innerText = "";
       await reloadConfigs();
     } else {
-      document.getElementById("newBotConfigStatus").innerHTML =
-        await resp.text();
+      statusEl.innerHTML = await resp.text();
     }
   }
 
@@ -114,23 +89,27 @@
     <h1>Telebot constructor</h1>
     <div>
       <div id="container">
-        {#each existingConfigs as config, i}
-          <h3>{config.name}</h3>
+        {#each Object.entries(existingConfigs) as [configName, config], i}
+          <h3>{configName}</h3>
           <p>
-            Token: <code>{config.token}</code>
+            Token secret: <code>{config.token_secret_name}</code>
           </p>
-          <button on:click={() => startBot(config.name)}>Start</button>
-          <button on:click={() => stopBot(config.name)}>Stop</button>
-          <button on:click={() => removeBotConfig(config.name)}>Delete</button>
-          <div id="{config.name}-status" />
+          <button on:click={() => startBot(configName)}>Start</button>
+          <button on:click={() => stopBot(configName)}>Stop</button>
+          <button on:click={() => removeBotConfig(configName)}>Delete</button>
+          <div id="{configName}-status" />
         {/each}
       </div>
       <h3>Add bot</h3>
       <form>
         <label for="bot_name">Name</label><br />
         <input type="text" id="bot_name" name="bot_name" /><br />
-        <label for="bot_token">Token</label><br />
-        <input type="text" id="bot_token" name="bot_token" /><br />
+        <label for="bot_token_secret_name">Token secret name</label><br />
+        <input
+          type="text"
+          id="bot_token_secret_name"
+          name="bot_token_secret_name"
+        /><br />
       </form>
 
       <h3>Feedback Handler</h3>
