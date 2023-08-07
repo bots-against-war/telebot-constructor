@@ -16,12 +16,17 @@ from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.utils.secrets import SecretStore
 
 from telebot_constructor.bot_config import BotConfig
+from telebot_constructor.user_flow.types import UserFlowSetupContext
 
 logger = logging.getLogger(__name__)
 
 
 async def construct_bot(
-    username: str, bot_name: str, bot_config: BotConfig, secret_store: SecretStore, redis: RedisInterface
+    username: str,
+    bot_name: str,
+    bot_config: BotConfig,
+    secret_store: SecretStore,
+    redis: RedisInterface,
 ) -> BotRunner:
     """Core bot construction function responsible for turning a config into a functional bot"""
     log_prefix = f"[{username}][{bot_name}] "
@@ -50,8 +55,10 @@ async def construct_bot(
         await bot.reply_to(message, "hello world")
 
     # region Feedback
+
     feedback_config = bot_config.feedback_handler_config
     if feedback_config:
+        logger.info(log_prefix + "Setting up feedback handler")
         feedback_handler = FeedbackHandler(
             admin_chat_id=feedback_config.admin_chat_id,
             redis=redis,
@@ -86,9 +93,16 @@ async def construct_bot(
         )
         await feedback_handler.setup(bot)
         background_jobs.extend(feedback_handler.background_jobs(base_url=None, server_listening_future=None))
+
     # endregion
 
-    logging.basicConfig(level=logging.DEBUG)
+    if bot_config.user_flow is not None:
+        await bot_config.user_flow.setup(
+            context=UserFlowSetupContext(
+                bot=bot,
+                redis=redis,
+            )
+        )
 
     return BotRunner(
         bot_prefix=bot_prefix,
