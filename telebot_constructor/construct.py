@@ -95,9 +95,9 @@ async def construct_bot(
         background_jobs.extend(feedback_handler.background_jobs(base_url=None, server_listening_future=None))
 
     # endregion
-
-    if bot_config.user_flow is not None:
-        await bot_config.user_flow.setup(
+    if bot_config.user_flow_config is not None:
+        user_flow = bot_config.user_flow_config.to_user_flow()
+        await user_flow.setup(
             context=UserFlowSetupContext(
                 bot=bot,
                 redis=redis,
