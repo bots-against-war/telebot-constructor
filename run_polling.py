@@ -16,7 +16,7 @@ async def main() -> None:
     app = TelebotConstructorApp(
         redis=redis,
         auth=NoAuth(),
-        secret_store=TomlFileSecretStore("secrets.toml"),
+        secret_store=TomlFileSecretStore(Path("secrets.toml")),
         static_files_dir_override=Path("frontend/dist"),
     )
     await app.run_polling(port=8088)
