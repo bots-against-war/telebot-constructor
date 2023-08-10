@@ -4,7 +4,7 @@ Free & open-source Telegram bot constructor with no-code web UI, using as backen
 
 ## Development
 
-### Setup
+### Basic setup
 
 1. The project requires Poerty 1.5.1 (see [installation instruction](https://python-poetry.org/docs/master#installing-with-the-official-installer))).
 
@@ -22,8 +22,15 @@ Free & open-source Telegram bot constructor with no-code web UI, using as backen
      poetry config virtualenvs.in-project false --local
      ```
 
+3. Build frontend (requires `npm` & `node` `v16`+)
+   ```bash
+   cd frontend
+   npm install
+   npm run build
+   ```
+   Now you should see compiled frontend files in `frontend/dist`
 
-### Running in debug mode
+5. Run the app
 
 ```sh
 export TELEBOT_CONSTRUCTOR_DEBUG=1

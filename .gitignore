@@ -254,3 +254,4 @@ pip-selfcheck.json
 telebot_constructor/static
 env.sh
 .redis-emulation
+secrets.toml
