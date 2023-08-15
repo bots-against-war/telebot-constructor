@@ -1,5 +1,5 @@
 from datetime import timedelta
-from typing import Any, Optional
+from typing import Optional
 
 from pydantic import BaseModel, model_validator
 from telebot_components.constants import times
