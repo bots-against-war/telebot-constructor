@@ -30,5 +30,7 @@ jobs:
           poetry run black . --check &&
           poetry run mypy &&
           poetry run pflake8
-      # - name: Run unit tests
-      #   run: poetry run pytest tests -vv
+      - name: Run unit tests with coverage check
+        run: |
+          poetry run coverage run -m pytest tests -vv &&
+          poetry run coverage report
