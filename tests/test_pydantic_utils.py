@@ -1,7 +1,9 @@
+from typing import Optional
+
 import pytest
 from pydantic import ValidationError
+
 from telebot_constructor.pydantic_utils import ExactlyOneNonNullFieldModel
-from typing import Optional
 
 
 def test_exactly_one_non_null_field_model() -> None:
@@ -25,4 +27,3 @@ def test_exactly_one_non_null_field_model() -> None:
         Example(number=4, bar=111, baz=True)
     with pytest.raises(ValidationError):
         Example(number=4, foo="world", bar=111, baz=False)
-

@@ -1,4 +1,5 @@
 import logging
+from typing import Callable, Coroutine
 
 from telebot import AsyncTeleBot
 from telebot import types as tg
@@ -27,19 +28,20 @@ async def construct_bot(
     bot_config: BotConfig,
     secret_store: SecretStore,
     redis: RedisInterface,
+    _bot_factory: Callable[[str], AsyncTeleBot] = AsyncTeleBot,
 ) -> BotRunner:
     """Core bot construction function responsible for turning a config into a functional bot"""
     log_prefix = f"[{username}][{bot_name}] "
     bot_prefix = f"{username}-{bot_name}"
-    background_jobs = []
+    background_jobs: list[Coroutine[None, None, None]] = []
 
     logger.info(log_prefix + "Constructing bot")
 
-    token = await secret_store.get_secret(secret_name=bot_config.token_secret_name, owner_id=username)  # type: ignore
+    token = await secret_store.get_secret(secret_name=bot_config.token_secret_name, owner_id=username)
     if token is None:
-        raise ValueError(f"Token name {bot_config.token_secret_name} does not correspond to a valid secret")
+        raise ValueError(f"Token name {bot_config.token_secret_name!r} does not correspond to a valid secret")
     logger.info(log_prefix + "Loaded token from the secret store")
-    bot = AsyncTeleBot(token=token)
+    bot = _bot_factory(token)
 
     try:
         bot_user = await bot.get_me()

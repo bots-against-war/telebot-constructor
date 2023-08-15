@@ -138,7 +138,7 @@ class TelebotConstructorApp:
             result = await self.secret_store.save_secret(
                 secret_name=secret_name,
                 secret_value=secret_value,
-                owner_id=username,  # type: ignore
+                owner_id=username,
                 allow_update=True,
             )
             return web.Response(text=result.message, status=200 if result.is_saved else 400)
@@ -156,7 +156,7 @@ class TelebotConstructorApp:
             secret_name = self.parse_secret_name(request)
             if await self.secret_store.remove_secret(
                 secret_name=secret_name,
-                owner_id=username,  # type: ignore
+                owner_id=username,
             ):
                 return web.Response(text="Removed", status=200)
             else:
@@ -174,7 +174,7 @@ class TelebotConstructorApp:
                     description: List of string secret names
             """
             username = await self.authenticate(request)
-            secret_names = await self.secret_store.list_secrets(owner_id=username)  # type: ignore
+            secret_names = await self.secret_store.list_secrets(owner_id=username)
             return web.json_response(data=secret_names)
 
         ##################################################################################

@@ -1,5 +1,6 @@
+from typing import Union, get_args, get_origin
+
 from pydantic import BaseModel, model_validator
-from typing import get_args, get_origin, Union
 
 
 class ExactlyOneNonNullFieldModel(BaseModel):
@@ -23,3 +24,4 @@ class ExactlyOneNonNullFieldModel(BaseModel):
                 f"Exacly one optional field (of {sorted(optional_field_names)}) must be set to non-null value, "
                 + f"but {len(non_null_optional_fields)} actually are: {sorted(non_null_optional_fields)}"
             )
+        return self

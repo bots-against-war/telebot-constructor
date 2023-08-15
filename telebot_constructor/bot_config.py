@@ -1,15 +1,15 @@
 from datetime import timedelta
 from typing import Optional
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel
 from telebot_components.constants import times
 
+from telebot_constructor.pydantic_utils import ExactlyOneNonNullFieldModel
 from telebot_constructor.user_flow import UserFlow
-from telebot_constructor.user_flow.entrypoints.command import CommandEntryPoint
-from telebot_constructor.user_flow.entrypoints.base import UserFlowEntryPoint
 from telebot_constructor.user_flow.blocks.base import UserFlowBlock
 from telebot_constructor.user_flow.blocks.message import MessageBlock
-from telebot_constructor.pydantic_utils import ExactlyOneNonNullFieldModel
+from telebot_constructor.user_flow.entrypoints.base import UserFlowEntryPoint
+from telebot_constructor.user_flow.entrypoints.command import CommandEntryPoint
 
 
 class UserFlowEntryPointConfig(ExactlyOneNonNullFieldModel):
