@@ -1,7 +1,7 @@
 from datetime import timedelta
-from typing import Optional
+from typing import Any, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 from telebot_components.constants import times
 
 from telebot_constructor.pydantic_utils import ExactlyOneNonNullFieldModel
@@ -31,6 +31,11 @@ class UserFlowBlockConfig(ExactlyOneNonNullFieldModel):
 class UserFlowConfig(BaseModel):
     entrypoints: list[UserFlowEntryPointConfig]
     blocks: list[UserFlowBlockConfig]
+
+    @model_validator(mode="after")
+    def config_convertible_to_user_flow(self) -> "UserFlowConfig":
+        self.to_user_flow()
+        return self
 
     def to_user_flow(self) -> UserFlow:
         return UserFlow(

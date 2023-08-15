@@ -17,12 +17,12 @@ class UserFlow:
     blocks: List[UserFlowBlock]
 
     def __post_init__(self) -> None:
-        self.block_by_id = {block.block_id: block for block in self.blocks}
-
         block_id_counter = collections.Counter(b.block_id for b in self.blocks)
         duplicate_block_ids = sorted(bid for bid, count in block_id_counter.items() if count > 1)
         if duplicate_block_ids:
             raise ValueError(f"Duplicate block ids detected: {duplicate_block_ids}")
+
+        self.block_by_id = {block.block_id: block for block in self.blocks}
 
     async def _enter_block(self, id: UserFlowBlockId, context: UserFlowContext) -> None:
         block = self.block_by_id.get(id)

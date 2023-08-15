@@ -1,3 +1,4 @@
+import pytest
 from telebot.test_util import MockedAsyncTeleBot
 from telebot_components.redis_utils.emulation import RedisEmulation
 
@@ -15,6 +16,17 @@ from tests.utils import (
     dummy_secret_store,
     tg_update_message_to_bot,
 )
+
+
+def test_user_flow_config_model_validation() -> None:
+    with pytest.raises(ValueError, match=r".*?Duplicate block ids detected: \['1'\]"):
+        UserFlowConfig(
+            entrypoints=[],
+            blocks=[
+                UserFlowBlockConfig(message=MessageBlock(block_id="1", message_text="one", next_block_id=None)),
+                UserFlowBlockConfig(message=MessageBlock(block_id="1", message_text="also one", next_block_id=None)),
+            ],
+        )
 
 
 async def test_simple_user_flow() -> None:
