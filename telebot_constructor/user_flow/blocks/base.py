@@ -1,5 +1,4 @@
 import abc
-from dataclasses import dataclass
 
 from pydantic import BaseModel
 
@@ -11,7 +10,6 @@ from telebot_constructor.user_flow.types import (
 )
 
 
-@dataclass
 class UserFlowBlock(BaseModel, abc.ABC):
     """Single block in the user flow representing a particular state of user-bot interaction"""
 

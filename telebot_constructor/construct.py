@@ -14,6 +14,7 @@ from telebot_components.feedback import (
     UserAnonymization,
 )
 from telebot_components.redis_utils.interface import RedisInterface
+from telebot_components.stores.generic import GenericStore
 from telebot_components.utils.secrets import SecretStore
 
 from telebot_constructor.bot_config import BotConfig
@@ -105,6 +106,10 @@ async def construct_bot(
                 redis=redis,
             )
         )
+
+    # HACK: this allows creating multiple bots with the same prefix, which is needed for hot reloading;
+    # but this removes a failsafe mechanism and can cause problems with multiple competing bot instances
+    GenericStore.allow_duplicate_stores(prefix=bot_prefix)
 
     return BotRunner(
         bot_prefix=bot_prefix,

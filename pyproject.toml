@@ -49,9 +49,6 @@ profile = 'black'
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
-markers = [
-    'integration: requires a real bot to run',
-]
 
 [tool.mypy]
 incremental = false
@@ -68,4 +65,16 @@ extend-ignore = [
 omit = ['tests/**',]
 skip_covered = true
 show_missing = true
-
+fail_under = 95
+exclude_lines = [
+    # re-enable the standard pragma
+    'pragma: no cover',
+    # non-runnable code
+    'if __name__ == .__main__.:',
+    # abstract methods aren't run:
+    '@(abc\.)?abstractmethod',
+    # ellipsis is used in abstract method bodies
+    '\.\.\.',
+    # stub methods
+    'raise NotImplementedError()',
+]

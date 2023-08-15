@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from typing import Optional
 
 from telebot import types as tg
@@ -12,7 +11,6 @@ from telebot_constructor.user_flow.types import (
 )
 
 
-@dataclass
 class MessageBlock(UserFlowBlock):
     """Simplest user flow block: send message and immediately continue to the next block"""
 

@@ -1,7 +1,6 @@
 import collections
-from typing import Any, List
-
-from pydantic import BaseModel
+from dataclasses import dataclass
+from typing import List
 
 from telebot_constructor.user_flow.blocks.base import UserFlowBlock
 from telebot_constructor.user_flow.entrypoints.base import UserFlowEntryPoint
@@ -12,11 +11,12 @@ from telebot_constructor.user_flow.types import (
 )
 
 
-class UserFlow(BaseModel):
+@dataclass
+class UserFlow:
     entrypoints: List[UserFlowEntryPoint]
     blocks: List[UserFlowBlock]
 
-    def model_post_init(self, __context: Any) -> None:
+    def __post_init__(self) -> None:
         self.block_by_id = {block.block_id: block for block in self.blocks}
 
         block_id_counter = collections.Counter(b.block_id for b in self.blocks)

@@ -10,7 +10,7 @@ from telebot_constructor.user_flow.types import (
 
 
 class CommandEntryPoint(UserFlowEntryPoint):
-    command: str  # without leading slash, e.g. "start"
+    command: str  # without leading slash, e.g. "start" instead of "/start"
     start_block_id: UserFlowBlockId
 
     async def setup(self, context: UserFlowSetupContext, enter_block: EnterUserFlowBlockCallback) -> None:
