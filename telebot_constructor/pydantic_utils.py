@@ -8,8 +8,8 @@ class ExactlyOneNonNullFieldModel(BaseModel):
     If a subclass model has several Optional[...] fields, exactly one of them must contain the actual value,
     and others be None.
 
-    Useful for serializing a union of different types under one wrapper object, like how Telegram Bot API
-    handles multiple update types
+    Useful for modelling a union of different types under one wrapper object, like how Telegram Bot API
+    handles multiple possible kinds of Update (https://core.telegram.org/bots/api#getting-updates)
     """
 
     @model_validator(mode="after")
