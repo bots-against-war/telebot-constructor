@@ -1,1 +1,1 @@
-web: python run_polling.py
+web: poetry install && python run_polling.py
