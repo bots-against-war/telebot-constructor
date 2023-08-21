@@ -4,7 +4,7 @@ import json
 import sys
 from pathlib import Path
 
-import dictdiffer
+import dictdiffer  # type: ignore
 
 from telebot_constructor.bot_config import BotConfig
 
