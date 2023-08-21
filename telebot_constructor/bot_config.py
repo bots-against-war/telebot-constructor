@@ -56,5 +56,3 @@ class BotConfig(BaseModel):
     token_secret_name: str  # must correspond to a valid secret in secret store
     feedback_handler_config: Optional[FeedbackHandlerConfig] = None
     user_flow_config: Optional[UserFlowConfig] = None
-
-    foo: int = 1
