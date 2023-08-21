@@ -206,7 +206,8 @@ class TelebotConstructorApp:
                 raise web.HTTPBadRequest(reason=str(e))
             await self.bot_config_store.set_subkey(username, bot_name, bot_config)
 
-            await self.re_start_bot(username, bot_name, bot_config)
+            if bot_name in await self.running_bots_store.all(username):
+                await self.re_start_bot(username, bot_name, bot_config)
 
             if existing_bot_config is None:
                 return web.json_response(text=bot_config.model_dump_json(), status=201)

@@ -22,3 +22,9 @@ export async function toTrivialResult(resp: Response): Promise<Result<null, stri
   if (resp.ok) return ok(null);
   else return err(await resp.text());
 }
+
+export async function toDataResult<T>(resp: Response): Promise<Result<T, string>> {
+  const respText = await resp.text();
+  if (resp.ok) return ok(JSON.parse(respText));
+  else return err(respText);
+}
