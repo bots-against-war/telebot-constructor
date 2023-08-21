@@ -14,7 +14,8 @@ export function unwrap<T, E = string>(result: Result<T, E>): T {
   if (result.ok) {
     return result.data;
   } else {
-    throw new Error(result.error); // @ts-ignore
+    // @ts-ignore
+    throw new Error(result.error);
   }
 }
 
