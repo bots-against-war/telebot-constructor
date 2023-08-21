@@ -9,9 +9,10 @@ jobs:
     runs-on: ubuntu-latest
     name: Testing PR
     steps:
+      # setup
       - name: Checkout latest version
         uses: actions/checkout@v2
-      - name: Setup python
+      - name: Setup Python
         uses: actions/setup-python@v2
         with:
           python-version: 3.10
@@ -22,13 +23,12 @@ jobs:
           poetry-version: 1.5.1
       - name: Install backend dependencies
         run: poetry install
-      - name: Setup Node v18
+      - name: Setup NodeJS v18
         uses: actions/setup-node@v3
         with:
           node-version: 18
-      
-      # backend checks
 
+      # backend checks
       - name: Run linter and type checker tests
         run: poetry run isort . --check &&
           poetry run black . --check &&
@@ -40,11 +40,9 @@ jobs:
           poetry run coverage report
       - name: Validate that JSON schema is up-to-date
         run: poetry run python scripts/models/pydantic2jsonschema.py --check
-    
-      # frontend checks
 
+      # frontend checks
       - name: Run Svelte check
         run: npm run check
       - name: Validate that Typescript data model is up-to-date
         run: node scripts/models/jsonschema2ts.mjs --check
-    
