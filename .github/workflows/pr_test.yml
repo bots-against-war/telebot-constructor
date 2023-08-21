@@ -44,6 +44,8 @@ jobs:
         run: poetry run python scripts/models/pydantic2jsonschema.py --check
 
       # frontend checks
+      - name: Check Prettier formatting
+        run: npx prettier --check frontend
       - name: Run Svelte check
         run: npm run check
       - name: Validate that Typescript data model is up-to-date
