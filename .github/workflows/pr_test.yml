@@ -34,3 +34,5 @@ jobs:
         run: |
           poetry run coverage run -m pytest tests -vv &&
           poetry run coverage report
+      - name: Validate that JSON schema is up-to-date
+        run: poetry run python scripts/models/pydantic2jsonschema.py --check

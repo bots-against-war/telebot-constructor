@@ -1,0 +1,182 @@
+{
+  "$defs": {
+    "CommandEntryPoint": {
+      "properties": {
+        "command": {
+          "title": "Command",
+          "type": "string"
+        },
+        "start_block_id": {
+          "title": "Start Block Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "command",
+        "start_block_id"
+      ],
+      "title": "CommandEntryPoint",
+      "type": "object"
+    },
+    "FeedbackHandlerConfig": {
+      "properties": {
+        "admin_chat_id": {
+          "title": "Admin Chat Id",
+          "type": "integer"
+        },
+        "message_log_to_admin_chat": {
+          "default": true,
+          "title": "Message Log To Admin Chat",
+          "type": "boolean"
+        },
+        "force_category_selection": {
+          "default": false,
+          "title": "Force Category Selection",
+          "type": "boolean"
+        },
+        "hashtags_in_admin_chat": {
+          "default": true,
+          "title": "Hashtags In Admin Chat",
+          "type": "boolean"
+        },
+        "hashtag_message_rarer_than": {
+          "default": "PT300S",
+          "format": "duration",
+          "title": "Hashtag Message Rarer Than",
+          "type": "string"
+        }
+      },
+      "required": [
+        "admin_chat_id"
+      ],
+      "title": "FeedbackHandlerConfig",
+      "type": "object"
+    },
+    "MessageBlock": {
+      "description": "Simplest user flow block: send message and immediately continue to the next block",
+      "properties": {
+        "block_id": {
+          "title": "Block Id",
+          "type": "string"
+        },
+        "message_text": {
+          "title": "Message Text",
+          "type": "string"
+        },
+        "next_block_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Next Block Id"
+        }
+      },
+      "required": [
+        "block_id",
+        "message_text",
+        "next_block_id"
+      ],
+      "title": "MessageBlock",
+      "type": "object"
+    },
+    "UserFlowBlockConfig": {
+      "properties": {
+        "message": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MessageBlock"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "message"
+      ],
+      "title": "UserFlowBlockConfig",
+      "type": "object"
+    },
+    "UserFlowConfig": {
+      "properties": {
+        "entrypoints": {
+          "items": {
+            "$ref": "#/$defs/UserFlowEntryPointConfig"
+          },
+          "title": "Entrypoints",
+          "type": "array"
+        },
+        "blocks": {
+          "items": {
+            "$ref": "#/$defs/UserFlowBlockConfig"
+          },
+          "title": "Blocks",
+          "type": "array"
+        }
+      },
+      "required": [
+        "entrypoints",
+        "blocks"
+      ],
+      "title": "UserFlowConfig",
+      "type": "object"
+    },
+    "UserFlowEntryPointConfig": {
+      "properties": {
+        "command": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CommandEntryPoint"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "command"
+      ],
+      "title": "UserFlowEntryPointConfig",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "token_secret_name": {
+      "title": "Token Secret Name",
+      "type": "string"
+    },
+    "feedback_handler_config": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/FeedbackHandlerConfig"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "user_flow_config": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/UserFlowConfig"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "required": [
+    "token_secret_name"
+  ],
+  "title": "BotConfig",
+  "type": "object"
+}
