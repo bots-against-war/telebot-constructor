@@ -15,11 +15,8 @@ def print_cmd(cmd: list[str]) -> None:
 delimiter = "\n" + "=" * 30 + "\n"
 
 
-print("Determining version from git tag")
-git_tag_cmd = ["/usr/bin/git", "describe", "--tag"]
-print_cmd(git_tag_cmd)
-res = subprocess.run(git_tag_cmd, capture_output=True, check=True)
-version = res.stdout.decode("utf-8").strip()
+print("Determining version from GIT_TAG_NAME env var")
+version = os.environ["GIT_TAG_NAME"]
 print(f"Package version: {version}")
 
 
