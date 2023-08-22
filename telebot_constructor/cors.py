@@ -1,5 +1,6 @@
 import logging
-from aiohttp import web, hdrs
+
+from aiohttp import hdrs, web
 from aiohttp.typedefs import Handler
 
 logger = logging.getLogger(__name__)

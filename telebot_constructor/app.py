@@ -20,14 +20,13 @@ from telebot_constructor.auth import Auth
 from telebot_constructor.bot_config import BotConfig
 from telebot_constructor.build_time_config import BASE_PATH
 from telebot_constructor.construct import construct_bot
+from telebot_constructor.cors import setup_cors
 from telebot_constructor.runners import (
     ConstructedBotRunner,
     PollingConstructedBotRunner,
     WebhookAppConstructedBotRunner,
 )
 from telebot_constructor.static import static_file_content
-
-from telebot_constructor.cors import setup_cors
 
 logger = logging.getLogger(__name__)
 
