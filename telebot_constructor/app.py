@@ -20,6 +20,7 @@ from telebot_constructor.auth import Auth
 from telebot_constructor.bot_config import BotConfig
 from telebot_constructor.build_time_config import BASE_PATH
 from telebot_constructor.construct import construct_bot
+from telebot_constructor.cors import setup_cors
 from telebot_constructor.runners import (
     ConstructedBotRunner,
     PollingConstructedBotRunner,
@@ -138,7 +139,7 @@ class TelebotConstructorApp:
             result = await self.secret_store.save_secret(
                 secret_name=secret_name,
                 secret_value=secret_value,
-                owner_id=username,  # type: ignore
+                owner_id=username,
                 allow_update=True,
             )
             return web.Response(text=result.message, status=200 if result.is_saved else 400)
@@ -156,7 +157,7 @@ class TelebotConstructorApp:
             secret_name = self.parse_secret_name(request)
             if await self.secret_store.remove_secret(
                 secret_name=secret_name,
-                owner_id=username,  # type: ignore
+                owner_id=username,
             ):
                 return web.Response(text="Removed", status=200)
             else:
@@ -174,7 +175,7 @@ class TelebotConstructorApp:
                     description: List of string secret names
             """
             username = await self.authenticate(request)
-            secret_names = await self.secret_store.list_secrets(owner_id=username)  # type: ignore
+            secret_names = await self.secret_store.list_secrets(owner_id=username)
             return web.json_response(data=secret_names)
 
         ##################################################################################
@@ -206,7 +207,8 @@ class TelebotConstructorApp:
                 raise web.HTTPBadRequest(reason=str(e))
             await self.bot_config_store.set_subkey(username, bot_name, bot_config)
 
-            await self.re_start_bot(username, bot_name, bot_config)
+            if bot_name in await self.running_bots_store.all(username):
+                await self.re_start_bot(username, bot_name, bot_config)
 
             if existing_bot_config is None:
                 return web.json_response(text=bot_config.model_dump_json(), status=201)
@@ -359,6 +361,7 @@ class TelebotConstructorApp:
         app.add_routes(routes)
         setup_swagger(app=app, swagger_url="/swagger")
         await self.auth.setup_routes(app)
+        setup_cors(app)
         return app
 
     async def _start_stored_bots(self) -> None:

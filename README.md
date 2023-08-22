@@ -4,35 +4,42 @@ Free & open-source Telegram bot constructor with no-code web UI, using as backen
 
 ## Development
 
-### Basic setup
+### Dev setup
 
-1. The project requires Poerty 1.5.1 (see [installation instruction](https://python-poetry.org/docs/master#installing-with-the-official-installer))).
+1. The project uses Poerty 1.5.1 (see [installation instruction](https://python-poetry.org/docs/master#installing-with-the-official-installer)). Using it,
+   install Python package with the backend API code:
 
-2. Then, to install the library with all dependencies, run from project root
-   ```bash
-   poetry install
-   ```
-   - You might need to manually install dynamic versioning plugin (without it local build will
-     always have version `0.0.0`):
-     ```bash
-     poetry self add poetry-dynamic-versioning-plugin
-     ```
-   - To create virtualenv inside the project’s root directory, use command
-     ```bash
-     poetry config virtualenvs.in-project false --local
-     ```
+```bash
+poetry install
+```
 
-3. Build frontend (requires `npm` & `node` `v16`+)
-   ```bash
-   cd frontend
-   npm install
-   npm run build
-   ```
-   Now you should see compiled frontend files in `frontend/dist`
+<spoiler>
+  Poetry details
+  <details>
+    - You might need to manually install dynamic versioning plugin (without it local build will
+      always have version `0.0.0`):
+      ```bash
+      poetry self add poetry-dynamic-versioning-plugin
+      ```
+    - To create virtualenv inside the project’s root directory, use command
+    `bash
+    poetry config virtualenvs.in-project false --local
+    `
+  </details>
+</spoiler>
 
-5. Run the app
+2. Start backend/API application
 
 ```sh
 export TELEBOT_CONSTRUCTOR_DEBUG=1
 python run_polling.py
 ```
+
+2. Frontend uses `npm` v16+, use it to install the dependencies and run the dev server for frontend
+
+```bash
+npm install
+npm run dev
+```
+
+3. Visit `http://localhost:8081` in the browser.

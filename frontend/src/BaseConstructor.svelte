@@ -1,12 +1,15 @@
 <script lang="ts">
+  import { listBotConfigs } from "./api/botConfig";
+  import type { BotConfig } from "./api/types";
+  import { unwrap } from "./utils";
+
   const BASE_PATH = ""; // TODO: make configurable with Vite build step
   console.log(`Base path = ${BASE_PATH}`);
 
-  let existingConfigs;
+  let existingConfigs: { [key: string]: BotConfig };
 
   async function reloadConfigs() {
-    const resp = await fetch(BASE_PATH + "/api/config");
-    existingConfigs = JSON.parse(await resp.text());
+    existingConfigs = unwrap(await listBotConfigs());
   }
 
   async function startBot(name: string) {
@@ -40,10 +43,12 @@
     const adminChatIdEl = document.getElementById("admin_chat_id");
     const statusEl = document.getElementById("newBotConfigStatus");
 
-    const name = nameEl.value; // @ts-ignore
-    const tokenSecretName = tokenSecretNameEl.value; // @ts-ignore
+    // @ts-ignore
+    const name = nameEl.value;
+    // @ts-ignore
+    const tokenSecretName = tokenSecretNameEl.value;
 
-    const botConfig = {
+    const botConfig: BotConfig = {
       token_secret_name: tokenSecretName,
     };
 
@@ -53,7 +58,7 @@
         statusEl.innerHTML = "Admin chat ID must be a number";
         return;
       } else {
-        botConfig.feedback_handler_config = { admin_chat_id: admin_chat_id }; // @ts-ignore
+        botConfig.feedback_handler_config = { admin_chat_id: parseInt(admin_chat_id) };
       }
     }
 
@@ -63,10 +68,10 @@
     }
 
     console.log(botConfig);
-    const resp = await fetch(
-      BASE_PATH + `/api/config/${encodeURIComponent(name)}`,
-      { method: "POST", body: JSON.stringify(botConfig) }
-    );
+    const resp = await fetch(BASE_PATH + `/api/config/${encodeURIComponent(name)}`, {
+      method: "POST",
+      body: JSON.stringify(botConfig),
+    });
     console.log(resp);
 
     if (resp.ok) {
@@ -105,11 +110,7 @@
         <label for="bot_name">Name</label><br />
         <input type="text" id="bot_name" name="bot_name" /><br />
         <label for="bot_token_secret_name">Token secret name</label><br />
-        <input
-          type="text"
-          id="bot_token_secret_name"
-          name="bot_token_secret_name"
-        /><br />
+        <input type="text" id="bot_token_secret_name" name="bot_token_secret_name" /><br />
       </form>
 
       <h3>Feedback Handler</h3>
@@ -131,8 +132,6 @@
     transition: color 0.2s;
   }
   button {
-    aspect-ratio: 1;
-    border-radius: 50%;
     background: var(--color, #fff);
     transform: translate(-2px, -2px);
     filter: drop-shadow(2px 2px 3px rgba(0, 0, 0, 0.2));

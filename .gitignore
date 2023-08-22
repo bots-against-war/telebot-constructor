@@ -26,7 +26,6 @@
 # Icon must end with two \r
 Icon
 
-
 # Thumbnails
 ._*
 
@@ -230,7 +229,6 @@ pyrightconfig.json
 [Ll]ib
 [Ll]ib64
 [Ll]ocal
-[Ss]cripts
 pyvenv.cfg
 pip-selfcheck.json
 
@@ -255,3 +253,4 @@ telebot_constructor/static
 env.sh
 .redis-emulation
 secrets.toml
+node_modules
