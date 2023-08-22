@@ -4,6 +4,10 @@ on:
   release:
     types: [published]
 
+  # adds ability to trigger workflow manually
+  # see https://docs.github.com/en/actions/using-workflows/manually-running-a-workflow#configuring-a-workflow-to-run-manually
+  workflow_dispatch: {}  
+
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -25,10 +29,8 @@ jobs:
           poetry-version: 1.5.1
       - name: Install dynamic versioning plugin
         run: poetry self add "poetry-dynamic-versioning[plugin]"
-      - name: Build frontend static files
-        run: ./build_frontend.sh
       - name: Build package
-        run: poetry build
+        run: python build_package.py
       - name: Publish package
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
