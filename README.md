@@ -24,7 +24,6 @@ Free & open-source Telegram bot constructor with no-code web UI, using as backen
 
 3. Build frontend (requires `npm` & `node` `v16`+)
    ```bash
-   cd frontend
    npm install
    npm run build
    ```

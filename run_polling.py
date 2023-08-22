@@ -2,7 +2,7 @@ import asyncio
 import logging
 from pathlib import Path
 
-from telebot_components.redis_utils.emulation import RedisEmulation
+from telebot_components.redis_utils.emulation import PersistentRedisEmulation
 from telebot_components.utils.secrets import TomlFileSecretStore
 
 from telebot_constructor.app import TelebotConstructorApp
@@ -12,7 +12,7 @@ logging.basicConfig(level=logging.INFO)
 
 
 async def main() -> None:
-    redis = RedisEmulation()
+    redis = PersistentRedisEmulation()  # type: ignore
     app = TelebotConstructorApp(
         redis=redis,
         auth=NoAuth(),

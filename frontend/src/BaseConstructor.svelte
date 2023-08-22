@@ -132,8 +132,6 @@
     transition: color 0.2s;
   }
   button {
-    aspect-ratio: 1;
-    border-radius: 50%;
     background: var(--color, #fff);
     transform: translate(-2px, -2px);
     filter: drop-shadow(2px 2px 3px rgba(0, 0, 0, 0.2));

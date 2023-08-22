@@ -41,7 +41,7 @@ async def construct_bot(
     token = await secret_store.get_secret(secret_name=bot_config.token_secret_name, owner_id=username)
     if token is None:
         raise ValueError(f"Token name {bot_config.token_secret_name!r} does not correspond to a valid secret")
-    logger.info(log_prefix + "Loaded token from the secret store")
+    logger.info(log_prefix + f"Loaded token from the secret store, secret {bot_config.token_secret_name!r}")
     bot = _bot_factory(token)
 
     try:
