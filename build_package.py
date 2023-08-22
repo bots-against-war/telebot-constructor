@@ -1,7 +1,3 @@
-"""
-Script to build package and upload it to PyPI.
-"""
-
 import atexit
 import os
 import shutil
