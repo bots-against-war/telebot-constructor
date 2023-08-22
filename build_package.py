@@ -50,7 +50,7 @@ print(delimiter)
 print("Building final package")
 poetry_cmd = ["poetry", "build"]
 print_cmd(poetry_cmd)
-subprocess.run(poetry_cmd)
+subprocess.run(poetry_cmd, check=True)
 
 
 print(delimiter)
