@@ -11,6 +11,7 @@
     "format": "prettier --write --plugin prettier-plugin-svelte frontend"
   },
   "devDependencies": {
+    "@rollup/plugin-replace": "^5.0.2",
     "@sveltejs/vite-plugin-svelte": "^2.4.2",
     "@tsconfig/svelte": "^5.0.0",
     "json-schema-to-typescript": "^13.0.2",
