@@ -1,2 +1,2 @@
-# TODO: make configurable on build step with custom static code rewrite
+# rewritten during package build, see build_package.py script
 BASE_PATH = ""
