@@ -16,10 +16,8 @@ delimiter = "\n" + "=" * 30 + "\n"
 
 
 print("Determining version from GIT_TAG_NAME env var")
-import pprint
-pprint.pprint(os.environ)
-version = os.environ["GIT_TAG_NAME"]
-print(f"Package version: {version}")
+version = os.environ.get("GIT_TAG_NAME", "development")
+print(f"Package version: {version!r}")
 
 
 print(delimiter)
