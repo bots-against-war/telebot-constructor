@@ -1,3 +1,4 @@
+import os
 import asyncio
 import logging
 from pathlib import Path
@@ -19,7 +20,7 @@ async def main() -> None:
         secret_store=TomlFileSecretStore(Path("secrets.toml")),
         static_files_dir_override=Path("frontend/dist"),
     )
-    await app.run_polling(port=8088)
+    await app.run_polling(port=os.environ.get("PORT", 8088))
 
 
 if __name__ == "__main__":
