@@ -3,7 +3,10 @@ name: Build and publish package to PyPI
 on:
   release:
     types: [published]
-  workflow_dispatch: {}
+
+  # adds ability to trigger workflow manually
+  # see https://docs.github.com/en/actions/using-workflows/manually-running-a-workflow#configuring-a-workflow-to-run-manually
+  workflow_dispatch: {}  
 
 jobs:
   publish:
