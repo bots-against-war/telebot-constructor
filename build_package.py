@@ -16,7 +16,7 @@ delimiter = "\n" + "=" * 30 + "\n"
 
 
 print("Determining version from git tag")
-git_tag_cmd = ["git", "describe", "--tag"]
+git_tag_cmd = ["/usr/bin/git", "describe", "--tag"]
 print_cmd(git_tag_cmd)
 res = subprocess.run(git_tag_cmd, capture_output=True, check=True)
 version = res.stdout.decode("utf-8").strip()
