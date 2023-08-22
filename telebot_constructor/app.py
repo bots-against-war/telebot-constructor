@@ -27,6 +27,8 @@ from telebot_constructor.runners import (
 )
 from telebot_constructor.static import static_file_content
 
+from telebot_constructor.cors import setup_cors
+
 logger = logging.getLogger(__name__)
 
 
@@ -360,6 +362,7 @@ class TelebotConstructorApp:
         app.add_routes(routes)
         setup_swagger(app=app, swagger_url="/swagger")
         await self.auth.setup_routes(app)
+        setup_cors(app)
         return app
 
     async def _start_stored_bots(self) -> None:
