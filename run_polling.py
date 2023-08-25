@@ -25,7 +25,7 @@ async def main() -> None:
     )
     try:
         # await app.run_polling(port=int(PORT))
-        await app.run_polling(port=int(os.environ.get("PORT", 8088)))
+        await app.run_polling(port=int(PORT))
     finally:
         logging.info("====== ☄️  Server is going down ☄️  ======")
         await cleanup_redis()
