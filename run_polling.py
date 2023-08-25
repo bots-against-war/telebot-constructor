@@ -22,13 +22,7 @@ async def main() -> None:
         secret_store=secret_store,
         static_files_dir_override=Path("frontend/dist"),
     )
-    try:
-        # await app.run_polling(port=int(PORT))
-        await app.run_polling(port=os.environ.get("PORT", 8088))
-    finally:
-        logging.info("====== ☄️  Server is going down ☄️  ======")
-        await cleanup_redis()
-        logging.info("Bye...")
+    await app.run_polling(port=int(os.environ.get("PORT", 8088)))
 
 
 if __name__ == "__main__":
