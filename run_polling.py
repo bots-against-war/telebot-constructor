@@ -6,7 +6,6 @@ from pathlib import Path
 from telebot_components.redis_utils.emulation import PersistentRedisEmulation
 from telebot_components.utils.secrets import TomlFileSecretStore
 
-from config import PORT
 from global_redis import GLOBAL_REDIS, cleanup_redis
 from secret_store import secret_store
 from telebot_constructor.app import TelebotConstructorApp
@@ -25,7 +24,7 @@ async def main() -> None:
     )
     try:
         # await app.run_polling(port=int(PORT))
-        await app.run_polling(port=int(PORT))
+        await app.run_polling(port=os.environ.get("PORT", 8088))
     finally:
         logging.info("====== ☄️  Server is going down ☄️  ======")
         await cleanup_redis()
