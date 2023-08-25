@@ -24,7 +24,8 @@ async def main() -> None:
         static_files_dir_override=Path("frontend/dist"),
     )
     try:
-        await app.run_polling(port=int(PORT))
+        # await app.run_polling(port=int(PORT))
+        await app.run_polling(port=int(os.environ.get("PORT", 8088)))
     finally:
         logging.info("====== ☄️  Server is going down ☄️  ======")
         await cleanup_redis()
