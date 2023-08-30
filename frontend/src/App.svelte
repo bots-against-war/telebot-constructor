@@ -5,7 +5,15 @@
   import MessageBlockNode from "./studio/nodes/MessageBlockNode.svelte";
 
   const exampleConfig: UserFlowConfig = {
-    entrypoints: [{ command: { command: "start", next_block_id: "message-1" } }],
+    entrypoints: [
+      {
+        command: {
+          entrypoint_id: "command-1",
+          command: "start",
+          next_block_id: "message-1",
+        },
+      },
+    ],
     blocks: [
       {
         message: {
