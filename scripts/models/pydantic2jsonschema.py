@@ -19,7 +19,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    current_schema = BotConfig.model_json_schema()
+    current_schema = BotConfig.model_json_schema(mode="serialization")
 
     if not args.check:
         args.jsonschema_path.write_text(json.dumps(current_schema, ensure_ascii=False, indent=2))

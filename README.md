@@ -49,6 +49,5 @@ npm run dev
 Run from project root
 
 ```bash
-python scripts/models/pydantic2jsonschema.py
-node scripts/models/jsonschema2ts.mjs 
+python scripts/models/pydantic2jsonschema.py && node scripts/models/jsonschema2ts.mjs 
 ```

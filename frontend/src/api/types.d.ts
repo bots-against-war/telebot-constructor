@@ -19,24 +19,27 @@ export type BlockId = string;
 export type MessageText = string;
 export type NextBlockId1 = string | null;
 export type Blocks = UserFlowBlockConfig[];
+export type X = number;
+export type Y = number;
 
 export interface BotConfig {
   token_secret_name: TokenSecretName;
-  feedback_handler_config?: FeedbackHandlerConfig | null;
-  user_flow_config?: UserFlowConfig | null;
+  feedback_handler_config: FeedbackHandlerConfig | null;
+  user_flow_config: UserFlowConfig | null;
   [k: string]: unknown;
 }
 export interface FeedbackHandlerConfig {
   admin_chat_id: AdminChatId;
-  message_log_to_admin_chat?: MessageLogToAdminChat;
-  force_category_selection?: ForceCategorySelection;
-  hashtags_in_admin_chat?: HashtagsInAdminChat;
-  hashtag_message_rarer_than?: HashtagMessageRarerThan;
+  message_log_to_admin_chat: MessageLogToAdminChat;
+  force_category_selection: ForceCategorySelection;
+  hashtags_in_admin_chat: HashtagsInAdminChat;
+  hashtag_message_rarer_than: HashtagMessageRarerThan;
   [k: string]: unknown;
 }
 export interface UserFlowConfig {
   entrypoints: Entrypoints;
   blocks: Blocks;
+  node_display_coords: NodeDisplayCoords;
   [k: string]: unknown;
 }
 export interface UserFlowEntryPointConfig {
@@ -60,5 +63,13 @@ export interface MessageBlock {
   block_id: BlockId;
   message_text: MessageText;
   next_block_id: NextBlockId1;
+  [k: string]: unknown;
+}
+export interface NodeDisplayCoords {
+  [k: string]: UserFlowNodePosition;
+}
+export interface UserFlowNodePosition {
+  x: X;
+  y: Y;
   [k: string]: unknown;
 }

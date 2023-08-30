@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 import replace from "@rollup/plugin-replace";
+import resolve from "@rollup/plugin-node-resolve";
 
 const optionalReplacements: { [key: string]: string } = {};
 
@@ -22,6 +23,10 @@ if (apiOriginOverride) {
 export default defineConfig({
   plugins: [
     svelte(),
+    resolve({
+      // see https://github.com/flekschas/svelte-simple-modal readme
+      dedupe: ["svelte", "svelte/transition", "svelte/internal"],
+    }),
     replace({
       values: {
         __buildTimeReplacedVersion: JSON.stringify(version),

@@ -52,7 +52,11 @@
         }
       },
       "required": [
-        "admin_chat_id"
+        "admin_chat_id",
+        "message_log_to_admin_chat",
+        "force_category_selection",
+        "hashtags_in_admin_chat",
+        "hashtag_message_rarer_than"
       ],
       "title": "FeedbackHandlerConfig",
       "type": "object"
@@ -122,11 +126,19 @@
           },
           "title": "Blocks",
           "type": "array"
+        },
+        "node_display_coords": {
+          "additionalProperties": {
+            "$ref": "#/$defs/UserFlowNodePosition"
+          },
+          "title": "Node Display Coords",
+          "type": "object"
         }
       },
       "required": [
         "entrypoints",
-        "blocks"
+        "blocks",
+        "node_display_coords"
       ],
       "title": "UserFlowConfig",
       "type": "object"
@@ -148,6 +160,24 @@
         "command"
       ],
       "title": "UserFlowEntryPointConfig",
+      "type": "object"
+    },
+    "UserFlowNodePosition": {
+      "properties": {
+        "x": {
+          "title": "X",
+          "type": "number"
+        },
+        "y": {
+          "title": "Y",
+          "type": "number"
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ],
+      "title": "UserFlowNodePosition",
       "type": "object"
     }
   },
@@ -180,7 +210,9 @@
     }
   },
   "required": [
-    "token_secret_name"
+    "token_secret_name",
+    "feedback_handler_config",
+    "user_flow_config"
   ],
   "title": "BotConfig",
   "type": "object"
