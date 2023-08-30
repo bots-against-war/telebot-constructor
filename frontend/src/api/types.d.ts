@@ -11,12 +11,13 @@ export type MessageLogToAdminChat = boolean;
 export type ForceCategorySelection = boolean;
 export type HashtagsInAdminChat = boolean;
 export type HashtagMessageRarerThan = string;
+export type EntrypointId = string;
 export type Command = string;
-export type StartBlockId = string;
+export type NextBlockId = string;
 export type Entrypoints = UserFlowEntryPointConfig[];
 export type BlockId = string;
 export type MessageText = string;
-export type NextBlockId = string | null;
+export type NextBlockId1 = string | null;
 export type Blocks = UserFlowBlockConfig[];
 
 export interface BotConfig {
@@ -43,8 +44,9 @@ export interface UserFlowEntryPointConfig {
   [k: string]: unknown;
 }
 export interface CommandEntryPoint {
+  entrypoint_id: EntrypointId;
   command: Command;
-  start_block_id: StartBlockId;
+  next_block_id: NextBlockId;
   [k: string]: unknown;
 }
 export interface UserFlowBlockConfig {
@@ -57,6 +59,6 @@ export interface UserFlowBlockConfig {
 export interface MessageBlock {
   block_id: BlockId;
   message_text: MessageText;
-  next_block_id: NextBlockId;
+  next_block_id: NextBlockId1;
   [k: string]: unknown;
 }

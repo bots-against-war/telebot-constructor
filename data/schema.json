@@ -2,16 +2,24 @@
   "$defs": {
     "CommandEntryPoint": {
       "properties": {
+        "entrypoint_id": {
+          "title": "Entrypoint Id",
+          "type": "string"
+        },
         "command": {
           "title": "Command",
           "type": "string"
         },
-        "start_block_id": {
-          "title": "Start Block Id",
+        "next_block_id": {
+          "title": "Next Block Id",
           "type": "string"
         }
       },
-      "required": ["command", "start_block_id"],
+      "required": [
+        "entrypoint_id",
+        "command",
+        "next_block_id"
+      ],
       "title": "CommandEntryPoint",
       "type": "object"
     },
@@ -43,7 +51,9 @@
           "type": "string"
         }
       },
-      "required": ["admin_chat_id"],
+      "required": [
+        "admin_chat_id"
+      ],
       "title": "FeedbackHandlerConfig",
       "type": "object"
     },
@@ -70,7 +80,11 @@
           "title": "Next Block Id"
         }
       },
-      "required": ["block_id", "message_text", "next_block_id"],
+      "required": [
+        "block_id",
+        "message_text",
+        "next_block_id"
+      ],
       "title": "MessageBlock",
       "type": "object"
     },
@@ -87,7 +101,9 @@
           ]
         }
       },
-      "required": ["message"],
+      "required": [
+        "message"
+      ],
       "title": "UserFlowBlockConfig",
       "type": "object"
     },
@@ -108,7 +124,10 @@
           "type": "array"
         }
       },
-      "required": ["entrypoints", "blocks"],
+      "required": [
+        "entrypoints",
+        "blocks"
+      ],
       "title": "UserFlowConfig",
       "type": "object"
     },
@@ -125,7 +144,9 @@
           ]
         }
       },
-      "required": ["command"],
+      "required": [
+        "command"
+      ],
       "title": "UserFlowEntryPointConfig",
       "type": "object"
     }
@@ -158,7 +179,9 @@
       "default": null
     }
   },
-  "required": ["token_secret_name"],
+  "required": [
+    "token_secret_name"
+  ],
   "title": "BotConfig",
   "type": "object"
 }

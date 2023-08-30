@@ -36,8 +36,9 @@ async def test_simple_user_flow() -> None:
             entrypoints=[
                 UserFlowEntryPointConfig(
                     command=CommandEntryPoint(
+                        entrypoint_id="command-1",
                         command="hello",
-                        start_block_id="message-1",
+                        next_block_id="message-1",
                     ),
                 )
             ],

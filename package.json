@@ -28,5 +28,8 @@
     "plugins": [
       "prettier-plugin-svelte"
     ]
+  },
+  "dependencies": {
+    "svelvet": "^8.1.0"
   }
 }

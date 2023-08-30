@@ -1,25 +1,43 @@
 <script lang="ts">
-  import bawLogo from "/baw.svg";
-  import BaseConstructor from "./BaseConstructor.svelte";
+  import { Node, Svelvet } from "svelvet";
+  import CommandEntryPointNode from "./studio/nodes/CommandEntryPointNode.svelte";
+  import type { UserFlowConfig } from "./api/types";
+  import MessageBlockNode from "./studio/nodes/MessageBlockNode.svelte";
+
+  const exampleConfig: UserFlowConfig = {
+    entrypoints: [{ command: { command: "start", next_block_id: "message-1" } }],
+    blocks: [
+      {
+        message: {
+          block_id: "message-1",
+          message_text: "hello world",
+          next_block_id: "message-2",
+        },
+      },
+    ],
+  };
 </script>
 
 <main>
-  <div>
-    <img src={bawLogo} class="logo" alt="BAW Logo" />
-  </div>
-  <div class="constructor">
-    <BaseConstructor />
+  <div class="svelvet-container">
+    <Svelvet id="my-canvas" TD controls on:connection={(e) => console.log(e)}>
+      {#each exampleConfig.entrypoints as entrypoint}
+        {#if entrypoint.command !== null}
+          <CommandEntryPointNode bind:config={entrypoint.command} />
+        {/if}
+      {/each}
+      {#each exampleConfig.blocks as block}
+        {#if block.message !== null}
+          <MessageBlockNode bind:config={block.message} />
+        {/if}
+      {/each}
+    </Svelvet>
   </div>
 </main>
 
 <style>
-  .logo {
-    height: 6em;
-    padding: 1.5em;
-    will-change: filter;
-    transition: filter 300ms;
-  }
-  .logo:hover {
-    filter: drop-shadow(0 0 2em #646cffaa);
+  .svelvet-container {
+    width: 100%;
+    height: 100vh;
   }
 </style>
