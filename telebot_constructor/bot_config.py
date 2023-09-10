@@ -39,7 +39,7 @@ class UserFlowConfig(BaseModel):
 
     # entrypoint/block id -> display position on frontend
     # not used for bot logic, but still stored
-    node_display_coords: dict[str, UserFlowNodePosition]  
+    node_display_coords: dict[str, UserFlowNodePosition]
 
     @model_validator(mode="after")
     def config_convertible_to_user_flow(self) -> "UserFlowConfig":

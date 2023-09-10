@@ -1,4 +1,5 @@
 from typing import Optional
+
 from telebot import types as tg
 
 from telebot_constructor.user_flow.entrypoints.base import UserFlowEntryPoint

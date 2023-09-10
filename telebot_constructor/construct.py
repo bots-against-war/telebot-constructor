@@ -51,12 +51,6 @@ async def construct_bot(
         logger.exception(log_prefix + "Error getting bot user, probably an invalid token")
         raise ValueError("Failed to get bot user with getMe, the token is probably invalid")
 
-    # handlers setup (dummy)
-
-    @bot.message_handler(commands=["start"])
-    async def dummy_start_handler(message: tg.Message) -> None:
-        await bot.reply_to(message, "hello world")
-
     # region Feedback
 
     feedback_config = bot_config.feedback_handler_config

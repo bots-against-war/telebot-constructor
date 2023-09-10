@@ -1,14 +1,13 @@
 <script lang="ts">
-  import Studio from "./studio/Studio.svelte";
-
   // @ts-ignore
   import Modal from "svelte-simple-modal";
+  import StudioProvider from "./studio/StudioProvider.svelte";
 </script>
 
 <Modal>
   <main>
     <div class="constructor">
-      <Studio />
+      <StudioProvider botName="studio-test-bot" />
     </div>
   </main>
 </Modal>

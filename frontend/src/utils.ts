@@ -23,6 +23,15 @@ export function unwrap<T, E = string>(result: Result<T, E>): T {
   }
 }
 
+export function getError<E = string>(result: Result<any, E>): E | null {
+  if (result.ok) {
+    return null;
+  } else {
+    // @ts-ignore
+    return result.error;
+  }
+}
+
 export async function toTrivialResult(resp: Response): Promise<Result<null, string>> {
   if (resp.ok) return ok(null);
   else return err(await resp.text());

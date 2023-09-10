@@ -1,51 +1,56 @@
 <script lang="ts">
   import { Svelvet } from "svelvet";
   import CommandEntryPointNode from "./nodes/CommandEntryPoint/Node.svelte";
-  import type { UserFlowConfig, UserFlowNodePosition } from "../api/types";
+  import type { BotConfig, UserFlowConfig, UserFlowNodePosition } from "../api/types";
   import MessageBlockNode from "./nodes/MessageBlock/Node.svelte";
   import DeletableEdge from "./components/DeletableEdge.svelte";
+  import { saveBotConfig } from "../api/botConfig";
+  import { getError, unwrap } from "../utils";
 
-  // TODO: fetch from API based on path/props
-  const userFlowConfig: UserFlowConfig = {
-    entrypoints: [
-      {
-        command: {
-          entrypoint_id: "command-start",
-          command: "start",
-          next_block_id: "message-1",
-        },
-      },
-      {
-        command: {
-          entrypoint_id: "command-help",
-          command: "help",
-          next_block_id: "message-2",
-        },
-      },
-    ],
-    blocks: [
-      {
-        message: {
-          block_id: "message-1",
-          message_text: "hello world",
-          next_block_id: "message-2",
-        },
-      },
-      {
-        message: {
-          block_id: "message-2",
-          message_text: `how are you today?`,
-          next_block_id: null,
-        },
-      },
-    ],
-    node_display_coords: {
-      "command-start": { x: 150, y: 0 },
-      "command-help": { x: 300, y: -10 },
-      "message-1": { x: 0, y: 100 },
-      "message-2": { x: 150, y: 250 },
-    },
-  };
+  export let botName: string;
+  export let botConfig: BotConfig;
+
+  const userFlowConfig = botConfig.user_flow_config;
+  // const userFlowConfig: UserFlowConfig = {
+  //   entrypoints: [
+  //     {
+  //       command: {
+  //         entrypoint_id: "command-start",
+  //         command: "start",
+  //         next_block_id: "message-1",
+  //       },
+  //     },
+  //     {
+  //       command: {
+  //         entrypoint_id: "command-help",
+  //         command: "help",
+  //         next_block_id: "message-2",
+  //       },
+  //     },
+  //   ],
+  //   blocks: [
+  //     {
+  //       message: {
+  //         block_id: "message-1",
+  //         message_text: "hello world",
+  //         next_block_id: "message-2",
+  //       },
+  //     },
+  //     {
+  //       message: {
+  //         block_id: "message-2",
+  //         message_text: `how are you today?`,
+  //         next_block_id: null,
+  //       },
+  //     },
+  //   ],
+  //   node_display_coords: {
+  //     "command-start": { x: 150, y: 0 },
+  //     "command-help": { x: 300, y: -10 },
+  //     "message-1": { x: 0, y: 100 },
+  //     "message-2": { x: 150, y: 250 },
+  //   },
+  // };
 
   function newUserFlowNodePosition(): UserFlowNodePosition {
     return { x: 0, y: 0 };
@@ -61,10 +66,24 @@
       userFlowConfig.blocks = userFlowConfig.blocks.toSpliced(idx, 1);
     };
   }
+
+  async function saveCurrentBotConfig() {
+    const res = await saveBotConfig(botName, botConfig);
+    if (getError(res) !== null) {
+      console.error(`Error saving bot config: ${getError(res)}`);
+    } else {
+      botConfig = unwrap(res);
+    }
+  }
 </script>
 
 <div class="svelvet-container">
-  <Svelvet TD controls fitView edge={DeletableEdge}>
+  <Svelvet
+    TD
+    controls
+    fitView={userFlowConfig.blocks.length + userFlowConfig.entrypoints.length > 0}
+    edge={DeletableEdge}
+  >
     {#each userFlowConfig.entrypoints as entrypoint, idx}
       {#if entrypoint.command !== null}
         <CommandEntryPointNode
@@ -85,6 +104,7 @@
     {/each}
   </Svelvet>
   <div class="custom-controls">
+    <h3>{botName}</h3>
     <button
       on:click={() => {
         const newEntrypointId = `entrypoint-command-${userFlowConfig.entrypoints.length}`;
@@ -111,7 +131,8 @@
         });
       }}>New message</button
     >
-    <button on:click={() => console.log(userFlowConfig)}>Log current config</button>
+    <!-- <button on:click={() => console.log(userFlowConfig)}>Log current config</button> -->
+    <button on:click={saveCurrentBotConfig}>Save</button>
   </div>
 </div>
 
@@ -136,6 +157,10 @@
   }
 
   div.custom-controls > button {
+    margin: 0.2em 0;
+    width: 100%;
+  }
+  div.custom-controls > h3 {
     margin: 0.2em 0;
     width: 100%;
   }
