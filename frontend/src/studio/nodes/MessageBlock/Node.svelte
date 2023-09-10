@@ -28,5 +28,5 @@
   >
     <span>{config.message_text}</span>
   </NodeContent>
-  <OutputAnchor connection={config.next_block_id} />
+  <OutputAnchor bind:nextBlockId={config.next_block_id} />
 </Node>

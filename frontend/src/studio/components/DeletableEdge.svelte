@@ -1,18 +1,19 @@
 <script>
+  import { createEventDispatcher } from "svelte";
   import { Edge } from "svelvet";
+
+  const dispatch = createEventDispatcher();
 </script>
 
-<Edge let:path edgeClick={() => console.log("Edge clicked")} let:destroy enableHover let:hovering>
-  <path d={path} class:hovering />
+<Edge let:path let:destroy>
+  <path d={path} />
   <button
     slot="label"
     on:click={(e) => {
-      console.log(`Destroy clicked: ${e}`);
+      dispatch("deleted");
       destroy();
-    }}
+    }}>⨯</button
   >
-    XXX
-  </button>
 </Edge>
 
 <style>
@@ -21,9 +22,13 @@
     stroke-width: 3px;
   }
 
-  path.hovering {
-    stroke: red;
-    stroke-width: 8px;
-    cursor: crosshair;
+  button {
+    background-color: rgb(189, 189, 189);
+    padding: 0.5em;
+    margin: 0;
+    border: 1px grey solid;
+    border-radius: 100%;
+    aspect-ratio: 1 / 1;
+    cursor: pointer;
   }
 </style>

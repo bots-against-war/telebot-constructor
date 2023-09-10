@@ -11,8 +11,15 @@
           "type": "string"
         },
         "next_block_id": {
-          "title": "Next Block Id",
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Next Block Id"
         }
       },
       "required": [

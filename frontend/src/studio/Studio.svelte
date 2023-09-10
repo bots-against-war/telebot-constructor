@@ -11,9 +11,16 @@
     entrypoints: [
       {
         command: {
-          entrypoint_id: "command-1",
+          entrypoint_id: "command-start",
           command: "start",
           next_block_id: "message-1",
+        },
+      },
+      {
+        command: {
+          entrypoint_id: "command-help",
+          command: "help",
+          next_block_id: "message-2",
         },
       },
     ],
@@ -34,9 +41,10 @@
       },
     ],
     node_display_coords: {
-      "command-1": { x: 0, y: 0 },
-      "message-1": { x: 100, y: 100 },
-      "message-2": { x: 50, y: 250 },
+      "command-start": { x: 150, y: 0 },
+      "command-help": { x: 300, y: -10 },
+      "message-1": { x: 0, y: 100 },
+      "message-2": { x: 150, y: 250 },
     },
   };
 

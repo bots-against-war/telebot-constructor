@@ -1,12 +1,33 @@
 <script lang="ts">
-  import { Anchor } from "svelvet";
-  import type { SvelvetConnection } from "../../types";
+  import { Anchor, type Connections } from "svelvet";
   import DeletableEdge from "./DeletableEdge.svelte";
-  export let connection: SvelvetConnection;
+  import { svelvetNodeIdToBlockId } from "../utils";
+
+  export let nextBlockId: string | null;
+
+  let initialConnections: Connections = nextBlockId !== null ? [nextBlockId] : [];
 </script>
 
 <div class="anchor-container">
-  <Anchor direction="south" multiple={false} output connections={[connection]} edge={DeletableEdge} />
+  <Anchor
+    direction="south"
+    multiple={false}
+    output
+    edge={DeletableEdge}
+    connections={initialConnections}
+    on:connection={(e) => {
+      console.debug("Connected edge");
+      console.debug(e);
+      const connectedNode = e.detail.connectedNode;
+      console.debug(connectedNode);
+      nextBlockId = svelvetNodeIdToBlockId(connectedNode.id);
+    }}
+    on:disconnection={(e) => {
+      console.debug("Disconnected edge");
+      console.debug(e);
+      nextBlockId = null;
+    }}
+  />
 </div>
 
 <style>
