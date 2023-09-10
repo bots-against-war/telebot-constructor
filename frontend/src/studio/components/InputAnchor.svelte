@@ -4,7 +4,7 @@
 </script>
 
 <div class="anchor-container">
-  <Anchor direction="north" multiple input edge={DeletableEdge} />
+  <Anchor direction="north" multiple input />
 </div>
 
 <style>

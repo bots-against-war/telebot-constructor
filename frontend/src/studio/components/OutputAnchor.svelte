@@ -13,7 +13,6 @@
     direction="south"
     multiple={false}
     output
-    edge={DeletableEdge}
     connections={initialConnections}
     on:connection={(e) => {
       console.debug("Connected edge");

@@ -18,6 +18,7 @@
   <InputAnchor />
   <NodeContent
     name="Message"
+    on:delete
     on:edit={() =>
       openModal(Modal, {
         config,

@@ -11,6 +11,7 @@
   <slot />
   <div class="controls">
     <button on:click={(e) => dispatch("edit")}>Edit</button>
+    <button on:click={(e) => dispatch("delete")}>Delete</button>
   </div>
 </div>
 
