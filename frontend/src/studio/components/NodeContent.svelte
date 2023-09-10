@@ -16,8 +16,6 @@
 
 <style>
   div.node-content {
-    width: fit-content;
-    height: 100%;
     display: flex;
     flex-flow: column;
     margin: 0.4em 0.8em;

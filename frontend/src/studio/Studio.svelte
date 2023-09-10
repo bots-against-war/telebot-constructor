@@ -28,7 +28,7 @@
       {
         message: {
           block_id: "message-2",
-          message_text: "how are you today?",
+          message_text: `how are you today?`,
           next_block_id: null,
         },
       },

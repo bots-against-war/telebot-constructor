@@ -1,9 +1,10 @@
 <script lang="ts">
   import { Anchor } from "svelvet";
+  import DeletableEdge from "./DeletableEdge.svelte";
 </script>
 
 <div class="anchor-container">
-  <Anchor direction="north" multiple input />
+  <Anchor direction="north" multiple input edge={DeletableEdge} />
 </div>
 
 <style>

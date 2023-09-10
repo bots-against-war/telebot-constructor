@@ -1,9 +1,9 @@
 <script lang="ts">
   import { Node } from "svelvet";
   import type { MessageBlock } from "../../../api/types";
-  import NodeContent from "../../layout/NodeContent.svelte";
-  import OutputAnchor from "../../layout/OutputAnchor.svelte";
-  import InputAnchor from "../../layout/InputAnchor.svelte";
+  import NodeContent from "../../components/NodeContent.svelte";
+  import OutputAnchor from "../../components/OutputAnchor.svelte";
+  import InputAnchor from "../../components/InputAnchor.svelte";
   import type { SvelvetPosition } from "../../../types";
 
   import Modal from "./Modal.svelte";
@@ -14,7 +14,7 @@
   export let position: SvelvetPosition;
 </script>
 
-<Node id={config.block_id} bgColor="#bfebff" bind:position on:nodeReleased>
+<Node id={config.block_id} bgColor="#bfebff" bind:position>
   <InputAnchor />
   <NodeContent
     name="Message"

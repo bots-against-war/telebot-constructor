@@ -1,8 +1,8 @@
 <script lang="ts">
   import { Node } from "svelvet";
   import type { CommandEntryPoint } from "../../../api/types";
-  import NodeContent from "../../layout/NodeContent.svelte";
-  import OutputAnchor from "../../layout/OutputAnchor.svelte";
+  import NodeContent from "../../components/NodeContent.svelte";
+  import OutputAnchor from "../../components/OutputAnchor.svelte";
   import type { SvelvetPosition } from "../../../types";
 
   import Modal from "./Modal.svelte";
