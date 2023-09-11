@@ -3,7 +3,7 @@ import abc
 from pydantic import BaseModel
 
 from telebot_constructor.user_flow.types import (
-    EnterUserFlowBlockCallback,
+    SetupResult,
     UserFlowBlockId,
     UserFlowContext,
     UserFlowSetupContext,
@@ -16,7 +16,7 @@ class UserFlowBlock(BaseModel, abc.ABC):
     block_id: UserFlowBlockId  # mandatory field for all blocks; id by which they can be referenced in the flow
 
     @abc.abstractmethod
-    async def enter(self, context: UserFlowContext, enter_block: EnterUserFlowBlockCallback) -> None:
+    async def enter(self, context: UserFlowContext) -> None:
         """
         Enter the block within the context.
 
@@ -29,7 +29,7 @@ class UserFlowBlock(BaseModel, abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def setup(self, context: UserFlowSetupContext, enter_block: EnterUserFlowBlockCallback) -> None:
+    async def setup(self, context: UserFlowSetupContext) -> SetupResult:
         """
         Setup handlers necessary for the block to work. Invoked once when constucting the bot.
         """

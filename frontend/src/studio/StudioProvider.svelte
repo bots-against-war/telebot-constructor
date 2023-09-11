@@ -10,7 +10,7 @@
     const loadBotConfigResult = await loadBotConfig(botName);
     if (getError(loadBotConfigResult) !== null) {
       const newBotConfig: BotConfig = {
-        token_secret_name: "",
+        token_secret_name: "example_bot_token", // TEMP
         feedback_handler_config: null,
         user_flow_config: {
           entrypoints: [],

@@ -1,8 +1,6 @@
-from datetime import timedelta
 from typing import Optional
 
 from pydantic import BaseModel, model_validator
-from telebot_components.constants import times
 
 from telebot_constructor.pydantic_utils import ExactlyOneNonNullFieldModel
 from telebot_constructor.user_flow import UserFlow
@@ -53,15 +51,7 @@ class UserFlowConfig(BaseModel):
         )
 
 
-class FeedbackHandlerConfig(BaseModel):
-    admin_chat_id: int
-    message_log_to_admin_chat: bool = True
-    force_category_selection: bool = False
-    hashtags_in_admin_chat: bool = True
-    hashtag_message_rarer_than: timedelta = times.FIVE_MINUTES
-
-
 class BotConfig(BaseModel):
+    display_name: str  # for constructor UI
     token_secret_name: str  # must correspond to a valid secret in secret store
-    feedback_handler_config: Optional[FeedbackHandlerConfig] = None
     user_flow_config: Optional[UserFlowConfig] = None

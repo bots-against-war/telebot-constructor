@@ -2,10 +2,7 @@ import abc
 
 from pydantic import BaseModel
 
-from telebot_constructor.user_flow.types import (
-    EnterUserFlowBlockCallback,
-    UserFlowSetupContext,
-)
+from telebot_constructor.user_flow.types import SetupResult, UserFlowSetupContext
 
 
 class UserFlowEntryPoint(BaseModel, abc.ABC):
@@ -14,5 +11,5 @@ class UserFlowEntryPoint(BaseModel, abc.ABC):
     entrypoint_id: str
 
     @abc.abstractmethod
-    async def setup(self, context: UserFlowSetupContext, enter_block: EnterUserFlowBlockCallback) -> None:
+    async def setup(self, context: UserFlowSetupContext) -> SetupResult:
         ...
