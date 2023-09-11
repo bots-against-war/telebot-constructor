@@ -1,76 +1,50 @@
 <script lang="ts">
   import { Svelvet } from "svelvet";
+
   import CommandEntryPointNode from "./nodes/CommandEntryPoint/Node.svelte";
-  import type { BotConfig, UserFlowConfig, UserFlowNodePosition } from "../api/types";
   import MessageBlockNode from "./nodes/MessageBlock/Node.svelte";
   import DeletableEdge from "./components/DeletableEdge.svelte";
+
   import { saveBotConfig } from "../api/botConfig";
+  import { getBlockId, getEntrypointId } from "../api/typeUtils";
+  import type { BotConfig, UserFlowNodePosition } from "../api/types";
+
   import { getError, unwrap } from "../utils";
+  import { findNewNodePosition } from "./utils";
 
   export let botName: string;
   export let botConfig: BotConfig;
 
   const userFlowConfig = botConfig.user_flow_config;
-  // const userFlowConfig: UserFlowConfig = {
-  //   entrypoints: [
-  //     {
-  //       command: {
-  //         entrypoint_id: "command-start",
-  //         command: "start",
-  //         next_block_id: "message-1",
-  //       },
-  //     },
-  //     {
-  //       command: {
-  //         entrypoint_id: "command-help",
-  //         command: "help",
-  //         next_block_id: "message-2",
-  //       },
-  //     },
-  //   ],
-  //   blocks: [
-  //     {
-  //       message: {
-  //         block_id: "message-1",
-  //         message_text: "hello world",
-  //         next_block_id: "message-2",
-  //       },
-  //     },
-  //     {
-  //       message: {
-  //         block_id: "message-2",
-  //         message_text: `how are you today?`,
-  //         next_block_id: null,
-  //       },
-  //     },
-  //   ],
-  //   node_display_coords: {
-  //     "command-start": { x: 150, y: 0 },
-  //     "command-help": { x: 300, y: -10 },
-  //     "message-1": { x: 0, y: 100 },
-  //     "message-2": { x: 150, y: 250 },
-  //   },
-  // };
 
   function newUserFlowNodePosition(): UserFlowNodePosition {
-    return { x: 0, y: 0 };
+    const currentPositions = Object.values(userFlowConfig.node_display_coords);
+    if (currentPositions.length === 0) {
+      return { x: 0, y: 0 };
+    } else {
+      return findNewNodePosition(Object.values(userFlowConfig.node_display_coords), 200, 100, 30);
+    }
   }
 
   function getOnDeleteEntrypoint(idx: number) {
     return () => {
+      const entrypointId = getEntrypointId(userFlowConfig.entrypoints[idx]);
       userFlowConfig.entrypoints = userFlowConfig.entrypoints.toSpliced(idx, 1);
+      delete userFlowConfig.node_display_coords[entrypointId];
     };
   }
   function getOnDeleteBlock(idx: number) {
     return () => {
+      const blockId = getBlockId(userFlowConfig.blocks[idx]);
       userFlowConfig.blocks = userFlowConfig.blocks.toSpliced(idx, 1);
+      delete userFlowConfig.node_display_coords[blockId];
     };
   }
 
   async function saveCurrentBotConfig() {
     const res = await saveBotConfig(botName, botConfig);
     if (getError(res) !== null) {
-      console.error(`Error saving bot config: ${getError(res)}`);
+      window.alert(`Error saving bot config: ${getError(res)}`);
     } else {
       botConfig = unwrap(res);
     }
@@ -116,7 +90,7 @@
             next_block_id: null,
           },
         });
-      }}>New command</button
+      }}>New <b>command</b></button
     >
     <button
       on:click={() => {
@@ -128,10 +102,21 @@
             message_text: "Hello, I am bot!",
             next_block_id: null,
           },
+          human_operator: null,
         });
-      }}>New message</button
+      }}>New <b>message block</b></button
     >
-    <!-- <button on:click={() => console.log(userFlowConfig)}>Log current config</button> -->
+    <button
+      on:click={() => {
+        const newBlockId = `block-message-${userFlowConfig.blocks.length}`;
+        userFlowConfig.node_display_coords[newBlockId] = newUserFlowNodePosition();
+        userFlowConfig.blocks.push({
+          message: null,
+          human_operator: null,
+        });
+      }}>New <b>human operator block</b></button
+    >
+    <button on:click={() => console.log(userFlowConfig)}>Log current config</button>
     <button on:click={saveCurrentBotConfig}>Save</button>
   </div>
 </div>

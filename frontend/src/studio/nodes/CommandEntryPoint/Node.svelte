@@ -26,6 +26,7 @@
       })}
   >
     <span>/{config.command}</span>
+    <!-- <span>x:{Math.round(position.x)},y:{Math.round(position.y)}</span> -->
   </NodeContent>
   <OutputAnchor bind:nextBlockId={config.next_block_id} />
 </Node>

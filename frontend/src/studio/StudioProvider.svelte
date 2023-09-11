@@ -11,7 +11,7 @@
     if (getError(loadBotConfigResult) !== null) {
       const newBotConfig: BotConfig = {
         token_secret_name: "example_bot_token", // TEMP
-        feedback_handler_config: null,
+        display_name: "Studio test",
         user_flow_config: {
           entrypoints: [],
           blocks: [],
