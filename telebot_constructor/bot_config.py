@@ -25,7 +25,7 @@ class UserFlowBlockConfig(ExactlyOneNonNullFieldModel):
 
     def to_user_flow_block(self) -> UserFlowBlock:
         # runtime guarantee that exactly one of the options is not None
-        return self.message  # type: ignore
+        return self.message or self.human_operator  # type: ignore
 
 
 class UserFlowNodePosition(BaseModel):

@@ -6,6 +6,7 @@ from telebot import types as tg
 from telebot.runner import AuxBotEndpoint
 from telebot.types import service as service_types
 from telebot_components.redis_utils.interface import RedisInterface
+from telebot_components.stores.banned_users import BannedUsersStore
 
 
 @dataclass(frozen=True)
@@ -13,6 +14,7 @@ class UserFlowSetupContext:
     bot_prefix: str
     bot: AsyncTeleBot
     redis: RedisInterface
+    banned_users_store: BannedUsersStore
     enter_block: "EnterUserFlowBlockCallback"
     get_active_block_id: "GetActiveUserFlowBlockId"
 

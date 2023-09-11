@@ -5,6 +5,7 @@ from typing import List, Optional
 
 from telebot import AsyncTeleBot
 from telebot_components.redis_utils.interface import RedisInterface
+from telebot_components.stores.banned_users import BannedUsersStore
 from telebot_components.stores.generic import KeyValueStore
 
 from telebot_constructor.user_flow.blocks.base import UserFlowBlock
@@ -48,11 +49,18 @@ class UserFlow:
     async def _get_active_block_id(self, user_id: int) -> Optional[UserFlowBlockId]:
         return await self.active_block_id_store.load(user_id)
 
-    async def setup(self, bot_prefix: str, bot: AsyncTeleBot, redis: RedisInterface) -> SetupResult:
+    async def setup(
+        self,
+        bot_prefix: str,
+        bot: AsyncTeleBot,
+        redis: RedisInterface,
+        banned_users_store: BannedUsersStore,
+    ) -> SetupResult:
         setup_context = UserFlowSetupContext(
             bot_prefix=bot_prefix,
             bot=bot,
             redis=redis,
+            banned_users_store=banned_users_store,
             enter_block=self._enter_block,
             get_active_block_id=self._get_active_block_id,
         )

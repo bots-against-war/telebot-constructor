@@ -4,6 +4,7 @@ from typing import Callable, Coroutine
 from telebot import AsyncTeleBot
 from telebot.runner import AuxBotEndpoint, BotRunner
 from telebot_components.redis_utils.interface import RedisInterface
+from telebot_components.stores.banned_users import BannedUsersStore
 from telebot_components.stores.generic import GenericStore
 from telebot_components.utils.secrets import SecretStore
 
@@ -41,15 +42,19 @@ async def construct_bot(
         logger.exception(log_prefix + "Error getting bot user, probably an invalid token")
         raise ValueError("Failed to get bot user with getMe, the token is probably invalid")
 
+    banned_users_store = BannedUsersStore(redis=redis, bot_prefix=bot_prefix, cached=True)
+
     if bot_config.user_flow_config is not None:
         logger.info(log_prefix + "Parsing user flow config")
         user_flow = bot_config.user_flow_config.to_user_flow()
 
-        logger.info(
-            log_prefix
-            + f"Setting up user flow with {len(user_flow.blocks)} blocks and {user_flow.entrypoints} entrypoints"
+        logger.info(log_prefix + f"Setting up user flow")
+        user_flow_setup_result = await user_flow.setup(
+            bot_prefix=bot_prefix,
+            bot=bot,
+            redis=redis,
+            banned_users_store=banned_users_store,
         )
-        user_flow_setup_result = await user_flow.setup(bot_prefix=bot_prefix, bot=bot, redis=redis)
 
         logger.info(log_prefix + f"Got result: {user_flow_setup_result}")
         background_jobs.extend(user_flow_setup_result.background_jobs)
