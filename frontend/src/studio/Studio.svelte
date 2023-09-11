@@ -18,6 +18,7 @@
   } from "./nodes/defaultConfigs";
   import HumanOperatorNode from "./nodes/HumanOperatorBlock/Node.svelte";
   import { startBot } from "../api/lifecycle";
+  import { comment } from "svelte/internal";
 
   export let botName: string;
   export let botConfig: BotConfig;
@@ -33,11 +34,15 @@
     }
   }
 
-  function getEntrypointDestructor(idx: number) {
+  function getEntrypointDestructor(id: string) {
     return () => {
+      const idx = userFlowConfig.entrypoints.map(getEntrypointId).findIndex((entrypointId) => entrypointId === id);
+      if (idx === -1) {
+        console.log(`Entrypoing with id '${id}' not found`);
+        return;
+      }
       userFlowConfig.entrypoints = userFlowConfig.entrypoints.toSpliced(idx, 1);
-      const entrypointId = getEntrypointId(userFlowConfig.entrypoints[idx]);
-      delete userFlowConfig.node_display_coords[entrypointId];
+      delete userFlowConfig.node_display_coords[id];
     };
   }
   function getEntrypointConstructor(prefix: string, entryPointConfigConstructor: (string) => UserFlowEntryPointConfig) {
@@ -47,11 +52,15 @@
       userFlowConfig.entrypoints.push(entryPointConfigConstructor(id));
     };
   }
-  function getBlockDestructor(idx: number) {
+  function getBlockDestructor(id: string) {
     return () => {
+      const idx = userFlowConfig.blocks.map(getBlockId).findIndex((blockId) => blockId === id);
+      if (idx === -1) {
+        console.log(`Block with id '${id}' not found`);
+        return;
+      }
       userFlowConfig.blocks = userFlowConfig.blocks.toSpliced(idx, 1);
-      const blockId = getBlockId(userFlowConfig.blocks[idx]);
-      delete userFlowConfig.node_display_coords[blockId];
+      delete userFlowConfig.node_display_coords[id];
     };
   }
   function getBlockConstructor(prefix: string, blockConfigConstructor: (string) => UserFlowBlockConfig) {
@@ -63,6 +72,8 @@
   }
 
   async function saveCurrentBotConfig() {
+    console.log(`Saving bot config for ${botName}`);
+    console.log(botConfig);
     const res = await saveBotConfig(botName, botConfig);
     if (getError(res) !== null) {
       window.alert(`Error saving bot config: ${getError(res)}`);
@@ -82,7 +93,7 @@
     {#each userFlowConfig.entrypoints as entrypoint, idx}
       {#if entrypoint.command !== null}
         <CommandEntryPointNode
-          on:delete={getEntrypointDestructor(idx)}
+          on:delete={getEntrypointDestructor(entrypoint.command.entrypoint_id)}
           bind:config={userFlowConfig.entrypoints[idx].command}
           bind:position={userFlowConfig.node_display_coords[entrypoint.command.entrypoint_id]}
         />
@@ -91,13 +102,13 @@
     {#each userFlowConfig.blocks as block, idx}
       {#if block.message !== null}
         <MessageBlockNode
-          on:delete={getBlockDestructor(idx)}
+          on:delete={getBlockDestructor(block.message.block_id)}
           bind:config={userFlowConfig.blocks[idx].message}
           bind:position={userFlowConfig.node_display_coords[block.message.block_id]}
         />
       {:else if block.human_operator !== null}
         <HumanOperatorNode
-          on:delete={getBlockDestructor(idx)}
+          on:delete={getBlockDestructor(block.human_operator.block_id)}
           bind:config={userFlowConfig.blocks[idx].human_operator}
           bind:position={userFlowConfig.node_display_coords[block.human_operator.block_id]}
         />
@@ -105,7 +116,7 @@
     {/each}
   </Svelvet>
   <div class="custom-controls">
-    <h3>{botName}</h3>
+    <h3>{botConfig.display_name}</h3>
     <button on:click={getEntrypointConstructor("command", defaultCommandEntrypoint)}>New <b>command</b></button>
     <button on:click={getBlockConstructor("message", defaultMessageBlockConfig)}>New <b>message block</b></button>
     <button on:click={getBlockConstructor("human-opeartor", defaultHumanOperatorBlockCofig)}

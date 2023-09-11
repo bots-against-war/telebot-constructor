@@ -41,8 +41,8 @@ class PollingConstructedBotRunner(ConstructedBotRunner):
         if bot_running_task is None:
             return False
         else:
-            was_already_canceled = bot_running_task.cancel()
-            if was_already_canceled:
+            is_cancelled = bot_running_task.cancel()
+            if not is_cancelled:
                 return False
             try:
                 await bot_running_task

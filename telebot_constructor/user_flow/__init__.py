@@ -1,6 +1,7 @@
 import collections
 import datetime
 from dataclasses import dataclass
+import logging
 from typing import List, Optional
 
 from telebot import AsyncTeleBot
@@ -16,6 +17,8 @@ from telebot_constructor.user_flow.types import (
     UserFlowContext,
     UserFlowSetupContext,
 )
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -73,10 +76,12 @@ class UserFlow:
             loader=str,
         )
         result = SetupResult.empty()
-        for entrypoint in self.entrypoints:
+        for idx, entrypoint in enumerate(self.entrypoints):
+            logger.info(f"[{bot_prefix}] Setting up entrypoint {idx + 1} / {len(self.entrypoints)}: {entrypoint}")
             new_result = await entrypoint.setup(setup_context)
             result.merge(new_result)
-        for block in self.block_by_id.values():
+        for idx, block in enumerate(self.blocks):
+            logger.info(f"[{bot_prefix}] Setting up block {idx + 1} / {len(self.blocks)}: {block}")
             new_result = await block.setup(setup_context)
             result.merge(new_result)
         return result
