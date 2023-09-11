@@ -16,7 +16,7 @@ async def test_construct_empty_bot() -> None:
     await construct_bot(
         username=username,
         bot_name="empty-bot-test",
-        bot_config=BotConfig(token_secret_name="empty-bot-token"),
+        bot_config=BotConfig(token_secret_name="empty-bot-token", display_name="Test bot"),
         secret_store=secret_store,
         redis=redis,
         _bot_factory=MockedAsyncTeleBot,
@@ -29,7 +29,7 @@ async def test_missing_token_secret() -> None:
         await construct_bot(
             username="some-user",
             bot_name="bot-test",
-            bot_config=BotConfig(token_secret_name="empty-bot-token"),
+            bot_config=BotConfig(token_secret_name="empty-bot-token", display_name="Test bot"),
             secret_store=dummy_secret_store(redis),
             redis=redis,
             _bot_factory=MockedAsyncTeleBot,
@@ -47,7 +47,7 @@ async def test_bot_token_validation_failed() -> None:
             await construct_bot(
                 username=username,
                 bot_name="test",
-                bot_config=BotConfig(token_secret_name="token"),
+                bot_config=BotConfig(token_secret_name="token", display_name="Test bot"),
                 secret_store=secret_store,
                 redis=redis,
             )

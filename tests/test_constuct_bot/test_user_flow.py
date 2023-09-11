@@ -19,19 +19,25 @@ from tests.utils import (
 
 
 def test_user_flow_config_model_validation() -> None:
-    with pytest.raises(ValueError, match=r".*?Duplicate block ids detected: \['1'\]"):
+    with pytest.raises(ValueError, match=r".*?Duplicate block ids: \['1'\]"):
         UserFlowConfig(
             entrypoints=[],
             blocks=[
-                UserFlowBlockConfig(message=MessageBlock(block_id="1", message_text="one", next_block_id=None)),
-                UserFlowBlockConfig(message=MessageBlock(block_id="1", message_text="also one", next_block_id=None)),
+                UserFlowBlockConfig(
+                    message=MessageBlock(block_id="1", message_text="one", next_block_id=None), human_operator=None
+                ),
+                UserFlowBlockConfig(
+                    message=MessageBlock(block_id="1", message_text="also one", next_block_id=None), human_operator=None
+                ),
             ],
+            node_display_coords={},
         )
 
 
 async def test_simple_user_flow() -> None:
     bot_config = BotConfig(
         token_secret_name="token",
+        display_name="Test bot",
         user_flow_config=UserFlowConfig(
             entrypoints=[
                 UserFlowEntryPointConfig(
@@ -48,16 +54,19 @@ async def test_simple_user_flow() -> None:
                         block_id="message-1",
                         message_text="hello!",
                         next_block_id="message-2",
-                    )
+                    ),
+                    human_operator=None,
                 ),
                 UserFlowBlockConfig(
                     message=MessageBlock(
                         block_id="message-2",
                         message_text="how are you today?",
                         next_block_id=None,
-                    )
+                    ),
+                    human_operator=None,
                 ),
             ],
+            node_display_coords={},
         ),
     )
 
