@@ -1,7 +1,7 @@
 import collections
 import datetime
-from dataclasses import dataclass
 import logging
+from dataclasses import dataclass
 from typing import List, Optional
 
 from telebot import AsyncTeleBot
