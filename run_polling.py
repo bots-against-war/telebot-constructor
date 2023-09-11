@@ -8,11 +8,12 @@ from telebot_components.utils.secrets import TomlFileSecretStore
 from telebot_constructor.app import TelebotConstructorApp
 from telebot_constructor.auth import NoAuth
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 
 async def main() -> None:
     redis = PersistentRedisEmulation()  # type: ignore
+    print(redis.r._storages)
     app = TelebotConstructorApp(
         redis=redis,
         auth=NoAuth(),

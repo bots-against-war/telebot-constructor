@@ -7,10 +7,17 @@
 
   import { saveBotConfig } from "../api/botConfig";
   import { getBlockId, getEntrypointId } from "../api/typeUtils";
-  import type { BotConfig, UserFlowNodePosition } from "../api/types";
+  import type { BotConfig, UserFlowBlockConfig, UserFlowEntryPointConfig, UserFlowNodePosition } from "../api/types";
 
   import { getError, unwrap } from "../utils";
   import { findNewNodePosition } from "./utils";
+  import {
+    defaultCommandEntrypoint,
+    defaultMessageBlockConfig,
+    defaultHumanOperatorBlockCofig,
+  } from "./nodes/defaultConfigs";
+  import HumanOperatorNode from "./nodes/HumanOperatorBlock/Node.svelte";
+  import { startBot } from "../api/lifecycle";
 
   export let botName: string;
   export let botConfig: BotConfig;
@@ -26,18 +33,32 @@
     }
   }
 
-  function getOnDeleteEntrypoint(idx: number) {
+  function getEntrypointDestructor(idx: number) {
     return () => {
-      const entrypointId = getEntrypointId(userFlowConfig.entrypoints[idx]);
       userFlowConfig.entrypoints = userFlowConfig.entrypoints.toSpliced(idx, 1);
+      const entrypointId = getEntrypointId(userFlowConfig.entrypoints[idx]);
       delete userFlowConfig.node_display_coords[entrypointId];
     };
   }
-  function getOnDeleteBlock(idx: number) {
+  function getEntrypointConstructor(prefix: string, entryPointConfigConstructor: (string) => UserFlowEntryPointConfig) {
     return () => {
-      const blockId = getBlockId(userFlowConfig.blocks[idx]);
+      const id = `entrypoint-${prefix}-${crypto.randomUUID()}`;
+      userFlowConfig.node_display_coords[id] = newUserFlowNodePosition();
+      userFlowConfig.entrypoints.push(entryPointConfigConstructor(id));
+    };
+  }
+  function getBlockDestructor(idx: number) {
+    return () => {
       userFlowConfig.blocks = userFlowConfig.blocks.toSpliced(idx, 1);
+      const blockId = getBlockId(userFlowConfig.blocks[idx]);
       delete userFlowConfig.node_display_coords[blockId];
+    };
+  }
+  function getBlockConstructor(prefix: string, blockConfigConstructor: (string) => UserFlowBlockConfig) {
+    return () => {
+      const id = `block-${prefix}-${crypto.randomUUID()}`;
+      userFlowConfig.node_display_coords[id] = newUserFlowNodePosition();
+      userFlowConfig.blocks.push(blockConfigConstructor(id));
     };
   }
 
@@ -61,7 +82,7 @@
     {#each userFlowConfig.entrypoints as entrypoint, idx}
       {#if entrypoint.command !== null}
         <CommandEntryPointNode
-          on:delete={getOnDeleteEntrypoint(idx)}
+          on:delete={getEntrypointDestructor(idx)}
           bind:config={userFlowConfig.entrypoints[idx].command}
           bind:position={userFlowConfig.node_display_coords[entrypoint.command.entrypoint_id]}
         />
@@ -70,54 +91,29 @@
     {#each userFlowConfig.blocks as block, idx}
       {#if block.message !== null}
         <MessageBlockNode
-          on:delete={getOnDeleteBlock(idx)}
+          on:delete={getBlockDestructor(idx)}
           bind:config={userFlowConfig.blocks[idx].message}
           bind:position={userFlowConfig.node_display_coords[block.message.block_id]}
+        />
+      {:else if block.human_operator !== null}
+        <HumanOperatorNode
+          on:delete={getBlockDestructor(idx)}
+          bind:config={userFlowConfig.blocks[idx].human_operator}
+          bind:position={userFlowConfig.node_display_coords[block.human_operator.block_id]}
         />
       {/if}
     {/each}
   </Svelvet>
   <div class="custom-controls">
     <h3>{botName}</h3>
-    <button
-      on:click={() => {
-        const newEntrypointId = `entrypoint-command-${userFlowConfig.entrypoints.length}`;
-        userFlowConfig.node_display_coords[newEntrypointId] = newUserFlowNodePosition();
-        userFlowConfig.entrypoints.push({
-          command: {
-            entrypoint_id: newEntrypointId,
-            command: "command",
-            next_block_id: null,
-          },
-        });
-      }}>New <b>command</b></button
-    >
-    <button
-      on:click={() => {
-        const newBlockId = `block-message-${userFlowConfig.blocks.length}`;
-        userFlowConfig.node_display_coords[newBlockId] = newUserFlowNodePosition();
-        userFlowConfig.blocks.push({
-          message: {
-            block_id: newBlockId,
-            message_text: "Hello, I am bot!",
-            next_block_id: null,
-          },
-          human_operator: null,
-        });
-      }}>New <b>message block</b></button
-    >
-    <button
-      on:click={() => {
-        const newBlockId = `block-message-${userFlowConfig.blocks.length}`;
-        userFlowConfig.node_display_coords[newBlockId] = newUserFlowNodePosition();
-        userFlowConfig.blocks.push({
-          message: null,
-          human_operator: null,
-        });
-      }}>New <b>human operator block</b></button
+    <button on:click={getEntrypointConstructor("command", defaultCommandEntrypoint)}>New <b>command</b></button>
+    <button on:click={getBlockConstructor("message", defaultMessageBlockConfig)}>New <b>message block</b></button>
+    <button on:click={getBlockConstructor("human-opeartor", defaultHumanOperatorBlockCofig)}
+      >New <b>human operator block</b></button
     >
     <button on:click={() => console.log(userFlowConfig)}>Log current config</button>
     <button on:click={saveCurrentBotConfig}>Save</button>
+    <button on:click={() => startBot(botName)}>Run bot</button>
   </div>
 </div>
 

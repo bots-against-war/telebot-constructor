@@ -103,7 +103,10 @@ class TelebotConstructorApp:
         return config
 
     async def re_start_bot(self, username: str, bot_name: str, bot_config: BotConfig) -> None:
-        await self.runner.stop(username, bot_name)
+        log_prefix = f"[{username}][{bot_name}]"
+        logger.info(f"{log_prefix} (Re)starting bot")
+        is_stopped = await self.runner.stop(username, bot_name)
+        logger.info(f"{log_prefix} Stopped bot {is_stopped = }")
         try:
             bot_runner = await construct_bot(
                 username=username,
@@ -113,9 +116,13 @@ class TelebotConstructorApp:
                 redis=self.redis,
             )
         except Exception as e:
+            logger.info(f"{log_prefix} Error constructing bot", exc_info=True)
             raise web.HTTPBadRequest(reason=str(e))
         if not await self.runner.start(username=username, bot_name=bot_name, bot_runner=bot_runner):
+            logger.info(f"{log_prefix} Bot failed to start")
             raise web.HTTPInternalServerError(reason="Failed to start bot")
+        logger.info(f"{log_prefix} Bot started OK!")
+        await self.running_bots_store.add(username, bot_name)
 
     async def create_constructor_web_app(self) -> web.Application:
         app = web.Application()
@@ -208,6 +215,7 @@ class TelebotConstructorApp:
             await self.bot_config_store.set_subkey(username, bot_name, bot_config)
 
             if bot_name in await self.running_bots_store.all(username):
+                logger.info(f"Updated bot {bot_name} is running, restarting it")
                 await self.re_start_bot(username, bot_name, bot_config)
 
             if existing_bot_config is None:
