@@ -1,0 +1,1 @@
+web: poetry install && poetry run python run_polling.py
