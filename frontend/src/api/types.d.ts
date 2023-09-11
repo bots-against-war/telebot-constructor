@@ -15,17 +15,19 @@ export type BlockId = string;
 export type MessageText = string;
 export type NextBlockId1 = string | null;
 export type BlockId1 = string;
+export type CatchAll = boolean;
 export type AdminChatId = number;
+export type ForumTopicPerUser = boolean;
+export type AnonimyzeUsers = boolean;
+export type MaxMessagesPerMinute = number;
 export type ForwardedToAdminOk = string;
 export type Throttling = string;
 export type CopiedToUserOk = string;
 export type DeletedMessageOk = string;
 export type CanNotDeleteMessage = string;
-export type AnonimyzeUsers = boolean;
-export type MaxMessagesPerMinute = number;
 export type HashtagsInAdminChat = boolean;
-export type UnansweredHashtag = string;
-export type HashtagMessageRarerThan = string;
+export type UnansweredHashtag = string | null;
+export type HashtagMessageRarerThan = string | null;
 export type MessageLogToAdminChat = boolean;
 export type Blocks = UserFlowBlockConfig[];
 export type X = number;
@@ -72,15 +74,17 @@ export interface MessageBlock {
  */
 export interface HumanOperatorBlock {
   block_id: BlockId1;
+  catch_all: CatchAll;
   feedback_handler_config: FeedbackHandlerConfig;
   [k: string]: unknown;
 }
 export interface FeedbackHandlerConfig {
   admin_chat_id: AdminChatId;
-  messages_to_user: MessagesToUser;
-  messages_to_admin: MessagesToAdmin;
+  forum_topic_per_user: ForumTopicPerUser;
   anonimyze_users: AnonimyzeUsers;
   max_messages_per_minute: MaxMessagesPerMinute;
+  messages_to_user: MessagesToUser;
+  messages_to_admin: MessagesToAdmin;
   hashtags_in_admin_chat: HashtagsInAdminChat;
   unanswered_hashtag: UnansweredHashtag;
   hashtag_message_rarer_than: HashtagMessageRarerThan;

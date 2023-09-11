@@ -36,11 +36,9 @@
           "title": "Admin Chat Id",
           "type": "integer"
         },
-        "messages_to_user": {
-          "$ref": "#/$defs/MessagesToUser"
-        },
-        "messages_to_admin": {
-          "$ref": "#/$defs/MessagesToAdmin"
+        "forum_topic_per_user": {
+          "title": "Forum Topic Per User",
+          "type": "boolean"
         },
         "anonimyze_users": {
           "title": "Anonimyze Users",
@@ -50,18 +48,38 @@
           "title": "Max Messages Per Minute",
           "type": "number"
         },
+        "messages_to_user": {
+          "$ref": "#/$defs/MessagesToUser"
+        },
+        "messages_to_admin": {
+          "$ref": "#/$defs/MessagesToAdmin"
+        },
         "hashtags_in_admin_chat": {
           "title": "Hashtags In Admin Chat",
           "type": "boolean"
         },
         "unanswered_hashtag": {
-          "title": "Unanswered Hashtag",
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Unanswered Hashtag"
         },
         "hashtag_message_rarer_than": {
-          "format": "duration",
-          "title": "Hashtag Message Rarer Than",
-          "type": "string"
+          "anyOf": [
+            {
+              "format": "duration",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Hashtag Message Rarer Than"
         },
         "message_log_to_admin_chat": {
           "title": "Message Log To Admin Chat",
@@ -70,10 +88,11 @@
       },
       "required": [
         "admin_chat_id",
-        "messages_to_user",
-        "messages_to_admin",
+        "forum_topic_per_user",
         "anonimyze_users",
         "max_messages_per_minute",
+        "messages_to_user",
+        "messages_to_admin",
         "hashtags_in_admin_chat",
         "unanswered_hashtag",
         "hashtag_message_rarer_than",
@@ -89,12 +108,17 @@
           "title": "Block Id",
           "type": "string"
         },
+        "catch_all": {
+          "title": "Catch All",
+          "type": "boolean"
+        },
         "feedback_handler_config": {
           "$ref": "#/$defs/FeedbackHandlerConfig"
         }
       },
       "required": [
         "block_id",
+        "catch_all",
         "feedback_handler_config"
       ],
       "title": "HumanOperatorBlock",
