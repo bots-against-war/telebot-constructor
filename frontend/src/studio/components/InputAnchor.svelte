@@ -1,6 +1,5 @@
 <script lang="ts">
   import { Anchor } from "svelvet";
-  import DeletableEdge from "./DeletableEdge.svelte";
 </script>
 
 <div class="anchor-container">

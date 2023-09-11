@@ -1,19 +1,10 @@
 <script>
-  import { createEventDispatcher } from "svelte";
   import { Edge } from "svelvet";
-
-  const dispatch = createEventDispatcher();
 </script>
 
 <Edge let:path let:destroy>
   <path d={path} />
-  <button
-    slot="label"
-    on:click={(e) => {
-      dispatch("deleted");
-      destroy();
-    }}>⨯</button
-  >
+  <button slot="label" on:click={destroy}>⨯</button>
 </Edge>
 
 <style>
