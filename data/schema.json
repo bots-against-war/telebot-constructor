@@ -36,36 +36,68 @@
           "title": "Admin Chat Id",
           "type": "integer"
         },
-        "message_log_to_admin_chat": {
-          "default": true,
-          "title": "Message Log To Admin Chat",
+        "messages_to_user": {
+          "$ref": "#/$defs/MessagesToUser"
+        },
+        "messages_to_admin": {
+          "$ref": "#/$defs/MessagesToAdmin"
+        },
+        "anonimyze_users": {
+          "title": "Anonimyze Users",
           "type": "boolean"
         },
-        "force_category_selection": {
-          "default": false,
-          "title": "Force Category Selection",
-          "type": "boolean"
+        "max_messages_per_minute": {
+          "title": "Max Messages Per Minute",
+          "type": "number"
         },
         "hashtags_in_admin_chat": {
-          "default": true,
           "title": "Hashtags In Admin Chat",
           "type": "boolean"
         },
+        "unanswered_hashtag": {
+          "title": "Unanswered Hashtag",
+          "type": "string"
+        },
         "hashtag_message_rarer_than": {
-          "default": "PT300S",
           "format": "duration",
           "title": "Hashtag Message Rarer Than",
           "type": "string"
+        },
+        "message_log_to_admin_chat": {
+          "title": "Message Log To Admin Chat",
+          "type": "boolean"
         }
       },
       "required": [
         "admin_chat_id",
-        "message_log_to_admin_chat",
-        "force_category_selection",
+        "messages_to_user",
+        "messages_to_admin",
+        "anonimyze_users",
+        "max_messages_per_minute",
         "hashtags_in_admin_chat",
-        "hashtag_message_rarer_than"
+        "unanswered_hashtag",
+        "hashtag_message_rarer_than",
+        "message_log_to_admin_chat"
       ],
       "title": "FeedbackHandlerConfig",
+      "type": "object"
+    },
+    "HumanOperatorBlock": {
+      "description": "Terminal block that incapsulates user interaction with a human operator",
+      "properties": {
+        "block_id": {
+          "title": "Block Id",
+          "type": "string"
+        },
+        "feedback_handler_config": {
+          "$ref": "#/$defs/FeedbackHandlerConfig"
+        }
+      },
+      "required": [
+        "block_id",
+        "feedback_handler_config"
+      ],
+      "title": "HumanOperatorBlock",
       "type": "object"
     },
     "MessageBlock": {
@@ -99,6 +131,47 @@
       "title": "MessageBlock",
       "type": "object"
     },
+    "MessagesToAdmin": {
+      "properties": {
+        "copied_to_user_ok": {
+          "title": "Copied To User Ok",
+          "type": "string"
+        },
+        "deleted_message_ok": {
+          "title": "Deleted Message Ok",
+          "type": "string"
+        },
+        "can_not_delete_message": {
+          "title": "Can Not Delete Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "copied_to_user_ok",
+        "deleted_message_ok",
+        "can_not_delete_message"
+      ],
+      "title": "MessagesToAdmin",
+      "type": "object"
+    },
+    "MessagesToUser": {
+      "properties": {
+        "forwarded_to_admin_ok": {
+          "title": "Forwarded To Admin Ok",
+          "type": "string"
+        },
+        "throttling": {
+          "title": "Throttling",
+          "type": "string"
+        }
+      },
+      "required": [
+        "forwarded_to_admin_ok",
+        "throttling"
+      ],
+      "title": "MessagesToUser",
+      "type": "object"
+    },
     "UserFlowBlockConfig": {
       "properties": {
         "message": {
@@ -110,10 +183,21 @@
               "type": "null"
             }
           ]
+        },
+        "human_operator": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/HumanOperatorBlock"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
-        "message"
+        "message",
+        "human_operator"
       ],
       "title": "UserFlowBlockConfig",
       "type": "object"
@@ -189,20 +273,13 @@
     }
   },
   "properties": {
+    "display_name": {
+      "title": "Display Name",
+      "type": "string"
+    },
     "token_secret_name": {
       "title": "Token Secret Name",
       "type": "string"
-    },
-    "feedback_handler_config": {
-      "anyOf": [
-        {
-          "$ref": "#/$defs/FeedbackHandlerConfig"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null
     },
     "user_flow_config": {
       "anyOf": [
@@ -217,8 +294,8 @@
     }
   },
   "required": [
+    "display_name",
     "token_secret_name",
-    "feedback_handler_config",
     "user_flow_config"
   ],
   "title": "BotConfig",

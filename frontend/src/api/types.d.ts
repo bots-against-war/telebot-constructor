@@ -5,12 +5,8 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
+export type DisplayName = string;
 export type TokenSecretName = string;
-export type AdminChatId = number;
-export type MessageLogToAdminChat = boolean;
-export type ForceCategorySelection = boolean;
-export type HashtagsInAdminChat = boolean;
-export type HashtagMessageRarerThan = string;
 export type EntrypointId = string;
 export type Command = string;
 export type NextBlockId = string | null;
@@ -18,22 +14,27 @@ export type Entrypoints = UserFlowEntryPointConfig[];
 export type BlockId = string;
 export type MessageText = string;
 export type NextBlockId1 = string | null;
+export type BlockId1 = string;
+export type AdminChatId = number;
+export type ForwardedToAdminOk = string;
+export type Throttling = string;
+export type CopiedToUserOk = string;
+export type DeletedMessageOk = string;
+export type CanNotDeleteMessage = string;
+export type AnonimyzeUsers = boolean;
+export type MaxMessagesPerMinute = number;
+export type HashtagsInAdminChat = boolean;
+export type UnansweredHashtag = string;
+export type HashtagMessageRarerThan = string;
+export type MessageLogToAdminChat = boolean;
 export type Blocks = UserFlowBlockConfig[];
 export type X = number;
 export type Y = number;
 
 export interface BotConfig {
+  display_name: DisplayName;
   token_secret_name: TokenSecretName;
-  feedback_handler_config: FeedbackHandlerConfig | null;
   user_flow_config: UserFlowConfig | null;
-  [k: string]: unknown;
-}
-export interface FeedbackHandlerConfig {
-  admin_chat_id: AdminChatId;
-  message_log_to_admin_chat: MessageLogToAdminChat;
-  force_category_selection: ForceCategorySelection;
-  hashtags_in_admin_chat: HashtagsInAdminChat;
-  hashtag_message_rarer_than: HashtagMessageRarerThan;
   [k: string]: unknown;
 }
 export interface UserFlowConfig {
@@ -54,6 +55,7 @@ export interface CommandEntryPoint {
 }
 export interface UserFlowBlockConfig {
   message: MessageBlock | null;
+  human_operator: HumanOperatorBlock | null;
   [k: string]: unknown;
 }
 /**
@@ -63,6 +65,37 @@ export interface MessageBlock {
   block_id: BlockId;
   message_text: MessageText;
   next_block_id: NextBlockId1;
+  [k: string]: unknown;
+}
+/**
+ * Terminal block that incapsulates user interaction with a human operator
+ */
+export interface HumanOperatorBlock {
+  block_id: BlockId1;
+  feedback_handler_config: FeedbackHandlerConfig;
+  [k: string]: unknown;
+}
+export interface FeedbackHandlerConfig {
+  admin_chat_id: AdminChatId;
+  messages_to_user: MessagesToUser;
+  messages_to_admin: MessagesToAdmin;
+  anonimyze_users: AnonimyzeUsers;
+  max_messages_per_minute: MaxMessagesPerMinute;
+  hashtags_in_admin_chat: HashtagsInAdminChat;
+  unanswered_hashtag: UnansweredHashtag;
+  hashtag_message_rarer_than: HashtagMessageRarerThan;
+  message_log_to_admin_chat: MessageLogToAdminChat;
+  [k: string]: unknown;
+}
+export interface MessagesToUser {
+  forwarded_to_admin_ok: ForwardedToAdminOk;
+  throttling: Throttling;
+  [k: string]: unknown;
+}
+export interface MessagesToAdmin {
+  copied_to_user_ok: CopiedToUserOk;
+  deleted_message_ok: DeletedMessageOk;
+  can_not_delete_message: CanNotDeleteMessage;
   [k: string]: unknown;
 }
 export interface NodeDisplayCoords {

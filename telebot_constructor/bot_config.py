@@ -5,6 +5,7 @@ from pydantic import BaseModel, model_validator
 from telebot_constructor.pydantic_utils import ExactlyOneNonNullFieldModel
 from telebot_constructor.user_flow import UserFlow
 from telebot_constructor.user_flow.blocks.base import UserFlowBlock
+from telebot_constructor.user_flow.blocks.human_operator import HumanOperatorBlock
 from telebot_constructor.user_flow.blocks.message import MessageBlock
 from telebot_constructor.user_flow.entrypoints.base import UserFlowEntryPoint
 from telebot_constructor.user_flow.entrypoints.command import CommandEntryPoint
@@ -20,6 +21,7 @@ class UserFlowEntryPointConfig(ExactlyOneNonNullFieldModel):
 
 class UserFlowBlockConfig(ExactlyOneNonNullFieldModel):
     message: Optional[MessageBlock]
+    human_operator: Optional[HumanOperatorBlock]
 
     def to_user_flow_block(self) -> UserFlowBlock:
         # runtime guarantee that exactly one of the options is not None
