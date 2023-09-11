@@ -54,7 +54,8 @@ class FeedbackHandlerConfig(BaseModel):
 class HumanOperatorBlock(UserFlowBlock):
     """Terminal block that incapsulates user interaction with a human operator"""
 
-    catch_all: bool  # if set to True, all messages not catched by other handlers (e.g. forms) will be processed by this block
+    # if set to True, all messages not catched by other handlers (e.g. forms) will be processed by this block
+    catch_all: bool
     feedback_handler_config: FeedbackHandlerConfig
 
     async def enter(self, context: UserFlowContext) -> None:

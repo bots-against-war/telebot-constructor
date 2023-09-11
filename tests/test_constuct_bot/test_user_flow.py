@@ -105,7 +105,8 @@ async def test_simple_user_flow() -> None:
     )
 
 
-async def test_flow_with_human_operator() -> None:
+@pytest.mark.parametrize("catch_all", [True, False])
+async def test_flow_with_human_operator(catch_all: bool) -> None:
     ADMIN_CHAT_ID = 98765
     USER_ID = 1312
     bot_config = BotConfig(
@@ -134,7 +135,7 @@ async def test_flow_with_human_operator() -> None:
                     message=None,
                     human_operator=HumanOperatorBlock(
                         block_id="human-operator-1",
-                        catch_all=False,
+                        catch_all=catch_all,
                         feedback_handler_config=FeedbackHandlerConfig(
                             admin_chat_id=ADMIN_CHAT_ID,
                             forum_topic_per_user=False,
@@ -174,15 +175,38 @@ async def test_flow_with_human_operator() -> None:
 
     bot = bot_runner.bot
     assert isinstance(bot, MockedAsyncTeleBot)
-    bot.method_calls.clear()  # to remove construct-time calls
+    bot.method_calls.clear()  # remove construct-time calls
 
+    # direct message to bot but not a command
     await bot.process_new_updates(
         [tg_update_message_to_bot(user_id=USER_ID, first_name="User", text="hello i am user")]
     )
-    assert len(bot.method_calls) == 0  # no response, human operator block is not active
+    if catch_all:
+        assert_method_call_kwargs_include(
+            bot.method_calls["send_message"],
+            [
+                {"chat_id": ADMIN_CHAT_ID, "text": "#unanswered"},  # hashtag in admin chat
+                {
+                    "chat_id": ADMIN_CHAT_ID,
+                    "text": '<a href="tg://user?id=1312">User (#1312)</a>',
+                    "parse_mode": "HTML",
+                },  # user identifier in admin chat
+                {"chat_id": USER_ID, "text": "ok"},  # reply to user
+            ],
+        )
+        assert_method_call_kwargs_include(
+            bot.method_calls["copy_message"],
+            [
+                {"chat_id": ADMIN_CHAT_ID, "from_chat_id": USER_ID},
+            ],
+        )
+    else:
+        # no response, human operator block is not active
+        assert len(bot.method_calls) == 0
+    bot.method_calls.clear()
 
+    # /start command
     await bot.process_new_updates([tg_update_message_to_bot(user_id=USER_ID, first_name="User", text="/start")])
-    assert len(bot.method_calls) == 1
     assert_method_call_kwargs_include(
         bot.method_calls["send_message"],
         [
@@ -190,25 +214,35 @@ async def test_flow_with_human_operator() -> None:
         ],
     )
     bot.method_calls.clear()
+
+    # message to bot after the command
     await bot.process_new_updates(
         [tg_update_message_to_bot(user_id=USER_ID, first_name="User", text="hello i am user")]
     )
-    assert len(bot.method_calls) == 3
-    assert_method_call_kwargs_include(
-        bot.method_calls["send_message"],
-        [
-            {"chat_id": ADMIN_CHAT_ID, "text": "#unanswered"},  # hashtag in admin chat
-            {
-                "chat_id": ADMIN_CHAT_ID,
-                "text": '<a href="tg://user?id=1312">User (#1312)</a>',
-                "parse_mode": "HTML",
-            },  # user identifier in admin chat
-            {"chat_id": USER_ID, "text": "ok", "reply_to_message_id": 1},  # reply to user
-        ],
-    )
+    if catch_all:
+        assert_method_call_kwargs_include(
+            bot.method_calls["send_message"],
+            [
+                {"chat_id": USER_ID, "text": "ok"},  # reply to user
+            ],
+        )
+    else:
+        assert_method_call_kwargs_include(
+            bot.method_calls["send_message"],
+            [
+                {"chat_id": ADMIN_CHAT_ID, "text": "#unanswered"},  # hashtag in admin chat
+                {
+                    "chat_id": ADMIN_CHAT_ID,
+                    "text": '<a href="tg://user?id=1312">User (#1312)</a>',
+                    "parse_mode": "HTML",
+                },  # user identifier in admin chat
+                {"chat_id": USER_ID, "text": "ok"},  # reply to user
+            ],
+        )
+
     assert_method_call_kwargs_include(
         bot.method_calls["copy_message"],
         [
-            {"chat_id": ADMIN_CHAT_ID, "from_chat_id": USER_ID, "message_id": 1},
+            {"chat_id": ADMIN_CHAT_ID, "from_chat_id": USER_ID},
         ],
     )

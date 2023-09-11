@@ -48,7 +48,7 @@ async def construct_bot(
         logger.info(log_prefix + "Parsing user flow config")
         user_flow = bot_config.user_flow_config.to_user_flow()
 
-        logger.info(log_prefix + f"Setting up user flow")
+        logger.info(log_prefix + "Setting up user flow")
         user_flow_setup_result = await user_flow.setup(
             bot_prefix=bot_prefix,
             bot=bot,
