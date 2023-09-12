@@ -7,29 +7,39 @@
   import { botConfigs } from "../botConfigsStore";
 
   let existingConfigs: { [key: string]: BotConfig };
+  const botStatuses: { [key: string]: string } = {};
+
   async function startBotWithName(name: string) {
     const resp = await startBot(name);
-    const statusEl = document.getElementById(`${name}-status`);
-    // @ts-expect-error
-    statusEl.innerHTML = resp.ok ? "Started" : `Failed to start: ${resp.error}`;
+    if (resp.ok) {
+      botStatuses[name] = "Started";
+    } else {
+      // @ts-expect-error
+      botStatuses[name] = `Failed to start: ${resp.error}`;
+    }
   }
 
   async function stopBotWithName(name: string) {
     const resp = await stopBot(name);
-    const statusEl = document.getElementById(`${name}-status`);
-    // @ts-expect-error
-    statusEl.innerHTML = resp.ok ? "Stopped" : `Failed to stop: ${resp.error}`;
+    if (resp.ok) {
+      botStatuses[name] = "Stopped";
+    } else {
+      // @ts-expect-error
+      botStatuses[name] = `Failed to stop: ${resp.error}`;
+    }
   }
 
   async function removeBotConfig(name: string) {
     const resp = await deleteBotConfig(name);
-    const statusEl = document.getElementById(`${name}-status`);
-    // @ts-expect-error
-    statusEl.innerHTML = resp.ok ? "" : `Failed to delete: ${resp.error}`;
+    if (!resp.ok) {
+      // @ts-expect-error
+      botStatuses[name] = `Failed to delete: ${resp.error}`;
+      return;
+    }
     await reloadConfigs();
   }
 
-  export async function reloadConfigs() {
+  async function reloadConfigs() {
     const configsFromBackend = unwrap(await listBotConfigs());
     botConfigs.set(configsFromBackend);
   }
@@ -52,6 +62,6 @@
     <button on:click={() => startBotWithName(configName)}>Start</button>
     <button on:click={() => stopBotWithName(configName)}>Stop</button>
     <button on:click={() => removeBotConfig(configName)}>Delete</button>
-    <div id="{configName}-status" />
+    <p><span class="text-status">{botStatuses[configName] || ""}</span></p>
   {/each}
 </div>

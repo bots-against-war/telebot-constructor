@@ -10,6 +10,7 @@
   const closePopup = async () => close();
 
   let bot_name = "";
+  let newBotConfigStatus = "";
 
   async function reloadConfigs() {
     const configsFromBackend = unwrap(await listBotConfigs());
@@ -17,10 +18,8 @@
   }
 
   async function createNewBot() {
-    const statusEl = document.getElementById("newBotConfigStatus");
-
     if (!bot_name) {
-      statusEl.innerHTML = `Form not completed. Name and token are required`;
+      newBotConfigStatus = `Form not completed. Name are required`;
       return;
     }
 
@@ -32,11 +31,12 @@
     console.log(resp);
 
     if (resp.ok) {
+      newBotConfigStatus = "";
       await reloadConfigs();
       await closePopup();
     } else {
       // @ts-expect-error
-      statusEl.innerHTML = `Failed to save: ${resp.error}`;
+      newBotConfigStatus = `Failed to save: ${resp.error}`;
     }
   }
 </script>
@@ -48,7 +48,7 @@
     description="Напишите любое имя (его можно будет поменять): "
     placeholder="Бот волонтер"
   />
-  <p id="newBotConfigStatus" style="color: #ffaaaa" />
+  <p><span class="text-status">{newBotConfigStatus || ""}</span></p>
   <div class="save-button">
     <Button radius={20} color="#62B1D0" on:click={createNewBot}>Сохранить</Button>
   </div>

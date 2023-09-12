@@ -16,7 +16,7 @@ export async function stopBot(botName: string): Promise<Result<BotConfig>> {
   return await toTrivialResult(resp);
 }
 
-async function listRunningBots(): Promise<Result<string[]>> {
+export async function listRunningBots(): Promise<Result<string[]>> {
   const resp = await fetch(apiUrl(`/running`), {});
   return await toDataResult(resp);
 }
