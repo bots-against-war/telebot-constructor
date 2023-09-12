@@ -14,7 +14,7 @@ def setup_cors(app: web.Application) -> None:
         except web.HTTPException as e:
             resp = e
 
-        allowed_origins = ["http://localhost:8081"]  # local dev server origin
+        allowed_origins = ["http://localhost:8081", "http://127.0.0.1:8081"]  # local dev server origin
         request_origin = request.headers.get(hdrs.ORIGIN)
         logger.debug(f"CORS: request origin = {request_origin}")
         if request_origin is not None:

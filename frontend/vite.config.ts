@@ -31,4 +31,5 @@ export default defineConfig({
       preventAssignment: true,
     }),
   ],
+  base: process.env.BASE_PATH || "",
 });
