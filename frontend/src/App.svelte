@@ -1,25 +1,23 @@
 <script lang="ts">
-  import bawLogo from "/baw.svg";
-  import BaseConstructor from "./BaseConstructor.svelte";
+  import bawLogo from "../public/baw.svg";
+  import { Button } from "@svelteuidev/core";
+  import { Router, links } from "svelte-routing";
+  import Dashboard from "./dashboard/Dashboard.svelte";
 </script>
 
-<main>
-  <div>
-    <img src={bawLogo} class="logo" alt="BAW Logo" />
+<Router>
+  <div use:links>
+    <header id="header" class="header">
+      <div class="center" style="flex:0">
+        <img src={bawLogo} alt="BAW logo" class="logo" />
+      </div>
+      <div class="nav-buttons">
+        <Button href="/" radius={40} ripple>Управление</Button>
+        <Button href="/command" radius={40} ripple>Команда</Button>
+        <Button href="/actions" radius={40} ripple>Действия</Button>
+        <Button href="/security" radius={40} ripple>Безопасность</Button>
+      </div>
+    </header>
   </div>
-  <div class="constructor">
-    <BaseConstructor />
-  </div>
-</main>
-
-<style>
-  .logo {
-    height: 6em;
-    padding: 1.5em;
-    will-change: filter;
-    transition: filter 300ms;
-  }
-  .logo:hover {
-    filter: drop-shadow(0 0 2em #646cffaa);
-  }
-</style>
+  <Dashboard />
+</Router>

@@ -14,14 +14,17 @@ export function unwrap<T, E = string>(result: Result<T, E>): T {
   if (result.ok) {
     return result.data;
   } else {
-    // @ts-ignore
+    // @ts-expect-error
     throw new Error(result.error);
   }
 }
 
 export async function toTrivialResult(resp: Response): Promise<Result<null, string>> {
-  if (resp.ok) return ok(null);
-  else return err(await resp.text());
+  if (resp.ok) {
+    return ok(null);
+  } else {
+    return err(await resp.text());
+  }
 }
 
 export async function toDataResult<T>(resp: Response): Promise<Result<T, string>> {
