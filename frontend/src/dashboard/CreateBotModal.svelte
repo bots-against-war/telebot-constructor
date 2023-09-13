@@ -1,16 +1,17 @@
 <script lang="ts">
-  import { listBotConfigs, saveBotConfig } from "./api/botConfig";
-  import { unwrap } from "./utils";
+  import { listBotConfigs, saveBotConfig } from "../api/botConfig";
+  import { unwrap } from "../utils";
   import { Button, TextInput } from "@svelteuidev/core";
   import { getContext } from "svelte";
   // @ts-expect-error
   import { Context } from "svelte-simple-modal";
-  import { botConfigs } from "./botConfigsStore";
+  import { botConfigs } from "../botConfigsStore";
   const { close } = getContext<Context>("simple-modal");
-  const closePopup = async () => close();
+  const closePopup = async () => close(() => (selectedBot = bot_name));
 
   let bot_name = "";
   let newBotConfigStatus = "";
+  export let selectedBot: string;
 
   async function reloadConfigs() {
     const configsFromBackend = unwrap(await listBotConfigs());
@@ -32,6 +33,7 @@
 
     if (resp.ok) {
       newBotConfigStatus = "";
+      selectedBot = bot_name;
       await reloadConfigs();
       await closePopup();
     } else {

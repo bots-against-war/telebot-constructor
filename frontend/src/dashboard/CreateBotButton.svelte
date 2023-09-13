@@ -6,7 +6,9 @@
   import type { Context } from "svelte-simple-modal";
   const { open } = getContext<Context>("simple-modal");
 
-  const showNewBotModal = () => open(CreateNewBotModal);
+  export let selectedBot: string;
+
+  const showNewBotModal = () => open(CreateNewBotModal, { selectedBot: selectedBot });
 </script>
 
 <div class="button">
