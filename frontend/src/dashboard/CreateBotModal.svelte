@@ -1,22 +1,15 @@
 <script lang="ts">
-  import { listBotConfigs, saveBotConfig } from "../api/botConfig";
-  import { unwrap } from "../utils";
+  import { saveBotConfig } from "../api/botConfig";
   import { Button, TextInput } from "@svelteuidev/core";
   import { getContext } from "svelte";
+  import { reloadConfigs } from "./Dashboard.svelte";
   // @ts-expect-error
   import { Context } from "svelte-simple-modal";
-  import { botConfigs } from "../botConfigsStore";
-  const { close } = getContext<Context>("simple-modal");
-  const closePopup = async () => close(() => (selectedBot = bot_name));
 
   let bot_name = "";
   let newBotConfigStatus = "";
-  export let selectedBot: string;
-
-  async function reloadConfigs() {
-    const configsFromBackend = unwrap(await listBotConfigs());
-    botConfigs.set(configsFromBackend);
-  }
+  const { close } = getContext<Context>("simple-modal");
+  const closePopup = async () => close();
 
   async function createNewBot() {
     if (!bot_name) {
@@ -27,13 +20,11 @@
     const bot_config = {
       token_secret_name: "",
     };
-
     const resp = await saveBotConfig(bot_name, bot_config);
     console.log(resp);
 
     if (resp.ok) {
       newBotConfigStatus = "";
-      selectedBot = bot_name;
       await reloadConfigs();
       await closePopup();
     } else {

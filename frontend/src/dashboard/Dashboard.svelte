@@ -1,3 +1,14 @@
+<script context="module" lang="ts">
+  import { listBotConfigs } from "../api/botConfig.js";
+  import { unwrap } from "../utils.js";
+  import { botConfigs } from "../botConfigsStore";
+
+  export async function reloadConfigs() {
+    const configsFromBackend = unwrap(await listBotConfigs());
+    botConfigs.set(configsFromBackend);
+  }
+</script>
+
 <script lang="ts">
   import { Route } from "svelte-routing";
   import CreateBotButton from "./CreateBotButton.svelte";
@@ -5,10 +16,19 @@
   // @ts-expect-error
   import Modal from "svelte-simple-modal";
   import type { BotConfig } from "../api/types";
-  import { botConfigs } from "../botConfigsStore";
-  let existingConfigs: { [key: string]: BotConfig } = {};
+  import BotLifecycle from "./BotLifecycle.svelte";
 
+  let existingConfigs: { [key: string]: BotConfig } = {};
   let selectedBot = "";
+  $: selectedBot = selectedBot || Object.keys(existingConfigs)[0];
+
+  function handleUpdateSelectedBot(event: CustomEvent<string>) {
+    if (event.detail) {
+      selectedBot = event.detail;
+    } else {
+      selectedBot = "";
+    }
+  }
 
   botConfigs.subscribe((value) => {
     existingConfigs = value;
@@ -19,16 +39,18 @@
   <div style="display:flex; flex-flow: row; align-items: center;">
     <div class="right">
       <div class="center">
-        <Modal {selectedBot}><CreateBotButton {selectedBot} /></Modal>
+        <Modal><CreateBotButton /></Modal>
       </div>
       <hr />
-      <ArrayBots {selectedBot} />
+      <ArrayBots on:updateSelectedBot={handleUpdateSelectedBot} {selectedBot} />
     </div>
     {#if !selectedBot}
       <p class="text">
         Добро пожаловать в B.A.W., современный конструктор чат-ботов, который поможет вашей инициативе стать еще ближе к
         пользователям.
       </p>
+    {:else}
+      <BotLifecycle on:updateSelectedBot={handleUpdateSelectedBot} botName={selectedBot} />
     {/if}
   </div>
 </Route>
