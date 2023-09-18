@@ -3,10 +3,8 @@
   import { unwrap } from "./utils";
   import { Button, TextInput } from "@svelteuidev/core";
   import { getContext } from "svelte";
-  // @ts-expect-error
-  import { Context } from "svelte-simple-modal";
   import { botConfigs } from "./botConfigsStore";
-  const { close } = getContext<Context>("simple-modal");
+  const { close } = getContext("simple-modal");
   const closePopup = async () => close();
 
   let bot_name = "";
@@ -35,7 +33,6 @@
       await reloadConfigs();
       await closePopup();
     } else {
-      // @ts-expect-error
       newBotConfigStatus = `Failed to save: ${resp.error}`;
     }
   }

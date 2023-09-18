@@ -21,7 +21,7 @@ async def main() -> None:
     if is_local:
         redis = PersistentRedisEmulation()  # type: ignore
     else:
-        redis_url = urlparse(os.environ.get("REDIS_URL"))
+        redis_url = urlparse(os.environ["REDIS_URL"])
         redis = Redis(
             host=redis_url.hostname,
             port=redis_url.port,
@@ -34,7 +34,7 @@ async def main() -> None:
     else:
         secret_store = RedisSecretStore(
             redis=redis,
-            encryption_key=str(os.environ.get("SECRETS_ENCRYPTION_KEY")),
+            encryption_key=os.environ["SECRETS_ENCRYPTION_KEY"],
             secret_max_len=10 * 1024,
             secrets_per_user=10,
             scope_secrets_to_user=False,
