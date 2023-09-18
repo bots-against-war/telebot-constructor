@@ -36,4 +36,5 @@ export default defineConfig({
       preventAssignment: true,
     }),
   ],
+  optimizeDeps: { exclude: ["svelte-routing"] },
 });
