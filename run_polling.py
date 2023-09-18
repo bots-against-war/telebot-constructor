@@ -7,7 +7,11 @@ from urllib.parse import urlparse
 from redis.asyncio import Redis  # type: ignore
 from telebot_components.redis_utils.emulation import PersistentRedisEmulation
 from telebot_components.redis_utils.interface import RedisInterface
-from telebot_components.utils.secrets import RedisSecretStore, TomlFileSecretStore, SecretStore
+from telebot_components.utils.secrets import (
+    RedisSecretStore,
+    SecretStore,
+    TomlFileSecretStore,
+)
 
 from telebot_constructor.app import TelebotConstructorApp
 from telebot_constructor.auth import NoAuth

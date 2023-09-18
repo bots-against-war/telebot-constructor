@@ -29,6 +29,19 @@ export type HashtagsInAdminChat = boolean;
 export type UnansweredHashtag = string | null;
 export type HashtagMessageRarerThan = string | null;
 export type MessageLogToAdminChat = boolean;
+export type BlockId2 = string;
+export type Text = string;
+export type Label = string;
+export type NextBlockId2 = string | null;
+export type LinkUrl = string | null;
+export type Items = MenuItem[];
+export type BackLabel =
+  | string
+  | {
+      [k: string]: string;
+    };
+export type LockAfterTermination = boolean;
+export type IsTextHtml = boolean;
 export type Blocks = UserFlowBlockConfig[];
 export type X = number;
 export type Y = number;
@@ -58,6 +71,7 @@ export interface CommandEntryPoint {
 export interface UserFlowBlockConfig {
   message: MessageBlock | null;
   human_operator: HumanOperatorBlock | null;
+  menu: MenuBlock | null;
   [k: string]: unknown;
 }
 /**
@@ -100,6 +114,33 @@ export interface MessagesToAdmin {
   copied_to_user_ok: CopiedToUserOk;
   deleted_message_ok: DeletedMessageOk;
   can_not_delete_message: CanNotDeleteMessage;
+  [k: string]: unknown;
+}
+/**
+ * Multilevel menu on inline buttons
+ */
+export interface MenuBlock {
+  block_id: BlockId2;
+  menu: Menu;
+  config: MenuConfig;
+  [k: string]: unknown;
+}
+export interface Menu {
+  text: Text;
+  items: Items;
+  [k: string]: unknown;
+}
+export interface MenuItem {
+  label: Label;
+  submenu: Menu | null;
+  next_block_id: NextBlockId2;
+  link_url: LinkUrl;
+  [k: string]: unknown;
+}
+export interface MenuConfig {
+  back_label: BackLabel;
+  lock_after_termination: LockAfterTermination;
+  is_text_html: IsTextHtml;
   [k: string]: unknown;
 }
 export interface NodeDisplayCoords {

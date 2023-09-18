@@ -124,6 +124,131 @@
       "title": "HumanOperatorBlock",
       "type": "object"
     },
+    "Menu": {
+      "properties": {
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "items": {
+          "items": {
+            "$ref": "#/$defs/MenuItem"
+          },
+          "title": "Items",
+          "type": "array"
+        }
+      },
+      "required": [
+        "text",
+        "items"
+      ],
+      "title": "Menu",
+      "type": "object"
+    },
+    "MenuBlock": {
+      "description": "Multilevel menu on inline buttons",
+      "properties": {
+        "block_id": {
+          "title": "Block Id",
+          "type": "string"
+        },
+        "menu": {
+          "$ref": "#/$defs/Menu"
+        },
+        "config": {
+          "$ref": "#/$defs/MenuConfig"
+        }
+      },
+      "required": [
+        "block_id",
+        "menu",
+        "config"
+      ],
+      "title": "MenuBlock",
+      "type": "object"
+    },
+    "MenuConfig": {
+      "properties": {
+        "back_label": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            }
+          ],
+          "title": "Back Label"
+        },
+        "lock_after_termination": {
+          "title": "Lock After Termination",
+          "type": "boolean"
+        },
+        "is_text_html": {
+          "default": false,
+          "title": "Is Text Html",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "back_label",
+        "lock_after_termination",
+        "is_text_html"
+      ],
+      "title": "MenuConfig",
+      "type": "object"
+    },
+    "MenuItem": {
+      "properties": {
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "submenu": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Menu"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "next_block_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Next Block Id"
+        },
+        "link_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Link Url"
+        }
+      },
+      "required": [
+        "label",
+        "submenu",
+        "next_block_id",
+        "link_url"
+      ],
+      "title": "MenuItem",
+      "type": "object"
+    },
     "MessageBlock": {
       "description": "Simplest user flow block: send message and immediately continue to the next block",
       "properties": {
@@ -206,7 +331,8 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "default": null
         },
         "human_operator": {
           "anyOf": [
@@ -216,12 +342,25 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "default": null
+        },
+        "menu": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MenuBlock"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         }
       },
       "required": [
         "message",
-        "human_operator"
+        "human_operator",
+        "menu"
       ],
       "title": "UserFlowBlockConfig",
       "type": "object"
@@ -268,7 +407,8 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "default": null
         }
       },
       "required": [
