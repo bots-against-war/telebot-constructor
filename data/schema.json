@@ -215,7 +215,8 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "default": null
         },
         "next_block_id": {
           "anyOf": [
@@ -226,6 +227,7 @@
               "type": "null"
             }
           ],
+          "default": null,
           "title": "Next Block Id"
         },
         "link_url": {
@@ -237,6 +239,7 @@
               "type": "null"
             }
           ],
+          "default": null,
           "title": "Link Url"
         }
       },
