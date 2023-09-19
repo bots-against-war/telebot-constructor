@@ -22,11 +22,12 @@ class UserFlowSetupContext:
 @dataclass(frozen=True)
 class UserFlowContext:
     bot: AsyncTeleBot
+    banned_users_store: BannedUsersStore
+    enter_block: "EnterUserFlowBlockCallback"
+    get_active_block_id: "GetActiveUserFlowBlockId"
     chat: Optional[tg.Chat]
     user: tg.User
     last_update_content: Optional[service_types.UpdateContent]
-    enter_block: "EnterUserFlowBlockCallback"
-    get_active_block_id: "GetActiveUserFlowBlockId"
 
     @classmethod
     def from_setup_context(
@@ -38,11 +39,12 @@ class UserFlowContext:
     ) -> "UserFlowContext":
         return UserFlowContext(
             bot=setup_ctx.bot,
+            banned_users_store=setup_ctx.banned_users_store,
+            enter_block=setup_ctx.enter_block,
+            get_active_block_id=setup_ctx.get_active_block_id,
             chat=chat,
             user=user,
             last_update_content=last_update_content,
-            enter_block=setup_ctx.enter_block,
-            get_active_block_id=setup_ctx.get_active_block_id,
         )
 
 
@@ -53,16 +55,30 @@ GetActiveUserFlowBlockId = Callable[[int], Awaitable[Optional[UserFlowBlockId]]]
 
 
 @dataclass(frozen=True)
+class BotCommandInfo:
+    command: tg.BotCommand
+    scope: Optional[tg.BotCommandScope]
+
+    def scope_key(self) -> str:
+        if self.scope is not None:
+            return self.scope.to_json()
+        else:
+            return ""
+
+
+@dataclass(frozen=True)
 class SetupResult:
     background_jobs: list[Coroutine[None, None, None]]
     aux_endpoints: list[AuxBotEndpoint]
+    bot_commands: list[BotCommandInfo]
 
     @classmethod
     def empty(cls) -> "SetupResult":
-        return SetupResult([], [])
+        return SetupResult([], [], [])
 
     def merge(self, other: "SetupResult") -> "SetupResult":
         return SetupResult(
             background_jobs=self.background_jobs + other.background_jobs,
             aux_endpoints=self.aux_endpoints + other.aux_endpoints,
+            bot_commands=self.bot_commands + other.bot_commands
         )

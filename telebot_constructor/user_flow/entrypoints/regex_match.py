@@ -30,8 +30,11 @@ class RegexMatchEntryPoint(UserFlowEntryPoint):
         return self.is_catch_all_pattern
 
     async def setup(self, context: UserFlowSetupContext) -> SetupResult:
-        #                            VVVVVV TODO fix typing in lib
-        @context.bot.message_handler(regexp=self.compiled_regex)  # type: ignore
+        @context.bot.message_handler(
+            # VVVV TODO fix typing in lib to accept Pattern[str]
+            regexp=self.compiled_regex,  # type: ignore
+            func=context.banned_users_store.not_from_banned_user,
+        )
         async def regex_matching_handler(message: tg.Message) -> None:
             if self.next_block_id is not None:
                 await context.enter_block(

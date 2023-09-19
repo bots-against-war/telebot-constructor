@@ -78,13 +78,11 @@ class MenuBlock(UserFlowBlock):
             next_block_id = terminator_context.terminator
             await context.enter_block(
                 next_block_id,
-                UserFlowContext(
-                    bot=context.bot,
+                UserFlowContext.from_setup_context(
+                    setup_ctx=context,
                     chat=terminator_context.menu_message.chat,
                     user=terminator_context.user,
                     last_update_content=terminator_context.menu_message,
-                    enter_block=context.enter_block,
-                    get_active_block_id=context.get_active_block_id,
                 ),
             )
             return None

@@ -14,6 +14,7 @@ from telebot_components.feedback.anti_spam import AntiSpam, AntiSpamConfig
 
 from telebot_constructor.user_flow.blocks.base import UserFlowBlock
 from telebot_constructor.user_flow.types import (
+    BotCommandInfo,
     SetupResult,
     UserFlowContext,
     UserFlowSetupContext,
@@ -116,7 +117,26 @@ class HumanOperatorBlock(UserFlowBlock):
 
         await feedback_handler.setup(context.bot)
 
+        admin_chat_cmd_scope = tg.BotCommandScopeChat(chat_id=self.feedback_handler_config.admin_chat_id)
         return SetupResult(
             background_jobs=feedback_handler.background_jobs(base_url=None, server_listening_future=None),
             aux_endpoints=await feedback_handler.aux_endpoints(),
+            bot_commands=[
+                BotCommandInfo(
+                    command=tg.BotCommand(command="help", description="помощь по использованию админ-чата"),
+                    scope=admin_chat_cmd_scope,
+                ),
+                BotCommandInfo(
+                    command=tg.BotCommand(command="undo", description="отменить отправку сообщения юзер:ке"),
+                    scope=admin_chat_cmd_scope,
+                ),
+                BotCommandInfo(
+                    command=tg.BotCommand(command="ban", description="забанить юзер:ку"),
+                    scope=admin_chat_cmd_scope,
+                ),
+                BotCommandInfo(
+                    command=tg.BotCommand(command="log", description="история сообщений с юзер:кой"),
+                    scope=admin_chat_cmd_scope,
+                ),
+            ],
         )

@@ -48,6 +48,8 @@ class UserFlow:
         return self._active_block_id_store
 
     async def _enter_block(self, id: UserFlowBlockId, context: UserFlowContext) -> None:
+        if await context.banned_users_store.is_banned(context.user.id):
+            return
         block = self.block_by_id.get(id)
         if block is None:
             raise ValueError(f"Attempt to enter non-existent block with id {id}")

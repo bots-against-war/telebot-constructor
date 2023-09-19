@@ -18,7 +18,7 @@ class CatchAllEntryPoint(UserFlowEntryPoint):
 
     async def setup(self, context: UserFlowSetupContext) -> SetupResult:
         # NOTE: lowest priority to not interfere with more specific handlers
-        @context.bot.message_handler(priority=-1000)
+        @context.bot.message_handler(priority=-1000, func=context.banned_users_store.not_from_banned_user)
         async def catch_all_handler(message: tg.Message) -> None:
             if self.next_block_id is not None:
                 await context.enter_block(
