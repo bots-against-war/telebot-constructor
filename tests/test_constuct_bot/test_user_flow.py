@@ -25,6 +25,7 @@ from telebot_constructor.user_flow.blocks.menu import (
 from telebot_constructor.user_flow.blocks.message import MessageBlock
 from telebot_constructor.user_flow.entrypoints.catch_all import CatchAllEntryPoint
 from telebot_constructor.user_flow.entrypoints.command import CommandEntryPoint
+from telebot_constructor.user_flow.entrypoints.regex_match import RegexMatchEntryPoint
 from tests.utils import (
     assert_method_call_kwargs_include,
     dummy_secret_store,
@@ -428,4 +429,73 @@ async def test_catch_all_entrypoint() -> None:
     # any other message for catch-all entrypoint
     await bot.process_new_updates([tg_update_message_to_bot(USER_ID, first_name="User", text="HIIIIIIII!!!!!")])
     assert_method_call_kwargs_include(bot.method_calls["send_message"], [{"chat_id": USER_ID, "text": "Message 2"}])
+    bot.method_calls.clear()
+
+
+async def test_regex_match_entrypoint() -> None:
+    USER_ID = 1312
+    bot_config = BotConfig(
+        token_secret_name="token",
+        display_name="",
+        user_flow_config=UserFlowConfig(
+            entrypoints=[
+                UserFlowEntryPointConfig(
+                    regex=RegexMatchEntryPoint(
+                        entrypoint_id="regex-1", regex="literal value", next_block_id="message-literal"
+                    )
+                ),
+                UserFlowEntryPointConfig(
+                    regex=RegexMatchEntryPoint(entrypoint_id="regex-2", regex=".+", next_block_id="message-non-empty")
+                ),
+                UserFlowEntryPointConfig(
+                    regex=RegexMatchEntryPoint(entrypoint_id="regex-3", regex="^$", next_block_id="message-empty")
+                ),
+            ],
+            blocks=[
+                UserFlowBlockConfig(
+                    message=MessageBlock(block_id="message-literal", message_text="Literal value", next_block_id=None),
+                ),
+                UserFlowBlockConfig(
+                    message=MessageBlock(block_id="message-non-empty", message_text="Non-empty", next_block_id=None),
+                ),
+                UserFlowBlockConfig(
+                    message=MessageBlock(block_id="message-empty", message_text="Empty", next_block_id=None),
+                ),
+            ],
+            node_display_coords={},
+        ),
+    )
+
+    redis = RedisEmulation()
+    secret_store = dummy_secret_store(redis)
+    username = "user123"
+    await secret_store.save_secret(secret_name="token", secret_value="mock-token", owner_id=username)
+    bot_runner = await construct_bot(
+        username=username,
+        bot_name="regex-entrypoint-bot",
+        bot_config=bot_config,
+        secret_store=secret_store,
+        redis=redis,
+        _bot_factory=MockedAsyncTeleBot,
+    )
+
+    assert not bot_runner.background_jobs
+    assert not bot_runner.aux_endpoints
+
+    bot = bot_runner.bot
+    assert isinstance(bot, MockedAsyncTeleBot)
+    bot.method_calls.clear()  # remove construct-time calls
+
+    await bot.process_new_updates([tg_update_message_to_bot(USER_ID, first_name="User", text="")])
+    assert_method_call_kwargs_include(bot.method_calls["send_message"], [{"chat_id": USER_ID, "text": "Empty"}])
+    bot.method_calls.clear()
+
+    await bot.process_new_updates(
+        [tg_update_message_to_bot(USER_ID, first_name="User", text="message containing literal value!!!")]
+    )
+    assert_method_call_kwargs_include(bot.method_calls["send_message"], [{"chat_id": USER_ID, "text": "Literal value"}])
+    bot.method_calls.clear()
+
+    await bot.process_new_updates([tg_update_message_to_bot(USER_ID, first_name="User", text="aaaabbbb")])
+    assert_method_call_kwargs_include(bot.method_calls["send_message"], [{"chat_id": USER_ID, "text": "Non-empty"}])
     bot.method_calls.clear()

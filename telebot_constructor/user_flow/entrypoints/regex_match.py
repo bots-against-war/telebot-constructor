@@ -19,20 +19,18 @@ class RegexMatchEntryPoint(UserFlowEntryPoint):
     next_block_id: Optional[UserFlowBlockId]
 
     def model_post_init(self, __context: Any) -> None:
-        self.compiled_regex = re.compile(self.regex, flags=re.IGNORECASE)
         # pattern is considered catch-all if it matches both empty and some non-empty string, e.g.
         # '.*' - catch-all
         # '.+' - not catch-all, rejects empty texts
         # '^$' - not catch-all, rejects non-empty texts
-        self.is_catch_all_pattern = bool(self.compiled_regex.search("")) and bool(self.compiled_regex.search("a"))
+        self._is_catch_all_pattern = bool(re.search(self.regex, "")) and bool(re.search(self.regex, "a"))
 
     def is_catch_all(self) -> bool:
-        return self.is_catch_all_pattern
+        return self._is_catch_all_pattern
 
     async def setup(self, context: UserFlowSetupContext) -> SetupResult:
         @context.bot.message_handler(
-            # VVVV TODO fix typing in lib to accept Pattern[str]
-            regexp=self.compiled_regex,  # type: ignore
+            regexp=self.regex,  # type: ignore
             func=context.banned_users_store.not_from_banned_user,
         )
         async def regex_matching_handler(message: tg.Message) -> None:
