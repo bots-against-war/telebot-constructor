@@ -32,8 +32,8 @@ class UserFlowContext:
     def from_setup_context(
         cls,
         setup_ctx: UserFlowSetupContext,
-        chat: tg.Chat,
-        user: Optional[tg.User],
+        chat: Optional[tg.Chat],
+        user: tg.User,
         last_update_content: Optional[service_types.UpdateContent],
     ) -> "UserFlowContext":
         return UserFlowContext(
