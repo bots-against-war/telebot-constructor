@@ -37,10 +37,6 @@
           "title": "Command",
           "type": "string"
         },
-        "short_description": {
-          "title": "Short Description",
-          "type": "string"
-        },
         "next_block_id": {
           "anyOf": [
             {
@@ -51,13 +47,25 @@
             }
           ],
           "title": "Next Block Id"
+        },
+        "short_description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Short Description"
         }
       },
       "required": [
         "entrypoint_id",
         "command",
-        "short_description",
-        "next_block_id"
+        "next_block_id",
+        "short_description"
       ],
       "title": "CommandEntryPoint",
       "type": "object"

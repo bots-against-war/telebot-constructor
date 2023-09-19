@@ -9,8 +9,8 @@ export type DisplayName = string;
 export type TokenSecretName = string;
 export type EntrypointId = string;
 export type Command = string;
-export type ShortDescription = string;
 export type NextBlockId = string | null;
+export type ShortDescription = string | null;
 export type EntrypointId1 = string;
 export type NextBlockId1 = string | null;
 export type EntrypointId2 = string;
@@ -76,8 +76,8 @@ export interface UserFlowEntryPointConfig {
 export interface CommandEntryPoint {
   entrypoint_id: EntrypointId;
   command: Command;
-  short_description: ShortDescription;
   next_block_id: NextBlockId;
+  short_description: ShortDescription;
   [k: string]: unknown;
 }
 /**

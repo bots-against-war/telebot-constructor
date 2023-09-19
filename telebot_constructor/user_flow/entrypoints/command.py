@@ -14,8 +14,8 @@ from telebot_constructor.user_flow.types import (
 class CommandEntryPoint(UserFlowEntryPoint):
     """Basic entry-point catching Telegram /commands"""
     command: str  # without leading slash, e.g. "start" instead of "/start"
-    short_description: str  # used for native Telegram menu
     next_block_id: Optional[UserFlowBlockId]
+    short_description: Optional[str] = None  # used for native Telegram menu
 
     async def setup(self, context: UserFlowSetupContext) -> SetupResult:
         @context.bot.message_handler(commands=[self.command])
