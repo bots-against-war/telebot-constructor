@@ -1,4 +1,5 @@
 import pytest
+from pydantic import ValidationError
 from telebot import types as tg
 from telebot.test_util import MockedAsyncTeleBot
 from telebot_components.redis_utils.emulation import RedisEmulation
@@ -499,3 +500,59 @@ async def test_regex_match_entrypoint() -> None:
     await bot.process_new_updates([tg_update_message_to_bot(USER_ID, first_name="User", text="aaaabbbb")])
     assert_method_call_kwargs_include(bot.method_calls["send_message"], [{"chat_id": USER_ID, "text": "Non-empty"}])
     bot.method_calls.clear()
+
+
+async def test_forbid_multiple_catch_all() -> None:
+    with pytest.raises(ValidationError, match=".*More than one catch-all blocks/entrypoints"):
+        BotConfig(
+            token_secret_name="foobar",
+            display_name="barfoo",
+            user_flow_config=UserFlowConfig(
+                entrypoints=[
+                    UserFlowEntryPointConfig(
+                        regex=RegexMatchEntryPoint(entrypoint_id="regex-catch-all", regex=".*", next_block_id=None)
+                    ),
+                    UserFlowEntryPointConfig(
+                        catch_all=CatchAllEntryPoint(entrypoint_id="catch-all", next_block_id=None)
+                    ),
+                ],
+                blocks=[],
+                node_display_coords={},
+            ),
+        )
+
+    with pytest.raises(ValidationError, match=".*More than one catch-all blocks/entrypoints"):
+        BotConfig(
+            token_secret_name="foobar",
+            display_name="barfoo",
+            user_flow_config=UserFlowConfig(
+                entrypoints=[
+                    UserFlowEntryPointConfig(
+                        catch_all=CatchAllEntryPoint(entrypoint_id="catch-all", next_block_id=None)
+                    ),
+                ],
+                blocks=[
+                    UserFlowBlockConfig(
+                        human_operator=HumanOperatorBlock(
+                            block_id="human-op",
+                            catch_all=True,
+                            feedback_handler_config=FeedbackHandlerConfig(
+                                admin_chat_id=12345,
+                                forum_topic_per_user=False,
+                                messages_to_user=MessagesToUser(forwarded_to_admin_ok="ok", throttling=""),
+                                messages_to_admin=MessagesToAdmin(
+                                    copied_to_user_ok="copied ok", deleted_message_ok="", can_not_delete_message=""
+                                ),
+                                anonimyze_users=False,
+                                max_messages_per_minute=10,
+                                hashtags_in_admin_chat=True,
+                                unanswered_hashtag="unanswered",
+                                hashtag_message_rarer_than=None,
+                                message_log_to_admin_chat=True,
+                            ),
+                        )
+                    )
+                ],
+                node_display_coords={},
+            ),
+        )
