@@ -23,6 +23,7 @@ from telebot_constructor.user_flow.blocks.menu import (
     MenuItem,
 )
 from telebot_constructor.user_flow.blocks.message import MessageBlock
+from telebot_constructor.user_flow.entrypoints.catch_all import CatchAllEntryPoint
 from telebot_constructor.user_flow.entrypoints.command import CommandEntryPoint
 from tests.utils import (
     assert_method_call_kwargs_include,
@@ -59,6 +60,7 @@ async def test_simple_user_flow() -> None:
                         entrypoint_id="command-1",
                         command="hello",
                         next_block_id="message-1",
+                        short_description="example command",
                     ),
                 )
             ],
@@ -94,14 +96,22 @@ async def test_simple_user_flow() -> None:
         redis=redis,
         _bot_factory=MockedAsyncTeleBot,
     )
-
     assert not bot_runner.background_jobs
     assert not bot_runner.aux_endpoints
 
     bot = bot_runner.bot
     assert isinstance(bot, MockedAsyncTeleBot)
+
+    # checking construct-time calls
+    assert len(bot.method_calls["set_my_commands"]) == 1
+    bot_commands = bot.method_calls["set_my_commands"][0].full_kwargs["commands"]
+    assert len(bot_commands) == 1
+    assert bot_commands[0].to_json() == '{"command":"hello","description":"example command"}'
+    bot.method_calls.clear()
+
+    # user interaction
     await bot.process_new_updates([tg_update_message_to_bot(1312, first_name="User", text="/hello")])
-    assert len(bot.method_calls) == 2
+    assert len(bot.method_calls) == 1
     assert_method_call_kwargs_include(
         bot.method_calls["send_message"],
         [
@@ -167,7 +177,7 @@ async def test_flow_with_human_operator(catch_all: bool) -> None:
     await secret_store.save_secret(secret_name="token", secret_value="mock-token", owner_id=username)
     bot_runner = await construct_bot(
         username=username,
-        bot_name="simple-user-flow-bot",
+        bot_name=f"flow-with-human-operator-bot-{catch_all=}",
         bot_config=bot_config,
         secret_store=secret_store,
         redis=redis,
@@ -179,6 +189,13 @@ async def test_flow_with_human_operator(catch_all: bool) -> None:
 
     bot = bot_runner.bot
     assert isinstance(bot, MockedAsyncTeleBot)
+
+    assert len(bot.method_calls["set_my_commands"]) == 1
+    bot_commands = bot.method_calls["set_my_commands"][0].full_kwargs["commands"]
+    assert len(bot_commands) == 4
+    # too much hassle to compare the actual command values...
+    # assert bot_commands[0].to_json() == '{"command":"undo","description":"...???"}'
+
     bot.method_calls.clear()  # remove construct-time calls
 
     # direct message to bot but not a command
@@ -249,11 +266,10 @@ async def test_flow_with_human_operator(catch_all: bool) -> None:
 
 
 async def test_flow_with_menu() -> None:
-    ADMIN_CHAT_ID = 98765
     USER_ID = 1312
     bot_config = BotConfig(
         token_secret_name="token",
-        display_name="Simple feedback bot",
+        display_name="Menu bot",
         user_flow_config=UserFlowConfig(
             entrypoints=[
                 UserFlowEntryPointConfig(
@@ -355,4 +371,61 @@ async def test_flow_with_menu() -> None:
         bot.method_calls["send_message"], [{"chat_id": 1312, "text": "message on option two"}]
     )
     assert bot.method_calls["send_message"][0].full_kwargs["reply_markup"].to_json() == '{"remove_keyboard":true}'
+    bot.method_calls.clear()
+
+
+async def test_catch_all_entrypoint() -> None:
+    USER_ID = 1312
+    bot_config = BotConfig(
+        token_secret_name="token",
+        display_name="",
+        user_flow_config=UserFlowConfig(
+            entrypoints=[
+                UserFlowEntryPointConfig(
+                    command=CommandEntryPoint(entrypoint_id="command", command="cmd", next_block_id="message-1"),
+                ),
+                UserFlowEntryPointConfig(
+                    catch_all=CatchAllEntryPoint(entrypoint_id="catch-all", next_block_id="message-2")
+                ),
+            ],
+            blocks=[
+                UserFlowBlockConfig(
+                    message=MessageBlock(block_id="message-1", message_text="Message 1", next_block_id=None),
+                ),
+                UserFlowBlockConfig(
+                    message=MessageBlock(block_id="message-2", message_text="Message 2", next_block_id=None),
+                ),
+            ],
+            node_display_coords={},
+        ),
+    )
+
+    redis = RedisEmulation()
+    secret_store = dummy_secret_store(redis)
+    username = "user123"
+    await secret_store.save_secret(secret_name="token", secret_value="mock-token", owner_id=username)
+    bot_runner = await construct_bot(
+        username=username,
+        bot_name="catch-all-entrypoint-bot",
+        bot_config=bot_config,
+        secret_store=secret_store,
+        redis=redis,
+        _bot_factory=MockedAsyncTeleBot,
+    )
+
+    assert not bot_runner.background_jobs
+    assert not bot_runner.aux_endpoints
+
+    bot = bot_runner.bot
+    assert isinstance(bot, MockedAsyncTeleBot)
+    bot.method_calls.clear()  # remove construct-time calls
+
+    # command
+    await bot.process_new_updates([tg_update_message_to_bot(USER_ID, first_name="User", text="/cmd")])
+    assert_method_call_kwargs_include(bot.method_calls["send_message"], [{"chat_id": USER_ID, "text": "Message 1"}])
+    bot.method_calls.clear()
+
+    # any other message for catch-all entrypoint
+    await bot.process_new_updates([tg_update_message_to_bot(USER_ID, first_name="User", text="HIIIIIIII!!!!!")])
+    assert_method_call_kwargs_include(bot.method_calls["send_message"], [{"chat_id": USER_ID, "text": "Message 2"}])
     bot.method_calls.clear()

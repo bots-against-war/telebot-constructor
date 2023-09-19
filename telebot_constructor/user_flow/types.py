@@ -76,9 +76,7 @@ class SetupResult:
     def empty(cls) -> "SetupResult":
         return SetupResult([], [], [])
 
-    def merge(self, other: "SetupResult") -> "SetupResult":
-        return SetupResult(
-            background_jobs=self.background_jobs + other.background_jobs,
-            aux_endpoints=self.aux_endpoints + other.aux_endpoints,
-            bot_commands=self.bot_commands + other.bot_commands,
-        )
+    def merge(self, other: "SetupResult") -> None:
+        self.background_jobs.extend(other.background_jobs)
+        self.aux_endpoints.extend(other.aux_endpoints)
+        self.bot_commands.extend(other.bot_commands)

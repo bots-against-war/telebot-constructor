@@ -88,15 +88,15 @@ class UserFlow:
         for idx, entrypoint in enumerate(self.entrypoints):
             logger.info(f"[{bot_prefix}] Setting up entrypoint {idx + 1} / {len(self.entrypoints)}: {entrypoint}")
             try:
-                new_result = await entrypoint.setup(setup_context)
+                entrypoint_setup_result = await entrypoint.setup(setup_context)
             except Exception as e:
                 raise ValueError(f"Error setting up {entrypoint}: {e}") from e
-            result.merge(new_result)
+            result.merge(entrypoint_setup_result)
         for idx, block in enumerate(self.blocks):
             logger.info(f"[{bot_prefix}] Setting up block {idx + 1} / {len(self.blocks)}: {block}")
             try:
-                new_result = await block.setup(setup_context)
+                block_setup_result = await block.setup(setup_context)
             except Exception as e:
                 raise ValueError(f"Error setting up {block}: {e}") from e
-            result.merge(new_result)
+            result.merge(block_setup_result)
         return result
