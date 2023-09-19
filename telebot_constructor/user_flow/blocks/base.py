@@ -16,7 +16,7 @@ class UserFlowBlock(BaseModel, abc.ABC):
     block_id: UserFlowBlockId  # mandatory field for all blocks; id by which they can be referenced in the flow
 
     def __str__(self) -> str:
-        return f"Block \"{self.block_id}\" ({self.__class__.__name__})"
+        return f'Block "{self.block_id}" ({self.__class__.__name__})'
 
     @abc.abstractmethod
     async def enter(self, context: UserFlowContext) -> None:
@@ -37,6 +37,6 @@ class UserFlowBlock(BaseModel, abc.ABC):
         Setup handlers necessary for the block to work. Invoked once when constucting the bot.
         """
         ...
-    
+
     def is_catch_all(self) -> bool:
         return False

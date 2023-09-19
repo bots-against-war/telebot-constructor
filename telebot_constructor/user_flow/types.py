@@ -80,5 +80,5 @@ class SetupResult:
         return SetupResult(
             background_jobs=self.background_jobs + other.background_jobs,
             aux_endpoints=self.aux_endpoints + other.aux_endpoints,
-            bot_commands=self.bot_commands + other.bot_commands
+            bot_commands=self.bot_commands + other.bot_commands,
         )

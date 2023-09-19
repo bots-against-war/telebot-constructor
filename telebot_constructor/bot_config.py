@@ -21,7 +21,7 @@ class UserFlowEntryPointConfig(ExactlyOneNonNullFieldModel):
 
     def to_user_flow_entrypoint(self) -> UserFlowEntryPoint:
         # runtime guarantee that exactly one of the options is not None
-        return self.command or self.catch_all or self.regex # type: ignore
+        return self.command or self.catch_all or self.regex  # type: ignore
 
 
 class UserFlowBlockConfig(ExactlyOneNonNullFieldModel):

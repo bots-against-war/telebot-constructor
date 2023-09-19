@@ -3,6 +3,7 @@ import itertools
 import logging
 from typing import Callable, Coroutine, cast
 
+import tenacity
 from telebot import AsyncTeleBot
 from telebot import api as tg_api
 from telebot import types as tg
@@ -12,14 +13,16 @@ from telebot_components.stores.banned_users import BannedUsersStore
 from telebot_components.stores.generic import GenericStore
 from telebot_components.utils.secrets import SecretStore
 from tenacity import RetryCallState
+from tenacity.retry import (
+    retry_all,
+    retry_if_exception_message,
+    retry_if_exception_type,
+)
+from tenacity.stop import stop_after_attempt
+from tenacity.wait import wait_chain, wait_exponential
 
 from telebot_constructor.bot_config import BotConfig
 from telebot_constructor.user_flow.types import BotCommandInfo
-
-import tenacity
-from tenacity.retry import retry_all, retry_if_exception_type, retry_if_exception_message
-from tenacity.wait import wait_chain, wait_exponential
-from tenacity.stop import stop_after_attempt
 
 logger = logging.getLogger(__name__)
 

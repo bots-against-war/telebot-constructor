@@ -39,7 +39,9 @@ class UserFlow:
             block for block in self.blocks if block.is_catch_all()
         ]
         if len(catch_all_entities) > 1:
-            raise ValueError(f"More than one catch-all blocks/entrypoints: {', '.join(str(e) for e in catch_all_entities)}")
+            raise ValueError(
+                f"More than one catch-all blocks/entrypoints: {', '.join(str(e) for e in catch_all_entities)}"
+            )
 
     @property
     def active_block_id_store(self) -> KeyValueStore[str]:
