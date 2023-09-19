@@ -15,9 +15,9 @@ from telebot_constructor.user_flow.types import (
 
 
 class CommandScope(enum.Enum):
-    PRIVATE = enum.auto()
-    GROUP = enum.auto()
-    ANY = enum.auto()
+    PRIVATE = "private"
+    GROUP = "group"
+    ANY = "any"
 
 
 class CommandEntryPoint(UserFlowEntryPoint):

@@ -10,6 +10,7 @@ export type TokenSecretName = string;
 export type EntrypointId = string;
 export type Command = string;
 export type NextBlockId = string | null;
+export type CommandScope = "private" | "group" | "any";
 export type ShortDescription = string | null;
 export type EntrypointId1 = string;
 export type NextBlockId1 = string | null;
@@ -77,6 +78,7 @@ export interface CommandEntryPoint {
   entrypoint_id: EntrypointId;
   command: Command;
   next_block_id: NextBlockId;
+  scope: CommandScope & string;
   short_description: ShortDescription;
   [k: string]: unknown;
 }

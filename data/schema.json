@@ -48,6 +48,14 @@
           ],
           "title": "Next Block Id"
         },
+        "scope": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/CommandScope"
+            }
+          ],
+          "default": "private"
+        },
         "short_description": {
           "anyOf": [
             {
@@ -65,10 +73,20 @@
         "entrypoint_id",
         "command",
         "next_block_id",
+        "scope",
         "short_description"
       ],
       "title": "CommandEntryPoint",
       "type": "object"
+    },
+    "CommandScope": {
+      "enum": [
+        "private",
+        "group",
+        "any"
+      ],
+      "title": "CommandScope",
+      "type": "string"
     },
     "FeedbackHandlerConfig": {
       "properties": {
