@@ -61,6 +61,9 @@ class HumanOperatorBlock(UserFlowBlock):
     async def enter(self, context: UserFlowContext) -> None:
         pass  # nothing to do on enter
 
+    def is_catch_all(self) -> bool:
+        return self.catch_all
+
     async def setup(self, context: UserFlowSetupContext) -> SetupResult:
         log_prefix = f"[{context.bot_prefix}]"
         logger.info(log_prefix + "Setting up feedback handler")

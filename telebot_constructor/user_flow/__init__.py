@@ -27,14 +27,19 @@ class UserFlow:
     blocks: List[UserFlowBlock]
 
     def __post_init__(self) -> None:
+        self._active_block_id_store: Optional[KeyValueStore[str]] = None
+
         block_id_counter = collections.Counter(b.block_id for b in self.blocks)
         duplicate_block_ids = sorted(bid for bid, count in block_id_counter.items() if count > 1)
         if duplicate_block_ids:
             raise ValueError(f"Duplicate block ids: {duplicate_block_ids}")
-
         self.block_by_id = {block.block_id: block for block in self.blocks}
 
-        self._active_block_id_store: Optional[KeyValueStore[str]] = None
+        catch_all_entities = [entrypoint for entrypoint in self.entrypoints if entrypoint.is_catch_all()] + [
+            block for block in self.blocks if block.is_catch_all()
+        ]
+        if len(catch_all_entities) > 1:
+            raise ValueError(f"More than one catch-all blocks/entrypoints: {', '.join(str(e) for e in catch_all_entities)}")
 
     @property
     def active_block_id_store(self) -> KeyValueStore[str]:
@@ -78,10 +83,16 @@ class UserFlow:
         result = SetupResult.empty()
         for idx, entrypoint in enumerate(self.entrypoints):
             logger.info(f"[{bot_prefix}] Setting up entrypoint {idx + 1} / {len(self.entrypoints)}: {entrypoint}")
-            new_result = await entrypoint.setup(setup_context)
+            try:
+                new_result = await entrypoint.setup(setup_context)
+            except Exception as e:
+                raise ValueError(f"Error setting up {entrypoint}: {e}") from e
             result.merge(new_result)
         for idx, block in enumerate(self.blocks):
             logger.info(f"[{bot_prefix}] Setting up block {idx + 1} / {len(self.blocks)}: {block}")
-            new_result = await block.setup(setup_context)
+            try:
+                new_result = await block.setup(setup_context)
+            except Exception as e:
+                raise ValueError(f"Error setting up {block}: {e}") from e
             result.merge(new_result)
         return result

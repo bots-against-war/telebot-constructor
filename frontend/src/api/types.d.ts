@@ -9,11 +9,17 @@ export type DisplayName = string;
 export type TokenSecretName = string;
 export type EntrypointId = string;
 export type Command = string;
+export type ShortDescription = string;
 export type NextBlockId = string | null;
+export type EntrypointId1 = string;
+export type NextBlockId1 = string | null;
+export type EntrypointId2 = string;
+export type Regex = string;
+export type NextBlockId2 = string | null;
 export type Entrypoints = UserFlowEntryPointConfig[];
 export type BlockId = string;
 export type MessageText = string;
-export type NextBlockId1 = string | null;
+export type NextBlockId3 = string | null;
 export type BlockId1 = string;
 export type CatchAll = boolean;
 export type AdminChatId = number;
@@ -32,7 +38,7 @@ export type MessageLogToAdminChat = boolean;
 export type BlockId2 = string;
 export type Text = string;
 export type Label = string;
-export type NextBlockId2 = string | null;
+export type NextBlockId4 = string | null;
 export type LinkUrl = string | null;
 export type Items = MenuItem[];
 export type BackLabel =
@@ -60,12 +66,35 @@ export interface UserFlowConfig {
 }
 export interface UserFlowEntryPointConfig {
   command: CommandEntryPoint | null;
+  catch_all: CatchAllEntryPoint | null;
+  regex: RegexMatchEntryPoint | null;
   [k: string]: unknown;
 }
+/**
+ * Basic entry-point catching Telegram /commands
+ */
 export interface CommandEntryPoint {
   entrypoint_id: EntrypointId;
   command: Command;
+  short_description: ShortDescription;
   next_block_id: NextBlockId;
+  [k: string]: unknown;
+}
+/**
+ * Entry point that catches all user messages
+ */
+export interface CatchAllEntryPoint {
+  entrypoint_id: EntrypointId1;
+  next_block_id: NextBlockId1;
+  [k: string]: unknown;
+}
+/**
+ * Entrypoint matching user messages by searching a regex pattern in text
+ */
+export interface RegexMatchEntryPoint {
+  entrypoint_id: EntrypointId2;
+  regex: Regex;
+  next_block_id: NextBlockId2;
   [k: string]: unknown;
 }
 export interface UserFlowBlockConfig {
@@ -80,7 +109,7 @@ export interface UserFlowBlockConfig {
 export interface MessageBlock {
   block_id: BlockId;
   message_text: MessageText;
-  next_block_id: NextBlockId1;
+  next_block_id: NextBlockId3;
   [k: string]: unknown;
 }
 /**
@@ -133,7 +162,7 @@ export interface Menu {
 export interface MenuItem {
   label: Label;
   submenu: Menu | null;
-  next_block_id: NextBlockId2;
+  next_block_id: NextBlockId4;
   link_url: LinkUrl;
   [k: string]: unknown;
 }

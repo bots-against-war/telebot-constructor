@@ -28,6 +28,23 @@ class UserFlowContext:
     enter_block: "EnterUserFlowBlockCallback"
     get_active_block_id: "GetActiveUserFlowBlockId"
 
+    @classmethod
+    def from_setup_context(
+        cls,
+        setup_ctx: UserFlowSetupContext,
+        chat: tg.Chat,
+        user: Optional[tg.User],
+        last_update_content: Optional[service_types.UpdateContent],
+    ) -> "UserFlowContext":
+        return UserFlowContext(
+            bot=setup_ctx.bot,
+            chat=chat,
+            user=user,
+            last_update_content=last_update_content,
+            enter_block=setup_ctx.enter_block,
+            get_active_block_id=setup_ctx.get_active_block_id,
+        )
+
 
 UserFlowBlockId = str
 

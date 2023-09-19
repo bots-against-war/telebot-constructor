@@ -9,15 +9,19 @@ from telebot_constructor.user_flow.blocks.human_operator import HumanOperatorBlo
 from telebot_constructor.user_flow.blocks.menu import MenuBlock
 from telebot_constructor.user_flow.blocks.message import MessageBlock
 from telebot_constructor.user_flow.entrypoints.base import UserFlowEntryPoint
+from telebot_constructor.user_flow.entrypoints.catch_all import CatchAllEntryPoint
 from telebot_constructor.user_flow.entrypoints.command import CommandEntryPoint
+from telebot_constructor.user_flow.entrypoints.regex_match import RegexMatchEntryPoint
 
 
 class UserFlowEntryPointConfig(ExactlyOneNonNullFieldModel):
     command: Optional[CommandEntryPoint] = None
+    catch_all: Optional[CatchAllEntryPoint] = None
+    regex: Optional[RegexMatchEntryPoint] = None
 
     def to_user_flow_entrypoint(self) -> UserFlowEntryPoint:
         # runtime guarantee that exactly one of the options is not None
-        return self.command  # type: ignore
+        return self.command or self.catch_all or self.regex # type: ignore
 
 
 class UserFlowBlockConfig(ExactlyOneNonNullFieldModel):

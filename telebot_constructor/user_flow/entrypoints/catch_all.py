@@ -11,15 +11,15 @@ from telebot_constructor.user_flow.types import (
 )
 
 
-class CommandEntryPoint(UserFlowEntryPoint):
-    """Basic entry-point catching Telegram /commands"""
-    command: str  # without leading slash, e.g. "start" instead of "/start"
-    short_description: str  # used for native Telegram menu
+class CatchAllEntryPoint(UserFlowEntryPoint):
+    """Entry point that catches all user messages"""
+
     next_block_id: Optional[UserFlowBlockId]
 
     async def setup(self, context: UserFlowSetupContext) -> SetupResult:
-        @context.bot.message_handler(commands=[self.command])
-        async def cmd_handler(message: tg.Message) -> None:
+        # NOTE: lowest priority to not interfere with more specific handlers
+        @context.bot.message_handler(priority=-1000)
+        async def catch_all_handler(message: tg.Message) -> None:
             if self.next_block_id is not None:
                 await context.enter_block(
                     self.next_block_id,
@@ -32,3 +32,6 @@ class CommandEntryPoint(UserFlowEntryPoint):
                 )
 
         return SetupResult.empty()
+
+    def is_catch_all(self) -> bool:
+        return True

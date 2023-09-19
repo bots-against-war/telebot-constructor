@@ -1,6 +1,33 @@
 {
   "$defs": {
+    "CatchAllEntryPoint": {
+      "description": "Entry point that catches all user messages",
+      "properties": {
+        "entrypoint_id": {
+          "title": "Entrypoint Id",
+          "type": "string"
+        },
+        "next_block_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Next Block Id"
+        }
+      },
+      "required": [
+        "entrypoint_id",
+        "next_block_id"
+      ],
+      "title": "CatchAllEntryPoint",
+      "type": "object"
+    },
     "CommandEntryPoint": {
+      "description": "Basic entry-point catching Telegram /commands",
       "properties": {
         "entrypoint_id": {
           "title": "Entrypoint Id",
@@ -8,6 +35,10 @@
         },
         "command": {
           "title": "Command",
+          "type": "string"
+        },
+        "short_description": {
+          "title": "Short Description",
           "type": "string"
         },
         "next_block_id": {
@@ -25,6 +56,7 @@
       "required": [
         "entrypoint_id",
         "command",
+        "short_description",
         "next_block_id"
       ],
       "title": "CommandEntryPoint",
@@ -324,6 +356,37 @@
       "title": "MessagesToUser",
       "type": "object"
     },
+    "RegexMatchEntryPoint": {
+      "description": "Entrypoint matching user messages by searching a regex pattern in text",
+      "properties": {
+        "entrypoint_id": {
+          "title": "Entrypoint Id",
+          "type": "string"
+        },
+        "regex": {
+          "title": "Regex",
+          "type": "string"
+        },
+        "next_block_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Next Block Id"
+        }
+      },
+      "required": [
+        "entrypoint_id",
+        "regex",
+        "next_block_id"
+      ],
+      "title": "RegexMatchEntryPoint",
+      "type": "object"
+    },
     "UserFlowBlockConfig": {
       "properties": {
         "message": {
@@ -412,10 +475,34 @@
             }
           ],
           "default": null
+        },
+        "catch_all": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CatchAllEntryPoint"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "regex": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RegexMatchEntryPoint"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         }
       },
       "required": [
-        "command"
+        "command",
+        "catch_all",
+        "regex"
       ],
       "title": "UserFlowEntryPointConfig",
       "type": "object"
