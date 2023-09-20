@@ -31,7 +31,8 @@ FormEnd: TypeAlias = None
 
 
 class NextFieldMapping(BaseModel):
-    cases: dict[Optional[str], Optional[FormFieldId]]
+    if_value: dict[str, Optional[FormFieldId]]
+    if_skipped: Optional[FormFieldId]
     default: FormFieldId
 
 
@@ -47,14 +48,16 @@ def construct_next_field_getter(next_field: NextField) -> NextFieldGetter:
         next_field_mapping = next_field
         # similar to NextFieldGetter.by_mapping, but uses stringified values
         return NextFieldGetter(
-            lambda _, prev_field_value: next_field_mapping.cases.get(
-                prev_field_value
+            lambda _, prev_field_value: (
+                next_field_mapping.if_skipped
                 if prev_field_value is None
-                else str(prev_field_value),  # TODO: sync stringifying logic with admin-visible values
-                next_field_mapping.default,
+                else next_field_mapping.if_value.get(
+                    str(prev_field_value),  # TODO: sync stringifying logic with admin-visible values
+                    next_field_mapping.default,
+                )
             ),
             possible_next_field_names=(
-                [next_field_id for next_field_id in next_field_mapping.cases.values()] + [next_field_mapping.default]
+                [next_field_id for next_field_id in next_field_mapping.if_value.values()] + [next_field_mapping.default]
             ),
         )
 

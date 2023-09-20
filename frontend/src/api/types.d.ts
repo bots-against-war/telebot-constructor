@@ -49,6 +49,27 @@ export type BackLabel =
     };
 export type LockAfterTermination = boolean;
 export type IsTextHtml = boolean;
+export type BlockId3 = string;
+export type FormName = string;
+export type Id = string;
+export type Propmt = string;
+export type IsRequired = boolean;
+export type Descr = string;
+export type IsMultiline = boolean;
+export type ValueFormatter = null;
+export type NextField = string | NextFieldMapping | null;
+export type IfSkipped = string | null;
+export type Default = string;
+export type EmptyTextErrorMsg = string;
+export type Fields = FormFieldConfig[];
+export type FormStart = string;
+export type FieldIsSkippable = string;
+export type FieldIsNotSkippable = string;
+export type PleaseEnterCorrectValue = string;
+export type UnsupportedCommand = string;
+export type CancellingBecauseOfError = string;
+export type FormCompletedNextBlockId = string | null;
+export type FormCancelledNextBlockId = string | null;
 export type Blocks = UserFlowBlockConfig[];
 export type X = number;
 export type Y = number;
@@ -72,7 +93,7 @@ export interface UserFlowEntryPointConfig {
   [k: string]: unknown;
 }
 /**
- * Basic entry-point catching Telegram /commands
+ * Basic entrypoint catching Telegram /commands
  */
 export interface CommandEntryPoint {
   entrypoint_id: EntrypointId;
@@ -83,7 +104,7 @@ export interface CommandEntryPoint {
   [k: string]: unknown;
 }
 /**
- * Entry point that catches all user messages
+ * Entrypoint that catches all user messages
  */
 export interface CatchAllEntryPoint {
   entrypoint_id: EntrypointId1;
@@ -103,6 +124,7 @@ export interface UserFlowBlockConfig {
   message: MessageBlock | null;
   human_operator: HumanOperatorBlock | null;
   menu: MenuBlock | null;
+  form: FormBlock | null;
   [k: string]: unknown;
 }
 /**
@@ -148,7 +170,7 @@ export interface MessagesToAdmin {
   [k: string]: unknown;
 }
 /**
- * Multilevel menu on inline buttons
+ * Multilevel menu block powered by Telegram inline buttons
  */
 export interface MenuBlock {
   block_id: BlockId2;
@@ -172,6 +194,57 @@ export interface MenuConfig {
   back_label: BackLabel;
   lock_after_termination: LockAfterTermination;
   is_text_html: IsTextHtml;
+  [k: string]: unknown;
+}
+/**
+ * UNFINISHED
+ *
+ * Block with a series of questions to user with options to export their answers in various formats
+ */
+export interface FormBlock {
+  block_id: BlockId3;
+  form_name: FormName;
+  fields: Fields;
+  messages: FormMessages;
+  form_completed_next_block_id: FormCompletedNextBlockId;
+  form_cancelled_next_block_id: FormCancelledNextBlockId;
+  [k: string]: unknown;
+}
+export interface FormFieldConfig {
+  plain_text: PlainTextFormFieldConfig | null;
+  [k: string]: unknown;
+}
+export interface PlainTextFormFieldConfig {
+  id: Id;
+  propmt: Propmt;
+  is_required: IsRequired;
+  result_formatting_opts: FormFieldResultFormattingOpts;
+  next_field: NextField;
+  empty_text_error_msg: EmptyTextErrorMsg;
+  [k: string]: unknown;
+}
+export interface FormFieldResultFormattingOpts {
+  descr: Descr;
+  is_multiline: IsMultiline;
+  value_formatter: ValueFormatter;
+  [k: string]: unknown;
+}
+export interface NextFieldMapping {
+  if_value: IfValue;
+  if_skipped: IfSkipped;
+  default: Default;
+  [k: string]: unknown;
+}
+export interface IfValue {
+  [k: string]: string | null;
+}
+export interface FormMessages {
+  form_start: FormStart;
+  field_is_skippable: FieldIsSkippable;
+  field_is_not_skippable: FieldIsNotSkippable;
+  please_enter_correct_value: PleaseEnterCorrectValue;
+  unsupported_command: UnsupportedCommand;
+  cancelling_because_of_error: CancellingBecauseOfError;
   [k: string]: unknown;
 }
 export interface NodeDisplayCoords {

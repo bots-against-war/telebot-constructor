@@ -1,7 +1,7 @@
 {
   "$defs": {
     "CatchAllEntryPoint": {
-      "description": "Entry point that catches all user messages",
+      "description": "Entrypoint that catches all user messages",
       "properties": {
         "entrypoint_id": {
           "title": "Entrypoint Id",
@@ -27,7 +27,7 @@
       "type": "object"
     },
     "CommandEntryPoint": {
-      "description": "Basic entry-point catching Telegram /commands",
+      "description": "Basic entrypoint catching Telegram /commands",
       "properties": {
         "entrypoint_id": {
           "title": "Entrypoint Id",
@@ -159,6 +159,143 @@
       "title": "FeedbackHandlerConfig",
       "type": "object"
     },
+    "FormBlock": {
+      "description": "UNFINISHED\n\nBlock with a series of questions to user with options to export their answers in various formats",
+      "properties": {
+        "block_id": {
+          "title": "Block Id",
+          "type": "string"
+        },
+        "form_name": {
+          "title": "Form Name",
+          "type": "string"
+        },
+        "fields": {
+          "items": {
+            "$ref": "#/$defs/FormFieldConfig"
+          },
+          "title": "Fields",
+          "type": "array"
+        },
+        "messages": {
+          "$ref": "#/$defs/FormMessages"
+        },
+        "form_completed_next_block_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Form Completed Next Block Id"
+        },
+        "form_cancelled_next_block_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Form Cancelled Next Block Id"
+        }
+      },
+      "required": [
+        "block_id",
+        "form_name",
+        "fields",
+        "messages",
+        "form_completed_next_block_id",
+        "form_cancelled_next_block_id"
+      ],
+      "title": "FormBlock",
+      "type": "object"
+    },
+    "FormFieldConfig": {
+      "properties": {
+        "plain_text": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PlainTextFormFieldConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "plain_text"
+      ],
+      "title": "FormFieldConfig",
+      "type": "object"
+    },
+    "FormFieldResultFormattingOpts": {
+      "properties": {
+        "descr": {
+          "title": "Descr",
+          "type": "string"
+        },
+        "is_multiline": {
+          "default": false,
+          "title": "Is Multiline",
+          "type": "boolean"
+        },
+        "value_formatter": {
+          "default": null,
+          "title": "Value Formatter",
+          "type": "null"
+        }
+      },
+      "required": [
+        "descr",
+        "is_multiline",
+        "value_formatter"
+      ],
+      "title": "FormFieldResultFormattingOpts",
+      "type": "object"
+    },
+    "FormMessages": {
+      "properties": {
+        "form_start": {
+          "title": "Form Start",
+          "type": "string"
+        },
+        "field_is_skippable": {
+          "title": "Field Is Skippable",
+          "type": "string"
+        },
+        "field_is_not_skippable": {
+          "title": "Field Is Not Skippable",
+          "type": "string"
+        },
+        "please_enter_correct_value": {
+          "title": "Please Enter Correct Value",
+          "type": "string"
+        },
+        "unsupported_command": {
+          "title": "Unsupported Command",
+          "type": "string"
+        },
+        "cancelling_because_of_error": {
+          "title": "Cancelling Because Of Error",
+          "type": "string"
+        }
+      },
+      "required": [
+        "form_start",
+        "field_is_skippable",
+        "field_is_not_skippable",
+        "please_enter_correct_value",
+        "unsupported_command",
+        "cancelling_because_of_error"
+      ],
+      "title": "FormMessages",
+      "type": "object"
+    },
     "HumanOperatorBlock": {
       "description": "Terminal block that incapsulates user interaction with a human operator",
       "properties": {
@@ -204,7 +341,7 @@
       "type": "object"
     },
     "MenuBlock": {
-      "description": "Multilevel menu on inline buttons",
+      "description": "Multilevel menu block powered by Telegram inline buttons",
       "properties": {
         "block_id": {
           "title": "Block Id",
@@ -382,6 +519,93 @@
       "title": "MessagesToUser",
       "type": "object"
     },
+    "NextFieldMapping": {
+      "properties": {
+        "if_value": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": "If Value",
+          "type": "object"
+        },
+        "if_skipped": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "If Skipped"
+        },
+        "default": {
+          "title": "Default",
+          "type": "string"
+        }
+      },
+      "required": [
+        "if_value",
+        "if_skipped",
+        "default"
+      ],
+      "title": "NextFieldMapping",
+      "type": "object"
+    },
+    "PlainTextFormFieldConfig": {
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "propmt": {
+          "title": "Propmt",
+          "type": "string"
+        },
+        "is_required": {
+          "title": "Is Required",
+          "type": "boolean"
+        },
+        "result_formatting_opts": {
+          "$ref": "#/$defs/FormFieldResultFormattingOpts"
+        },
+        "next_field": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/NextFieldMapping"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Next Field"
+        },
+        "empty_text_error_msg": {
+          "title": "Empty Text Error Msg",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "propmt",
+        "is_required",
+        "result_formatting_opts",
+        "next_field",
+        "empty_text_error_msg"
+      ],
+      "title": "PlainTextFormFieldConfig",
+      "type": "object"
+    },
     "RegexMatchEntryPoint": {
       "description": "Entrypoint matching user messages by searching a regex pattern in text",
       "properties": {
@@ -447,12 +671,24 @@
             }
           ],
           "default": null
+        },
+        "form": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FormBlock"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         }
       },
       "required": [
         "message",
         "human_operator",
-        "menu"
+        "menu",
+        "form"
       ],
       "title": "UserFlowBlockConfig",
       "type": "object"
