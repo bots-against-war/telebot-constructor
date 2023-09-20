@@ -1,7 +1,6 @@
 from typing import Any, Optional
 
 from pydantic import BaseModel
-from telebot import types as tg
 from telebot_components.menu.menu import Menu as ComponentsMenu
 from telebot_components.menu.menu import MenuConfig as ComponentsMenuConfig
 from telebot_components.menu.menu import MenuHandler
@@ -12,7 +11,6 @@ from telebot_constructor.pydantic_utils import ExactlyOneNonNullFieldModel
 from telebot_constructor.user_flow.blocks.base import UserFlowBlock
 from telebot_constructor.user_flow.types import (
     SetupResult,
-    UserFlowBlockId,
     UserFlowContext,
     UserFlowSetupContext,
 )
@@ -49,7 +47,7 @@ class Menu(BaseModel):
 
 
 class MenuBlock(UserFlowBlock):
-    """Multilevel menu on inline buttons"""
+    """Multilevel menu block powered by Telegram inline buttons"""
 
     menu: Menu
     config: ComponentsMenuConfig

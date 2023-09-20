@@ -1,6 +1,5 @@
 import pytest
 from pydantic import ValidationError
-from telebot import types as tg
 from telebot.test_util import MockedAsyncTeleBot
 from telebot_components.redis_utils.emulation import RedisEmulation
 

@@ -5,6 +5,8 @@ import sys
 from pathlib import Path
 
 import dictdiffer  # type: ignore
+from pydantic._internal._core_utils import CoreSchemaOrField
+from pydantic.json_schema import GenerateJsonSchema, JsonSchemaValue
 
 from telebot_constructor.bot_config import BotConfig
 
@@ -19,7 +21,11 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    current_schema = BotConfig.model_json_schema(mode="serialization")
+    class CastUnsupportedToNullSchema(GenerateJsonSchema):
+        def handle_invalid_for_json_schema(self, schema: CoreSchemaOrField, error_info: str) -> JsonSchemaValue:
+            return {"type": "null"}
+
+    current_schema = BotConfig.model_json_schema(mode="serialization", schema_generator=CastUnsupportedToNullSchema)
 
     if not args.check:
         args.jsonschema_path.write_text(json.dumps(current_schema, ensure_ascii=False, indent=2))

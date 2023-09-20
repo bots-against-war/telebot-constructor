@@ -78,6 +78,7 @@ class HumanOperatorBlock(UserFlowBlock):
 
         feedback_handler = FeedbackHandler(
             admin_chat_id=self.feedback_handler_config.admin_chat_id,
+            name=f"fh-{self.feedback_handler_config.admin_chat_id}",
             redis=context.redis,
             bot_prefix=context.bot_prefix,
             config=FeedbackConfig(

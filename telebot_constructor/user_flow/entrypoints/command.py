@@ -21,7 +21,7 @@ class CommandScope(enum.Enum):
 
 
 class CommandEntryPoint(UserFlowEntryPoint):
-    """Basic entry-point catching Telegram /commands"""
+    """Basic entrypoint catching Telegram /commands"""
 
     command: str  # without leading slash, e.g. "start" instead of "/start"
     next_block_id: Optional[UserFlowBlockId]

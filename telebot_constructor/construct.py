@@ -6,7 +6,6 @@ from typing import Callable, Coroutine, cast
 import tenacity
 from telebot import AsyncTeleBot
 from telebot import api as tg_api
-from telebot import types as tg
 from telebot.runner import AuxBotEndpoint, BotRunner
 from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.stores.banned_users import BannedUsersStore

@@ -23,7 +23,7 @@ async def main() -> None:
     is_local = bool(os.environ.get("LOCAL"))
 
     if is_local:
-        redis = PersistentRedisEmulation()  # type: ignore
+        redis: RedisInterface = PersistentRedisEmulation()  # type: ignore
     else:
         redis_url = urlparse(os.environ["REDIS_URL"])
         redis = Redis(

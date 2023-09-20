@@ -12,7 +12,7 @@ from telebot_constructor.user_flow.types import (
 
 
 class CatchAllEntryPoint(UserFlowEntryPoint):
-    """Entry point that catches all user messages"""
+    """Entrypoint that catches all user messages"""
 
     next_block_id: Optional[UserFlowBlockId]
 
