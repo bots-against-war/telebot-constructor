@@ -1,12 +1,12 @@
 <script lang="ts">
   import { Button } from "@svelteuidev/core";
   import { getContext } from "svelte";
-  import CreateNewBotModal from "./CreateBotModal.svelte";
+  import CreateBotModal from "./CreateBotModal.svelte";
   // @ts-expect-error
   import type { Context } from "svelte-simple-modal";
-  const { open } = getContext<Context>("simple-modal");
 
-  const showNewBotModal = () => open(CreateNewBotModal);
+  const { open } = getContext<Context>("simple-modal");
+  const showNewBotModal = () => open(CreateBotModal);
 </script>
 
 <div class="button">

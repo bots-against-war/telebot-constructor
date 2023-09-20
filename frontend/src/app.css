@@ -93,9 +93,12 @@ button:focus-visible {
 }
 
 .text {
+  width: 781px;
+  height: 147px;
   flex-shrink: 0;
   color: #1c1c1c;
   text-align: center;
+  margin: auto;
   font-family: Roboto, ui-monospace;
   font-size: 32px;
   font-style: normal;
