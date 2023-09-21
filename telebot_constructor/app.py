@@ -372,7 +372,7 @@ class TelebotConstructorApp:
         STATIC_FILE_GLOBS = ["assets/*"]
 
         @routes.get("/{tail:.+}")
-        async def serve_static_file(request: web.Request) -> web.Response:
+        async def serve_static_file(request: web.Request) -> web.StreamResponse:
             static_file_path = request.match_info.get("tail")
             if static_file_path is None:
                 raise web.HTTPNotFound()
