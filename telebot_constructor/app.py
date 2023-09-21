@@ -383,7 +383,8 @@ class TelebotConstructorApp:
                     content_type=mime_type,
                 )
             else:
-                raise web.HTTPNotFound()
+                # falling back to index page to support client-side routing
+                return await index(request)
 
         ##################################################################################
 

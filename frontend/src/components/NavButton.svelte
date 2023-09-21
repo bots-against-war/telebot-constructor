@@ -7,4 +7,4 @@
   type $$Props = ButtonProps;
 </script>
 
-<Button target="" radius={40} ripple {...$$restProps}><slot /></Button>
+<Button target="" {...$$restProps}><slot /></Button>

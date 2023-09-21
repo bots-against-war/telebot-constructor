@@ -4,6 +4,7 @@
   import { createEventDispatcher } from "svelte";
   import { Alert, Center, Flex, Container, Button } from "@svelteuidev/core";
   import type { BotConfig } from "../api/types";
+  import NavButton from "../components/NavButton.svelte";
 
   // region props
   export let botName: string;
@@ -45,7 +46,7 @@
     <Flex direction="column" gap="xl">
       <h1>{botConfig.display_name}</h1>
       <Flex gap="xl">
-        <Button href={`/studio/${botName}`}>Редактировать</Button>
+        <NavButton href={`/studio/${botName}`}>Редактировать</NavButton>
         <Button on:click={() => startBotWithName(botName)}>Запустить</Button>
         <Button on:click={() => stopBotWithName(botName)}>Остановить</Button>
         <Button on:click={() => removeBotConfig(botName)}>Удалить</Button>
