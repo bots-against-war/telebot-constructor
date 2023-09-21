@@ -369,7 +369,7 @@ class TelebotConstructorApp:
                 content_type="text/html",
             )
 
-        STATIC_FILE_GLOBS = ["baw.svg", "assets/*"]
+        STATIC_FILE_GLOBS = ["assets/*"]
 
         @routes.get("/{tail:.+}")
         async def serve_static_file(request: web.Request) -> web.Response:
