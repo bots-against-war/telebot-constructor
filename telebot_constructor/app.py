@@ -5,9 +5,10 @@ import logging
 import mimetypes
 import re
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Type, TypeVar
 
 import pydantic
+from telebot import AsyncTeleBot
 import telebot.api
 from aiohttp import web
 from aiohttp_swagger import setup_swagger  # type: ignore
@@ -15,6 +16,7 @@ from telebot.webhook import WebhookApp
 from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.stores.generic import KeyDictStore, KeySetStore
 from telebot_components.utils.secrets import SecretStore
+from telebot_constructor.app_models import BotTokenPayload
 
 from telebot_constructor.auth import Auth
 from telebot_constructor.bot_config import BotConfig
@@ -30,6 +32,9 @@ from telebot_constructor.runners import (
 from telebot_constructor.static import static_file_content
 
 logger = logging.getLogger(__name__)
+
+
+PydanticModelT = TypeVar("PydanticModelT", bound=pydantic.BaseModel)
 
 
 class TelebotConstructorApp:
@@ -77,7 +82,7 @@ class TelebotConstructorApp:
             raise web.HTTPUnauthorized(reason="Authentication required")
         return username
 
-    VALID_NAME_RE = re.compile(r"^[0-9a-zA-Z\-_]{3,32}$")
+    VALID_NAME_RE = re.compile(r"^[0-9a-zA-Z\-_]{3,64}$")
 
     def _validate_name(self, name: str) -> None:
         if not self.VALID_NAME_RE.match(name):
@@ -89,6 +94,16 @@ class TelebotConstructorApp:
             raise web.HTTPNotFound()
         self._validate_name(name)
         return name
+
+    async def parse_pydantic_model(self, request: web.Request, Model: Type[PydanticModelT]) -> PydanticModelT:
+        try:
+            return Model.model_validate(await request.json())
+        except json.JSONDecodeError:
+            raise web.HTTPBadRequest(reason="Request body must be valid JSON")
+        except pydantic.ValidationError as e:
+            raise web.HTTPBadRequest(text=e.json(include_context=False, include_url=False))
+        except Exception as e:
+            raise web.HTTPBadRequest(reason=str(e))
 
     def parse_secret_name(self, request: web.Request) -> str:
         name = request.match_info.get("secret_name")
@@ -205,16 +220,8 @@ class TelebotConstructorApp:
             username = await self.authenticate(request)
             bot_name = self.parse_bot_name(request)
             existing_bot_config = await self.bot_config_store.get_subkey(username, bot_name)
-            try:
-                bot_config = BotConfig.model_validate(await request.json())
-            except json.JSONDecodeError:
-                raise web.HTTPBadRequest(reason="Request body must be valid JSON")
-            except pydantic.ValidationError as e:
-                raise web.HTTPBadRequest(text=e.json(include_context=False, include_url=False))
-            except Exception as e:
-                raise web.HTTPBadRequest(reason=str(e))
+            bot_config = await self.parse_pydantic_model(request, BotConfig)
             await self.bot_config_store.set_subkey(username, bot_name, bot_config)
-
             if bot_name in await self.running_bots_store.all(username):
                 logger.info(f"Updated bot {bot_name} is running, restarting it")
                 await self.re_start_bot(username, bot_name, bot_config)
@@ -335,6 +342,19 @@ class TelebotConstructorApp:
             username = await self.authenticate(request)
             running_bots = await self.running_bots_store.all(username)
             return web.json_response(data=sorted(running_bots))
+
+        ##################################################################################
+        # validation endpoints
+
+        @routes.post("/api/validate-token")
+        async def validate_bot_token(request: web.Request) -> web.Response:
+            _ = await self.authenticate(request)
+            token_payload = await self.parse_pydantic_model(request, BotTokenPayload)
+            try:
+                await AsyncTeleBot(token=token_payload.token).get_me()
+            except Exception as e:
+                raise web.HTTPBadRequest(reason=f"Bot token validation failed ({e})")
+            return web.Response()
 
         ##################################################################################
         # static file routes

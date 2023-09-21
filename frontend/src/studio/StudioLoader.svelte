@@ -1,30 +1,16 @@
 <script lang="ts">
-  import { loadBotConfig, saveBotConfig } from "../api/botConfig";
+  import { loadBotConfig } from "../api/botConfig";
   import type { BotConfig } from "../api/types";
   import FatalError from "../components/FatalError.svelte";
   import LoadingScreen from "../components/LoadingScreen.svelte";
-  import { getError, unwrap } from "../utils";
+  import { unwrap } from "../utils";
   import Studio from "./Studio.svelte";
 
   export let botName: string;
 
   async function getBotConfig(botName: string): Promise<BotConfig> {
     const loadBotConfigResult = await loadBotConfig(botName);
-    if (getError(loadBotConfigResult) !== null) {
-      const newBotConfig: BotConfig = {
-        token_secret_name: "example_bot_token", // TEMP
-        display_name: "Studio test",
-        user_flow_config: {
-          entrypoints: [],
-          blocks: [],
-          node_display_coords: {},
-        },
-      };
-      const res = await saveBotConfig(botName, newBotConfig);
-      return unwrap(res);
-    } else {
-      return unwrap(loadBotConfigResult);
-    }
+    return unwrap(loadBotConfigResult);
   }
 
   const getBotConfigPromise = getBotConfig(botName);

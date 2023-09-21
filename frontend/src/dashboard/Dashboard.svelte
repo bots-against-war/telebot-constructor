@@ -1,8 +1,12 @@
 <script lang="ts">
-  import CreateBotButton from "./CreateBotButton.svelte";
   import ArrayBots from "./ArrayBots.svelte";
   import BotLifecycle from "./BotLifecycle.svelte";
   import type { BotConfigList } from "../types";
+  import { Button } from "@svelteuidev/core";
+  import CreateBotModal from "./CreateBotModal.svelte";
+  import { getModalOpener } from "../utils";
+  import type { BotConfig } from "../api/types";
+  const open = getModalOpener();
 
   export let botConfigs: BotConfigList;
 
@@ -15,12 +19,21 @@
       selectedBot = "";
     }
   }
+
+  const showNewBotModal = () =>
+    open(CreateBotModal, {
+      newBotCallback: (name: string, config: BotConfig) => {
+        botConfigs[name] = config;
+      },
+    });
 </script>
 
 <div style="display:flex; flex-flow: row; align-items: center;">
   <div class="right">
     <div class="center">
-      <CreateBotButton />
+      <div style="margin: auto;">
+        <p><Button radius={40} on:click={showNewBotModal}>Новый бот</Button></p>
+      </div>
     </div>
     <hr />
     <ArrayBots on:updateSelectedBot={handleUpdateSelectedBot} {botConfigs} {selectedBot} />

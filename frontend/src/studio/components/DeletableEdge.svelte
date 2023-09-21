@@ -2,9 +2,9 @@
   import { Edge } from "svelvet";
 </script>
 
-<Edge let:path let:destroy>
+<Edge let:path>
   <path d={path} />
-  <button slot="label" on:click={destroy}>⨯</button>
+  <button slot="label" let:destroy on:click={destroy}>⨯</button>
 </Edge>
 
 <style>

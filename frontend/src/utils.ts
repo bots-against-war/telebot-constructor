@@ -1,6 +1,7 @@
 import { getContext, type ComponentProps } from "svelte";
 import { type SvelteComponent } from "svelte";
 import type { Newable } from "ts-essentials";
+import { saveSecret } from "./api/secrets";
 
 // rust-like result type with convenience functions
 
@@ -69,4 +70,18 @@ export function getModalCloser(): () => void {
   // @ts-ignore
   const { close } = getContext("simple-modal");
   return close;
+}
+
+export async function createBotTokenSecret(botName: string, token: string): Promise<Result<string, string>> {
+  let secretName = botName + "-token-" + crypto.randomUUID().slice(0, 8);
+  console.log("Generated secret name", secretName);
+  // TODO: check if secret with this value does not exist, not its possible to save
+  // the same token in two secrets and cause clashes
+  let res = await saveSecret(secretName, token);
+  let saveSecretError = getError(res);
+  if (saveSecretError !== null) {
+    return err(saveSecretError);
+  } else {
+    return ok(secretName);
+  }
 }

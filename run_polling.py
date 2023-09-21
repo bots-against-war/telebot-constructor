@@ -20,9 +20,7 @@ logging.basicConfig(level=logging.INFO)
 
 
 async def main() -> None:
-    is_local = bool(os.environ.get("LOCAL"))
-
-    if is_local:
+    if bool(os.environ.get("TELEBOT_CONSTRUCTOR_SECRETS_USE_REDIS_EMULATION")):
         redis: RedisInterface = PersistentRedisEmulation()  # type: ignore
     else:
         redis_url = urlparse(os.environ["REDIS_URL"])
@@ -33,7 +31,7 @@ async def main() -> None:
             password=redis_url.password,
         )
 
-    if is_local:
+    if bool(os.environ.get("TELEBOT_CONSTRUCTOR_SECRETS_FROM_FILE")):
         secret_store: SecretStore = TomlFileSecretStore(path=Path(__file__).parent / "secrets.toml")
     else:
         secret_store = RedisSecretStore(

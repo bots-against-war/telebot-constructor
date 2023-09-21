@@ -17,7 +17,7 @@
       <Route path="/studio/:botname" let:params>
         <StudioLoader botName={params.botname} />
       </Route>
-      <!-- TODO: separate each route to a component -->
+      <!-- TODO: separate each route contents to a component -->
       <Route path="/command">
         <Navbar />
         <p>Команда</p>
