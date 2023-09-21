@@ -64,4 +64,4 @@ class UserFlowConfig(BaseModel):
 class BotConfig(BaseModel):
     display_name: str  # for constructor UI
     token_secret_name: str  # must correspond to a valid secret in secret store
-    user_flow_config: Optional[UserFlowConfig] = None
+    user_flow_config: UserFlowConfig

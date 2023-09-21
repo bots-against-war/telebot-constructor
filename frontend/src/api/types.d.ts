@@ -77,7 +77,7 @@ export type Y = number;
 export interface BotConfig {
   display_name: DisplayName;
   token_secret_name: TokenSecretName;
-  user_flow_config: UserFlowConfig | null;
+  user_flow_config: UserFlowConfig;
   [k: string]: unknown;
 }
 export interface UserFlowConfig {

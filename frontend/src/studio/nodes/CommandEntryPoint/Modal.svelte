@@ -5,7 +5,7 @@
   const closeModal = getModalCloser();
 
   export let config: CommandEntryPoint;
-  export let onConfigUpdate: (CommandEntryPoint) => any;
+  export let onConfigUpdate: (newConfig: CommandEntryPoint) => any;
 
   function updateConfig() {
     config.command = editedCommand;

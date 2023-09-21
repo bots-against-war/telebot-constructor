@@ -798,15 +798,7 @@
       "type": "string"
     },
     "user_flow_config": {
-      "anyOf": [
-        {
-          "$ref": "#/$defs/UserFlowConfig"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null
+      "$ref": "#/$defs/UserFlowConfig"
     }
   },
   "required": [

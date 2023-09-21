@@ -5,7 +5,7 @@
   const closeModal = getModalCloser();
 
   export let config: HumanOperatorBlock;
-  export let onConfigUpdate: (HumanOperatorBlock) => any;
+  export let onConfigUpdate: (newConfig: HumanOperatorBlock) => any;
 
   function updateConfig() {
     config.feedback_handler_config.admin_chat_id = adminChatId;

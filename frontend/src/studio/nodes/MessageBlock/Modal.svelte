@@ -5,7 +5,7 @@
   const closeModal = getModalCloser();
 
   export let config: MessageBlock;
-  export let onConfigUpdate: (MessageBlock) => any;
+  export let onConfigUpdate: (newConfig: MessageBlock) => any;
 
   function updateConfig() {
     config.message_text = editedMessageText;

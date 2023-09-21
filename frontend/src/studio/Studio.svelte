@@ -45,7 +45,10 @@
       delete botConfig.user_flow_config.node_display_coords[id];
     };
   }
-  function getEntrypointConstructor(prefix: string, entryPointConfigConstructor: (string) => UserFlowEntryPointConfig) {
+  function getEntrypointConstructor(
+    prefix: string,
+    entryPointConfigConstructor: (id: string) => UserFlowEntryPointConfig,
+  ) {
     return () => {
       const id = `entrypoint-${prefix}-${crypto.randomUUID()}`;
       console.debug(`Creating new entrypoint ${id}`);
@@ -59,7 +62,7 @@
   function getBlockDestructor(id: string) {
     return () => {
       const idx = botConfig.user_flow_config.blocks.map(getBlockId).findIndex((blockId) => blockId === id);
-      console.debug(`Creating new flow block ${id}, idx = ${idx}`);
+      console.debug(`Deleting block ${id}, idx = ${idx}`);
       if (idx === -1) {
         console.log(`Block with id '${id}' not found`);
         return;
@@ -68,7 +71,7 @@
       delete botConfig.user_flow_config.node_display_coords[id];
     };
   }
-  function getBlockConstructor(prefix: string, blockConfigConstructor: (string) => UserFlowBlockConfig) {
+  function getBlockConstructor(prefix: string, blockConfigConstructor: (id: string) => UserFlowBlockConfig) {
     return () => {
       const id = `block-${prefix}-${crypto.randomUUID()}`;
       console.debug(`Creating new block ${id}`);
@@ -122,7 +125,7 @@
     <h3>{botConfig.display_name}</h3>
     <button on:click={getEntrypointConstructor("command", defaultCommandEntrypoint)}>New <b>command</b></button>
     <button on:click={getBlockConstructor("message", defaultMessageBlockConfig)}>New <b>message block</b></button>
-    <button on:click={getBlockConstructor("human-opeartor", defaultHumanOperatorBlockCofig)}
+    <button on:click={getBlockConstructor("human-operator", defaultHumanOperatorBlockCofig)}
       >New <b>human operator block</b></button
     >
     <button on:click={() => console.log(botConfig.user_flow_config)}>Log current config</button>
