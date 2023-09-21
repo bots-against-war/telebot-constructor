@@ -5,8 +5,12 @@ export function defaultCommandEntrypoint(id: string): UserFlowEntryPointConfig {
     command: {
       entrypoint_id: id,
       command: "command",
+      scope: "private",
+      short_description: "Some command",
       next_block_id: null,
     },
+    catch_all: null,
+    regex: null,
   };
 }
 
@@ -18,6 +22,8 @@ export function defaultMessageBlockConfig(id: string): UserFlowBlockConfig {
       next_block_id: null,
     },
     human_operator: null,
+    menu: null,
+    form: null,
   };
 }
 
@@ -47,5 +53,7 @@ export function defaultHumanOperatorBlockCofig(id: string): UserFlowBlockConfig 
         message_log_to_admin_chat: true,
       },
     },
+    menu: null,
+    form: null,
   };
 }
