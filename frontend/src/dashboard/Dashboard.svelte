@@ -44,7 +44,17 @@
       пользователям.
     </p>
   {:else}
-    <BotLifecycle on:updateSelectedBot={handleUpdateSelectedBot} botName={selectedBot} />
+    <BotLifecycle
+      on:botDeleted={() => {
+        if (selectedBot === null) return;
+        // @ts-ignore
+        let newBotConfigs = { ...botConfigs };
+        delete newBotConfigs[selectedBot];
+        botConfigs = newBotConfigs;
+        selectedBot = null;
+      }}
+      botName={selectedBot}
+    />
   {/if}
 </div>
 

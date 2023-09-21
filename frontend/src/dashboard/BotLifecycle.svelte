@@ -2,22 +2,19 @@
   import { startBot, stopBot } from "../api/lifecycle";
   import { deleteBotConfig } from "../api/botConfig";
   import { createEventDispatcher } from "svelte";
+  import { Alert } from "@svelteuidev/core";
 
   // region props
   export let botName: string;
   // endregion
-  let botStatus: string;
+  let botStatus: string | null = null;
   const dispatch = createEventDispatcher();
 
-  function updateSelectedBot(selectedBot: string) {
-    dispatch("updateSelectedBot", selectedBot);
-  }
   async function startBotWithName(name: string) {
     const resp = await startBot(name);
     if (resp.ok) {
       botStatus = "Started";
     } else {
-      // @ts-expect-error
       botStatus = `Failed to start: ${resp.error}`;
     }
   }
@@ -27,20 +24,17 @@
     if (resp.ok) {
       botStatus = "Stopped";
     } else {
-      // @ts-expect-error
       botStatus = `Failed to stop: ${resp.error}`;
     }
   }
 
   async function removeBotConfig(name: string) {
     const resp = await deleteBotConfig(name);
-    if (!resp.ok) {
-      // @ts-expect-error
+    if (resp.ok) {
+      dispatch("botDeleted");
+    } else {
       botStatus = `Failed to delete: ${resp.error}`;
-      return;
     }
-    // await reloadConfigs();
-    updateSelectedBot("");
   }
 </script>
 
@@ -49,7 +43,9 @@
   <button on:click={() => startBotWithName(botName)}>Start</button>
   <button on:click={() => stopBotWithName(botName)}>Stop</button>
   <button on:click={() => removeBotConfig(botName)}>Delete</button>
-  <p><span class="text-status">{botStatus || ""}</span></p>
+  {#if botStatus !== null}
+    <Alert color="yellow">{botStatus}</Alert>
+  {/if}
 </div>
 
 <style>
