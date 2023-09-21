@@ -68,13 +68,17 @@ async def construct_bot(
     _bot_factory: Callable[[str], AsyncTeleBot] = AsyncTeleBot,  # used for testing
 ) -> BotRunner:
     """Core bot construction function responsible for turning a config into a functional bot"""
-    log_prefix = f"[{username}][{bot_name}] "
     bot_prefix = f"{username}-{bot_name}"
+    log_prefix = f"[{username}][{bot_name}] "
+    logger.info(log_prefix + "Constructing bot")
+
+    # HACK: this allows creating multiple bots with the same prefix, which is needed for hot reloading;
+    # but this removes a failsafe mechanism and can cause problems with multiple competing bot instances
+    GenericStore.allow_duplicate_stores(prefix=bot_prefix)
+
     background_jobs: list[Coroutine[None, None, None]] = []
     aux_endpoints: list[AuxBotEndpoint] = []
     bot_commands: list[BotCommandInfo] = []
-
-    logger.info(log_prefix + "Constructing bot")
 
     token = await secret_store.get_secret(secret_name=bot_config.token_secret_name, owner_id=username)
     if token is None:
@@ -127,10 +131,6 @@ async def construct_bot(
                     commands=[cmd.command for cmd in command_info_batch],
                     scope=command_info_batch[0].scope,
                 )
-
-    # HACK: this allows creating multiple bots with the same prefix, which is needed for hot reloading;
-    # but this removes a failsafe mechanism and can cause problems with multiple competing bot instances
-    GenericStore.allow_duplicate_stores(prefix=bot_prefix)
 
     return BotRunner(
         bot_prefix=bot_prefix,
