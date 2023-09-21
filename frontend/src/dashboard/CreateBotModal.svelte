@@ -1,10 +1,9 @@
 <script lang="ts">
   import { saveBotConfig } from "../api/botConfig";
   import { Button, TextInput } from "@svelteuidev/core";
-  import { getContext } from "svelte";
-  const { close } = getContext("simple-modal");
-  const closePopup = async () => close();
-  import { reloadConfigs } from "./Dashboard.svelte";
+  import { getModalCloser } from "../utils";
+
+  const closePopup = getModalCloser();
 
   let bot_name = "";
   let newBotConfigStatus = "";
@@ -23,7 +22,7 @@
 
     if (resp.ok) {
       newBotConfigStatus = "";
-      await reloadConfigs();
+      // await reloadConfigs();
       await closePopup();
     } else {
       newBotConfigStatus = `Failed to save: ${resp.error}`;

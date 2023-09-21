@@ -1,6 +1,8 @@
 <script lang="ts">
   import { loadBotConfig, saveBotConfig } from "../api/botConfig";
   import type { BotConfig } from "../api/types";
+  import FatalError from "../components/FatalError.svelte";
+  import LoadingScreen from "../components/LoadingScreen.svelte";
   import { getError, unwrap } from "../utils";
   import Studio from "./Studio.svelte";
 
@@ -29,9 +31,9 @@
 </script>
 
 {#await getBotConfigPromise}
-  Loading...
+  <LoadingScreen />
 {:then botConfig}
   <Studio {botName} {botConfig} />
-{:catch e}
-  <h1>Error: {e}</h1>
+{:catch error}
+  <FatalError {error} />
 {/await}

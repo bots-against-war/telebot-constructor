@@ -34,7 +34,7 @@ async def main() -> None:
         )
 
     if is_local:
-        secret_store: SecretStore = TomlFileSecretStore(path=Path(__file__).parent.parent / "secrets.toml")
+        secret_store: SecretStore = TomlFileSecretStore(path=Path(__file__).parent / "secrets.toml")
     else:
         secret_store = RedisSecretStore(
             redis=redis,

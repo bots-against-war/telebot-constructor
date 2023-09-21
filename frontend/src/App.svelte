@@ -1,23 +1,43 @@
 <script lang="ts">
-  import bawLogo from "../public/baw.svg";
-  import { Button } from "@svelteuidev/core";
-  import { Router, links } from "svelte-routing";
-  import Dashboard from "./dashboard/Dashboard.svelte";
+  import { Router, Route, links } from "svelte-routing";
+  import DashboardLoader from "./dashboard/DashboardLoader.svelte";
+  import StudioLoader from "./studio/StudioLoader.svelte";
+  import Navbar from "./components/Navbar.svelte";
+  // @ts-expect-error
+  import Modal from "svelte-simple-modal";
 </script>
 
-<Router>
-  <div use:links>
-    <header id="header" class="header">
-      <div class="center" style="flex:0">
-        <img src={bawLogo} alt="BAW logo" class="logo" />
-      </div>
-      <div class="nav-buttons">
-        <Button href="/" radius={40} ripple>Управление</Button>
-        <Button href="/command" radius={40} ripple>Команда</Button>
-        <Button href="/actions" radius={40} ripple>Действия</Button>
-        <Button href="/security" radius={40} ripple>Безопасность</Button>
-      </div>
-    </header>
+<Modal>
+  <div use:links class="app-container">
+    <Router>
+      <Route path="/">
+        <Navbar />
+        <DashboardLoader />
+      </Route>
+      <Route path="/studio/:botname" let:params>
+        <StudioLoader botName={params.botname} />
+      </Route>
+      <!-- TODO: separate each route to a component -->
+      <Route path="/command">
+        <Navbar />
+        <p>Команда</p>
+      </Route>
+      <Route path="/actions">
+        <Navbar />
+        <p>Действия</p>
+      </Route>
+      <Route path="/security">
+        <Navbar />
+        <p>Безопасность</p>
+      </Route>
+    </Router>
   </div>
-  <Dashboard />
-</Router>
+</Modal>
+
+<style>
+  div.app-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+</style>

@@ -21,6 +21,7 @@ from telebot_constructor.bot_config import BotConfig
 from telebot_constructor.build_time_config import BASE_PATH
 from telebot_constructor.construct import construct_bot
 from telebot_constructor.cors import setup_cors
+from telebot_constructor.debug import setup_debugging
 from telebot_constructor.runners import (
     ConstructedBotRunner,
     PollingConstructedBotRunner,
@@ -370,6 +371,7 @@ class TelebotConstructorApp:
         setup_swagger(app=app, swagger_url="/swagger")
         await self.auth.setup_routes(app)
         setup_cors(app)
+        setup_debugging(app)
         return app
 
     async def _start_stored_bots(self) -> None:

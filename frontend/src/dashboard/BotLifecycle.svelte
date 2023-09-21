@@ -1,7 +1,6 @@
 <script lang="ts">
   import { startBot, stopBot } from "../api/lifecycle";
   import { deleteBotConfig } from "../api/botConfig";
-  import { reloadConfigs } from "./Dashboard.svelte";
   import { createEventDispatcher } from "svelte";
 
   // region props
@@ -40,7 +39,7 @@
       botStatus = `Failed to delete: ${resp.error}`;
       return;
     }
-    await reloadConfigs();
+    // await reloadConfigs();
     updateSelectedBot("");
   }
 </script>
