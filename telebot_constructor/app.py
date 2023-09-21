@@ -8,16 +8,16 @@ from pathlib import Path
 from typing import Optional, Type, TypeVar
 
 import pydantic
-from telebot import AsyncTeleBot
 import telebot.api
 from aiohttp import web
 from aiohttp_swagger import setup_swagger  # type: ignore
+from telebot import AsyncTeleBot
 from telebot.webhook import WebhookApp
 from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.stores.generic import KeyDictStore, KeySetStore
 from telebot_components.utils.secrets import SecretStore
-from telebot_constructor.app_models import BotTokenPayload
 
+from telebot_constructor.app_models import BotTokenPayload
 from telebot_constructor.auth import Auth
 from telebot_constructor.bot_config import BotConfig
 from telebot_constructor.build_time_config import BASE_PATH
