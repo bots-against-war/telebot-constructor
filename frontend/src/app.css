@@ -17,29 +17,3 @@
 body {
   margin: 0;
 }
-
-
-.center {
-  text-align: center;
-  display: flex;
-  flex-flow: column;
-  justify-content: center;
-}
-
-.text {
-  width: 781px;
-  height: 147px;
-  flex-shrink: 0;
-  color: #1c1c1c;
-  text-align: center;
-  margin: auto;
-  font-family: Roboto, ui-monospace;
-  font-size: 32px;
-  font-style: normal;
-  font-weight: 400;
-  line-height: normal;
-}
-
-.text-status {
-  color: #ec6969;
-}

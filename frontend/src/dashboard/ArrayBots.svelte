@@ -15,17 +15,17 @@
 </script>
 
 <div class="bots">
-  {#each Object.entries(botConfigs) as [configName, config], i}
+  {#each Object.entries(botConfigs) as [botName, config], i}
     <button
       class="bot"
-      aria-label={configName}
-      aria-current={selectedBot === configName}
+      aria-label={botName}
+      aria-current={selectedBot === botName}
       on:click={() => {
-        selectedBot = configName;
-        updateSelectedBot(configName);
+        selectedBot = botName;
+        updateSelectedBot(botName);
       }}
     >
-      {configName}</button
+      {config.display_name}</button
     >
   {/each}
 </div>

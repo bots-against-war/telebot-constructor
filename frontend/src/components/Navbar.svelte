@@ -4,9 +4,7 @@
 </script>
 
 <header>
-  <div class="center" style="flex:0">
-    <img src={bawLogo} alt="BAW logo" class="logo" />
-  </div>
+  <img src={bawLogo} alt="BAW logo" class="logo" />
   <div class="nav-buttons">
     <NavButton href="/">Управление</NavButton>
     <NavButton href="/command">Команда</NavButton>

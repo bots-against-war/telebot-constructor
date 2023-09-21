@@ -2,7 +2,7 @@
   import ArrayBots from "./ArrayBots.svelte";
   import BotLifecycle from "./BotLifecycle.svelte";
   import type { BotConfigList } from "../types";
-  import { Button } from "@svelteuidev/core";
+  import { Button, Container, Space } from "@svelteuidev/core";
   import CreateBotModal from "./CreateBotModal.svelte";
   import { getModalOpener } from "../utils";
   import type { BotConfig } from "../api/types";
@@ -30,21 +30,22 @@
 
 <div style="display:flex; flex-flow: row; align-items: center;">
   <div class="right">
-    <div class="center">
-      <div style="margin: auto;">
-        <p><Button radius={40} on:click={showNewBotModal}>Новый бот</Button></p>
-      </div>
-    </div>
+    <Space h="s" />
+    <Container>
+      <Button radius={40} on:click={showNewBotModal}>Новый бот</Button>
+    </Container>
     <hr />
     <ArrayBots on:updateSelectedBot={handleUpdateSelectedBot} {botConfigs} {selectedBot} />
   </div>
   {#if selectedBot === null}
-    <p class="text">
+    <p class="lifecycle-placeholder">
       Добро пожаловать в B.A.W., современный конструктор чат-ботов, который поможет вашей инициативе стать еще ближе к
       пользователям.
     </p>
   {:else}
     <BotLifecycle
+      botName={selectedBot}
+      botConfig={botConfigs[selectedBot]}
       on:botDeleted={() => {
         if (selectedBot === null) return;
         // @ts-ignore
@@ -53,25 +54,34 @@
         botConfigs = newBotConfigs;
         selectedBot = null;
       }}
-      botName={selectedBot}
     />
   {/if}
 </div>
 
 <style>
   .right {
-    float: left;
+    /* float: left; */
     width: 332px;
     min-height: 700px;
-    flex-shrink: 0;
+    /* flex-shrink: 0; */
     border-radius: 0 40px 40px 0;
     background: linear-gradient(180deg, #85d0ee 0%, rgba(133, 208, 238, 0.6) 100%);
     margin-top: calc(144px - 88px);
     margin-bottom: 30px;
+    display: flex;
+    flex-direction: column;
   }
   hr {
     width: 240px;
     height: 2px;
     background: #0776a0;
+  }
+  p.lifecycle-placeholder {
+    width: 781px;
+    height: 147px;
+    flex-shrink: 0;
+    text-align: center;
+    margin: auto;
+    font-size: 32px;
   }
 </style>

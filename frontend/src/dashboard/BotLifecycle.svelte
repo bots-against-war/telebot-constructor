@@ -2,10 +2,12 @@
   import { startBot, stopBot } from "../api/lifecycle";
   import { deleteBotConfig } from "../api/botConfig";
   import { createEventDispatcher } from "svelte";
-  import { Alert } from "@svelteuidev/core";
+  import { Alert, Center, Flex, Container, Button } from "@svelteuidev/core";
+  import type { BotConfig } from "../api/types";
 
   // region props
   export let botName: string;
+  export let botConfig: BotConfig;
   // endregion
   let botStatus: string | null = null;
   const dispatch = createEventDispatcher();
@@ -38,19 +40,19 @@
   }
 </script>
 
-<div class="bot-lifecycle">
-  <h3>{botName}</h3>
-  <button on:click={() => startBotWithName(botName)}>Start</button>
-  <button on:click={() => stopBotWithName(botName)}>Stop</button>
-  <button on:click={() => removeBotConfig(botName)}>Delete</button>
-  {#if botStatus !== null}
-    <Alert color="yellow">{botStatus}</Alert>
-  {/if}
-</div>
-
-<style>
-  .bot-lifecycle {
-    margin: auto;
-    text-align: center;
-  }
-</style>
+<Container>
+  <Center>
+    <Flex direction="column" gap="xl">
+      <h1>{botConfig.display_name}</h1>
+      <Flex gap="xl">
+        <Button href={`/studio/${botName}`}>Редактировать</Button>
+        <Button on:click={() => startBotWithName(botName)}>Запустить</Button>
+        <Button on:click={() => stopBotWithName(botName)}>Остановить</Button>
+        <Button on:click={() => removeBotConfig(botName)}>Удалить</Button>
+      </Flex>
+      {#if botStatus !== null}
+        <Alert color="yellow">{botStatus}</Alert>
+      {/if}
+    </Flex>
+  </Center>
+</Container>
