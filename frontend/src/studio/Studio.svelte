@@ -1,4 +1,8 @@
 <script lang="ts">
+  // @ts-nocheck
+  // Note: nocheck is required because we do bind:config with non-type-safe assignments
+  // this happens inside svelte's markup so it can't be ignored with @ts-ignore
+
   import { Svelvet } from "svelvet";
 
   import CommandEntryPointNode from "./nodes/CommandEntryPoint/Node.svelte";

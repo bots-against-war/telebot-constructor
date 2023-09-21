@@ -12,6 +12,9 @@
 
   export let config: MessageBlock;
   export let position: SvelvetPosition;
+  const setNewConfig = (newConfig: MessageBlock) => {
+    config = newConfig;
+  };
 </script>
 
 <Node id={config.block_id} bgColor="#bfebff" bind:position>
@@ -22,9 +25,7 @@
     on:edit={() =>
       openModal(Modal, {
         config,
-        onConfigUpdate: (newConfig) => {
-          config = newConfig;
-        },
+        onConfigUpdate: setNewConfig,
       })}
   >
     <span>{config.message_text}</span>

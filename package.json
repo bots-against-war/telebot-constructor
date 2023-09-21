@@ -8,7 +8,7 @@
     "build": "vite build frontend",
     "watch": "vite watch frontend",
     "preview": "vite build frontend && vite preview frontend",
-    "check": "svelte-check --tsconfig ./tsconfig.json --workspace frontend/",
+    "check": "svelte-check --tsconfig tsconfig.json --workspace frontend/ --compiler-warnings \"ts:ignore\"",
     "check:watch": "svelte-check --tsconfig ./tsconfig.json --workspace frontend/ --watch",
     "format": "prettier --write --plugin prettier-plugin-svelte frontend"
   },

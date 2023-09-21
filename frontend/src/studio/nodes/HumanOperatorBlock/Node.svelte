@@ -11,6 +11,10 @@
 
   export let config: HumanOperatorBlock;
   export let position: SvelvetPosition;
+
+  const setNewConfig = (newConfig: HumanOperatorBlock) => {
+    config = newConfig;
+  };
 </script>
 
 <Node id={config.block_id} bgColor="#b2db81" bind:position>
@@ -21,9 +25,7 @@
     on:edit={() =>
       openModal(Modal, {
         config,
-        onConfigUpdate: (newConfig) => {
-          config = newConfig;
-        },
+        onConfigUpdate: setNewConfig,
       })}
   >
     <span>TBD</span>
