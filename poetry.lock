@@ -1750,13 +1750,13 @@ files = [
 
 [[package]]
 name = "telebot-against-war"
-version = "0.6.9"
+version = "0.6.10"
 description = "Async-first fork of pyTelegramBotApi"
 optional = false
 python-versions = ">=3.9,<4.0"
 files = [
-    {file = "telebot_against_war-0.6.9-py3-none-any.whl", hash = "sha256:445f064a32b9e32a529f62639848b1abd9d0e8cfae44b562f3d071fd17a99a10"},
-    {file = "telebot_against_war-0.6.9.tar.gz", hash = "sha256:f9209136754331a72ae33c3ba46c9730740e41afb37884bc25033e80d1bd24a9"},
+    {file = "telebot_against_war-0.6.10-py3-none-any.whl", hash = "sha256:005b640e9616e2ba2546da0aeccafa90d01896a958281364230c3e14705131bc"},
+    {file = "telebot_against_war-0.6.10.tar.gz", hash = "sha256:ce071616f6c4319c1bfae3cefea27f953ca7bd32ee3391bf36588caf39cd86db"},
 ]
 
 [package.dependencies]
@@ -1766,13 +1766,13 @@ ujson = ">=5.3.0,<6.0.0"
 
 [[package]]
 name = "telebot-components"
-version = "0.8.16"
+version = "0.8.20"
 description = "Framework/toolkit for building Telegram bots with telebot and redis"
 optional = false
 python-versions = ">=3.10,<4.0"
 files = [
-    {file = "telebot_components-0.8.16-py3-none-any.whl", hash = "sha256:33e50552333a48efa71b1035b46584c14c933bab58e8314da21543e8197215d4"},
-    {file = "telebot_components-0.8.16.tar.gz", hash = "sha256:d1299a49150332d2588c0ae1a855428504f10bb06a69d05c01016b97b1e75741"},
+    {file = "telebot_components-0.8.20-py3-none-any.whl", hash = "sha256:dfaca8dc3a8f0d47d277f6609adae336bb134c30f5c5bf95b62a328f328ab1da"},
+    {file = "telebot_components-0.8.20.tar.gz", hash = "sha256:283b7d53b8e92d2f21c48fbf723c720c42ba6276ed818a17eec22f875dcabf0e"},
 ]
 
 [package.dependencies]
@@ -2034,4 +2034,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "810fcc13c3183c29aa562069ec13ea4a62e15762179c6565423314ca7ef9df61"
+content-hash = "6ab8a6e6f872bed207cfa4c2f4f730f0020d2db838e64474ad9120125493d943"

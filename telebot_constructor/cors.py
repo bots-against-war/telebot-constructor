@@ -34,7 +34,7 @@ def setup_cors(app: web.Application) -> None:
         else:
             return resp
 
-    app.middlewares.append(cors_middleware)
+    app.middlewares.insert(0, cors_middleware)
 
     async def preflight(request: web.Request) -> web.Response:
         return web.Response()

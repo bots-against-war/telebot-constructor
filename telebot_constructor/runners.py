@@ -2,6 +2,7 @@ import abc
 import asyncio
 import collections
 
+import telebot.api
 from telebot.runner import BotRunner
 from telebot.webhook import WebhookApp
 
@@ -36,11 +37,20 @@ class PollingConstructedBotRunner(ConstructedBotRunner):
         return True
 
     async def stop(self, username: str, bot_name: str) -> bool:
-        bot_running_task = self.running_bot_tasks.get(username, {}).get(bot_name, None)
+        bot_running_task = self.running_bot_tasks.get(username, {}).pop(bot_name, None)
         if bot_running_task is None:
             return False
         else:
-            return bot_running_task.cancel()
+            is_cancelled = bot_running_task.cancel()
+            if not is_cancelled:
+                return False
+            try:
+                await bot_running_task
+            except asyncio.CancelledError:
+                # HACK: telebot's infinity polling closes HTTP session on polling stop,
+                #       so here we forcefully recreate it
+                await telebot.api.session_manager.get_session()
+            return True
 
     async def cleanup(self) -> None:
         for _username, tasks in self.running_bot_tasks.items():

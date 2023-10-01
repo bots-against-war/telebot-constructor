@@ -1,41 +1,31 @@
 <script lang="ts">
-  import { createEventDispatcher, onMount } from "svelte";
-  import type { BotConfig } from "../api/types";
-  import { botConfigs } from "../botConfigsStore";
-  import { reloadConfigs } from "../dashboard/Dashboard.svelte";
+  import { createEventDispatcher } from "svelte";
+  import type { BotConfigList } from "../types";
 
   // region props
-  export let selectedBot: string;
+  export let botConfigs: BotConfigList;
+  export let selectedBot: string | null;
   // endregion
 
-  let existingConfigs: { [key: string]: BotConfig } = {};
   const dispatch = createEventDispatcher();
 
   function updateSelectedBot(selectedBot: string) {
     dispatch("updateSelectedBot", selectedBot);
   }
-
-  onMount(async () => {
-    await reloadConfigs();
-  });
-
-  botConfigs.subscribe((value) => {
-    existingConfigs = value;
-  });
 </script>
 
 <div class="bots">
-  {#each Object.entries(existingConfigs) as [configName, config], i}
+  {#each Object.entries(botConfigs) as [botName, config], i}
     <button
       class="bot"
-      aria-label={configName}
-      aria-current={selectedBot === configName}
+      aria-label={botName}
+      aria-current={selectedBot === botName}
       on:click={() => {
-        selectedBot = configName;
-        updateSelectedBot(configName);
+        selectedBot = botName;
+        updateSelectedBot(botName);
       }}
     >
-      {configName}</button
+      {config.display_name}</button
     >
   {/each}
 </div>

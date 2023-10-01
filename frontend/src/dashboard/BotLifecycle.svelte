@@ -1,24 +1,23 @@
 <script lang="ts">
   import { startBot, stopBot } from "../api/lifecycle";
   import { deleteBotConfig } from "../api/botConfig";
-  import { reloadConfigs } from "./Dashboard.svelte";
   import { createEventDispatcher } from "svelte";
+  import { Alert, Center, Flex, Container, Button } from "@svelteuidev/core";
+  import type { BotConfig } from "../api/types";
+  import NavButton from "../components/NavButton.svelte";
 
   // region props
   export let botName: string;
+  export let botConfig: BotConfig;
   // endregion
-  let botStatus: string;
+  let botStatus: string | null = null;
   const dispatch = createEventDispatcher();
 
-  function updateSelectedBot(selectedBot: string) {
-    dispatch("updateSelectedBot", selectedBot);
-  }
   async function startBotWithName(name: string) {
     const resp = await startBot(name);
     if (resp.ok) {
       botStatus = "Started";
     } else {
-      // @ts-expect-error
       botStatus = `Failed to start: ${resp.error}`;
     }
   }
@@ -28,34 +27,33 @@
     if (resp.ok) {
       botStatus = "Stopped";
     } else {
-      // @ts-expect-error
       botStatus = `Failed to stop: ${resp.error}`;
     }
   }
 
   async function removeBotConfig(name: string) {
     const resp = await deleteBotConfig(name);
-    if (!resp.ok) {
-      // @ts-expect-error
+    if (resp.ok) {
+      dispatch("botDeleted");
+    } else {
       botStatus = `Failed to delete: ${resp.error}`;
-      return;
     }
-    await reloadConfigs();
-    updateSelectedBot("");
   }
 </script>
 
-<div class="bot-lifecycle">
-  <h3>{botName}</h3>
-  <button on:click={() => startBotWithName(botName)}>Start</button>
-  <button on:click={() => stopBotWithName(botName)}>Stop</button>
-  <button on:click={() => removeBotConfig(botName)}>Delete</button>
-  <p><span class="text-status">{botStatus || ""}</span></p>
-</div>
-
-<style>
-  .bot-lifecycle {
-    margin: auto;
-    text-align: center;
-  }
-</style>
+<Container>
+  <Center>
+    <Flex direction="column" gap="xl">
+      <h1>{botConfig.display_name}</h1>
+      <Flex gap="xl">
+        <NavButton href={`/studio/${botName}`}>Редактировать</NavButton>
+        <Button on:click={() => startBotWithName(botName)}>Запустить</Button>
+        <Button on:click={() => stopBotWithName(botName)}>Остановить</Button>
+        <Button on:click={() => removeBotConfig(botName)}>Удалить</Button>
+      </Flex>
+      {#if botStatus !== null}
+        <Alert color="yellow">{botStatus}</Alert>
+      {/if}
+    </Flex>
+  </Center>
+</Container>

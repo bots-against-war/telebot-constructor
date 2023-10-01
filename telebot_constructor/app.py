@@ -5,22 +5,25 @@ import logging
 import mimetypes
 import re
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Type, TypeVar
 
 import pydantic
 import telebot.api
 from aiohttp import web
 from aiohttp_swagger import setup_swagger  # type: ignore
+from telebot import AsyncTeleBot
 from telebot.webhook import WebhookApp
 from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.stores.generic import KeyDictStore, KeySetStore
 from telebot_components.utils.secrets import SecretStore
 
+from telebot_constructor.app_models import BotTokenPayload
 from telebot_constructor.auth import Auth
 from telebot_constructor.bot_config import BotConfig
 from telebot_constructor.build_time_config import BASE_PATH
 from telebot_constructor.construct import construct_bot
 from telebot_constructor.cors import setup_cors
+from telebot_constructor.debug import setup_debugging
 from telebot_constructor.runners import (
     ConstructedBotRunner,
     PollingConstructedBotRunner,
@@ -29,6 +32,9 @@ from telebot_constructor.runners import (
 from telebot_constructor.static import static_file_content
 
 logger = logging.getLogger(__name__)
+
+
+PydanticModelT = TypeVar("PydanticModelT", bound=pydantic.BaseModel)
 
 
 class TelebotConstructorApp:
@@ -76,7 +82,7 @@ class TelebotConstructorApp:
             raise web.HTTPUnauthorized(reason="Authentication required")
         return username
 
-    VALID_NAME_RE = re.compile(r"^[0-9a-zA-Z\-_]{3,32}$")
+    VALID_NAME_RE = re.compile(r"^[0-9a-zA-Z\-_]{3,64}$")
 
     def _validate_name(self, name: str) -> None:
         if not self.VALID_NAME_RE.match(name):
@@ -88,6 +94,16 @@ class TelebotConstructorApp:
             raise web.HTTPNotFound()
         self._validate_name(name)
         return name
+
+    async def parse_pydantic_model(self, request: web.Request, Model: Type[PydanticModelT]) -> PydanticModelT:
+        try:
+            return Model.model_validate(await request.json())
+        except json.JSONDecodeError:
+            raise web.HTTPBadRequest(reason="Request body must be valid JSON")
+        except pydantic.ValidationError as e:
+            raise web.HTTPBadRequest(text=e.json(include_context=False, include_url=False))
+        except Exception as e:
+            raise web.HTTPBadRequest(reason=str(e))
 
     def parse_secret_name(self, request: web.Request) -> str:
         name = request.match_info.get("secret_name")
@@ -103,7 +119,10 @@ class TelebotConstructorApp:
         return config
 
     async def re_start_bot(self, username: str, bot_name: str, bot_config: BotConfig) -> None:
-        await self.runner.stop(username, bot_name)
+        log_prefix = f"[{username}][{bot_name}]"
+        logger.info(f"{log_prefix} (Re)starting bot")
+        is_stopped = await self.runner.stop(username, bot_name)
+        logger.info(f"{log_prefix} Stopped bot {is_stopped = }")
         try:
             bot_runner = await construct_bot(
                 username=username,
@@ -113,9 +132,13 @@ class TelebotConstructorApp:
                 redis=self.redis,
             )
         except Exception as e:
+            logger.info(f"{log_prefix} Error constructing bot", exc_info=True)
             raise web.HTTPBadRequest(reason=str(e))
         if not await self.runner.start(username=username, bot_name=bot_name, bot_runner=bot_runner):
+            logger.info(f"{log_prefix} Bot failed to start")
             raise web.HTTPInternalServerError(reason="Failed to start bot")
+        logger.info(f"{log_prefix} Bot started OK!")
+        await self.running_bots_store.add(username, bot_name)
 
     async def create_constructor_web_app(self) -> web.Application:
         app = web.Application()
@@ -197,17 +220,10 @@ class TelebotConstructorApp:
             username = await self.authenticate(request)
             bot_name = self.parse_bot_name(request)
             existing_bot_config = await self.bot_config_store.get_subkey(username, bot_name)
-            try:
-                bot_config = BotConfig.model_validate(await request.json())
-            except json.JSONDecodeError:
-                raise web.HTTPBadRequest(reason="Request body must be valid JSON")
-            except pydantic.ValidationError as e:
-                raise web.HTTPBadRequest(text=e.json(include_context=False, include_url=False))
-            except Exception as e:
-                raise web.HTTPBadRequest(reason=str(e))
+            bot_config = await self.parse_pydantic_model(request, BotConfig)
             await self.bot_config_store.set_subkey(username, bot_name, bot_config)
-
             if bot_name in await self.running_bots_store.all(username):
+                logger.info(f"Updated bot {bot_name} is running, restarting it")
                 await self.re_start_bot(username, bot_name, bot_config)
 
             if existing_bot_config is None:
@@ -328,6 +344,19 @@ class TelebotConstructorApp:
             return web.json_response(data=sorted(running_bots))
 
         ##################################################################################
+        # validation endpoints
+
+        @routes.post("/api/validate-token")
+        async def validate_bot_token(request: web.Request) -> web.Response:
+            _ = await self.authenticate(request)
+            token_payload = await self.parse_pydantic_model(request, BotTokenPayload)
+            try:
+                await AsyncTeleBot(token=token_payload.token).get_me()
+            except Exception as e:
+                raise web.HTTPBadRequest(reason=f"Bot token validation failed ({e})")
+            return web.Response()
+
+        ##################################################################################
         # static file routes
 
         @routes.get("/")
@@ -340,10 +369,10 @@ class TelebotConstructorApp:
                 content_type="text/html",
             )
 
-        STATIC_FILE_GLOBS = ["baw.svg", "assets/*"]
+        STATIC_FILE_GLOBS = ["assets/*"]
 
         @routes.get("/{tail:.+}")
-        async def serve_static_file(request: web.Request) -> web.Response:
+        async def serve_static_file(request: web.Request) -> web.StreamResponse:
             static_file_path = request.match_info.get("tail")
             if static_file_path is None:
                 raise web.HTTPNotFound()
@@ -354,7 +383,8 @@ class TelebotConstructorApp:
                     content_type=mime_type,
                 )
             else:
-                raise web.HTTPNotFound()
+                # falling back to index page to support client-side routing
+                return await index(request)
 
         ##################################################################################
 
@@ -362,6 +392,7 @@ class TelebotConstructorApp:
         setup_swagger(app=app, swagger_url="/swagger")
         await self.auth.setup_routes(app)
         setup_cors(app)
+        setup_debugging(app)
         return app
 
     async def _start_stored_bots(self) -> None:

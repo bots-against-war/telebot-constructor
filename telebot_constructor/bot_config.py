@@ -1,36 +1,53 @@
-from datetime import timedelta
 from typing import Optional
 
 from pydantic import BaseModel, model_validator
-from telebot_components.constants import times
 
 from telebot_constructor.pydantic_utils import ExactlyOneNonNullFieldModel
 from telebot_constructor.user_flow import UserFlow
 from telebot_constructor.user_flow.blocks.base import UserFlowBlock
-from telebot_constructor.user_flow.blocks.message import MessageBlock
+from telebot_constructor.user_flow.blocks.content import ContentBlock
+from telebot_constructor.user_flow.blocks.form import FormBlock
+from telebot_constructor.user_flow.blocks.human_operator import HumanOperatorBlock
+from telebot_constructor.user_flow.blocks.menu import MenuBlock
 from telebot_constructor.user_flow.entrypoints.base import UserFlowEntryPoint
+from telebot_constructor.user_flow.entrypoints.catch_all import CatchAllEntryPoint
 from telebot_constructor.user_flow.entrypoints.command import CommandEntryPoint
+from telebot_constructor.user_flow.entrypoints.regex_match import RegexMatchEntryPoint
 
 
 class UserFlowEntryPointConfig(ExactlyOneNonNullFieldModel):
-    command: Optional[CommandEntryPoint]
+    command: Optional[CommandEntryPoint] = None
+    catch_all: Optional[CatchAllEntryPoint] = None
+    regex: Optional[RegexMatchEntryPoint] = None
 
     def to_user_flow_entrypoint(self) -> UserFlowEntryPoint:
         # runtime guarantee that exactly one of the options is not None
-        return self.command  # type: ignore
+        return self.command or self.catch_all or self.regex  # type: ignore
 
 
 class UserFlowBlockConfig(ExactlyOneNonNullFieldModel):
-    message: Optional[MessageBlock]
+    content: Optional[ContentBlock] = None
+    human_operator: Optional[HumanOperatorBlock] = None
+    menu: Optional[MenuBlock] = None
+    form: Optional[FormBlock] = None
 
     def to_user_flow_block(self) -> UserFlowBlock:
         # runtime guarantee that exactly one of the options is not None
-        return self.message  # type: ignore
+        return self.content or self.human_operator or self.menu or self.form  # type: ignore
+
+
+class UserFlowNodePosition(BaseModel):
+    x: float
+    y: float
 
 
 class UserFlowConfig(BaseModel):
     entrypoints: list[UserFlowEntryPointConfig]
     blocks: list[UserFlowBlockConfig]
+
+    # entrypoint/block id -> display position on frontend
+    # not used for bot logic, but still stored
+    node_display_coords: dict[str, UserFlowNodePosition]
 
     @model_validator(mode="after")
     def config_convertible_to_user_flow(self) -> "UserFlowConfig":
@@ -44,15 +61,7 @@ class UserFlowConfig(BaseModel):
         )
 
 
-class FeedbackHandlerConfig(BaseModel):
-    admin_chat_id: int
-    message_log_to_admin_chat: bool = True
-    force_category_selection: bool = False
-    hashtags_in_admin_chat: bool = True
-    hashtag_message_rarer_than: timedelta = times.FIVE_MINUTES
-
-
 class BotConfig(BaseModel):
+    display_name: str  # for constructor UI
     token_secret_name: str  # must correspond to a valid secret in secret store
-    feedback_handler_config: Optional[FeedbackHandlerConfig] = None
-    user_flow_config: Optional[UserFlowConfig] = None
+    user_flow_config: UserFlowConfig

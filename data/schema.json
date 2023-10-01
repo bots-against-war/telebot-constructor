@@ -1,61 +1,10 @@
 {
   "$defs": {
-    "CommandEntryPoint": {
+    "CatchAllEntryPoint": {
+      "description": "Entrypoint that catches all user messages",
       "properties": {
-        "command": {
-          "title": "Command",
-          "type": "string"
-        },
-        "start_block_id": {
-          "title": "Start Block Id",
-          "type": "string"
-        }
-      },
-      "required": ["command", "start_block_id"],
-      "title": "CommandEntryPoint",
-      "type": "object"
-    },
-    "FeedbackHandlerConfig": {
-      "properties": {
-        "admin_chat_id": {
-          "title": "Admin Chat Id",
-          "type": "integer"
-        },
-        "message_log_to_admin_chat": {
-          "default": true,
-          "title": "Message Log To Admin Chat",
-          "type": "boolean"
-        },
-        "force_category_selection": {
-          "default": false,
-          "title": "Force Category Selection",
-          "type": "boolean"
-        },
-        "hashtags_in_admin_chat": {
-          "default": true,
-          "title": "Hashtags In Admin Chat",
-          "type": "boolean"
-        },
-        "hashtag_message_rarer_than": {
-          "default": "PT300S",
-          "format": "duration",
-          "title": "Hashtag Message Rarer Than",
-          "type": "string"
-        }
-      },
-      "required": ["admin_chat_id"],
-      "title": "FeedbackHandlerConfig",
-      "type": "object"
-    },
-    "MessageBlock": {
-      "description": "Simplest user flow block: send message and immediately continue to the next block",
-      "properties": {
-        "block_id": {
-          "title": "Block Id",
-          "type": "string"
-        },
-        "message_text": {
-          "title": "Message Text",
+        "entrypoint_id": {
+          "title": "Entrypoint Id",
           "type": "string"
         },
         "next_block_id": {
@@ -70,16 +19,314 @@
           "title": "Next Block Id"
         }
       },
-      "required": ["block_id", "message_text", "next_block_id"],
-      "title": "MessageBlock",
+      "required": [
+        "entrypoint_id",
+        "next_block_id"
+      ],
+      "title": "CatchAllEntryPoint",
       "type": "object"
     },
-    "UserFlowBlockConfig": {
+    "CommandEntryPoint": {
+      "description": "Basic entrypoint catching Telegram /commands",
       "properties": {
-        "message": {
+        "entrypoint_id": {
+          "title": "Entrypoint Id",
+          "type": "string"
+        },
+        "command": {
+          "title": "Command",
+          "type": "string"
+        },
+        "next_block_id": {
           "anyOf": [
             {
-              "$ref": "#/$defs/MessageBlock"
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Next Block Id"
+        },
+        "scope": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/CommandScope"
+            }
+          ],
+          "default": "private"
+        },
+        "short_description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Short Description"
+        }
+      },
+      "required": [
+        "entrypoint_id",
+        "command",
+        "next_block_id",
+        "scope",
+        "short_description"
+      ],
+      "title": "CommandEntryPoint",
+      "type": "object"
+    },
+    "CommandScope": {
+      "enum": [
+        "private",
+        "group",
+        "any"
+      ],
+      "title": "CommandScope",
+      "type": "string"
+    },
+    "Content": {
+      "properties": {
+        "text": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ContentText"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "attachments": {
+          "items": {
+            "$ref": "#/$defs/ContentBlockContentAttachment"
+          },
+          "title": "Attachments",
+          "type": "array"
+        }
+      },
+      "required": [
+        "text",
+        "attachments"
+      ],
+      "title": "Content",
+      "type": "object"
+    },
+    "ContentBlock": {
+      "description": "Simplest user flow block: static content sent by bot in one or several telegram messages.\nImmediately continues to the next block after sending the content.",
+      "properties": {
+        "block_id": {
+          "title": "Block Id",
+          "type": "string"
+        },
+        "contents": {
+          "items": {
+            "$ref": "#/$defs/Content"
+          },
+          "title": "Contents",
+          "type": "array"
+        },
+        "next_block_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Next Block Id"
+        }
+      },
+      "required": [
+        "block_id",
+        "contents",
+        "next_block_id"
+      ],
+      "title": "ContentBlock",
+      "type": "object"
+    },
+    "ContentBlockContentAttachment": {
+      "properties": {
+        "image": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Image"
+        }
+      },
+      "required": [
+        "image"
+      ],
+      "title": "ContentBlockContentAttachment",
+      "type": "object"
+    },
+    "ContentText": {
+      "properties": {
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "markup": {
+          "$ref": "#/$defs/ContentTextMarkup"
+        }
+      },
+      "required": [
+        "text",
+        "markup"
+      ],
+      "title": "ContentText",
+      "type": "object"
+    },
+    "ContentTextMarkup": {
+      "enum": [
+        "none",
+        "html",
+        "markdown"
+      ],
+      "title": "ContentTextMarkup",
+      "type": "string"
+    },
+    "FeedbackHandlerConfig": {
+      "properties": {
+        "admin_chat_id": {
+          "title": "Admin Chat Id",
+          "type": "integer"
+        },
+        "forum_topic_per_user": {
+          "title": "Forum Topic Per User",
+          "type": "boolean"
+        },
+        "anonimyze_users": {
+          "title": "Anonimyze Users",
+          "type": "boolean"
+        },
+        "max_messages_per_minute": {
+          "title": "Max Messages Per Minute",
+          "type": "number"
+        },
+        "messages_to_user": {
+          "$ref": "#/$defs/MessagesToUser"
+        },
+        "messages_to_admin": {
+          "$ref": "#/$defs/MessagesToAdmin"
+        },
+        "hashtags_in_admin_chat": {
+          "title": "Hashtags In Admin Chat",
+          "type": "boolean"
+        },
+        "unanswered_hashtag": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Unanswered Hashtag"
+        },
+        "hashtag_message_rarer_than": {
+          "anyOf": [
+            {
+              "format": "duration",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Hashtag Message Rarer Than"
+        },
+        "message_log_to_admin_chat": {
+          "title": "Message Log To Admin Chat",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "admin_chat_id",
+        "forum_topic_per_user",
+        "anonimyze_users",
+        "max_messages_per_minute",
+        "messages_to_user",
+        "messages_to_admin",
+        "hashtags_in_admin_chat",
+        "unanswered_hashtag",
+        "hashtag_message_rarer_than",
+        "message_log_to_admin_chat"
+      ],
+      "title": "FeedbackHandlerConfig",
+      "type": "object"
+    },
+    "FormBlock": {
+      "description": "UNFINISHED\n\nBlock with a series of questions to user with options to export their answers in various formats",
+      "properties": {
+        "block_id": {
+          "title": "Block Id",
+          "type": "string"
+        },
+        "form_name": {
+          "title": "Form Name",
+          "type": "string"
+        },
+        "fields": {
+          "items": {
+            "$ref": "#/$defs/FormFieldConfig"
+          },
+          "title": "Fields",
+          "type": "array"
+        },
+        "messages": {
+          "$ref": "#/$defs/FormMessages"
+        },
+        "form_completed_next_block_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Form Completed Next Block Id"
+        },
+        "form_cancelled_next_block_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Form Cancelled Next Block Id"
+        }
+      },
+      "required": [
+        "block_id",
+        "form_name",
+        "fields",
+        "messages",
+        "form_completed_next_block_id",
+        "form_cancelled_next_block_id"
+      ],
+      "title": "FormBlock",
+      "type": "object"
+    },
+    "FormFieldConfig": {
+      "properties": {
+        "plain_text": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PlainTextFormFieldConfig"
             },
             {
               "type": "null"
@@ -87,7 +334,438 @@
           ]
         }
       },
-      "required": ["message"],
+      "required": [
+        "plain_text"
+      ],
+      "title": "FormFieldConfig",
+      "type": "object"
+    },
+    "FormFieldResultFormattingOpts": {
+      "properties": {
+        "descr": {
+          "title": "Descr",
+          "type": "string"
+        },
+        "is_multiline": {
+          "default": false,
+          "title": "Is Multiline",
+          "type": "boolean"
+        },
+        "value_formatter": {
+          "default": null,
+          "title": "Value Formatter",
+          "type": "null"
+        }
+      },
+      "required": [
+        "descr",
+        "is_multiline",
+        "value_formatter"
+      ],
+      "title": "FormFieldResultFormattingOpts",
+      "type": "object"
+    },
+    "FormMessages": {
+      "properties": {
+        "form_start": {
+          "title": "Form Start",
+          "type": "string"
+        },
+        "field_is_skippable": {
+          "title": "Field Is Skippable",
+          "type": "string"
+        },
+        "field_is_not_skippable": {
+          "title": "Field Is Not Skippable",
+          "type": "string"
+        },
+        "please_enter_correct_value": {
+          "title": "Please Enter Correct Value",
+          "type": "string"
+        },
+        "unsupported_command": {
+          "title": "Unsupported Command",
+          "type": "string"
+        },
+        "cancelling_because_of_error": {
+          "title": "Cancelling Because Of Error",
+          "type": "string"
+        }
+      },
+      "required": [
+        "form_start",
+        "field_is_skippable",
+        "field_is_not_skippable",
+        "please_enter_correct_value",
+        "unsupported_command",
+        "cancelling_because_of_error"
+      ],
+      "title": "FormMessages",
+      "type": "object"
+    },
+    "HumanOperatorBlock": {
+      "description": "Terminal block that incapsulates user interaction with a human operator",
+      "properties": {
+        "block_id": {
+          "title": "Block Id",
+          "type": "string"
+        },
+        "catch_all": {
+          "title": "Catch All",
+          "type": "boolean"
+        },
+        "feedback_handler_config": {
+          "$ref": "#/$defs/FeedbackHandlerConfig"
+        }
+      },
+      "required": [
+        "block_id",
+        "catch_all",
+        "feedback_handler_config"
+      ],
+      "title": "HumanOperatorBlock",
+      "type": "object"
+    },
+    "Menu": {
+      "properties": {
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "items": {
+          "items": {
+            "$ref": "#/$defs/MenuItem"
+          },
+          "title": "Items",
+          "type": "array"
+        }
+      },
+      "required": [
+        "text",
+        "items"
+      ],
+      "title": "Menu",
+      "type": "object"
+    },
+    "MenuBlock": {
+      "description": "Multilevel menu block powered by Telegram inline buttons",
+      "properties": {
+        "block_id": {
+          "title": "Block Id",
+          "type": "string"
+        },
+        "menu": {
+          "$ref": "#/$defs/Menu"
+        },
+        "config": {
+          "$ref": "#/$defs/MenuConfig"
+        }
+      },
+      "required": [
+        "block_id",
+        "menu",
+        "config"
+      ],
+      "title": "MenuBlock",
+      "type": "object"
+    },
+    "MenuConfig": {
+      "properties": {
+        "back_label": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            }
+          ],
+          "title": "Back Label"
+        },
+        "lock_after_termination": {
+          "title": "Lock After Termination",
+          "type": "boolean"
+        },
+        "is_text_html": {
+          "default": false,
+          "title": "Is Text Html",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "back_label",
+        "lock_after_termination",
+        "is_text_html"
+      ],
+      "title": "MenuConfig",
+      "type": "object"
+    },
+    "MenuItem": {
+      "properties": {
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "submenu": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Menu"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "next_block_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Next Block Id"
+        },
+        "link_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Link Url"
+        }
+      },
+      "required": [
+        "label",
+        "submenu",
+        "next_block_id",
+        "link_url"
+      ],
+      "title": "MenuItem",
+      "type": "object"
+    },
+    "MessagesToAdmin": {
+      "properties": {
+        "copied_to_user_ok": {
+          "title": "Copied To User Ok",
+          "type": "string"
+        },
+        "deleted_message_ok": {
+          "title": "Deleted Message Ok",
+          "type": "string"
+        },
+        "can_not_delete_message": {
+          "title": "Can Not Delete Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "copied_to_user_ok",
+        "deleted_message_ok",
+        "can_not_delete_message"
+      ],
+      "title": "MessagesToAdmin",
+      "type": "object"
+    },
+    "MessagesToUser": {
+      "properties": {
+        "forwarded_to_admin_ok": {
+          "title": "Forwarded To Admin Ok",
+          "type": "string"
+        },
+        "throttling": {
+          "title": "Throttling",
+          "type": "string"
+        }
+      },
+      "required": [
+        "forwarded_to_admin_ok",
+        "throttling"
+      ],
+      "title": "MessagesToUser",
+      "type": "object"
+    },
+    "NextFieldMapping": {
+      "properties": {
+        "if_value": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": "If Value",
+          "type": "object"
+        },
+        "if_skipped": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "If Skipped"
+        },
+        "default": {
+          "title": "Default",
+          "type": "string"
+        }
+      },
+      "required": [
+        "if_value",
+        "if_skipped",
+        "default"
+      ],
+      "title": "NextFieldMapping",
+      "type": "object"
+    },
+    "PlainTextFormFieldConfig": {
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "propmt": {
+          "title": "Propmt",
+          "type": "string"
+        },
+        "is_required": {
+          "title": "Is Required",
+          "type": "boolean"
+        },
+        "result_formatting_opts": {
+          "$ref": "#/$defs/FormFieldResultFormattingOpts"
+        },
+        "next_field": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/NextFieldMapping"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Next Field"
+        },
+        "empty_text_error_msg": {
+          "title": "Empty Text Error Msg",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "propmt",
+        "is_required",
+        "result_formatting_opts",
+        "next_field",
+        "empty_text_error_msg"
+      ],
+      "title": "PlainTextFormFieldConfig",
+      "type": "object"
+    },
+    "RegexMatchEntryPoint": {
+      "description": "Entrypoint matching user messages by searching a regex pattern in text",
+      "properties": {
+        "entrypoint_id": {
+          "title": "Entrypoint Id",
+          "type": "string"
+        },
+        "regex": {
+          "title": "Regex",
+          "type": "string"
+        },
+        "next_block_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Next Block Id"
+        }
+      },
+      "required": [
+        "entrypoint_id",
+        "regex",
+        "next_block_id"
+      ],
+      "title": "RegexMatchEntryPoint",
+      "type": "object"
+    },
+    "UserFlowBlockConfig": {
+      "properties": {
+        "content": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ContentBlock"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "human_operator": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/HumanOperatorBlock"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "menu": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MenuBlock"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "form": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FormBlock"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "content",
+        "human_operator",
+        "menu",
+        "form"
+      ],
       "title": "UserFlowBlockConfig",
       "type": "object"
     },
@@ -106,9 +784,20 @@
           },
           "title": "Blocks",
           "type": "array"
+        },
+        "node_display_coords": {
+          "additionalProperties": {
+            "$ref": "#/$defs/UserFlowNodePosition"
+          },
+          "title": "Node Display Coords",
+          "type": "object"
         }
       },
-      "required": ["entrypoints", "blocks"],
+      "required": [
+        "entrypoints",
+        "blocks",
+        "node_display_coords"
+      ],
       "title": "UserFlowConfig",
       "type": "object"
     },
@@ -122,43 +811,77 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "default": null
+        },
+        "catch_all": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CatchAllEntryPoint"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "regex": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RegexMatchEntryPoint"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         }
       },
-      "required": ["command"],
+      "required": [
+        "command",
+        "catch_all",
+        "regex"
+      ],
       "title": "UserFlowEntryPointConfig",
+      "type": "object"
+    },
+    "UserFlowNodePosition": {
+      "properties": {
+        "x": {
+          "title": "X",
+          "type": "number"
+        },
+        "y": {
+          "title": "Y",
+          "type": "number"
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ],
+      "title": "UserFlowNodePosition",
       "type": "object"
     }
   },
   "properties": {
+    "display_name": {
+      "title": "Display Name",
+      "type": "string"
+    },
     "token_secret_name": {
       "title": "Token Secret Name",
       "type": "string"
     },
-    "feedback_handler_config": {
-      "anyOf": [
-        {
-          "$ref": "#/$defs/FeedbackHandlerConfig"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null
-    },
     "user_flow_config": {
-      "anyOf": [
-        {
-          "$ref": "#/$defs/UserFlowConfig"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null
+      "$ref": "#/$defs/UserFlowConfig"
     }
   },
-  "required": ["token_secret_name"],
+  "required": [
+    "display_name",
+    "token_secret_name",
+    "user_flow_config"
+  ],
   "title": "BotConfig",
   "type": "object"
 }

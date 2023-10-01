@@ -43,3 +43,11 @@ npm run dev
 ```
 
 4. Visit `http://localhost:8081` in the browser.
+
+### Generate TS interfaces for backend data model
+
+Run from project root
+
+```bash
+python scripts/models/pydantic2jsonschema.py && node scripts/models/jsonschema2ts.mjs 
+```
