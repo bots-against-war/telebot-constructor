@@ -1,23 +1,23 @@
 <script lang="ts">
-  import type { MessageBlock } from "../../../api/types";
+  import type { ContentBlock } from "../../../api/types";
   import { getModalCloser } from "../../../utils";
 
   const closeModal = getModalCloser();
 
-  export let config: MessageBlock;
-  export let onConfigUpdate: (newConfig: MessageBlock) => any;
+  export let config: ContentBlock;
+  export let onConfigUpdate: (newConfig: ContentBlock) => any;
 
   function updateConfig() {
-    config.message_text = editedMessageText;
+    config.contents = [{ text: { text: editedMessageText, markup: "none" }, attachments: [] }];
     onConfigUpdate(config);
     closeModal();
   }
 
-  let editedMessageText = config.message_text;
+  let editedMessageText = config.contents[0].text?.text || "";
 </script>
 
 <div>
-  <h3>Simple bot->user message</h3>
+  <h3>Content</h3>
   <span>
     <b>Message text:</b>
     <input bind:value={editedMessageText} />

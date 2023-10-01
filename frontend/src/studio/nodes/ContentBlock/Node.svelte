@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Node } from "svelvet";
-  import type { MessageBlock } from "../../../api/types";
+  import type { ContentBlock } from "../../../api/types";
   import NodeContent from "../../components/NodeContent.svelte";
   import OutputAnchor from "../../components/OutputAnchor.svelte";
   import InputAnchor from "../../components/InputAnchor.svelte";
@@ -10,9 +10,9 @@
   import { getModalOpener } from "../../../utils";
   const openModal = getModalOpener();
 
-  export let config: MessageBlock;
+  export let config: ContentBlock;
   export let position: SvelvetPosition;
-  const setNewConfig = (newConfig: MessageBlock) => {
+  const setNewConfig = (newConfig: ContentBlock) => {
     config = newConfig;
   };
 </script>
@@ -20,7 +20,7 @@
 <Node id={config.block_id} bgColor="#bfebff" bind:position>
   <InputAnchor />
   <NodeContent
-    name="Message"
+    name="Content"
     on:delete
     on:edit={() =>
       openModal(Modal, {
@@ -28,7 +28,7 @@
         onConfigUpdate: setNewConfig,
       })}
   >
-    <span>{config.message_text}</span>
+    Message text: <span>{config.contents[0].text?.text}</span>
     <!-- <span>x:{Math.round(position.x)},y:{Math.round(position.y)}</span> -->
   </NodeContent>
   <OutputAnchor bind:nextBlockId={config.next_block_id} />

@@ -88,6 +88,113 @@
       "title": "CommandScope",
       "type": "string"
     },
+    "Content": {
+      "properties": {
+        "text": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ContentText"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "attachments": {
+          "items": {
+            "$ref": "#/$defs/ContentBlockContentAttachment"
+          },
+          "title": "Attachments",
+          "type": "array"
+        }
+      },
+      "required": [
+        "text",
+        "attachments"
+      ],
+      "title": "Content",
+      "type": "object"
+    },
+    "ContentBlock": {
+      "description": "Simplest user flow block: static content sent by bot in one or several telegram messages.\nImmediately continues to the next block after sending the content.",
+      "properties": {
+        "block_id": {
+          "title": "Block Id",
+          "type": "string"
+        },
+        "contents": {
+          "items": {
+            "$ref": "#/$defs/Content"
+          },
+          "title": "Contents",
+          "type": "array"
+        },
+        "next_block_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Next Block Id"
+        }
+      },
+      "required": [
+        "block_id",
+        "contents",
+        "next_block_id"
+      ],
+      "title": "ContentBlock",
+      "type": "object"
+    },
+    "ContentBlockContentAttachment": {
+      "properties": {
+        "image": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Image"
+        }
+      },
+      "required": [
+        "image"
+      ],
+      "title": "ContentBlockContentAttachment",
+      "type": "object"
+    },
+    "ContentText": {
+      "properties": {
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "markup": {
+          "$ref": "#/$defs/ContentTextMarkup"
+        }
+      },
+      "required": [
+        "text",
+        "markup"
+      ],
+      "title": "ContentText",
+      "type": "object"
+    },
+    "ContentTextMarkup": {
+      "enum": [
+        "none",
+        "html",
+        "markdown"
+      ],
+      "title": "ContentTextMarkup",
+      "type": "string"
+    },
     "FeedbackHandlerConfig": {
       "properties": {
         "admin_chat_id": {
@@ -447,37 +554,6 @@
       "title": "MenuItem",
       "type": "object"
     },
-    "MessageBlock": {
-      "description": "Simplest user flow block: send message and immediately continue to the next block",
-      "properties": {
-        "block_id": {
-          "title": "Block Id",
-          "type": "string"
-        },
-        "message_text": {
-          "title": "Message Text",
-          "type": "string"
-        },
-        "next_block_id": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Next Block Id"
-        }
-      },
-      "required": [
-        "block_id",
-        "message_text",
-        "next_block_id"
-      ],
-      "title": "MessageBlock",
-      "type": "object"
-    },
     "MessagesToAdmin": {
       "properties": {
         "copied_to_user_ok": {
@@ -639,10 +715,10 @@
     },
     "UserFlowBlockConfig": {
       "properties": {
-        "message": {
+        "content": {
           "anyOf": [
             {
-              "$ref": "#/$defs/MessageBlock"
+              "$ref": "#/$defs/ContentBlock"
             },
             {
               "type": "null"
@@ -685,7 +761,7 @@
         }
       },
       "required": [
-        "message",
+        "content",
         "human_operator",
         "menu",
         "form"

@@ -1,8 +1,8 @@
 import type { UserFlowBlockConfig, UserFlowEntryPointConfig } from "./types";
 
 export function getBlockId(c: UserFlowBlockConfig): string {
-  if (c.message !== null) {
-    return c.message.block_id;
+  if (c.content !== null) {
+    return c.content.block_id;
   } else if (c.human_operator !== null) {
     return c.human_operator.block_id;
   } else if (c.menu !== null) {

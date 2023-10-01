@@ -10,6 +10,7 @@ from telebot_constructor.bot_config import (
     UserFlowEntryPointConfig,
 )
 from telebot_constructor.construct import construct_bot
+from telebot_constructor.user_flow.blocks.content import ContentBlock
 from telebot_constructor.user_flow.blocks.human_operator import (
     FeedbackHandlerConfig,
     HumanOperatorBlock,
@@ -22,7 +23,6 @@ from telebot_constructor.user_flow.blocks.menu import (
     MenuBlock,
     MenuItem,
 )
-from telebot_constructor.user_flow.blocks.message import MessageBlock
 from telebot_constructor.user_flow.entrypoints.catch_all import CatchAllEntryPoint
 from telebot_constructor.user_flow.entrypoints.command import CommandEntryPoint
 from telebot_constructor.user_flow.entrypoints.regex_match import RegexMatchEntryPoint
@@ -40,10 +40,10 @@ def test_user_flow_config_model_validation() -> None:
             entrypoints=[],
             blocks=[
                 UserFlowBlockConfig(
-                    message=MessageBlock(block_id="1", message_text="one", next_block_id=None),
+                    content=ContentBlock.simple_text(block_id="1", message_text="one", next_block_id=None),
                 ),
                 UserFlowBlockConfig(
-                    message=MessageBlock(block_id="1", message_text="also one", next_block_id=None),
+                    content=ContentBlock.simple_text(block_id="1", message_text="also one", next_block_id=None),
                 ),
             ],
             node_display_coords={},
@@ -67,14 +67,14 @@ async def test_simple_user_flow() -> None:
             ],
             blocks=[
                 UserFlowBlockConfig(
-                    message=MessageBlock(
+                    content=ContentBlock.simple_text(
                         block_id="message-1",
                         message_text="hello!",
                         next_block_id="message-2",
                     ),
                 ),
                 UserFlowBlockConfig(
-                    message=MessageBlock(
+                    content=ContentBlock.simple_text(
                         block_id="message-2",
                         message_text="how are you today?",
                         next_block_id=None,
@@ -141,7 +141,7 @@ async def test_flow_with_human_operator(catch_all: bool) -> None:
             ],
             blocks=[
                 UserFlowBlockConfig(
-                    message=MessageBlock(
+                    content=ContentBlock.simple_text(
                         block_id="message-1",
                         message_text="Hi, I'm a bot",
                         next_block_id="human-operator-1",
@@ -283,7 +283,7 @@ async def test_flow_with_menu() -> None:
             ],
             blocks=[
                 UserFlowBlockConfig(
-                    message=MessageBlock(
+                    content=ContentBlock.simple_text(
                         block_id="start-message",
                         message_text="start message",
                         next_block_id="menu",
@@ -303,14 +303,14 @@ async def test_flow_with_menu() -> None:
                     )
                 ),
                 UserFlowBlockConfig(
-                    message=MessageBlock(
+                    content=ContentBlock.simple_text(
                         block_id="message-1",
                         message_text="message on option one",
                         next_block_id=None,
                     ),
                 ),
                 UserFlowBlockConfig(
-                    message=MessageBlock(
+                    content=ContentBlock.simple_text(
                         block_id="message-2",
                         message_text="message on option two",
                         next_block_id=None,
@@ -391,10 +391,14 @@ async def test_catch_all_entrypoint() -> None:
             ],
             blocks=[
                 UserFlowBlockConfig(
-                    message=MessageBlock(block_id="message-1", message_text="Message 1", next_block_id=None),
+                    content=ContentBlock.simple_text(
+                        block_id="message-1", message_text="Message 1", next_block_id=None
+                    ),
                 ),
                 UserFlowBlockConfig(
-                    message=MessageBlock(block_id="message-2", message_text="Message 2", next_block_id=None),
+                    content=ContentBlock.simple_text(
+                        block_id="message-2", message_text="Message 2", next_block_id=None
+                    ),
                 ),
             ],
             node_display_coords={},
@@ -453,13 +457,19 @@ async def test_regex_match_entrypoint() -> None:
             ],
             blocks=[
                 UserFlowBlockConfig(
-                    message=MessageBlock(block_id="message-literal", message_text="Literal value", next_block_id=None),
+                    content=ContentBlock.simple_text(
+                        block_id="message-literal", message_text="Literal value", next_block_id=None
+                    ),
                 ),
                 UserFlowBlockConfig(
-                    message=MessageBlock(block_id="message-non-empty", message_text="Non-empty", next_block_id=None),
+                    content=ContentBlock.simple_text(
+                        block_id="message-non-empty", message_text="Non-empty", next_block_id=None
+                    ),
                 ),
                 UserFlowBlockConfig(
-                    message=MessageBlock(block_id="message-empty", message_text="Empty", next_block_id=None),
+                    content=ContentBlock.simple_text(
+                        block_id="message-empty", message_text="Empty", next_block_id=None
+                    ),
                 ),
             ],
             node_display_coords={},

@@ -19,7 +19,11 @@ export type Regex = string;
 export type NextBlockId2 = string | null;
 export type Entrypoints = UserFlowEntryPointConfig[];
 export type BlockId = string;
-export type MessageText = string;
+export type Text = string;
+export type ContentTextMarkup = "none" | "html" | "markdown";
+export type Image = string | null;
+export type Attachments = ContentBlockContentAttachment[];
+export type Contents = Content[];
 export type NextBlockId3 = string | null;
 export type BlockId1 = string;
 export type CatchAll = boolean;
@@ -37,7 +41,7 @@ export type UnansweredHashtag = string | null;
 export type HashtagMessageRarerThan = string | null;
 export type MessageLogToAdminChat = boolean;
 export type BlockId2 = string;
-export type Text = string;
+export type Text1 = string;
 export type Label = string;
 export type NextBlockId4 = string | null;
 export type LinkUrl = string | null;
@@ -121,19 +125,34 @@ export interface RegexMatchEntryPoint {
   [k: string]: unknown;
 }
 export interface UserFlowBlockConfig {
-  message: MessageBlock | null;
+  content: ContentBlock | null;
   human_operator: HumanOperatorBlock | null;
   menu: MenuBlock | null;
   form: FormBlock | null;
   [k: string]: unknown;
 }
 /**
- * Simplest user flow block: send message and immediately continue to the next block
+ * Simplest user flow block: static content sent by bot in one or several telegram messages.
+ * Immediately continues to the next block after sending the content.
  */
-export interface MessageBlock {
+export interface ContentBlock {
   block_id: BlockId;
-  message_text: MessageText;
+  contents: Contents;
   next_block_id: NextBlockId3;
+  [k: string]: unknown;
+}
+export interface Content {
+  text: ContentText | null;
+  attachments: Attachments;
+  [k: string]: unknown;
+}
+export interface ContentText {
+  text: Text;
+  markup: ContentTextMarkup;
+  [k: string]: unknown;
+}
+export interface ContentBlockContentAttachment {
+  image: Image;
   [k: string]: unknown;
 }
 /**
@@ -179,7 +198,7 @@ export interface MenuBlock {
   [k: string]: unknown;
 }
 export interface Menu {
-  text: Text;
+  text: Text1;
   items: Items;
   [k: string]: unknown;
 }

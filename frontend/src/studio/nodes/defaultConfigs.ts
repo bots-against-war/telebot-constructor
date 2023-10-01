@@ -14,11 +14,11 @@ export function defaultCommandEntrypoint(id: string): UserFlowEntryPointConfig {
   };
 }
 
-export function defaultMessageBlockConfig(id: string): UserFlowBlockConfig {
+export function defaultContentBlockConfig(id: string): UserFlowBlockConfig {
   return {
-    message: {
+    content: {
       block_id: id,
-      message_text: "Hello, I am bot!",
+      contents: [{ text: { text: "Hello, I am bot!", markup: "none" }, attachments: [] }],
       next_block_id: null,
     },
     human_operator: null,
@@ -29,7 +29,7 @@ export function defaultMessageBlockConfig(id: string): UserFlowBlockConfig {
 
 export function defaultHumanOperatorBlockCofig(id: string): UserFlowBlockConfig {
   return {
-    message: null,
+    content: null,
     human_operator: {
       block_id: id,
       catch_all: false,

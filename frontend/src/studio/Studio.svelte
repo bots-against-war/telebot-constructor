@@ -1,12 +1,8 @@
 <script lang="ts">
-  // @ts-nocheck
-  // Note: nocheck is required because we do bind:config with non-type-safe assignments
-  // this happens inside svelte's markup so it can't be ignored with @ts-ignore
-
   import { Svelvet } from "svelvet";
 
   import CommandEntryPointNode from "./nodes/CommandEntryPoint/Node.svelte";
-  import MessageBlockNode from "./nodes/MessageBlock/Node.svelte";
+  import ContentBlockNode from "./nodes/ContentBlock/Node.svelte";
   import DeletableEdge from "./components/DeletableEdge.svelte";
 
   import { saveBotConfig } from "../api/botConfig";
@@ -17,7 +13,7 @@
   import { findNewNodePosition } from "./utils";
   import {
     defaultCommandEntrypoint,
-    defaultMessageBlockConfig,
+    defaultContentBlockConfig,
     defaultHumanOperatorBlockCofig,
   } from "./nodes/defaultConfigs";
   import HumanOperatorNode from "./nodes/HumanOperatorBlock/Node.svelte";
@@ -110,11 +106,11 @@
       {/if}
     {/each}
     {#each botConfig.user_flow_config.blocks as block, idx}
-      {#if block.message !== null}
-        <MessageBlockNode
-          on:delete={getBlockDestructor(block.message.block_id)}
-          bind:config={botConfig.user_flow_config.blocks[idx].message}
-          bind:position={botConfig.user_flow_config.node_display_coords[block.message.block_id]}
+      {#if block.content !== null}
+        <ContentBlockNode
+          on:delete={getBlockDestructor(block.content.block_id)}
+          bind:config={botConfig.user_flow_config.blocks[idx].content}
+          bind:position={botConfig.user_flow_config.node_display_coords[block.content.block_id]}
         />
       {:else if block.human_operator !== null}
         <HumanOperatorNode
@@ -128,7 +124,7 @@
   <div class="custom-controls">
     <h3>{botConfig.display_name}</h3>
     <button on:click={getEntrypointConstructor("command", defaultCommandEntrypoint)}>New <b>command</b></button>
-    <button on:click={getBlockConstructor("message", defaultMessageBlockConfig)}>New <b>message block</b></button>
+    <button on:click={getBlockConstructor("content", defaultContentBlockConfig)}>New <b>content block</b></button>
     <button on:click={getBlockConstructor("human-operator", defaultHumanOperatorBlockCofig)}
       >New <b>human operator block</b></button
     >
