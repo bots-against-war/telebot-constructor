@@ -66,8 +66,10 @@ class MenuBlock(UserFlowBlock):
 
     async def setup(self, context: UserFlowSetupContext) -> SetupResult:
         self._components_menu_handler = MenuHandler(
+            name=self.block_id,
             bot_prefix=context.bot_prefix,
             menu_tree=self._components_menu,
+            redis=context.redis,
             category_store=None,
             language_store=None,
         )
@@ -78,7 +80,7 @@ class MenuBlock(UserFlowBlock):
                 next_block_id,
                 UserFlowContext.from_setup_context(
                     setup_ctx=context,
-                    chat=terminator_context.menu_message.chat,
+                    chat=terminator_context.menu_message.chat if terminator_context.menu_message is not None else None,
                     user=terminator_context.user,
                     last_update_content=terminator_context.menu_message,
                 ),

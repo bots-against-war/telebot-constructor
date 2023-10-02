@@ -25,6 +25,7 @@ from telebot_constructor.build_time_config import BASE_PATH
 from telebot_constructor.construct import construct_bot
 from telebot_constructor.cors import setup_cors
 from telebot_constructor.debug import setup_debugging
+from telebot_constructor.group_chat_discovery import GroupChatDiscoveryHandler
 from telebot_constructor.runners import (
     ConstructedBotRunner,
     PollingConstructedBotRunner,
@@ -55,7 +56,7 @@ class TelebotConstructorApp:
         self.redis = redis
         logger.info(f"Will serve static frontend files from {self.static_files_dir.absolute()}")
 
-        # user id -> {bot name -> config}
+        # username -> {bot name -> bot config}
         self.bot_config_store = KeyDictStore[BotConfig](
             name="bot-configs",
             prefix=self.STORE_PREFIX,
@@ -64,12 +65,15 @@ class TelebotConstructorApp:
             dumper=BotConfig.model_dump_json,
             loader=BotConfig.model_validate_json,
         )
+        # username -> names of bots running at the moment
         self.running_bots_store = KeySetStore[str](
             name="bot-running",
             prefix=self.STORE_PREFIX,
             redis=redis,
             expiration_time=None,
         )
+
+        self.group_chat_discovery_handler = GroupChatDiscoveryHandler(redis=redis)
 
     @property
     def runner(self) -> ConstructedBotRunner:
@@ -131,6 +135,7 @@ class TelebotConstructorApp:
                 bot_config=bot_config,
                 secret_store=self.secret_store,
                 redis=self.redis,
+                group_chat_discovery_handler=self.group_chat_discovery_handler,
             )
         except Exception as e:
             logger.info(f"{log_prefix} Error constructing bot", exc_info=True)
@@ -420,6 +425,7 @@ class TelebotConstructorApp:
                             bot_config=bot_config,
                             secret_store=self.secret_store,
                             redis=self.redis,
+                            group_chat_discovery_handler=self.group_chat_discovery_handler,
                         )
                         await self.runner.start(username=username, bot_name=bot_name, bot_runner=bot_runner)
                         logger.info(f"Started {bot_name_full})")

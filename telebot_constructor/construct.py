@@ -1,62 +1,20 @@
-import datetime
 import itertools
 import logging
-from typing import Callable, Coroutine, cast
+from typing import Callable, Coroutine, Optional
 
-import tenacity
 from telebot import AsyncTeleBot
-from telebot import api as tg_api
 from telebot.runner import AuxBotEndpoint, BotRunner
 from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.stores.banned_users import BannedUsersStore
 from telebot_components.stores.generic import GenericStore
 from telebot_components.utils.secrets import SecretStore
-from tenacity import RetryCallState
-from tenacity.retry import (
-    retry_all,
-    retry_if_exception_message,
-    retry_if_exception_type,
-)
-from tenacity.stop import stop_after_attempt
-from tenacity.wait import wait_chain, wait_exponential
 
 from telebot_constructor.bot_config import BotConfig
+from telebot_constructor.group_chat_discovery import GroupChatDiscoveryHandler
 from telebot_constructor.user_flow.types import BotCommandInfo
+from telebot_constructor.utils.rate_limit_retry import rate_limit_retry
 
 logger = logging.getLogger(__name__)
-
-
-class wait_from_too_many_requests_error(tenacity.wait.wait_base):
-    def __call__(self, retry_state: RetryCallState) -> float:
-        if retry_state.outcome is None:
-            return 0.0
-        if not retry_state.outcome.failed:
-            return 0.0
-        exc = cast(Exception, retry_state.outcome.exception())
-        if not isinstance(exc, tg_api.ApiHTTPException):
-            return 0.0
-        if exc.error_parameters is None or exc.error_parameters.retry_after is None:
-            return 0.0
-        return exc.error_parameters.retry_after
-
-
-def rate_limit_retry():
-    return tenacity.AsyncRetrying(
-        retry=retry_all(
-            retry_if_exception_type(tg_api.ApiHTTPException),
-            retry_if_exception_message(match="Too Many Requests"),
-        ),
-        wait=wait_chain(
-            wait_from_too_many_requests_error(),
-            wait_exponential(
-                multiplier=1,
-                max=datetime.timedelta(minutes=3),
-                min=datetime.timedelta(seconds=1),
-            ),
-        ),
-        stop=stop_after_attempt(5),
-        reraise=True,
-    )
 
 
 async def construct_bot(
@@ -65,6 +23,7 @@ async def construct_bot(
     bot_config: BotConfig,
     secret_store: SecretStore,
     redis: RedisInterface,
+    group_chat_discovery_handler: Optional[GroupChatDiscoveryHandler] = None,
     _bot_factory: Callable[[str], AsyncTeleBot] = AsyncTeleBot,  # used for testing
 ) -> BotRunner:
     """Core bot construction function responsible for turning a config into a functional bot"""
@@ -131,6 +90,9 @@ async def construct_bot(
                     commands=[cmd.command for cmd in command_info_batch],
                     scope=command_info_batch[0].scope,
                 )
+
+    if group_chat_discovery_handler is not None:
+        group_chat_discovery_handler.setup_handlers(username=username, bot_name=bot_name, bot=bot)
 
     return BotRunner(
         bot_prefix=bot_prefix,
