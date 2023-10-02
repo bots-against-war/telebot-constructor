@@ -5,9 +5,11 @@ import sys
 from pathlib import Path
 
 import dictdiffer  # type: ignore
+from pydantic import BaseModel
 from pydantic._internal._core_utils import CoreSchemaOrField
 from pydantic.json_schema import GenerateJsonSchema, JsonSchemaValue
 
+from telebot_constructor.app_models import TgGroupChat
 from telebot_constructor.bot_config import BotConfig
 
 if __name__ == "__main__":
@@ -25,7 +27,16 @@ if __name__ == "__main__":
         def handle_invalid_for_json_schema(self, schema: CoreSchemaOrField, error_info: str) -> JsonSchemaValue:
             return {"type": "null"}
 
-    current_schema = BotConfig.model_json_schema(mode="serialization", schema_generator=CastUnsupportedToNullSchema)
+    class BackendDataModels(BaseModel):
+        """Temporary class to pack several models into one schema; not used directly by frontend code"""
+
+        bot_config: BotConfig
+        tg_group_chat: TgGroupChat
+
+    current_schema = BackendDataModels.model_json_schema(
+        mode="serialization",
+        schema_generator=CastUnsupportedToNullSchema,
+    )
 
     if not args.check:
         args.jsonschema_path.write_text(json.dumps(current_schema, ensure_ascii=False, indent=2))

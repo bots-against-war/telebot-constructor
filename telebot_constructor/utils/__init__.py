@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Awaitable, Callable, Optional
+from typing import Any, Awaitable, Callable, Optional, cast
 
 from telebot.types.service import HandlerFunction, HandlerResult
 
@@ -12,17 +12,17 @@ def non_capturing_handler(tg_update_handler: Callable[[Any], Awaitable[Optional[
     continues testing other handlers
     """
 
-    async def wrapper(*args, **kwargs) -> HandlerResult:
+    async def wrapper(update_content) -> HandlerResult:
         try:
-            res = await tg_update_handler(*args, **kwargs)
+            res = await tg_update_handler(update_content)
             if res is None:
                 return HandlerResult(continue_to_other_handlers=True)
             res.continue_to_other_handlers = True
             return res
         except Exception:
             logger.exception(
-                f"Error processing update ({args}, {kwargs}) with handler, continuing to other handlers anyway"
+                f"Error processing update ({update_content}) with handler, continuing to other handlers anyway"
             )
             return HandlerResult(continue_to_other_handlers=True)
 
-    return wrapper
+    return cast(HandlerFunction, wrapper)

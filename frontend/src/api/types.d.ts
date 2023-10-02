@@ -50,9 +50,11 @@ export type BackLabel =
   | string
   | {
       [k: string]: string;
-    };
+    }
+  | null;
 export type LockAfterTermination = boolean;
 export type IsTextHtml = boolean;
+export type MenuMechanism = "inline_buttons" | "reply_keyboard";
 export type BlockId3 = string;
 export type FormName = string;
 export type Id = string;
@@ -77,7 +79,19 @@ export type FormCancelledNextBlockId = string | null;
 export type Blocks = UserFlowBlockConfig[];
 export type X = number;
 export type Y = number;
+export type Id1 = number;
+export type TgGroupChatType = "group" | "supergroup" | "channel";
+export type Title = string;
+export type Description = string | null;
+export type Username = string | null;
+export type IsForum = boolean | null;
+export type Photo = string | null;
 
+export interface BackendDataModels {
+  bot_config: BotConfig;
+  tg_group_chat: TgGroupChat;
+  [k: string]: unknown;
+}
 export interface BotConfig {
   display_name: DisplayName;
   token_secret_name: TokenSecretName;
@@ -213,6 +227,7 @@ export interface MenuConfig {
   back_label: BackLabel;
   lock_after_termination: LockAfterTermination;
   is_text_html: IsTextHtml;
+  mechanism: MenuMechanism & string;
   [k: string]: unknown;
 }
 /**
@@ -272,5 +287,18 @@ export interface NodeDisplayCoords {
 export interface UserFlowNodePosition {
   x: X;
   y: Y;
+  [k: string]: unknown;
+}
+/**
+ * pydantic projection of https://core.telegram.org/bots/api#chat
+ */
+export interface TgGroupChat {
+  id: Id1;
+  type: TgGroupChatType;
+  title: Title;
+  description: Description;
+  username: Username;
+  is_forum: IsForum;
+  photo: Photo;
   [k: string]: unknown;
 }

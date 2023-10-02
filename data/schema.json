@@ -1,5 +1,27 @@
 {
   "$defs": {
+    "BotConfig": {
+      "properties": {
+        "display_name": {
+          "title": "Display Name",
+          "type": "string"
+        },
+        "token_secret_name": {
+          "title": "Token Secret Name",
+          "type": "string"
+        },
+        "user_flow_config": {
+          "$ref": "#/$defs/UserFlowConfig"
+        }
+      },
+      "required": [
+        "display_name",
+        "token_secret_name",
+        "user_flow_config"
+      ],
+      "title": "BotConfig",
+      "type": "object"
+    },
     "CatchAllEntryPoint": {
       "description": "Entrypoint that catches all user messages",
       "properties": {
@@ -481,11 +503,15 @@
                 "type": "string"
               },
               "type": "object"
+            },
+            {
+              "type": "null"
             }
           ],
           "title": "Back Label"
         },
         "lock_after_termination": {
+          "default": false,
           "title": "Lock After Termination",
           "type": "boolean"
         },
@@ -493,12 +519,21 @@
           "default": false,
           "title": "Is Text Html",
           "type": "boolean"
+        },
+        "mechanism": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/MenuMechanism"
+            }
+          ],
+          "default": "inline_buttons"
         }
       },
       "required": [
         "back_label",
         "lock_after_termination",
-        "is_text_html"
+        "is_text_html",
+        "mechanism"
       ],
       "title": "MenuConfig",
       "type": "object"
@@ -553,6 +588,14 @@
       ],
       "title": "MenuItem",
       "type": "object"
+    },
+    "MenuMechanism": {
+      "enum": [
+        "inline_buttons",
+        "reply_keyboard"
+      ],
+      "title": "MenuMechanism",
+      "type": "string"
     },
     "MessagesToAdmin": {
       "properties": {
@@ -713,6 +756,86 @@
       "title": "RegexMatchEntryPoint",
       "type": "object"
     },
+    "TgGroupChat": {
+      "description": "pydantic projection of https://core.telegram.org/bots/api#chat",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "integer"
+        },
+        "type": {
+          "$ref": "#/$defs/TgGroupChatType"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Description"
+        },
+        "username": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Username"
+        },
+        "is_forum": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Is Forum"
+        },
+        "photo": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Photo"
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "title",
+        "description",
+        "username",
+        "is_forum",
+        "photo"
+      ],
+      "title": "TgGroupChat",
+      "type": "object"
+    },
+    "TgGroupChatType": {
+      "enum": [
+        "group",
+        "supergroup",
+        "channel"
+      ],
+      "title": "TgGroupChatType",
+      "type": "string"
+    },
     "UserFlowBlockConfig": {
       "properties": {
         "content": {
@@ -865,23 +988,17 @@
     }
   },
   "properties": {
-    "display_name": {
-      "title": "Display Name",
-      "type": "string"
+    "bot_config": {
+      "$ref": "#/$defs/BotConfig"
     },
-    "token_secret_name": {
-      "title": "Token Secret Name",
-      "type": "string"
-    },
-    "user_flow_config": {
-      "$ref": "#/$defs/UserFlowConfig"
+    "tg_group_chat": {
+      "$ref": "#/$defs/TgGroupChat"
     }
   },
   "required": [
-    "display_name",
-    "token_secret_name",
-    "user_flow_config"
+    "bot_config",
+    "tg_group_chat"
   ],
-  "title": "BotConfig",
+  "title": "BackendDataModels",
   "type": "object"
 }
