@@ -12,6 +12,7 @@ import telebot.api
 from aiohttp import web
 from aiohttp_swagger import setup_swagger  # type: ignore
 from telebot import AsyncTeleBot
+from telebot.util import create_error_logging_task, log_error
 from telebot.webhook import WebhookApp
 from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.stores.generic import KeyDictStore, KeySetStore
@@ -406,13 +407,13 @@ class TelebotConstructorApp:
                 logger.info("Username %s has %s running bots: %s", usernames, len(running_bots), running_bots)
                 for bot_name in running_bots:
                     bot_name_full = f"{bot_name!r} (owned by {username!r})"
-                    logger.info(f"Loading bot config for {bot_name_full})")
-                    bot_config = await self.bot_config_store.get_subkey(username, bot_name)
-                    if bot_config is None:
-                        logger.error(f"Bot {bot_name_full} is in running bots store, but has no config")
-                        await self.running_bots_store.remove(username, bot_name)
-                        continue
-                    try:
+                    with log_error(marker=f"Starting stored bot {bot_name_full}", logger_=logger):
+                        logger.info(f"Loading bot config for {bot_name_full})")
+                        bot_config = await self.bot_config_store.get_subkey(username, bot_name)
+                        if bot_config is None:
+                            logger.error(f"Bot {bot_name_full} is in running bots store, but has no config")
+                            await self.running_bots_store.remove(username, bot_name)
+                            continue
                         bot_runner = await construct_bot(
                             username=username,
                             bot_name=bot_name,
@@ -422,10 +423,8 @@ class TelebotConstructorApp:
                         )
                         await self.runner.start(username=username, bot_name=bot_name, bot_runner=bot_runner)
                         logger.info(f"Started {bot_name_full})")
-                    except Exception:
-                        logger.exception(f"Error creating bot {bot_name_full})")
 
-        self._start_stored_bots_task = asyncio.create_task(_start_stored_bots())
+        self._start_stored_bots_task = create_error_logging_task(_start_stored_bots())
 
     # public methods to run constructor in different scenarios
 
