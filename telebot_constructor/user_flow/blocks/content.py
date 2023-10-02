@@ -8,7 +8,6 @@ from pydantic import BaseModel
 from telebot import types as tg
 from telebot_components.stores.generic import GenericStore, KeyValueStore
 
-from telebot_constructor.pydantic_utils import ExactlyOneNonNullFieldModel
 from telebot_constructor.user_flow.blocks.base import UserFlowBlock
 from telebot_constructor.user_flow.types import (
     SetupResult,
@@ -16,6 +15,7 @@ from telebot_constructor.user_flow.types import (
     UserFlowContext,
     UserFlowSetupContext,
 )
+from telebot_constructor.utils.pydantic import ExactlyOneNonNullFieldModel
 
 
 class ContentTextMarkup(enum.Enum):

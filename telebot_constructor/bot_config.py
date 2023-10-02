@@ -2,7 +2,6 @@ from typing import Optional
 
 from pydantic import BaseModel, model_validator
 
-from telebot_constructor.pydantic_utils import ExactlyOneNonNullFieldModel
 from telebot_constructor.user_flow import UserFlow
 from telebot_constructor.user_flow.blocks.base import UserFlowBlock
 from telebot_constructor.user_flow.blocks.content import ContentBlock
@@ -13,6 +12,7 @@ from telebot_constructor.user_flow.entrypoints.base import UserFlowEntryPoint
 from telebot_constructor.user_flow.entrypoints.catch_all import CatchAllEntryPoint
 from telebot_constructor.user_flow.entrypoints.command import CommandEntryPoint
 from telebot_constructor.user_flow.entrypoints.regex_match import RegexMatchEntryPoint
+from telebot_constructor.utils.pydantic import ExactlyOneNonNullFieldModel
 
 
 class UserFlowEntryPointConfig(ExactlyOneNonNullFieldModel):

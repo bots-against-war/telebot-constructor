@@ -7,13 +7,13 @@ from telebot_components.menu.menu import MenuHandler
 from telebot_components.menu.menu import MenuItem as ComponentsMenuItem
 from telebot_components.menu.menu import TerminatorContext, TerminatorResult
 
-from telebot_constructor.pydantic_utils import ExactlyOneNonNullFieldModel
 from telebot_constructor.user_flow.blocks.base import UserFlowBlock
 from telebot_constructor.user_flow.types import (
     SetupResult,
     UserFlowContext,
     UserFlowSetupContext,
 )
+from telebot_constructor.utils.pydantic import ExactlyOneNonNullFieldModel
 
 
 class MenuItem(ExactlyOneNonNullFieldModel):
