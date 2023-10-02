@@ -424,7 +424,7 @@ class TelebotConstructorApp:
                         await self.runner.start(username=username, bot_name=bot_name, bot_runner=bot_runner)
                         logger.info(f"Started {bot_name_full})")
 
-        self._start_stored_bots_task = create_error_logging_task(_start_stored_bots())
+        self._start_stored_bots_task = create_error_logging_task(_start_stored_bots(), name="start stored bots")
 
     # public methods to run constructor in different scenarios
 

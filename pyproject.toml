@@ -56,6 +56,9 @@ asyncio_mode = "auto"
 [tool.mypy]
 incremental = false
 files = '.'
+exclude = [
+    "dist"
+]
 
 [tool.flake8]
 max-line-length = 120
