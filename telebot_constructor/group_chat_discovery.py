@@ -124,7 +124,7 @@ class GroupChatDiscoveryHandler:
             logger.info(f"Undiscovered chat from explicit command: {message.chat.id}")
             await self._available_group_chat_ids.remove(self._full_key(username, bot_name), message.chat.id)
 
-        @bot.message_handler()  # catch-all
+        @bot.message_handler(content_types=list(tg_const.ServiceContentType))  # catch-all
         @non_capturing_handler
         async def catch_group_to_supergroup_migration(message: tg.Message) -> None:
             if message.migrate_from_chat_id is not None:

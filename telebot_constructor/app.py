@@ -401,7 +401,7 @@ class TelebotConstructorApp:
                 await AsyncTeleBot(token=token_payload.token).get_me()
             except Exception as e:
                 raise web.HTTPBadRequest(reason=f"Bot token validation failed ({e})")
-            return web.Response()
+            return web.Response(text="Token is valid")
 
         ##################################################################################
         # endpoints for syncing constructor state with telegram
@@ -451,7 +451,7 @@ class TelebotConstructorApp:
                     is_temporary=True,
                 )
             await self.group_chat_discovery_handler.start_discovery(username, bot_name)
-            return web.Response()
+            return web.Response(text="Group discovery started")
 
         @routes.post("/api/stop-group-chat-discovery/{bot_name}")
         async def stop_discovering_group_chats(request: web.Request) -> web.Response:
@@ -470,7 +470,7 @@ class TelebotConstructorApp:
             if await self.temporary_running_bots_store.includes(username, bot_name):
                 await self.runner.stop(username, bot_name)
                 await self.temporary_running_bots_store.remove(username, bot_name)
-            return web.Response()
+            return web.Response(text="Group discovery stopped")
 
         @routes.get("/api/available-group-chats/{bot_name}")
         async def get_available_group_chats(request: web.Request) -> web.Response:

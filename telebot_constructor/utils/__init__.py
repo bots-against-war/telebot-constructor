@@ -1,3 +1,4 @@
+import functools
 import logging
 from typing import Any, Awaitable, Callable, Optional, cast
 
@@ -12,6 +13,7 @@ def non_capturing_handler(tg_update_handler: Callable[[Any], Awaitable[Optional[
     continues testing other handlers
     """
 
+    @functools.wraps(tg_update_handler)
     async def wrapper(update_content) -> HandlerResult:
         try:
             res = await tg_update_handler(update_content)
