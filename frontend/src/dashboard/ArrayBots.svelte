@@ -1,5 +1,8 @@
 <script lang="ts">
   import { createEventDispatcher } from "svelte";
+
+  import { Button, Stack } from "@svelteuidev/core";
+
   import type { BotConfigList } from "../types";
 
   // region props
@@ -14,57 +17,16 @@
   }
 </script>
 
-<div class="bots">
+<Stack align="center" justify="flex-start" spacing="sm">
   {#each Object.entries(botConfigs) as [botName, config], i}
-    <button
-      class="bot"
-      aria-label={botName}
-      aria-current={selectedBot === botName}
+    <Button
+      variant={selectedBot === botName ? "filled" : "outline"}
       on:click={() => {
         selectedBot = botName;
         updateSelectedBot(botName);
       }}
     >
-      {config.display_name}</button
+      {config.display_name}</Button
     >
   {/each}
-</div>
-
-<style>
-  .bots {
-    display: flex;
-    flex-flow: column;
-    align-items: center;
-  }
-
-  .bot {
-    border-radius: 40px;
-    border: 2px solid #62b1d0;
-    background: #fff;
-    box-shadow:
-      0 7px 15px 0 rgba(0, 77, 87, 0.1),
-      0 26px 26px 0 rgba(0, 77, 87, 0.09),
-      0 59px 36px 0 rgba(0, 77, 87, 0.05),
-      0 106px 42px 0 rgba(0, 77, 87, 0.01),
-      0 165px 46px 0 rgba(0, 77, 87, 0);
-    display: flex;
-    width: 240px;
-    height: 50px;
-    padding: 20px 56px;
-    margin: 10px;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
-    flex-shrink: 0;
-  }
-
-  .bot[aria-current="true"] {
-    background: #0776a0;
-    box-shadow:
-      0 7px 15px 0 rgba(0, 77, 87, 0.1),
-      0 26px 26px 0 rgba(0, 77, 87, 0.09),
-      0 59px 36px 0 rgba(0, 77, 87, 0.05),
-      0 106px 42px 0 rgba(0, 77, 87, 0.01),
-      0 165px 46px 0 rgba(0, 77, 87, 0);
-  }
-</style>
+</Stack>

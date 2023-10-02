@@ -1,4 +1,4 @@
-<script context="module" lang="ts">
+<script lang="ts">
   import { listBotConfigs } from "../api/botConfig.js";
   import FatalError from "../components/FatalError.svelte";
   import LoadingScreen from "../components/LoadingScreen.svelte";

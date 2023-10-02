@@ -49,7 +49,7 @@
         <NavButton href={`/studio/${botName}`}>Редактировать</NavButton>
         <Button on:click={() => startBotWithName(botName)}>Запустить</Button>
         <Button on:click={() => stopBotWithName(botName)}>Остановить</Button>
-        <Button on:click={() => removeBotConfig(botName)}>Удалить</Button>
+        <Button color="red" on:click={() => removeBotConfig(botName)}>Удалить</Button>
       </Flex>
       {#if botStatus !== null}
         <Alert color="yellow">{botStatus}</Alert>
