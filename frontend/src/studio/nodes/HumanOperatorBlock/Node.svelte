@@ -20,7 +20,7 @@
 <Node id={config.block_id} bgColor="#b2db81" bind:position>
   <InputAnchor />
   <NodeContent
-    name="Human operator"
+    name="Человек-оператор"
     on:delete
     on:edit={() =>
       openModal(Modal, {

@@ -100,7 +100,7 @@
   <Svelvet
     TD
     controls
-    fitView={botConfig.user_flow_config.blocks.length + botConfig.user_flow_config.entrypoints.length >= 2}
+    fitView={botConfig.user_flow_config.blocks.length + botConfig.user_flow_config.entrypoints.length >= 1}
     edge={DeletableEdge}
   >
     {#each botConfig.user_flow_config.entrypoints as entrypoint, idx}

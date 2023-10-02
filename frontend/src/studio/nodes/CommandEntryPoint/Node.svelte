@@ -15,7 +15,7 @@
 
 <Node id={config.entrypoint_id} bgColor="#f9d6a7" bind:position>
   <NodeContent
-    name="Command"
+    name="Команда"
     on:delete
     on:edit={() =>
       openModal(Modal, {

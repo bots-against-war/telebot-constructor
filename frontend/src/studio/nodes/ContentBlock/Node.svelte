@@ -20,7 +20,7 @@
 <Node id={config.block_id} bgColor="#bfebff" bind:position>
   <InputAnchor />
   <NodeContent
-    name="Content"
+    name="Контент"
     on:delete
     on:edit={() =>
       openModal(Modal, {
@@ -28,7 +28,7 @@
         onConfigUpdate: setNewConfig,
       })}
   >
-    Message text: <span>{config.contents[0].text?.text}</span>
+    <span>{config.contents[0].text?.text}</span>
     <!-- <span>x:{Math.round(position.x)},y:{Math.round(position.y)}</span> -->
   </NodeContent>
   <OutputAnchor bind:nextBlockId={config.next_block_id} />
