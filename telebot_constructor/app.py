@@ -395,30 +395,37 @@ class TelebotConstructorApp:
         setup_debugging(app)
         return app
 
-    async def _start_stored_bots(self) -> None:
-        """Ensure that all bots stored as running are indeed running; used mainly on startup"""
-        usernames = await self.running_bots_store.list_keys()
-        logger.info("Found %s usernames with bot running flags", len(usernames))
-        for username in usernames:
-            running_bots = await self.running_bots_store.all(username)
-            logger.info("Username %s has %s running bots: %s", usernames, len(running_bots), running_bots)
-            for bot_name in running_bots:
-                bot_config = await self.bot_config_store.get_subkey(username, bot_name)
-                if bot_config is None:
-                    logger.error(f"Bot {bot_name!r} is in running bots store, but has no config")
-                    await self.running_bots_store.remove(username, bot_name)
-                    continue
-                try:
-                    bot_runner = await construct_bot(
-                        username=username,
-                        bot_name=bot_name,
-                        bot_config=bot_config,
-                        secret_store=self.secret_store,
-                        redis=self.redis,
-                    )
-                    await self.runner.start(username=username, bot_name=bot_name, bot_runner=bot_runner)
-                except Exception:
-                    logger.exception(f"Error creating bot {bot_name} ({username = })")
+    def start_stored_bots_in_background(self) -> None:
+        async def _start_stored_bots() -> None:
+            """Ensure that all bots stored as running are indeed running; used mainly on startup"""
+            logger.info("Starting stored bots")
+            usernames = await self.running_bots_store.list_keys()
+            logger.info("Found %s usernames with bot running flags", len(usernames))
+            for username in usernames:
+                running_bots = await self.running_bots_store.all(username)
+                logger.info("Username %s has %s running bots: %s", usernames, len(running_bots), running_bots)
+                for bot_name in running_bots:
+                    bot_name_full = f"{bot_name!r} (owned by {username!r})"
+                    logger.info(f"Loading bot config for {bot_name_full})")
+                    bot_config = await self.bot_config_store.get_subkey(username, bot_name)
+                    if bot_config is None:
+                        logger.error(f"Bot {bot_name_full} is in running bots store, but has no config")
+                        await self.running_bots_store.remove(username, bot_name)
+                        continue
+                    try:
+                        bot_runner = await construct_bot(
+                            username=username,
+                            bot_name=bot_name,
+                            bot_config=bot_config,
+                            secret_store=self.secret_store,
+                            redis=self.redis,
+                        )
+                        await self.runner.start(username=username, bot_name=bot_name, bot_runner=bot_runner)
+                        logger.info(f"Started {bot_name_full})")
+                    except Exception:
+                        logger.exception(f"Error creating bot {bot_name_full})")
+
+        self._start_stored_bots_task = asyncio.create_task(_start_stored_bots())
 
     # public methods to run constructor in different scenarios
 
@@ -426,7 +433,7 @@ class TelebotConstructorApp:
         """For standalone run"""
         logger.info("Running telebot constructor w/ polling")
         self._runner = PollingConstructedBotRunner()
-        await self._start_stored_bots()
+        self.start_stored_bots_in_background()
         aiohttp_app = await self.create_constructor_web_app()
         aiohttp_runner = web.AppRunner(aiohttp_app)
         await aiohttp_runner.setup()
@@ -444,7 +451,8 @@ class TelebotConstructorApp:
             await aiohttp_runner.cleanup()
 
     async def setup_on_webhook_app(self, webhook_app: WebhookApp) -> None:
+        logger.info(f"Setting up telebot constructor web app on webhook app with base URL {webhook_app.base_url!r}")
         self._runner = WebhookAppConstructedBotRunner(webhook_app)
-        await self._start_stored_bots()
+        self.start_stored_bots_in_background()
         app = await self.create_constructor_web_app()
         webhook_app.aiohttp_app.add_subapp(BASE_PATH, app)
