@@ -3,7 +3,7 @@
 
   export let name: string;
 
-  const dispatch = createEventDispatcher();
+  const dispatch = createEventDispatcher<{ edit: null; delete: null }>();
 </script>
 
 <div class="node-content">

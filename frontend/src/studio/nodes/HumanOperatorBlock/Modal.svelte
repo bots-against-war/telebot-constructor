@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { HumanOperatorBlock } from "../../../api/types";
   import NodeModalControls from "../../components/NodeModalControls.svelte";
+  import GroupChatIdSelect from "../../components/GroupChatIdSelect.svelte";
 
   export let config: HumanOperatorBlock;
   export let onConfigUpdate: (newConfig: HumanOperatorBlock) => any;
@@ -16,8 +17,7 @@
 <div>
   <h3>Человек-оператор</h3>
   <div>
-    <h4>Админ-чат</h4>
-    <input bind:value={adminChatId} type="number" />
+    <GroupChatIdSelect label="Админ-чат" bind:groupChatId={adminChatId} />
   </div>
   <NodeModalControls on:save={updateConfig} />
 </div>

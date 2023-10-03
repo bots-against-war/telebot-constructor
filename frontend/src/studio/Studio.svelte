@@ -10,7 +10,7 @@
   import { getBlockId, getEntrypointId } from "../api/typeUtils";
   import type { BotConfig, UserFlowBlockConfig, UserFlowEntryPointConfig, UserFlowNodePosition } from "../api/types";
 
-  import { getError, unwrap } from "../utils";
+  import { getError } from "../utils";
   import { findNewNodePosition } from "./utils";
   import {
     defaultCommandEntrypoint,
@@ -18,12 +18,14 @@
     defaultHumanOperatorBlockCofig,
   } from "./nodes/defaultConfigs";
   import HumanOperatorNode from "./nodes/HumanOperatorBlock/Node.svelte";
-  import { startBot } from "../api/lifecycle";
   import StudioControls from "./StudioControls.svelte";
   import { navigate } from "svelte-routing";
+  import { setContext } from "svelte";
 
   export let botName: string;
   export let botConfig: BotConfig;
+
+  setContext("botName", botName);
 
   function newUserFlowNodePosition(): UserFlowNodePosition {
     const currentPositions = Object.values(botConfig.user_flow_config.node_display_coords);

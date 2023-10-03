@@ -3,7 +3,9 @@ import datetime
 import logging
 from typing import Optional, Union
 
+import cachetools  # type: ignore
 from telebot import AsyncTeleBot
+from telebot import api as tg_api
 from telebot import types as tg
 from telebot.types import constants as tg_const
 from telebot_components.redis_utils.interface import RedisInterface
@@ -41,6 +43,8 @@ class GroupChatDiscoveryHandler:
             dumper=str,
             loader=int,
         )
+        # file_id -> base64-encoded photo cache for telegram chat avatars
+        self.chat_photo_cache = cachetools.LRUCache[str, str](maxsize=128)
 
     def _full_key(self, username: str, bot_name: str) -> str:
         return f"{username}-{bot_name}"
@@ -57,42 +61,59 @@ class GroupChatDiscoveryHandler:
     async def save_discovered_chat(self, username: str, bot_name: str, chat_id: Union[str, int]) -> None:
         await self._available_group_chat_ids.add(self._full_key(username, bot_name), chat_id)
 
+    async def get_group_chat(self, bot: AsyncTeleBot, chat_id: Union[int, str]) -> Optional[TgGroupChat]:
+        prefix = f"{bot.log_marker} (getting info for chat {chat_id}) "
+        try:
+            async for attempt in rate_limit_retry():
+                with attempt:
+                    raw_chat = await bot.get_chat(chat_id)
+        except tg_api.ApiException:
+            logger.info(prefix + "Error, assuming chat does not exist / is not available to bot", exc_info=True)
+            return None
+        photo_b64: Optional[str] = None
+        if raw_chat.photo is not None:
+            chat_photo_file_id = raw_chat.photo.small_file_id  # small file = 160x160 preview
+            photo_b64 = self.chat_photo_cache.get(chat_photo_file_id)
+            if photo_b64 is not None:
+                logger.info(prefix + "Chat photo loaded from cache")
+            else:
+                logger.info(prefix + "Chat photo not in cache, downloading")
+                try:
+                    file = await bot.get_file(chat_photo_file_id)
+                    photo_bytes = await bot.download_file(file_path=file.file_path)
+                    photo_b64 = base64.b64encode(photo_bytes).decode("utf-8")
+                    self.chat_photo_cache[chat_photo_file_id] = photo_b64
+                    logger.info(prefix + f"Chat photo loaded and saved in cache (size {len(photo_b64) / 1024} KiB)")
+                except Exception:
+                    logger.info("Error downloading chat avatar photo, ignoring it", exc_info=True)
+        return TgGroupChat(
+            id=raw_chat.id,
+            type=TgGroupChatType(raw_chat.type),
+            title=raw_chat.title or "",
+            description=raw_chat.description,
+            username=raw_chat.username,
+            is_forum=raw_chat.is_forum,
+            photo=photo_b64,
+        )
+
     async def validate_discovered_chats(self, username: str, bot_name: str, bot: AsyncTeleBot) -> list[TgGroupChat]:
         """
         Check saved available chats and validate they are still available to the bot (i.e. it was not kicked, group chat
         was not promoted to supergroup, etc); return a list of valid chats as telegram Chat objects
         """
-        validated_group_chats: list[TgGroupChat] = []
+        prefix = f"{bot_name!r} by {username!r} (validating discovered chats)"
+        chats: list[TgGroupChat] = []
         key = self._full_key(username, bot_name)
         available_chat_ids = await self._available_group_chat_ids.all(key)
-        logger.info(
-            f"Validating chat ids are available to bot {bot_name!r} (by {username!r}): {sorted(available_chat_ids)}"
-        )
+        logger.info(prefix + f"Available chat ids: {sorted(available_chat_ids)}")
         for chat_id in available_chat_ids:
-            try:
-                async for attempt in rate_limit_retry():
-                    with attempt:
-                        chat = await bot.get_chat(chat_id)
-                photo_b64: Optional[str] = None
-                if chat.photo is not None:
-                    file = await bot.get_file(chat.photo.small_file_id)  # small file = 160x160 preview
-                    photo_bytes = await bot.download_file(file_path=file.file_path)
-                    photo_b64 = base64.b64encode(photo_bytes).decode("utf-8")
-                validated_group_chats.append(
-                    TgGroupChat(
-                        id=chat.id,
-                        type=TgGroupChatType(chat.type),
-                        title=chat.title or "",
-                        description=chat.description,
-                        username=chat.username,
-                        is_forum=chat.is_forum,
-                        photo=photo_b64,
-                    )
-                )
-            except Exception as e:
-                logger.info(f"Found invalid chat id ({e!r}), removing it from available list")
+            chat = await self.get_group_chat(bot, chat_id=chat_id)
+            if chat is None:
+                logger.info(prefix + f"No chat retrieved for id {chat_id}, removing it from available list")
                 await self._available_group_chat_ids.remove(key, chat_id)
-        return validated_group_chats
+            else:
+                chats.append(chat)
+        return chats
 
     def setup_handlers(self, username: str, bot_name: str, bot: AsyncTeleBot) -> None:
         @bot.my_chat_member_handler()

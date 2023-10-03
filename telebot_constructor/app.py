@@ -481,7 +481,7 @@ class TelebotConstructorApp:
             - application/json
             responses:
                 "200":
-                    description: OK
+                    description: List of TgGroupChat objects
             """
             username = await self.authenticate(request)
             bot_name = self.parse_bot_name(request)
@@ -491,6 +491,33 @@ class TelebotConstructorApp:
                 username, bot_name, bot=bot_runner.bot
             )
             return web.json_response(data=[chat.model_dump(mode="json") for chat in chats])
+
+        @routes.get("/api/group-chat/{bot_name}")
+        async def get_group_chat(request: web.Request) -> web.Response:
+            """
+            ---
+            description: Retrieve info about a group chat available to bot
+            produces:
+            - application/json
+            responses:
+                "200":
+                    description: TgGroupChat object
+                "404":
+                    description: Chat not found
+            """
+            username = await self.authenticate(request)
+            bot_name = self.parse_bot_name(request)
+            bot_config = BotConfig.for_temporary_bot(await self.load_bot_config(username, bot_name))
+            # NOTE: numeric chat ids are not casted into ints because it doesn't matter for Telegram bot API
+            group_chat_id = request.query.get("group_chat")
+            if group_chat_id is None:
+                raise web.HTTPBadRequest(reason="group_chat query param expected")
+            bot_runner = await self._construct_bot(username, bot_name, bot_config)
+            chat = await self.group_chat_discovery_handler.get_group_chat(bot=bot_runner.bot, chat_id=group_chat_id)
+            if chat is None:
+                raise web.HTTPNotFound(reason="Chat does not exist or is not available to the bot")
+            else:
+                return web.json_response(data=chat.model_dump(mode="json"))
 
         ##################################################################################
         # static file routes

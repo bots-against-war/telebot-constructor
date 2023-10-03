@@ -7,7 +7,7 @@
 
   const close = getModalCloser();
 
-  const dispatch = createEventDispatcher();
+  const dispatch = createEventDispatcher<{ save: null }>();
 </script>
 
 <div style="margin-top: 1em;">

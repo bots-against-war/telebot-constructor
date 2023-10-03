@@ -10,7 +10,7 @@
   export let selectedBot: string | null;
   // endregion
 
-  const dispatch = createEventDispatcher();
+  const dispatch = createEventDispatcher<{ updateSelectedBot: string }>();
 
   function updateSelectedBot(selectedBot: string) {
     dispatch("updateSelectedBot", selectedBot);

@@ -11,7 +11,7 @@
   export let botConfig: BotConfig;
   // endregion
   let botStatus: string | null = null;
-  const dispatch = createEventDispatcher();
+  const dispatch = createEventDispatcher<{ botDeleted: null }>();
 
   async function startBotWithName(name: string) {
     const resp = await startBot(name);

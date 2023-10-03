@@ -18,14 +18,6 @@
     selectedBot = Object.keys(botConfigs)[0];
   }
 
-  function handleUpdateSelectedBot(event: CustomEvent<string>) {
-    if (event.detail) {
-      selectedBot = event.detail;
-    } else {
-      selectedBot = "";
-    }
-  }
-
   const showNewBotModal = () =>
     open(CreateBotModal, {
       newBotCallback: (name: string, config: BotConfig) => {
@@ -41,7 +33,13 @@
       <Button on:click={showNewBotModal}>Добавить</Button>
     </Container>
     <hr />
-    <ArrayBots on:updateSelectedBot={handleUpdateSelectedBot} {botConfigs} {selectedBot} />
+    <ArrayBots
+      on:updateSelectedBot={(e) => {
+        selectedBot = e.detail || null;
+      }}
+      {botConfigs}
+      {selectedBot}
+    />
   </div>
   {#if selectedBot === null}
     <p class="lifecycle-placeholder">
