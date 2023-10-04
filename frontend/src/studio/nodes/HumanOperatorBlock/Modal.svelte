@@ -3,6 +3,7 @@
   import NodeModalControls from "../../components/NodeModalControls.svelte";
   import GroupChatIdSelect from "../../components/GroupChatIdSelect.svelte";
 
+  export let botName: string; //required for admin chat id rendering, and context does not propagate here
   export let config: HumanOperatorBlock;
   export let onConfigUpdate: (newConfig: HumanOperatorBlock) => any;
 
@@ -17,7 +18,7 @@
 <div>
   <h3>Человек-оператор</h3>
   <div>
-    <GroupChatIdSelect label="Админ-чат" bind:groupChatId={adminChatId} />
+    <GroupChatIdSelect label="Админ-чат" {botName} bind:selectedGroupChatId={adminChatId} />
   </div>
   <NodeModalControls on:save={updateConfig} />
 </div>

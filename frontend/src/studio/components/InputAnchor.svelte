@@ -12,5 +12,8 @@
     display: flex;
     flex-direction: row;
     justify-content: center;
+    height: 6px;
+    position: relative;
+    top: -6px;
   }
 </style>

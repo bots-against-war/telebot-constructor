@@ -490,6 +490,7 @@ class TelebotConstructorApp:
             chats = await self.group_chat_discovery_handler.validate_discovered_chats(
                 username, bot_name, bot=bot_runner.bot
             )
+            chats.sort(key=lambda c: c.id)  # this is probably not chronological or anything, but at least it's consistent...
             return web.json_response(data=[chat.model_dump(mode="json") for chat in chats])
 
         @routes.get("/api/group-chat/{bot_name}")

@@ -9,10 +9,11 @@
   import { getModalOpener } from "../../../utils";
 
   import Modal from "./Modal.svelte";
-  import GroupChat from "../../../components/GroupChat.svelte";
+  import GroupChatBadge from "../../../components/GroupChatBadge.svelte";
   import NodeContent from "../../components/NodeContent.svelte";
   import InputAnchor from "../../components/InputAnchor.svelte";
   import { PLACEHOLDER_GROUP_CHAT_ID } from "../defaultConfigs";
+  import { ExclamationTriangle } from "radix-icons-svelte";
 
   const openModal = getModalOpener();
 
@@ -23,6 +24,8 @@
 
   const setNewConfig = (newConfig: HumanOperatorBlock) => {
     config = newConfig;
+    console.log("HO config updated");
+    console.log(config);
   };
 </script>
 
@@ -34,17 +37,18 @@
     on:edit={() =>
       openModal(Modal, {
         config,
+        botName,
         onConfigUpdate: setNewConfig,
       })}
   >
     <!-- <span style="background-color: red;">TEST 1312</span> -->
     {#if config.feedback_handler_config.admin_chat_id === PLACEHOLDER_GROUP_CHAT_ID}
       <div>
-        <!-- TODO: warning icon -->
-        <Alert color="red">Не выбран админ-чат</Alert>
+        <Alert color="red" icon={ExclamationTriangle}>Не выбран админ-чат</Alert>
       </div>
     {:else}
-      <GroupChat {botName} chatId={config.feedback_handler_config.admin_chat_id} />
+      <GroupChatBadge {botName} chatId={config.feedback_handler_config.admin_chat_id} />
+      <!-- id: {config.feedback_handler_config.admin_chat_id} -->
     {/if}
     <!-- <span>x:{Math.round(position.x)},y:{Math.round(position.y)}</span> -->
   </NodeContent>
