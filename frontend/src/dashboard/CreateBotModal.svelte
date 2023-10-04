@@ -12,26 +12,33 @@
 
   let botDisplayNameInput = "";
   let botTokenInput = "";
-  let errorType: string | null = null;
+  let errorTitle: string | null = null;
   let error: string | null = null;
+  let isCreating = false;
+  let userClickedCreate = false;
 
   async function createNewBot() {
+    userClickedCreate = true;
     let botToken = botTokenInput.trim();
     let botDisplayName = botDisplayNameInput.trim();
     if (!botDisplayName) {
+      errorTitle = "Не хватает данных";
       error = `Имя не может быть пустым`;
       return;
     }
 
     if (!botToken) {
+      errorTitle = "Не хватает данных";
       error = `Токен не может быть пустым`;
       return;
     }
 
+    isCreating = true;
     let tokenValidationError = getError(await validateBotToken(botToken));
     if (tokenValidationError !== null) {
-      errorType = "Проверьте корректность токена";
+      errorTitle = "Проверьте корректность токена";
       error = tokenValidationError;
+      isCreating = false;
       return;
     }
 
@@ -53,8 +60,9 @@
     let newTokenSecretRes = await createBotTokenSecret(botName, botToken);
     let newTokenSaveErr = getError(newTokenSecretRes);
     if (newTokenSaveErr !== null) {
-      errorType = "Не получилось сохранить токен";
+      errorTitle = "Не получилось сохранить токен";
       error = newTokenSaveErr;
+      isCreating = false;
       return;
     }
 
@@ -68,6 +76,7 @@
       },
     };
     const res = await saveBotConfig(botName, config);
+    isCreating = false;
 
     console.log(res);
 
@@ -76,7 +85,7 @@
       newBotCallback(botName, config);
       closePopup();
     } else {
-      errorType = "Ошибка сохранения";
+      errorTitle = "Ошибка сохранения";
       error = getError(res);
     }
   }
@@ -85,20 +94,22 @@
 <Flex direction="column" gap="md">
   <TextInput
     bind:value={botDisplayNameInput}
+    error={userClickedCreate && !botDisplayNameInput}
     label="Название"
     description="Не видно пользователь:ницам, только в конструкторе; можно изменить позже"
     placeholder="Бот-волонтер"
   />
   <PasswordInput
     bind:value={botTokenInput}
+    error={userClickedCreate && !botTokenInput}
     label="Токен"
     placeholder="123456789:ABCDEFGHIJKLMOPQRSTUVWXYZabcdefghij"
     description="Можно изменить позже"
   />
   {#if error !== null}
-    <Alert title={errorType || "Ошибка"} color="red">{error}</Alert>
+    <Alert title={errorTitle || "Ошибка"} color="red">{error}</Alert>
   {/if}
   <div class="save-button">
-    <Button radius={20} color="#62B1D0" on:click={createNewBot}>Создать</Button>
+    <Button on:click={createNewBot} loading={isCreating}>Создать</Button>
   </div>
 </Flex>

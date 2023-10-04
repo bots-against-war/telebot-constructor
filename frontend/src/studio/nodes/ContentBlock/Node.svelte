@@ -8,6 +8,7 @@
 
   import Modal from "./Modal.svelte";
   import { getModalOpener } from "../../../utils";
+  import { DEFAULT_NODE_PROPS } from "../nodeProps";
   const openModal = getModalOpener();
 
   export let config: ContentBlock;
@@ -17,10 +18,11 @@
   };
 </script>
 
-<Node id={config.block_id} bgColor="#bfebff" bind:position>
+<Node id={config.block_id} bind:position {...DEFAULT_NODE_PROPS}>
   <InputAnchor />
   <NodeContent
-    name="Content"
+    name="Контент"
+    headerColor="#62B1D0"
     on:delete
     on:edit={() =>
       openModal(Modal, {
@@ -28,8 +30,7 @@
         onConfigUpdate: setNewConfig,
       })}
   >
-    Message text: <span>{config.contents[0].text?.text}</span>
-    <!-- <span>x:{Math.round(position.x)},y:{Math.round(position.y)}</span> -->
+    <span>{config.contents[0].text?.text}</span>
   </NodeContent>
   <OutputAnchor bind:nextBlockId={config.next_block_id} />
 </Node>

@@ -1,6 +1,7 @@
 import abc
 import asyncio
 import collections
+import logging
 
 import telebot.api
 from telebot.runner import BotRunner
@@ -26,6 +27,7 @@ class PollingConstructedBotRunner(ConstructedBotRunner):
 
     def __init__(self) -> None:
         self.running_bot_tasks: dict[str, dict[str, asyncio.Task[None]]] = collections.defaultdict(dict)
+        self.logger = logging.getLogger(f"{__name__}.{self.__class__.__qualname__}")
 
     async def start(self, username: str, bot_name: str, bot_runner: BotRunner) -> bool:
         if bot_name in self.running_bot_tasks.get(username, {}):
@@ -53,13 +55,9 @@ class PollingConstructedBotRunner(ConstructedBotRunner):
             return True
 
     async def cleanup(self) -> None:
-        for _username, tasks in self.running_bot_tasks.items():
-            for _bot_name, task in tasks.items():
+        for bot_tasks in list(self.running_bot_tasks.values()):
+            for task in list(bot_tasks.values()):
                 task.cancel()
-                try:
-                    await task
-                except BaseException:
-                    pass
 
 
 class WebhookAppConstructedBotRunner(ConstructedBotRunner):

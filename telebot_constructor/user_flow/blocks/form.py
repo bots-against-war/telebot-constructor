@@ -17,13 +17,13 @@ from telebot_components.form.handler import (
     FormHandlerConfig as ComponentsFormHandlerConfig,
 )
 
-from telebot_constructor.pydantic_utils import ExactlyOneNonNullFieldModel
 from telebot_constructor.user_flow.blocks.base import UserFlowBlock
 from telebot_constructor.user_flow.types import (
     SetupResult,
     UserFlowContext,
     UserFlowSetupContext,
 )
+from telebot_constructor.utils.pydantic import ExactlyOneNonNullFieldModel
 
 FormFieldId = str
 

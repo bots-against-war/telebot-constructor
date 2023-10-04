@@ -262,6 +262,17 @@ jupyter = ["ipython (>=7.8.0)", "tokenize-rt (>=3.2.0)"]
 uvloop = ["uvloop (>=0.15.2)"]
 
 [[package]]
+name = "cachetools"
+version = "5.3.1"
+description = "Extensible memoizing collections and decorators"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "cachetools-5.3.1-py3-none-any.whl", hash = "sha256:95ef631eeaea14ba2e36f06437f36463aac3a096799e876ee55e5cdccb102590"},
+    {file = "cachetools-5.3.1.tar.gz", hash = "sha256:dce83f2d9b4e1f732a8cd44af8e8fab2dbe46201467fc98b3ef8f269092bf62b"},
+]
+
+[[package]]
 name = "certifi"
 version = "2023.7.22"
 description = "Python package for providing Mozilla's CA Bundle."
@@ -1750,29 +1761,29 @@ files = [
 
 [[package]]
 name = "telebot-against-war"
-version = "0.6.10"
+version = "0.6.11"
 description = "Async-first fork of pyTelegramBotApi"
 optional = false
 python-versions = ">=3.9,<4.0"
 files = [
-    {file = "telebot_against_war-0.6.10-py3-none-any.whl", hash = "sha256:005b640e9616e2ba2546da0aeccafa90d01896a958281364230c3e14705131bc"},
-    {file = "telebot_against_war-0.6.10.tar.gz", hash = "sha256:ce071616f6c4319c1bfae3cefea27f953ca7bd32ee3391bf36588caf39cd86db"},
+    {file = "telebot_against_war-0.6.11-py3-none-any.whl", hash = "sha256:d5e83dd91c91616f42f4b966a8cba90a440b7e4935bd2832802b1d22f224a720"},
+    {file = "telebot_against_war-0.6.11.tar.gz", hash = "sha256:7325c0c5cf1944b1ade066ec38ad6e2f28e09860343e215690a01101d341f1b4"},
 ]
 
 [package.dependencies]
-aiohttp = ">=3.8.1,<4.0.0"
+aiohttp = ">=3.8.5,<4.0.0"
 typing-extensions = ">=4.2.0,<5.0.0"
 ujson = ">=5.3.0,<6.0.0"
 
 [[package]]
 name = "telebot-components"
-version = "0.8.20"
+version = "0.9.0"
 description = "Framework/toolkit for building Telegram bots with telebot and redis"
 optional = false
 python-versions = ">=3.10,<4.0"
 files = [
-    {file = "telebot_components-0.8.20-py3-none-any.whl", hash = "sha256:dfaca8dc3a8f0d47d277f6609adae336bb134c30f5c5bf95b62a328f328ab1da"},
-    {file = "telebot_components-0.8.20.tar.gz", hash = "sha256:283b7d53b8e92d2f21c48fbf723c720c42ba6276ed818a17eec22f875dcabf0e"},
+    {file = "telebot_components-0.9.0-py3-none-any.whl", hash = "sha256:e1a7cb499402cee47e5c718bc60f0ab5c080ccc1f3260ed0b9a57e6128535463"},
+    {file = "telebot_components-0.9.0.tar.gz", hash = "sha256:cc1ef30a88fd6cec43aaf9b00fa86987b5d095a54c10ca8aeb47c7d6ee3baca8"},
 ]
 
 [package.dependencies]
@@ -1787,7 +1798,7 @@ pyairtable = ">=1.5.0,<2.0.0"
 pytest-mock = ">=3.7.0,<4.0.0"
 redis = ">=4.3.1,<5.0.0"
 "ruamel.yaml" = ">=0.17.21,<0.18.0"
-telebot-against-war = ">=0.6.7,<0.7.0"
+telebot-against-war = ">=0.6.11,<0.7.0"
 tenacity = ">=8.1.0,<9.0.0"
 toml = ">=0.10.2,<0.11.0"
 
@@ -2034,4 +2045,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "efd39c02f46aaa89dbc2654b5ac631a7a83dba47b107c994d77e4c943579a82d"
+content-hash = "9e18be4b75cfac1d34d8897c92b1cc5b316f6b3918916fe6b14e8519d21c0a72"

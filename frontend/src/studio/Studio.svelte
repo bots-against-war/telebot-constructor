@@ -1,5 +1,6 @@
 <script lang="ts">
   import { Svelvet } from "svelvet";
+  import { Button, Group } from "@svelteuidev/core";
 
   import CommandEntryPointNode from "./nodes/CommandEntryPoint/Node.svelte";
   import ContentBlockNode from "./nodes/ContentBlock/Node.svelte";
@@ -9,7 +10,7 @@
   import { getBlockId, getEntrypointId } from "../api/typeUtils";
   import type { BotConfig, UserFlowBlockConfig, UserFlowEntryPointConfig, UserFlowNodePosition } from "../api/types";
 
-  import { getError, unwrap } from "../utils";
+  import { getError } from "../utils";
   import { findNewNodePosition } from "./utils";
   import {
     defaultCommandEntrypoint,
@@ -17,10 +18,14 @@
     defaultHumanOperatorBlockCofig,
   } from "./nodes/defaultConfigs";
   import HumanOperatorNode from "./nodes/HumanOperatorBlock/Node.svelte";
-  import { startBot } from "../api/lifecycle";
+  import StudioControls from "./StudioControls.svelte";
+  import { navigate } from "svelte-routing";
+  import { setContext } from "svelte";
 
   export let botName: string;
   export let botConfig: BotConfig;
+
+  setContext("botName", botName);
 
   function newUserFlowNodePosition(): UserFlowNodePosition {
     const currentPositions = Object.values(botConfig.user_flow_config.node_display_coords);
@@ -80,9 +85,13 @@
     };
   }
 
+  let isSavingBotConfig = false;
+
   async function saveCurrentBotConfig() {
+    isSavingBotConfig = true;
     console.log(`Saving bot config for ${botName}`, botConfig);
     const res = await saveBotConfig(botName, botConfig);
+    isSavingBotConfig = false;
     if (getError(res) !== null) {
       window.alert(`Error saving bot config: ${getError(res)}`);
     }
@@ -93,7 +102,7 @@
   <Svelvet
     TD
     controls
-    fitView={botConfig.user_flow_config.blocks.length + botConfig.user_flow_config.entrypoints.length > 0}
+    fitView={botConfig.user_flow_config.blocks.length + botConfig.user_flow_config.entrypoints.length >= 1}
     edge={DeletableEdge}
   >
     {#each botConfig.user_flow_config.entrypoints as entrypoint, idx}
@@ -121,45 +130,29 @@
       {/if}
     {/each}
   </Svelvet>
-  <div class="custom-controls">
-    <h3>{botConfig.display_name}</h3>
-    <button on:click={getEntrypointConstructor("command", defaultCommandEntrypoint)}>New <b>command</b></button>
-    <button on:click={getBlockConstructor("content", defaultContentBlockConfig)}>New <b>content block</b></button>
-    <button on:click={getBlockConstructor("human-operator", defaultHumanOperatorBlockCofig)}
-      >New <b>human operator block</b></button
-    >
-    <button on:click={() => console.log(botConfig.user_flow_config)}>Log current config</button>
-    <button on:click={saveCurrentBotConfig}>Save</button>
-    <button on:click={() => startBot(botName)}>Run bot</button>
-  </div>
+  <StudioControls title="Добавить" position="upper-left">
+    <Group direction="column" spacing="xs">
+      <!-- TODO: styling of buttons for each block type -->
+      <Button compact color="gray" on:click={getEntrypointConstructor("command", defaultCommandEntrypoint)}>
+        Команда
+      </Button>
+      <Button compact color="gray" on:click={getBlockConstructor("content", defaultContentBlockConfig)}>Контент</Button>
+      <Button compact color="gray" on:click={getBlockConstructor("human-operator", defaultHumanOperatorBlockCofig)}>
+        Человек-оператор
+      </Button>
+    </Group>
+  </StudioControls>
+  <StudioControls position="upper-right">
+    <Group direction="column" spacing="xs">
+      <Button variant="filled" fullSize loading={isSavingBotConfig} on:click={saveCurrentBotConfig}>Сохранить</Button>
+      <Button variant="outline" fullSize on:click={() => navigate(`/#${botName}`)}>Выйти</Button>
+    </Group>
+  </StudioControls>
 </div>
 
 <style>
   .svelvet-container {
     width: 100%;
     height: 100vh;
-  }
-
-  div.custom-controls {
-    position: fixed;
-    left: 10px;
-    top: 10px;
-    background-color: white;
-    border: 1px black solid;
-    border-radius: 10px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-around;
-    padding: 1em;
-  }
-
-  div.custom-controls > button {
-    margin: 0.2em 0;
-    width: 100%;
-  }
-  div.custom-controls > h3 {
-    margin: 0.2em 0;
-    width: 100%;
   }
 </style>

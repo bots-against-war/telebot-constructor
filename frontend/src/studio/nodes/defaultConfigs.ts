@@ -27,6 +27,8 @@ export function defaultContentBlockConfig(id: string): UserFlowBlockConfig {
   };
 }
 
+export const PLACEHOLDER_GROUP_CHAT_ID = 0;
+
 export function defaultHumanOperatorBlockCofig(id: string): UserFlowBlockConfig {
   return {
     content: null,
@@ -34,7 +36,7 @@ export function defaultHumanOperatorBlockCofig(id: string): UserFlowBlockConfig 
       block_id: id,
       catch_all: false,
       feedback_handler_config: {
-        admin_chat_id: -1,
+        admin_chat_id: PLACEHOLDER_GROUP_CHAT_ID,
         forum_topic_per_user: false,
         anonimyze_users: true,
         max_messages_per_minute: 20,

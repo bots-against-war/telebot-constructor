@@ -1,62 +1,31 @@
-import datetime
 import itertools
 import logging
-from typing import Callable, Coroutine, cast
+from typing import Callable, Coroutine, Optional
 
-import tenacity
 from telebot import AsyncTeleBot
-from telebot import api as tg_api
 from telebot.runner import AuxBotEndpoint, BotRunner
 from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.stores.banned_users import BannedUsersStore
 from telebot_components.stores.generic import GenericStore
 from telebot_components.utils.secrets import SecretStore
-from tenacity import RetryCallState
-from tenacity.retry import (
-    retry_all,
-    retry_if_exception_message,
-    retry_if_exception_type,
-)
-from tenacity.stop import stop_after_attempt
-from tenacity.wait import wait_chain, wait_exponential
 
 from telebot_constructor.bot_config import BotConfig
+from telebot_constructor.group_chat_discovery import GroupChatDiscoveryHandler
 from telebot_constructor.user_flow.types import BotCommandInfo
+from telebot_constructor.utils.rate_limit_retry import rate_limit_retry
 
 logger = logging.getLogger(__name__)
 
-
-class wait_from_too_many_requests_error(tenacity.wait.wait_base):
-    def __call__(self, retry_state: RetryCallState) -> float:
-        if retry_state.outcome is None:
-            return 0.0
-        if not retry_state.outcome.failed:
-            return 0.0
-        exc = cast(Exception, retry_state.outcome.exception())
-        if not isinstance(exc, tg_api.ApiHTTPException):
-            return 0.0
-        if exc.error_parameters is None or exc.error_parameters.retry_after is None:
-            return 0.0
-        return exc.error_parameters.retry_after
+BotFactory = Callable[[str], AsyncTeleBot]
 
 
-def rate_limit_retry():
-    return tenacity.AsyncRetrying(
-        retry=retry_all(
-            retry_if_exception_type(tg_api.ApiHTTPException),
-            retry_if_exception_message(match="Too Many Requests"),
-        ),
-        wait=wait_chain(
-            wait_from_too_many_requests_error(),
-            wait_exponential(
-                multiplier=1,
-                max=datetime.timedelta(minutes=3),
-                min=datetime.timedelta(seconds=1),
-            ),
-        ),
-        stop=stop_after_attempt(5),
-        reraise=True,
-    )
+async def make_raw_bot(
+    username: str, bot_config: BotConfig, secret_store: SecretStore, _bot_factory: BotFactory = AsyncTeleBot
+) -> AsyncTeleBot:
+    token = await secret_store.get_secret(secret_name=bot_config.token_secret_name, owner_id=username)
+    if token is None:
+        raise ValueError(f"Token name {bot_config.token_secret_name!r} does not correspond to a valid secret")
+    return _bot_factory(token)
 
 
 async def construct_bot(
@@ -65,12 +34,17 @@ async def construct_bot(
     bot_config: BotConfig,
     secret_store: SecretStore,
     redis: RedisInterface,
-    _bot_factory: Callable[[str], AsyncTeleBot] = AsyncTeleBot,  # used for testing
+    group_chat_discovery_handler: Optional[GroupChatDiscoveryHandler] = None,
+    _bot_factory: BotFactory = AsyncTeleBot,  # used for testing
 ) -> BotRunner:
     """Core bot construction function responsible for turning a config into a functional bot"""
     bot_prefix = f"{username}-{bot_name}"
     log_prefix = f"[{username}][{bot_name}] "
     logger.info(log_prefix + "Constructing bot")
+
+    bot = await make_raw_bot(
+        username=username, bot_config=bot_config, secret_store=secret_store, _bot_factory=_bot_factory
+    )
 
     # HACK: this allows creating multiple bots with the same prefix, which is needed for hot reloading;
     # but this removes a failsafe mechanism and can cause problems with multiple competing bot instances
@@ -79,12 +53,6 @@ async def construct_bot(
     background_jobs: list[Coroutine[None, None, None]] = []
     aux_endpoints: list[AuxBotEndpoint] = []
     bot_commands: list[BotCommandInfo] = []
-
-    token = await secret_store.get_secret(secret_name=bot_config.token_secret_name, owner_id=username)
-    if token is None:
-        raise ValueError(f"Token name {bot_config.token_secret_name!r} does not correspond to a valid secret")
-    logger.info(log_prefix + f"Loaded token from the secret store, secret {bot_config.token_secret_name!r}")
-    bot = _bot_factory(token)
 
     try:
         async for attempt in rate_limit_retry():
@@ -131,6 +99,9 @@ async def construct_bot(
                     commands=[cmd.command for cmd in command_info_batch],
                     scope=command_info_batch[0].scope,
                 )
+
+    if group_chat_discovery_handler is not None:
+        group_chat_discovery_handler.setup_handlers(username=username, bot_name=bot_name, bot=bot)
 
     return BotRunner(
         bot_prefix=bot_prefix,

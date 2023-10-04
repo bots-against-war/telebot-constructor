@@ -3,7 +3,7 @@ from typing import Optional
 import pytest
 from pydantic import ValidationError
 
-from telebot_constructor.pydantic_utils import ExactlyOneNonNullFieldModel
+from telebot_constructor.utils.pydantic import ExactlyOneNonNullFieldModel
 
 
 def test_exactly_one_non_null_field_model() -> None:

@@ -12,5 +12,7 @@
     display: flex;
     flex-direction: row;
     justify-content: center;
+    position: absolute;
+    top: -6px;
   }
 </style>

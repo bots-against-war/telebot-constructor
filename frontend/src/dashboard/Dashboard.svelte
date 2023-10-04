@@ -10,14 +10,12 @@
 
   export let botConfigs: BotConfigList;
 
-  let selectedBot = Object.keys(botConfigs).length > 0 ? Object.keys(botConfigs)[0] : null;
-
-  function handleUpdateSelectedBot(event: CustomEvent<string>) {
-    if (event.detail) {
-      selectedBot = event.detail;
-    } else {
-      selectedBot = "";
-    }
+  let selectedBot: string | null = null;
+  let selectedBotHash = window.location.hash.slice(1); // slice removes # symbol from the start
+  if (selectedBotHash !== null && selectedBotHash in botConfigs) {
+    selectedBot = selectedBotHash;
+  } else if (Object.keys(botConfigs).length > 0) {
+    selectedBot = Object.keys(botConfigs)[0];
   }
 
   const showNewBotModal = () =>
@@ -32,10 +30,16 @@
   <div class="right">
     <Space h="s" />
     <Container>
-      <Button radius={40} on:click={showNewBotModal}>Новый бот</Button>
+      <Button on:click={showNewBotModal}>Добавить</Button>
     </Container>
     <hr />
-    <ArrayBots on:updateSelectedBot={handleUpdateSelectedBot} {botConfigs} {selectedBot} />
+    <ArrayBots
+      on:updateSelectedBot={(e) => {
+        selectedBot = e.detail || null;
+      }}
+      {botConfigs}
+      {selectedBot}
+    />
   </div>
   {#if selectedBot === null}
     <p class="lifecycle-placeholder">
