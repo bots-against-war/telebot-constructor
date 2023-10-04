@@ -42,7 +42,9 @@ async def construct_bot(
     log_prefix = f"[{username}][{bot_name}] "
     logger.info(log_prefix + "Constructing bot")
 
-    bot = await make_raw_bot(username=username, bot_config=bot_config, secret_store=secret_store, _bot_factory=_bot_factory)
+    bot = await make_raw_bot(
+        username=username, bot_config=bot_config, secret_store=secret_store, _bot_factory=_bot_factory
+    )
 
     # HACK: this allows creating multiple bots with the same prefix, which is needed for hot reloading;
     # but this removes a failsafe mechanism and can cause problems with multiple competing bot instances
