@@ -1,3 +1,4 @@
+import dataclasses
 from typing import Any, Optional
 
 from pydantic import BaseModel
@@ -5,7 +6,11 @@ from telebot_components.menu.menu import Menu as ComponentsMenu
 from telebot_components.menu.menu import MenuConfig as ComponentsMenuConfig
 from telebot_components.menu.menu import MenuHandler
 from telebot_components.menu.menu import MenuItem as ComponentsMenuItem
-from telebot_components.menu.menu import TerminatorContext, TerminatorResult
+from telebot_components.menu.menu import (
+    MenuMechanism,
+    TerminatorContext,
+    TerminatorResult,
+)
 
 from telebot_constructor.user_flow.blocks.base import UserFlowBlock
 from telebot_constructor.user_flow.types import (
@@ -36,24 +41,40 @@ class MenuItem(ExactlyOneNonNullFieldModel):
 
 class Menu(BaseModel):
     text: str
+    no_back_button: bool
     items: list[MenuItem]
 
     def to_components_menu(self, global_config: ComponentsMenuConfig) -> ComponentsMenu:
+        config_override = {"back_label": None} if self.no_back_button else {}
+        config = dataclasses.replace(global_config, **config_override)  # type: ignore
         return ComponentsMenu(
             text=self.text,
             menu_items=[item.to_components_menu_item(global_config) for item in self.items],
-            config=global_config,
+            config=config,
         )
+
+
+class MenuConfig(BaseModel):
+    back_label: str
+    mechanism: MenuMechanism
+    lock_after_termination: bool
 
 
 class MenuBlock(UserFlowBlock):
     """Multilevel menu block powered by Telegram inline buttons"""
 
     menu: Menu
-    config: ComponentsMenuConfig
+    config: MenuConfig
 
     def model_post_init(self, __context: Any) -> None:
-        self._components_menu = self.menu.to_components_menu(global_config=self.config)
+        self._components_config = ComponentsMenuConfig(
+            back_label=self.config.back_label,
+            lock_after_termination=self.config.lock_after_termination,
+            # TODO: convert markdown and plain texts to HTML and set is_text_html to True
+            is_text_html=False,
+            mechanism=self.config.mechanism,
+        )
+        self._components_menu = self.menu.to_components_menu(global_config=self._components_config)
 
     @property
     def menu_handler(self) -> MenuHandler:

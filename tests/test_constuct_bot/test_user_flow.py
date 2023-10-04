@@ -18,10 +18,11 @@ from telebot_constructor.user_flow.blocks.human_operator import (
     MessagesToUser,
 )
 from telebot_constructor.user_flow.blocks.menu import (
-    ComponentsMenuConfig,
     Menu,
     MenuBlock,
+    MenuConfig,
     MenuItem,
+    MenuMechanism,
 )
 from telebot_constructor.user_flow.entrypoints.catch_all import CatchAllEntryPoint
 from telebot_constructor.user_flow.entrypoints.command import CommandEntryPoint
@@ -294,12 +295,17 @@ async def test_flow_with_menu() -> None:
                         block_id="menu",
                         menu=Menu(
                             text="top level menu",
+                            no_back_button=False,
                             items=[
                                 MenuItem(label="one", next_block_id="message-1"),
                                 MenuItem(label="two", next_block_id="message-2"),
                             ],
                         ),
-                        config=ComponentsMenuConfig(back_label="<-", lock_after_termination=False, is_text_html=False),
+                        config=MenuConfig(
+                            back_label="<-",
+                            lock_after_termination=False,
+                            mechanism=MenuMechanism.INLINE_BUTTONS,
+                        ),
                     )
                 ),
                 UserFlowBlockConfig(
