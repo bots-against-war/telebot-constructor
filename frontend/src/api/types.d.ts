@@ -87,6 +87,9 @@ export type Username = string | null;
 export type IsForum = boolean | null;
 export type Photo = string | null;
 
+/**
+ * Temporary class to pack several models into one schema; not used directly by frontend code
+ */
 export interface BackendDataModels {
   bot_config: BotConfig;
   tg_group_chat: TgGroupChat;

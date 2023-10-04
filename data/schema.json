@@ -987,6 +987,7 @@
       "type": "object"
     }
   },
+  "description": "Temporary class to pack several models into one schema; not used directly by frontend code",
   "properties": {
     "bot_config": {
       "$ref": "#/$defs/BotConfig"
