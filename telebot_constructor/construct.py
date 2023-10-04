@@ -16,6 +16,17 @@ from telebot_constructor.utils.rate_limit_retry import rate_limit_retry
 
 logger = logging.getLogger(__name__)
 
+BotFactory = Callable[[str], AsyncTeleBot]
+
+
+async def make_raw_bot(
+    username: str, bot_config: BotConfig, secret_store: SecretStore, _bot_factory: BotFactory = AsyncTeleBot
+) -> AsyncTeleBot:
+    token = await secret_store.get_secret(secret_name=bot_config.token_secret_name, owner_id=username)
+    if token is None:
+        raise ValueError(f"Token name {bot_config.token_secret_name!r} does not correspond to a valid secret")
+    return _bot_factory(token)
+
 
 async def construct_bot(
     username: str,
@@ -24,12 +35,14 @@ async def construct_bot(
     secret_store: SecretStore,
     redis: RedisInterface,
     group_chat_discovery_handler: Optional[GroupChatDiscoveryHandler] = None,
-    _bot_factory: Callable[[str], AsyncTeleBot] = AsyncTeleBot,  # used for testing
+    _bot_factory: BotFactory = AsyncTeleBot,  # used for testing
 ) -> BotRunner:
     """Core bot construction function responsible for turning a config into a functional bot"""
     bot_prefix = f"{username}-{bot_name}"
     log_prefix = f"[{username}][{bot_name}] "
     logger.info(log_prefix + "Constructing bot")
+
+    bot = await make_raw_bot(username=username, bot_config=bot_config, secret_store=secret_store, _bot_factory=_bot_factory)
 
     # HACK: this allows creating multiple bots with the same prefix, which is needed for hot reloading;
     # but this removes a failsafe mechanism and can cause problems with multiple competing bot instances
@@ -38,12 +51,6 @@ async def construct_bot(
     background_jobs: list[Coroutine[None, None, None]] = []
     aux_endpoints: list[AuxBotEndpoint] = []
     bot_commands: list[BotCommandInfo] = []
-
-    token = await secret_store.get_secret(secret_name=bot_config.token_secret_name, owner_id=username)
-    if token is None:
-        raise ValueError(f"Token name {bot_config.token_secret_name!r} does not correspond to a valid secret")
-    logger.info(log_prefix + f"Loaded token from the secret store, secret {bot_config.token_secret_name!r}")
-    bot = _bot_factory(token)
 
     try:
         async for attempt in rate_limit_retry():

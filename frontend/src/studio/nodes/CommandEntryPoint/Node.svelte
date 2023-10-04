@@ -7,15 +7,17 @@
 
   import Modal from "./Modal.svelte";
   import { getModalOpener } from "../../../utils";
+  import { DEFAULT_NODE_PROPS } from "../nodeProps";
   const openModal = getModalOpener<Modal>();
 
   export let config: CommandEntryPoint;
   export let position: SvelvetPosition;
 </script>
 
-<Node id={config.entrypoint_id} bgColor="#f9d6a7" bind:position>
+<Node id={config.entrypoint_id} bind:position {...DEFAULT_NODE_PROPS}>
   <NodeContent
     name="Команда"
+    headerColor="#D2CA4D"
     on:delete
     on:edit={() =>
       openModal(Modal, {
@@ -26,7 +28,6 @@
       })}
   >
     <span>/{config.command}</span>
-    <!-- <span>x:{Math.round(position.x)},y:{Math.round(position.y)}</span> -->
   </NodeContent>
   <OutputAnchor bind:nextBlockId={config.next_block_id} />
 </Node>

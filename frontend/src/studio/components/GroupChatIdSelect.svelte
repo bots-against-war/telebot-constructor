@@ -6,6 +6,7 @@
     Group,
     ActionIcon,
     Stack,
+    Space,
     Alert,
     Loader,
     Button,
@@ -65,6 +66,7 @@
     </Group>
   {/if}
   <Collapse open={showGroupChatSelect}>
+    <Space h="sm" />
     <Paper withBorder>
       <Stack spacing="xs">
         {#await availableGroupChatsPromise}
@@ -151,5 +153,9 @@
     display: flex;
     align-items: center;
     gap: 0.2em;
+  }
+  ul {
+    margin: 0;
+    padding-left: 1.2em;
   }
 </style>

@@ -14,6 +14,7 @@
   import InputAnchor from "../../components/InputAnchor.svelte";
   import { PLACEHOLDER_GROUP_CHAT_ID } from "../defaultConfigs";
   import { ExclamationTriangle } from "radix-icons-svelte";
+  import { DEFAULT_NODE_PROPS } from "../nodeProps";
 
   const openModal = getModalOpener();
 
@@ -29,10 +30,11 @@
   };
 </script>
 
-<Node id={config.block_id} bgColor="#b2db81" bind:position>
+<Node id={config.block_id} bind:position {...DEFAULT_NODE_PROPS}>
   <InputAnchor />
   <NodeContent
     name="Человек-оператор"
+    headerColor="#b1d162"
     on:delete
     on:edit={() =>
       openModal(Modal, {
@@ -41,15 +43,12 @@
         onConfigUpdate: setNewConfig,
       })}
   >
-    <!-- <span style="background-color: red;">TEST 1312</span> -->
     {#if config.feedback_handler_config.admin_chat_id === PLACEHOLDER_GROUP_CHAT_ID}
       <div>
         <Alert color="red" icon={ExclamationTriangle}>Не выбран админ-чат</Alert>
       </div>
     {:else}
       <GroupChatBadge {botName} chatId={config.feedback_handler_config.admin_chat_id} />
-      <!-- id: {config.feedback_handler_config.admin_chat_id} -->
     {/if}
-    <!-- <span>x:{Math.round(position.x)},y:{Math.round(position.y)}</span> -->
   </NodeContent>
 </Node>

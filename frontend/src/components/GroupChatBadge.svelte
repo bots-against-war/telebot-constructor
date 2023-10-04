@@ -3,12 +3,12 @@
     Caches stuff in localStorage for fewer backend calls.
 -->
 <script lang="ts">
-  import { Alert, Group, Loader } from "@svelteuidev/core";
+  import { Alert, Loader, Image, Group, Text, Space } from "@svelteuidev/core";
 
   import { getGroupChatData } from "../api/groupChats";
   import type { TgGroupChat } from "../api/types";
   import { ok, type Result } from "../utils";
-  import { ExclamationTriangle } from "radix-icons-svelte";
+  import { ExclamationTriangle, QuestionMark } from "radix-icons-svelte";
 
   export let botName: string;
   export let chatId: number | string;
@@ -17,7 +17,9 @@
   let renderedChatDataPromise: Promise<Result<TgGroupChat>>;
 
   $: {
-    // NOTE: this reactive block is needed because we're fetching/loading from localStorage stuff based on chatId
+    // NOTE: this reactive block is needed because we're fetching/loading from localStorage stuff based on chatId,
+    // not rendering it directly
+
     const LOCALSTORAGE_PREFIX = "chat-data-for";
     let localStoragePrefix = `${LOCALSTORAGE_PREFIX}${chatId}`;
 
@@ -49,25 +51,51 @@
       }
     }
   }
+
+  const OVERFLOWING_TEXT_STYLE = {
+    textWrap: "nowrap",
+    textOverflow: "ellipsis",
+    overflow: "hidden",
+  };
 </script>
 
-<div class="container">
-  {#await renderedChatDataPromise}
-    <Loader size={10} />
-  {:then loadChatResult}
-    {#if loadChatResult.ok}
-      <!-- TODO: render icons, chat type, link to chat, etc -->
-      {loadChatResult.data.title}
-      ({loadChatResult.data.id})
-    {:else}
-      <Alert color="red" title="Ошибка загрузки данных чата" icon={ExclamationTriangle}>{loadChatResult.error}</Alert>
-    {/if}
-  {/await}
+<div class="badge">
+  <Group override={{ gap: "6px", maxWidth: "300px" }} noWrap>
+    {#await renderedChatDataPromise}
+      <Loader size={10} />
+    {:then loadChatResult}
+      {#if loadChatResult.ok}
+        <!-- TODO: render icons, chat type, link to chat, etc -->
+        <Image
+          src={loadChatResult.data.photo !== null ? `data:image/png;base64,${loadChatResult.data.photo}` : null}
+          width={25}
+          height={25}
+          radius={1000}
+          usePlaceholder
+        >
+          <svelte:fragment slot="placeholder">
+            <QuestionMark />
+          </svelte:fragment>
+        </Image>
+        <Group override={{ gap: "6px" }}>
+          <Text override={{ maxWidth: "250px", ...OVERFLOWING_TEXT_STYLE }}>{loadChatResult.data.title}</Text>
+          {#if loadChatResult.data.username}
+            <Text color="dimmed" override={{ maxWidth: "250px", ...OVERFLOWING_TEXT_STYLE }}
+              >@{loadChatResult.data.username}</Text
+            >
+          {/if}
+        </Group>
+      {:else}
+        <Alert color="red" title="Ошибка загрузки данных чата" icon={ExclamationTriangle}>{loadChatResult.error}</Alert>
+      {/if}
+    {/await}
+  </Group>
 </div>
 
 <style>
-  div.container {
-    display: block;
-    /* border:; */
+  div.badge {
+    padding: 5px 5px;
+    border: 1px solid rgb(222, 226, 230);
+    border-radius: 15px;
   }
 </style>

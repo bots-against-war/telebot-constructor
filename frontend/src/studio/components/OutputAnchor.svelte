@@ -29,6 +29,7 @@
     display: flex;
     flex-direction: row;
     justify-content: center;
-    height: 6px;
+    position: absolute;
+    bottom: -6px;
   }
 </style>

@@ -23,7 +23,7 @@ from telebot_constructor.app_models import BotTokenPayload
 from telebot_constructor.auth import Auth
 from telebot_constructor.bot_config import BotConfig
 from telebot_constructor.build_time_config import BASE_PATH
-from telebot_constructor.construct import construct_bot
+from telebot_constructor.construct import construct_bot, make_raw_bot
 from telebot_constructor.cors import setup_cors
 from telebot_constructor.debug import setup_debugging
 from telebot_constructor.group_chat_discovery import GroupChatDiscoveryHandler
@@ -134,6 +134,13 @@ class TelebotConstructorApp:
         if config is None:
             raise web.HTTPNotFound(reason=f"No config found for bot name {bot_name!r}")
         return config
+
+    async def _make_raw_bot(self, username: str, bot_name: str) -> AsyncTeleBot:
+        return await make_raw_bot(
+            username,
+            bot_config=await self.load_bot_config(username, bot_name),
+            secret_store=self.secret_store,
+        )
 
     async def _construct_bot(self, username: str, bot_name: str, bot_config: BotConfig) -> BotRunner:
         return await construct_bot(
@@ -418,12 +425,11 @@ class TelebotConstructorApp:
             """
             username = await self.authenticate(request)
             bot_name = self.parse_bot_name(request)
-            bot_runner = await self._construct_bot(
+            bot = await self._make_raw_bot(
                 username,
                 bot_name,
-                bot_config=BotConfig.for_temporary_bot(await self.load_bot_config(username, bot_name)),
             )
-            await bot_runner.bot.get_me()
+            await bot.get_me()
             # TODO call several other methods to get bot's description and stuff and pack it into our custom obj
             return web.Response()
 
@@ -485,12 +491,14 @@ class TelebotConstructorApp:
             """
             username = await self.authenticate(request)
             bot_name = self.parse_bot_name(request)
-            bot_config = BotConfig.for_temporary_bot(await self.load_bot_config(username, bot_name))
-            bot_runner = await self._construct_bot(username, bot_name, bot_config)
             chats = await self.group_chat_discovery_handler.validate_discovered_chats(
-                username, bot_name, bot=bot_runner.bot
+                username,
+                bot_name,
+                bot=await self._make_raw_bot(username, bot_name),
             )
-            chats.sort(key=lambda c: c.id)  # this is probably not chronological or anything, but at least it's consistent...
+            chats.sort(
+                key=lambda c: c.id
+            )  # this is probably not chronological or anything, but at least it's consistent...
             return web.json_response(data=[chat.model_dump(mode="json") for chat in chats])
 
         @routes.get("/api/group-chat/{bot_name}")
@@ -508,13 +516,12 @@ class TelebotConstructorApp:
             """
             username = await self.authenticate(request)
             bot_name = self.parse_bot_name(request)
-            bot_config = BotConfig.for_temporary_bot(await self.load_bot_config(username, bot_name))
+            bot = await self._make_raw_bot(username, bot_name)
             # NOTE: numeric chat ids are not casted into ints because it doesn't matter for Telegram bot API
             group_chat_id = request.query.get("group_chat")
             if group_chat_id is None:
                 raise web.HTTPBadRequest(reason="group_chat query param expected")
-            bot_runner = await self._construct_bot(username, bot_name, bot_config)
-            chat = await self.group_chat_discovery_handler.get_group_chat(bot=bot_runner.bot, chat_id=group_chat_id)
+            chat = await self.group_chat_discovery_handler.get_group_chat(bot=bot, chat_id=group_chat_id)
             if chat is None:
                 raise web.HTTPNotFound(reason="Chat does not exist or is not available to the bot")
             else:
