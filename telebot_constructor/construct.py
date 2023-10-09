@@ -20,7 +20,10 @@ BotFactory = Callable[[str], AsyncTeleBot]
 
 
 async def make_raw_bot(
-    username: str, bot_config: BotConfig, secret_store: SecretStore, _bot_factory: BotFactory = AsyncTeleBot
+    username: str,
+    bot_config: BotConfig,
+    secret_store: SecretStore,
+    _bot_factory: BotFactory = AsyncTeleBot,
 ) -> AsyncTeleBot:
     token = await secret_store.get_secret(secret_name=bot_config.token_secret_name, owner_id=username)
     if token is None:
