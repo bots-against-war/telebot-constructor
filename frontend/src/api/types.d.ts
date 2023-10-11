@@ -142,6 +142,18 @@ export type Description = string | null;
 export type Username = string | null;
 export type IsForum = boolean | null;
 export type Photo = string | null;
+export type Id2 = number;
+export type FirstName = string;
+export type LastName = string | null;
+export type Username1 = string;
+export type Description1 = string | null;
+export type ShortDescription1 = string | null;
+export type CanJoinGroups = boolean;
+export type CanReadAllGroupMessages = boolean;
+export type Command1 = string;
+export type Description2 = string;
+export type Commands = TgBotCommand[];
+export type Userpic = string | null;
 
 /**
  * Temporary class to pack several models into one schema; not used directly by frontend code
@@ -149,6 +161,7 @@ export type Photo = string | null;
 export interface BackendDataModels {
   bot_config: BotConfig;
   tg_group_chat: TgGroupChat;
+  tg_bot_user: TgBotUser;
   [k: string]: unknown;
 }
 export interface BotConfig {
@@ -164,9 +177,9 @@ export interface UserFlowConfig {
   [k: string]: unknown;
 }
 export interface UserFlowEntryPointConfig {
-  command: CommandEntryPoint | null;
-  catch_all: CatchAllEntryPoint | null;
-  regex: RegexMatchEntryPoint | null;
+  command?: CommandEntryPoint | null;
+  catch_all?: CatchAllEntryPoint | null;
+  regex?: RegexMatchEntryPoint | null;
   [k: string]: unknown;
 }
 /**
@@ -176,8 +189,8 @@ export interface CommandEntryPoint {
   entrypoint_id: EntrypointId;
   command: Command;
   next_block_id: NextBlockId;
-  scope: CommandScope & string;
-  short_description: ShortDescription;
+  scope?: CommandScope & string;
+  short_description?: ShortDescription;
   [k: string]: unknown;
 }
 /**
@@ -198,11 +211,11 @@ export interface RegexMatchEntryPoint {
   [k: string]: unknown;
 }
 export interface UserFlowBlockConfig {
-  content: ContentBlock | null;
-  human_operator: HumanOperatorBlock | null;
-  menu: MenuBlock | null;
-  form: FormBlock | null;
-  language_select: LanguageSelectBlock | null;
+  content?: ContentBlock | null;
+  human_operator?: HumanOperatorBlock | null;
+  menu?: MenuBlock | null;
+  form?: FormBlock | null;
+  language_select?: LanguageSelectBlock | null;
   [k: string]: unknown;
 }
 /**
@@ -279,9 +292,9 @@ export interface Menu {
 }
 export interface MenuItem {
   label: Label;
-  submenu: Menu | null;
-  next_block_id: NextBlockId4;
-  link_url: LinkUrl;
+  submenu?: Menu | null;
+  next_block_id?: NextBlockId4;
+  link_url?: LinkUrl;
   [k: string]: unknown;
 }
 export interface MenuConfig {
@@ -319,8 +332,8 @@ export interface PlainTextFormFieldConfig {
 }
 export interface FormFieldResultFormattingOpts {
   descr: Descr;
-  is_multiline: IsMultiline;
-  value_formatter: ValueFormatter;
+  is_multiline?: IsMultiline;
+  value_formatter?: ValueFormatter;
   [k: string]: unknown;
 }
 export interface NextFieldMapping {
@@ -381,5 +394,26 @@ export interface TgGroupChat {
   username: Username;
   is_forum: IsForum;
   photo: Photo;
+  [k: string]: unknown;
+}
+/**
+ * Info on telegram bot, combining info from several Bot API endpoints
+ */
+export interface TgBotUser {
+  id: Id2;
+  first_name: FirstName;
+  last_name: LastName;
+  username: Username1;
+  description: Description1;
+  short_description: ShortDescription1;
+  can_join_groups: CanJoinGroups;
+  can_read_all_group_messages: CanReadAllGroupMessages;
+  commands: Commands;
+  userpic: Userpic;
+  [k: string]: unknown;
+}
+export interface TgBotCommand {
+  command: Command1;
+  description: Description2;
   [k: string]: unknown;
 }

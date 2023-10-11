@@ -29,6 +29,11 @@ class TgGroupChat(BaseModel):
     photo: Optional[str]  # if set, base64-encoded chat photo
 
 
+class TgBotCommand(BaseModel):
+    command: str
+    description: str
+
+
 class TgBotUser(BaseModel):
     """Info on telegram bot, combining info from several Bot API endpoints"""
 
@@ -46,6 +51,6 @@ class TgBotUser(BaseModel):
     can_join_groups: bool
     can_read_all_group_messages: bool
 
-    commands: list[tg.BotCommand]
+    commands: list[TgBotCommand]
 
     userpic: Optional[str]  # base64-encoded bot's avatar photo preview

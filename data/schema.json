@@ -94,9 +94,7 @@
       "required": [
         "entrypoint_id",
         "command",
-        "next_block_id",
-        "scope",
-        "short_description"
+        "next_block_id"
       ],
       "title": "CommandEntryPoint",
       "type": "object"
@@ -390,9 +388,7 @@
         }
       },
       "required": [
-        "descr",
-        "is_multiline",
-        "value_formatter"
+        "descr"
       ],
       "title": "FormFieldResultFormattingOpts",
       "type": "object"
@@ -731,10 +727,7 @@
         }
       },
       "required": [
-        "label",
-        "submenu",
-        "next_block_id",
-        "link_url"
+        "label"
       ],
       "title": "MenuItem",
       "type": "object"
@@ -946,6 +939,114 @@
       "title": "RegexMatchEntryPoint",
       "type": "object"
     },
+    "TgBotCommand": {
+      "properties": {
+        "command": {
+          "title": "Command",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        }
+      },
+      "required": [
+        "command",
+        "description"
+      ],
+      "title": "TgBotCommand",
+      "type": "object"
+    },
+    "TgBotUser": {
+      "description": "Info on telegram bot, combining info from several Bot API endpoints",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "integer"
+        },
+        "first_name": {
+          "title": "First Name",
+          "type": "string"
+        },
+        "last_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Last Name"
+        },
+        "username": {
+          "title": "Username",
+          "type": "string"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Description"
+        },
+        "short_description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Short Description"
+        },
+        "can_join_groups": {
+          "title": "Can Join Groups",
+          "type": "boolean"
+        },
+        "can_read_all_group_messages": {
+          "title": "Can Read All Group Messages",
+          "type": "boolean"
+        },
+        "commands": {
+          "items": {
+            "$ref": "#/$defs/TgBotCommand"
+          },
+          "title": "Commands",
+          "type": "array"
+        },
+        "userpic": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Userpic"
+        }
+      },
+      "required": [
+        "id",
+        "first_name",
+        "last_name",
+        "username",
+        "description",
+        "short_description",
+        "can_join_groups",
+        "can_read_all_group_messages",
+        "commands",
+        "userpic"
+      ],
+      "title": "TgBotUser",
+      "type": "object"
+    },
     "TgGroupChat": {
       "description": "pydantic projection of https://core.telegram.org/bots/api#chat",
       "properties": {
@@ -1084,13 +1185,6 @@
           "default": null
         }
       },
-      "required": [
-        "content",
-        "human_operator",
-        "menu",
-        "form",
-        "language_select"
-      ],
       "title": "UserFlowBlockConfig",
       "type": "object"
     },
@@ -1162,11 +1256,6 @@
           "default": null
         }
       },
-      "required": [
-        "command",
-        "catch_all",
-        "regex"
-      ],
       "title": "UserFlowEntryPointConfig",
       "type": "object"
     },
@@ -1196,11 +1285,15 @@
     },
     "tg_group_chat": {
       "$ref": "#/$defs/TgGroupChat"
+    },
+    "tg_bot_user": {
+      "$ref": "#/$defs/TgBotUser"
     }
   },
   "required": [
     "bot_config",
-    "tg_group_chat"
+    "tg_group_chat",
+    "tg_bot_user"
   ],
   "title": "BackendDataModels",
   "type": "object"

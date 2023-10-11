@@ -20,7 +20,7 @@ from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.stores.generic import KeyDictStore, KeySetStore
 from telebot_components.utils.secrets import SecretStore
 
-from telebot_constructor.app_models import BotTokenPayload, TgBotUser
+from telebot_constructor.app_models import BotTokenPayload, TgBotCommand, TgBotUser
 from telebot_constructor.auth import Auth
 from telebot_constructor.bot_config import BotConfig
 from telebot_constructor.build_time_config import BASE_PATH
@@ -428,7 +428,7 @@ class TelebotConstructorApp:
         ##################################################################################
         # endpoints for syncing constructor state with telegram
         @routes.get("/api/bot-user/{bot_name}")
-        async def get_bot_account(request: web.Request) -> web.Response:
+        async def get_bot_user(request: web.Request) -> web.Response:
             """
             ---
             description: Retrieve info about bot account (username, name, settings, ...)
@@ -452,7 +452,8 @@ class TelebotConstructorApp:
                     bot_short_description = await bot.get_my_short_description()
             async for attempt in rate_limit_retry():
                 with attempt:
-                    bot_commands = await bot.get_my_commands(scope=None, language_code=None)
+                    bot_commands_raw = await bot.get_my_commands(scope=None, language_code=None)
+                    bot_commands = [TgBotCommand(**bc.to_dict()) for bc in bot_commands_raw]
             async for attempt in rate_limit_retry():
                 with attempt:
                     bot_user_profile_photos = await bot.get_user_profile_photos(bot_user.id, limit=1)
@@ -478,7 +479,7 @@ class TelebotConstructorApp:
                     commands=bot_commands,
                     can_join_groups=bot_user.can_join_groups or False,
                     can_read_all_group_messages=bot_user.can_read_all_group_messages or False,
-                ).model_dump_json()
+                ).model_dump(),
             )
 
         @routes.post("/api/start-group-chat-discovery/{bot_name}")
