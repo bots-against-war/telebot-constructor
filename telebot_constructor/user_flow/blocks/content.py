@@ -65,7 +65,9 @@ class ContentBlock(UserFlowBlock):
     # - splitting long text content into smaller content chunks to respect telegram's restrictions
 
     @classmethod
-    def simple_text(cls, block_id: str, message_text: str, next_block_id: Optional[UserFlowBlockId]) -> "ContentBlock":
+    def simple_text(
+        cls, block_id: str, message_text: LocalizableText, next_block_id: Optional[UserFlowBlockId]
+    ) -> "ContentBlock":
         """For use in tests"""
         return ContentBlock(
             block_id=block_id,

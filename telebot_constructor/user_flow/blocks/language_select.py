@@ -33,7 +33,7 @@ class LanguageSelectBlock(UserFlowBlock):
     supported_languages: list[Language]
     # if not selected AND user's Telegram interface language is not supported, use this
     default_language: Language
-    next_block_id: Optional[UserFlowBlockId]
+    language_selected_next_block_id: Optional[UserFlowBlockId]
 
     def model_post_init(self, __context: Any) -> None:
         self._setup_result: Optional[SetupResult] = None
@@ -69,9 +69,9 @@ class LanguageSelectBlock(UserFlowBlock):
         )
 
         async def on_language_change(lang_change_context: LanguageChangeContext) -> None:
-            if self.next_block_id is not None:
+            if self.language_selected_next_block_id is not None:
                 await context.enter_block(
-                    self.next_block_id,
+                    self.language_selected_next_block_id,
                     UserFlowContext.from_setup_context(
                         setup_ctx=context,
                         chat=None,

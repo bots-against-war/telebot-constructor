@@ -17,6 +17,10 @@ from telebot_constructor.user_flow.blocks.human_operator import (
     MessagesToAdmin,
     MessagesToUser,
 )
+from telebot_constructor.user_flow.blocks.language_select import (
+    LanguageSelectBlock,
+    LanguageSelectionMenuConfig,
+)
 from telebot_constructor.user_flow.blocks.menu import (
     Menu,
     MenuBlock,
@@ -27,6 +31,7 @@ from telebot_constructor.user_flow.blocks.menu import (
 from telebot_constructor.user_flow.entrypoints.catch_all import CatchAllEntryPoint
 from telebot_constructor.user_flow.entrypoints.command import CommandEntryPoint
 from telebot_constructor.user_flow.entrypoints.regex_match import RegexMatchEntryPoint
+from telebot_constructor.utils.pydantic import Language
 from tests.utils import (
     assert_method_call_kwargs_include,
     dummy_secret_store,
@@ -518,7 +523,7 @@ async def test_regex_match_entrypoint() -> None:
 
 
 async def test_forbid_multiple_catch_all() -> None:
-    with pytest.raises(ValidationError, match=".*More than one catch-all blocks/entrypoints"):
+    with pytest.raises(ValidationError, match=".*At most one catch-all block/entrypoint is allowed, but found:"):
         BotConfig(
             token_secret_name="foobar",
             display_name="barfoo",
@@ -536,7 +541,7 @@ async def test_forbid_multiple_catch_all() -> None:
             ),
         )
 
-    with pytest.raises(ValidationError, match=".*More than one catch-all blocks/entrypoints"):
+    with pytest.raises(ValidationError, match=".*At most one catch-all block/entrypoint is allowed, but found:"):
         BotConfig(
             token_secret_name="foobar",
             display_name="barfoo",
@@ -571,3 +576,110 @@ async def test_forbid_multiple_catch_all() -> None:
                 node_display_coords={},
             ),
         )
+
+
+async def test_multilang_user_flow() -> None:
+    bot_config = BotConfig(
+        token_secret_name="token",
+        display_name="Test bot",
+        user_flow_config=UserFlowConfig(
+            entrypoints=[
+                UserFlowEntryPointConfig(
+                    command=CommandEntryPoint(
+                        entrypoint_id="start-command",
+                        command="start",
+                        next_block_id="hello-message",
+                    ),
+                ),
+                UserFlowEntryPointConfig(
+                    command=CommandEntryPoint(
+                        entrypoint_id="language-command",
+                        command="language",
+                        next_block_id="language-select",
+                    ),
+                ),
+            ],
+            blocks=[
+                UserFlowBlockConfig(
+                    content=ContentBlock.simple_text(
+                        block_id="hello-message",
+                        message_text={Language.lookup("en"): "hello user", Language.lookup("ru"): "привет юзер"},
+                        next_block_id=None,
+                    ),
+                ),
+                UserFlowBlockConfig(
+                    content=ContentBlock.simple_text(
+                        block_id="language-selected-message",
+                        message_text={
+                            Language.lookup("en"): "thanks for selecting the english language",
+                            Language.lookup("ru"): "спасибо что выбрали русский язык",
+                        },
+                        next_block_id=None,
+                    ),
+                ),
+                UserFlowBlockConfig(
+                    language_select=LanguageSelectBlock(
+                        block_id="language-select",
+                        menu_config=LanguageSelectionMenuConfig(
+                            propmt={Language.lookup("en"): "choose language", Language.lookup("ru"): "выберите язык"},
+                            is_blocking=True,
+                            emoji_buttons=True,
+                        ),
+                        supported_languages=[Language.lookup("en"), Language.lookup("ru")],
+                        default_language=Language.lookup("en"),
+                        language_selected_next_block_id="language-selected-message",
+                    )
+                ),
+            ],
+            node_display_coords={},
+        ),
+    )
+
+    redis = RedisEmulation()
+    secret_store = dummy_secret_store(redis)
+    username = "bot-admin-1312"
+    await secret_store.save_secret(secret_name="token", secret_value="mock-token", owner_id=username)
+    bot_runner = await construct_bot(
+        username=username,
+        bot_name="simple-user-flow-bot",
+        bot_config=bot_config,
+        secret_store=secret_store,
+        redis=redis,
+        _bot_factory=MockedAsyncTeleBot,
+    )
+    assert not bot_runner.background_jobs
+    assert not bot_runner.aux_endpoints
+
+    bot = bot_runner.bot
+    assert isinstance(bot, MockedAsyncTeleBot)
+    bot.method_calls.clear()
+
+    # using start command to see hello in the default language
+    await bot.process_new_updates([tg_update_message_to_bot(161, first_name="User", text="/start")])
+    assert len(bot.method_calls) == 1
+    assert_method_call_kwargs_include(bot.method_calls["send_message"], [{"text": "hello user", "chat_id": 161}])
+    bot.method_calls.clear()
+
+    # using language selection menu
+    await bot.process_new_updates([tg_update_message_to_bot(161, first_name="User", text="/language")])
+    assert len(bot.method_calls) == 1
+    assert_method_call_kwargs_include(bot.method_calls["send_message"], [{"chat_id": 161, "text": "choose language"}])
+    assert bot.method_calls["send_message"][0].full_kwargs["reply_markup"].to_dict() == {
+        "keyboard": [[{"text": "🇬🇧"}], [{"text": "🇷🇺"}]],
+        "one_time_keyboard": True,
+        "resize_keyboard": True,
+    }
+    bot.method_calls.clear()
+
+    await bot.process_new_updates([tg_update_message_to_bot(161, first_name="User", text="🇷🇺")])
+    assert len(bot.method_calls) == 1
+    assert_method_call_kwargs_include(
+        bot.method_calls["send_message"], [{"chat_id": 161, "text": "спасибо что выбрали русский язык"}]
+    )
+    bot.method_calls.clear()
+
+    # using start command again, now in the selected language
+    await bot.process_new_updates([tg_update_message_to_bot(161, first_name="User", text="/start")])
+    assert len(bot.method_calls) == 1
+    assert_method_call_kwargs_include(bot.method_calls["send_message"], [{"text": "привет юзер", "chat_id": 161}])
+    bot.method_calls.clear()

@@ -13,6 +13,7 @@ from telebot_components.stores.generic import KeyValueStore
 from telebot_constructor.user_flow.blocks.base import UserFlowBlock
 from telebot_constructor.user_flow.blocks.language_select import LanguageSelectBlock
 from telebot_constructor.user_flow.entrypoints.base import UserFlowEntryPoint
+from telebot_constructor.user_flow.entrypoints.command import CommandEntryPoint
 from telebot_constructor.user_flow.types import (
     SetupResult,
     UserFlowBlockId,
@@ -42,7 +43,19 @@ class UserFlow:
         ]
         if len(catch_all_entities) > 1:
             raise ValueError(
-                f"More than one catch-all blocks/entrypoints: {', '.join(str(e) for e in catch_all_entities)}"
+                "At most one catch-all block/entrypoint is allowed, but found: "
+                + f"{', '.join(str(e) for e in catch_all_entities)}"
+            )
+
+        command_entrypoints = [
+            entrypoint for entrypoint in self.entrypoints if isinstance(entrypoint, CommandEntryPoint)
+        ]
+        commands_counter = collections.Counter(e.command for e in command_entrypoints)
+        repeating_commands_counter = {cmd: count for cmd, count in commands_counter.items() if count > 1}
+        if repeating_commands_counter:
+            raise ValueError(
+                "All commands must be unique, but there are duplicates: "
+                + f"{', '.join(('/' + cmd) for cmd in repeating_commands_counter.keys())}"
             )
 
         language_select_blocks = [block for block in self.blocks if isinstance(block, LanguageSelectBlock)]

@@ -36,6 +36,8 @@ class ExactlyOneNonNullFieldModel(BaseModel):
 
 
 def _parse_language_data(code: Any) -> LanguageData:
+    if isinstance(code, LanguageData):
+        return code
     if not isinstance(code, str):
         raise ValueError("language code is expected to be a string containing IETF language tag")
     try:
