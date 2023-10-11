@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from pydantic._internal._core_utils import CoreSchemaOrField
 from pydantic.json_schema import GenerateJsonSchema, JsonSchemaValue
 
-from telebot_constructor.app_models import TgGroupChat
+from telebot_constructor.app_models import TgBotUser, TgGroupChat
 from telebot_constructor.bot_config import BotConfig
 
 if __name__ == "__main__":
@@ -32,6 +32,7 @@ if __name__ == "__main__":
 
         bot_config: BotConfig
         tg_group_chat: TgGroupChat
+        tg_bot_user: TgBotUser
 
     current_schema = BackendDataModels.model_json_schema(
         mode="serialization",

@@ -12,6 +12,7 @@ import telebot.api
 from aiohttp import web
 from aiohttp_swagger import setup_swagger  # type: ignore
 from telebot import AsyncTeleBot
+from telebot import types as tg
 from telebot.runner import BotRunner
 from telebot.util import create_error_logging_task, log_error
 from telebot.webhook import WebhookApp
@@ -19,7 +20,7 @@ from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.stores.generic import KeyDictStore, KeySetStore
 from telebot_components.utils.secrets import SecretStore
 
-from telebot_constructor.app_models import BotTokenPayload
+from telebot_constructor.app_models import BotTokenPayload, TgBotUser
 from telebot_constructor.auth import Auth
 from telebot_constructor.bot_config import BotConfig
 from telebot_constructor.build_time_config import BASE_PATH
@@ -33,6 +34,12 @@ from telebot_constructor.runners import (
     WebhookAppConstructedBotRunner,
 )
 from telebot_constructor.static import static_file_content
+from telebot_constructor.telegram_files_downloader import (
+    InmemoryCacheTelegramFilesDownloader,
+    TelegramFilesDownloader,
+)
+from telebot_constructor.utils.pydantic import Language
+from telebot_constructor.utils.rate_limit_retry import rate_limit_retry
 
 logger = logging.getLogger(__name__)
 
@@ -53,13 +60,18 @@ class TelebotConstructorApp:
         auth: Auth,
         secret_store: SecretStore,
         static_files_dir_override: Optional[Path] = None,
+        telegram_files_downloader: Optional[TelegramFilesDownloader] = None,
     ) -> None:
         self.auth = auth
         self.secret_store = secret_store
         self.static_files_dir = static_files_dir_override or Path(__file__).parent / "static"
-        self._runner: Optional[ConstructedBotRunner] = None
-        self.redis = redis
         logger.info(f"Will serve static frontend files from {self.static_files_dir.absolute()}")
+
+        self.redis = redis
+        self.telegram_files_downloader = telegram_files_downloader or InmemoryCacheTelegramFilesDownloader()
+
+        # set during on of the setup/run methods to a concrete subclass
+        self._runner: Optional[ConstructedBotRunner] = None
 
         # username -> {bot name -> bot config}
         self.bot_config_store = KeyDictStore[BotConfig](
@@ -85,7 +97,10 @@ class TelebotConstructorApp:
             expiration_time=None,
         )
 
-        self.group_chat_discovery_handler = GroupChatDiscoveryHandler(redis=redis)
+        self.group_chat_discovery_handler = GroupChatDiscoveryHandler(
+            redis=redis,
+            telegram_files_downloader=self.telegram_files_downloader,
+        )
 
     @property
     def runner(self) -> ConstructedBotRunner:
@@ -412,7 +427,7 @@ class TelebotConstructorApp:
 
         ##################################################################################
         # endpoints for syncing constructor state with telegram
-        @routes.get("/api/bot-account/{bot_name}")
+        @routes.get("/api/bot-user/{bot_name}")
         async def get_bot_account(request: web.Request) -> web.Response:
             """
             ---
@@ -425,13 +440,46 @@ class TelebotConstructorApp:
             """
             username = await self.authenticate(request)
             bot_name = self.parse_bot_name(request)
-            bot = await self._make_raw_bot(
-                username,
-                bot_name,
+            bot = await self._make_raw_bot(username, bot_name)
+            async for attempt in rate_limit_retry():
+                with attempt:
+                    bot_user = await bot.get_me()
+            async for attempt in rate_limit_retry():
+                with attempt:
+                    bot_description = await bot.get_my_description()
+            async for attempt in rate_limit_retry():
+                with attempt:
+                    bot_short_description = await bot.get_my_short_description()
+            async for attempt in rate_limit_retry():
+                with attempt:
+                    bot_commands = await bot.get_my_commands(scope=None, language_code=None)
+            async for attempt in rate_limit_retry():
+                with attempt:
+                    bot_user_profile_photos = await bot.get_user_profile_photos(bot_user.id, limit=1)
+            bot_userpic_b64: Optional[str] = None
+            if bot_user_profile_photos.photos:
+                userpic_photos: list[list[tg.PhotoSize]] = bot_user_profile_photos.photos  # type: ignore
+                bot_userpic_b64 = await self.telegram_files_downloader.get_base64_file(
+                    bot=bot,
+                    file_id=min(userpic_photos[0], key=lambda photo_size: photo_size.width).file_id,
+                )
+
+            return web.json_response(
+                TgBotUser(
+                    id=bot_user.id,
+                    first_name=bot_user.first_name,
+                    last_name=bot_user.last_name,
+                    username=bot_user.username or "",
+                    description=bot_description.description if bot_description is not None else None,
+                    short_description=(
+                        bot_short_description.short_description if bot_short_description is not None else None
+                    ),
+                    userpic=bot_userpic_b64,
+                    commands=bot_commands,
+                    can_join_groups=bot_user.can_join_groups or False,
+                    can_read_all_group_messages=bot_user.can_read_all_group_messages or False,
+                ).model_dump_json()
             )
-            await bot.get_me()
-            # TODO call several other methods to get bot's description and stuff and pack it into our custom obj
-            return web.Response()
 
         @routes.post("/api/start-group-chat-discovery/{bot_name}")
         async def start_discovering_group_chats(request: web.Request) -> web.Response:
@@ -557,6 +605,20 @@ class TelebotConstructorApp:
                 # falling back to index page to support client-side routing
                 return await index(request)
 
+        @routes.get("/api/all-languages")
+        async def all_languages(request: web.Request) -> web.Response:
+            _ = await self.authenticate(request)
+            return web.json_response(
+                data=[
+                    {
+                        "code": lang.code,
+                        "name": lang.name,
+                        "emoji": lang.emoji,
+                    }
+                    for lang in Language.all().values()
+                ]
+            )
+
         ##################################################################################
 
         app.add_routes(routes)
@@ -612,13 +674,17 @@ class TelebotConstructorApp:
 
         self._start_stored_bots_task = create_error_logging_task(_start_stored_bots(), name="start stored bots")
 
+    async def pre_web_app_setup(self) -> None:
+        self.start_stored_bots_in_background()
+        await self.telegram_files_downloader.setup()
+
     # public methods to run constructor in different scenarios
 
     async def run_polling(self, port: int) -> None:
         """For standalone run"""
         logger.info("Running telebot constructor w/ polling")
         self._runner = PollingConstructedBotRunner()
-        self.start_stored_bots_in_background()
+        await self.pre_web_app_setup()
         aiohttp_app = await self.create_constructor_web_app()
         aiohttp_runner = web.AppRunner(aiohttp_app)
         await aiohttp_runner.setup()
@@ -638,6 +704,6 @@ class TelebotConstructorApp:
     async def setup_on_webhook_app(self, webhook_app: WebhookApp) -> None:
         logger.info(f"Setting up telebot constructor web app on webhook app with base URL {webhook_app.base_url!r}")
         self._runner = WebhookAppConstructedBotRunner(webhook_app)
-        self.start_stored_bots_in_background()
+        await self.pre_web_app_setup()
         app = await self.create_constructor_web_app()
         webhook_app.aiohttp_app.add_subapp(BASE_PATH, app)
