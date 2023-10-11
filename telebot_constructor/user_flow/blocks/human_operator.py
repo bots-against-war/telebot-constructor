@@ -19,13 +19,14 @@ from telebot_constructor.user_flow.types import (
     UserFlowContext,
     UserFlowSetupContext,
 )
+from telebot_constructor.utils.pydantic import LocalizableText
 
 logger = logging.getLogger(__name__)
 
 
 class MessagesToUser(BaseModel):
-    forwarded_to_admin_ok: str
-    throttling: str
+    forwarded_to_admin_ok: LocalizableText
+    throttling: LocalizableText
 
 
 class MessagesToAdmin(BaseModel):
@@ -114,6 +115,7 @@ class HumanOperatorBlock(UserFlowBlock):
                 deleted_message_ok=self.feedback_handler_config.messages_to_admin.deleted_message_ok,
             ),
             banned_users_store=context.banned_users_store,
+            language_store=context.language_store,
         )
 
         await feedback_handler.setup(context.bot)

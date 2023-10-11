@@ -248,7 +248,7 @@ class TelebotConstructorApp:
         # bot configs CRUD
 
         @routes.post("/api/config/{bot_name}")
-        async def upsert_new_bot_config(request: web.Request) -> web.Response:
+        async def upsert_bot_config(request: web.Request) -> web.Response:
             """
             ---
             description: Create or update bot configuration
