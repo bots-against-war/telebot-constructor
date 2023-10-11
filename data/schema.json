@@ -194,8 +194,18 @@
     "ContentText": {
       "properties": {
         "text": {
-          "title": "Text",
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            }
+          ],
+          "title": "Text"
         },
         "markup": {
           "$ref": "#/$defs/ContentTextMarkup"
@@ -390,28 +400,88 @@
     "FormMessages": {
       "properties": {
         "form_start": {
-          "title": "Form Start",
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            }
+          ],
+          "title": "Form Start"
         },
         "field_is_skippable": {
-          "title": "Field Is Skippable",
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            }
+          ],
+          "title": "Field Is Skippable"
         },
         "field_is_not_skippable": {
-          "title": "Field Is Not Skippable",
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            }
+          ],
+          "title": "Field Is Not Skippable"
         },
         "please_enter_correct_value": {
-          "title": "Please Enter Correct Value",
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            }
+          ],
+          "title": "Please Enter Correct Value"
         },
         "unsupported_command": {
-          "title": "Unsupported Command",
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            }
+          ],
+          "title": "Unsupported Command"
         },
         "cancelling_because_of_error": {
-          "title": "Cancelling Because Of Error",
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            }
+          ],
+          "title": "Cancelling Because Of Error"
         }
       },
       "required": [
@@ -448,11 +518,95 @@
       "title": "HumanOperatorBlock",
       "type": "object"
     },
+    "LanguageSelectBlock": {
+      "description": "Language selection menu block. If specified, all texts in the containing user flow must be multilang\nand be translated to all of the supported languages. Only one such block is permitted per user flow.",
+      "properties": {
+        "block_id": {
+          "title": "Block Id",
+          "type": "string"
+        },
+        "menu_config": {
+          "$ref": "#/$defs/LanguageSelectionMenuConfig"
+        },
+        "supported_languages": {
+          "items": {
+            "format": "IETF-language-tag",
+            "type": "string"
+          },
+          "title": "Supported Languages",
+          "type": "array"
+        },
+        "default_language": {
+          "format": "IETF-language-tag",
+          "type": "string"
+        },
+        "language_selected_next_block_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Language Selected Next Block Id"
+        }
+      },
+      "required": [
+        "block_id",
+        "menu_config",
+        "supported_languages",
+        "default_language",
+        "language_selected_next_block_id"
+      ],
+      "title": "LanguageSelectBlock",
+      "type": "object"
+    },
+    "LanguageSelectionMenuConfig": {
+      "properties": {
+        "propmt": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Propmt",
+          "type": "object"
+        },
+        "is_blocking": {
+          "title": "Is Blocking",
+          "type": "boolean"
+        },
+        "emoji_buttons": {
+          "title": "Emoji Buttons",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "propmt",
+        "is_blocking",
+        "emoji_buttons"
+      ],
+      "title": "LanguageSelectionMenuConfig",
+      "type": "object"
+    },
     "Menu": {
       "properties": {
         "text": {
-          "title": "Text",
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            }
+          ],
+          "title": "Text"
+        },
+        "no_back_button": {
+          "title": "No Back Button",
+          "type": "boolean"
         },
         "items": {
           "items": {
@@ -464,6 +618,7 @@
       },
       "required": [
         "text",
+        "no_back_button",
         "items"
       ],
       "title": "Menu",
@@ -503,37 +658,22 @@
                 "type": "string"
               },
               "type": "object"
-            },
-            {
-              "type": "null"
             }
           ],
           "title": "Back Label"
         },
+        "mechanism": {
+          "$ref": "#/$defs/MenuMechanism"
+        },
         "lock_after_termination": {
-          "default": false,
           "title": "Lock After Termination",
           "type": "boolean"
-        },
-        "is_text_html": {
-          "default": false,
-          "title": "Is Text Html",
-          "type": "boolean"
-        },
-        "mechanism": {
-          "allOf": [
-            {
-              "$ref": "#/$defs/MenuMechanism"
-            }
-          ],
-          "default": "inline_buttons"
         }
       },
       "required": [
         "back_label",
-        "lock_after_termination",
-        "is_text_html",
-        "mechanism"
+        "mechanism",
+        "lock_after_termination"
       ],
       "title": "MenuConfig",
       "type": "object"
@@ -541,8 +681,18 @@
     "MenuItem": {
       "properties": {
         "label": {
-          "title": "Label",
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            }
+          ],
+          "title": "Label"
         },
         "submenu": {
           "anyOf": [
@@ -623,12 +773,32 @@
     "MessagesToUser": {
       "properties": {
         "forwarded_to_admin_ok": {
-          "title": "Forwarded To Admin Ok",
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            }
+          ],
+          "title": "Forwarded To Admin Ok"
         },
         "throttling": {
-          "title": "Throttling",
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            }
+          ],
+          "title": "Throttling"
         }
       },
       "required": [
@@ -685,8 +855,18 @@
           "type": "string"
         },
         "propmt": {
-          "title": "Propmt",
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            }
+          ],
+          "title": "Propmt"
         },
         "is_required": {
           "title": "Is Required",
@@ -710,8 +890,18 @@
           "title": "Next Field"
         },
         "empty_text_error_msg": {
-          "title": "Empty Text Error Msg",
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            }
+          ],
+          "title": "Empty Text Error Msg"
         }
       },
       "required": [
@@ -881,13 +1071,25 @@
             }
           ],
           "default": null
+        },
+        "language_select": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LanguageSelectBlock"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         }
       },
       "required": [
         "content",
         "human_operator",
         "menu",
-        "form"
+        "form",
+        "language_select"
       ],
       "title": "UserFlowBlockConfig",
       "type": "object"
