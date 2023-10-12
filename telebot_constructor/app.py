@@ -12,7 +12,6 @@ import telebot.api
 from aiohttp import web
 from aiohttp_swagger import setup_swagger  # type: ignore
 from telebot import AsyncTeleBot
-from telebot import types as tg
 from telebot.runner import BotRunner
 from telebot.util import create_error_logging_task, log_error
 from telebot.webhook import WebhookApp
@@ -20,7 +19,7 @@ from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.stores.generic import KeyDictStore, KeySetStore
 from telebot_components.utils.secrets import SecretStore
 
-from telebot_constructor.app_models import BotTokenPayload, TgBotCommand, TgBotUser
+from telebot_constructor.app_models import BotTokenPayload, TgBotUser, TgBotUserUpdate
 from telebot_constructor.auth import Auth
 from telebot_constructor.bot_config import BotConfig
 from telebot_constructor.build_time_config import BASE_PATH
@@ -39,7 +38,6 @@ from telebot_constructor.telegram_files_downloader import (
     TelegramFilesDownloader,
 )
 from telebot_constructor.utils.pydantic import Language
-from telebot_constructor.utils.rate_limit_retry import rate_limit_retry
 
 logger = logging.getLogger(__name__)
 
@@ -436,51 +434,39 @@ class TelebotConstructorApp:
             - application/json
             responses:
                 "200":
-                    description: OK
+                    description: TgBotUser object
             """
             username = await self.authenticate(request)
             bot_name = self.parse_bot_name(request)
             bot = await self._make_raw_bot(username, bot_name)
-            async for attempt in rate_limit_retry():
-                with attempt:
-                    bot_user = await bot.get_me()
-            async for attempt in rate_limit_retry():
-                with attempt:
-                    bot_description = await bot.get_my_description()
-            async for attempt in rate_limit_retry():
-                with attempt:
-                    bot_short_description = await bot.get_my_short_description()
-            async for attempt in rate_limit_retry():
-                with attempt:
-                    bot_commands_raw = await bot.get_my_commands(scope=None, language_code=None)
-                    bot_commands = [TgBotCommand(**bc.to_dict()) for bc in bot_commands_raw]
-            async for attempt in rate_limit_retry():
-                with attempt:
-                    bot_user_profile_photos = await bot.get_user_profile_photos(bot_user.id, limit=1)
-            bot_userpic_b64: Optional[str] = None
-            if bot_user_profile_photos.photos:
-                userpic_photos: list[list[tg.PhotoSize]] = bot_user_profile_photos.photos  # type: ignore
-                bot_userpic_b64 = await self.telegram_files_downloader.get_base64_file(
-                    bot=bot,
-                    file_id=min(userpic_photos[0], key=lambda photo_size: photo_size.width).file_id,
-                )
+            try:
+                tg_bot_user = await TgBotUser.fetch(bot, telegram_files_downloader=self.telegram_files_downloader)
+                return web.json_response(tg_bot_user.model_dump())
+            except Exception:
+                logger.exception("Unexpected error retrieving tg bot user info")
+                raise web.HTTPInternalServerError(reason="Failed to retrieve bot user details")
 
-            return web.json_response(
-                TgBotUser(
-                    id=bot_user.id,
-                    first_name=bot_user.first_name,
-                    last_name=bot_user.last_name,
-                    username=bot_user.username or "",
-                    description=bot_description.description if bot_description is not None else None,
-                    short_description=(
-                        bot_short_description.short_description if bot_short_description is not None else None
-                    ),
-                    userpic=bot_userpic_b64,
-                    commands=bot_commands,
-                    can_join_groups=bot_user.can_join_groups or False,
-                    can_read_all_group_messages=bot_user.can_read_all_group_messages or False,
-                ).model_dump(),
-            )
+        @routes.put("/api/bot-user/{bot_name}")
+        async def update_bot_user(request: web.Request) -> web.Response:
+            """
+            ---
+            description: Update bot info (name, description and short descrition)
+            produces:
+            - application/json
+            responses:
+                "200":
+                    description: OK
+            """
+            username = await self.authenticate(request)
+            bot_name = self.parse_bot_name(request)
+            bot_user_update = await self.parse_pydantic_model(request, TgBotUserUpdate)
+            bot = await self._make_raw_bot(username, bot_name)
+            try:
+                await bot_user_update.save(bot, telegram_files_downloader=self.telegram_files_downloader)
+                return web.Response(reason="OK")
+            except Exception:
+                logger.exception("Error updating bot user info")
+                raise web.HTTPInternalServerError(reason="Failed to retrieve bot user details")
 
         @routes.post("/api/start-group-chat-discovery/{bot_name}")
         async def start_discovering_group_chats(request: web.Request) -> web.Response:
@@ -502,7 +488,7 @@ class TelebotConstructorApp:
                 await self.re_start_bot(
                     username,
                     bot_name,
-                    bot_config=BotConfig.for_temporary_bot(real_config=await self.load_bot_config(username, bot_name)),
+                    bot_config=(await self.load_bot_config(username, bot_name)).for_temporary_bot(),
                     is_temporary=True,
                 )
             await self.group_chat_discovery_handler.start_discovery(username, bot_name)
@@ -668,7 +654,7 @@ class TelebotConstructorApp:
                             ).remove(username, bot_name)
                             continue
                         if is_temporary:
-                            bot_config = BotConfig.for_temporary_bot(bot_config)
+                            bot_config = bot_config.for_temporary_bot()
                         bot_runner = await self._construct_bot(username, bot_name, bot_config)
                         await self.runner.start(username=username, bot_name=bot_name, bot_runner=bot_runner)
                         logger.info(f"Started {bot_name_full}")
