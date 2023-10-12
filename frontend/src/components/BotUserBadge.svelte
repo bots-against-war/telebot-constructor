@@ -9,6 +9,11 @@
   import DataBadge from "./internal/DataBadge.svelte";
   import EllipsisText from "./internal/EllipsisText.svelte";
   import DataBadgeLoader from "./internal/DataBadgeLoader.svelte";
+  import { getModalOpener, ok } from "../utils";
+  import EditBotUserModal from "./internal/EditBotUserModal.svelte";
+  import ReplaceBotUserModal from "./internal/ReplaceBotUserModal.svelte";
+
+  const openModal = getModalOpener();
 
   export let botName: string;
 
@@ -20,7 +25,7 @@
     <DataBadgeLoader />
   {:then botUserResult}
     {#if botUserResult.ok}
-      <Group override={{ justifyContent: "space-between" }} spacing="xs">
+      <Group position="apart" spacing="xs">
         <Group override={{ gap: "6px" }}>
           <Image
             src={botUserResult.data.userpic !== null ? `data:image/png;base64,${botUserResult.data.userpic}` : null}
@@ -42,12 +47,34 @@
           <ActionIcon root="a" href={`https://t.me/${botUserResult.data.username}`} external>
             <OpenInNewWindow />
           </ActionIcon>
-          <ActionIcon>
+          <ActionIcon
+            on:click={() => {
+              openModal(EditBotUserModal, {
+                botName: botName,
+                botUser: botUserResult.data,
+                // @ts-ignore
+                onBotUserUpdated: (newBotUser) =>
+                  (botUserPromise = new Promise((resolve, _) => resolve(ok(newBotUser)))),
+              });
+            }}
+          >
             <Gear />
           </ActionIcon>
-          <ActionIcon>
+          <!-- <ActionIcon
+            on:click={() => {
+              openModal(ReplaceBotUserModal, {
+                botName: botName,
+                // @ts-ignore
+                onNewTokenSecretName: (newTokenSecretName) => {
+                  // TODO:
+                  // - replace ONLY token secret name (e.g. via a dedicated endpoint), also set it in frontend code
+                  // - update UI so that the new bot info is loaded
+                },
+              });
+            }}
+          >
             <Update />
-          </ActionIcon>
+          </ActionIcon> -->
         </Group>
       </Group>
     {:else}

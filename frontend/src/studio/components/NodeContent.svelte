@@ -17,11 +17,11 @@
 
 <Group
   spacing="xs"
+  position="apart"
   override={{
     backgroundColor: headerColor,
     borderRadius: "10px 10px 0 0;",
     padding: "8px",
-    justifyContent: "space-between",
   }}
 >
   <h3>{name}</h3>
