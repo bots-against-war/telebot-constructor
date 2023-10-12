@@ -1,37 +1,38 @@
 <script lang="ts">
   import { Node } from "svelvet";
-  import type { ContentBlock } from "../../../api/types";
-  import NodeContent from "../../components/NodeContent.svelte";
-  import OutputAnchor from "../../components/OutputAnchor.svelte";
-  import InputAnchor from "../../components/InputAnchor.svelte";
+
   import type { SvelvetPosition } from "../../../types";
+  import type { LanguageSelectBlock } from "../../../api/types";
+  import { getModalOpener } from "../../../utils";
 
   import Modal from "./Modal.svelte";
-  import { getModalOpener } from "../../../utils";
+  import NodeContent from "../../components/NodeContent.svelte";
+  import InputAnchor from "../../components/InputAnchor.svelte";
   import { DEFAULT_NODE_PROPS } from "../nodeProps";
   import { HUE, headerColor } from "../colors";
+
   const openModal = getModalOpener();
 
-  export let config: ContentBlock;
+  export let config: LanguageSelectBlock;
   export let position: SvelvetPosition;
-  const setNewConfig = (newConfig: ContentBlock) => {
+
+  const setNewConfig = (newConfig: LanguageSelectBlock) => {
     config = newConfig;
+    console.log("HO config updated");
+    console.log(config);
   };
 </script>
 
 <Node id={config.block_id} bind:position {...DEFAULT_NODE_PROPS}>
   <InputAnchor />
   <NodeContent
-    name="Контент"
-    headerColor={headerColor(HUE.content)}
+    name="Выбор языка"
+    headerColor={headerColor(HUE.language_select)}
     on:delete
     on:edit={() =>
       openModal(Modal, {
         config,
         onConfigUpdate: setNewConfig,
       })}
-  >
-    <span>{config.contents[0].text?.text}</span>
-  </NodeContent>
-  <OutputAnchor bind:nextBlockId={config.next_block_id} />
+  ></NodeContent>
 </Node>

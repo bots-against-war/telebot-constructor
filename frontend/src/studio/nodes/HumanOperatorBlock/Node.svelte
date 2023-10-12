@@ -14,6 +14,7 @@
   import { PLACEHOLDER_GROUP_CHAT_ID } from "../defaultConfigs";
   import { DEFAULT_NODE_PROPS } from "../nodeProps";
   import ErrorBadge from "../../../components/ErrorBadge.svelte";
+  import { HUE, headerColor } from "../colors";
 
   const openModal = getModalOpener();
 
@@ -33,7 +34,7 @@
   <InputAnchor />
   <NodeContent
     name="Человек-оператор"
-    headerColor="#b1d162"
+    headerColor={headerColor(HUE.human_operator)}
     on:delete
     on:edit={() =>
       openModal(Modal, {

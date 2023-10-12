@@ -9,8 +9,6 @@ export function defaultCommandEntrypoint(id: string): UserFlowEntryPointConfig {
       short_description: "Some command",
       next_block_id: null,
     },
-    catch_all: null,
-    regex: null,
   };
 }
 
@@ -18,12 +16,9 @@ export function defaultContentBlockConfig(id: string): UserFlowBlockConfig {
   return {
     content: {
       block_id: id,
-      contents: [{ text: { text: "Hello, I am bot!", markup: "none" }, attachments: [] }],
+      contents: [{ text: { text: "Hello, I'm bot!", markup: "none" }, attachments: [] }],
       next_block_id: null,
     },
-    human_operator: null,
-    menu: null,
-    form: null,
   };
 }
 
@@ -31,7 +26,6 @@ export const PLACEHOLDER_GROUP_CHAT_ID = 0;
 
 export function defaultHumanOperatorBlockCofig(id: string): UserFlowBlockConfig {
   return {
-    content: null,
     human_operator: {
       block_id: id,
       catch_all: false,
@@ -55,7 +49,21 @@ export function defaultHumanOperatorBlockCofig(id: string): UserFlowBlockConfig 
         message_log_to_admin_chat: true,
       },
     },
-    menu: null,
-    form: null,
+  };
+}
+
+export function defaultLanguageSelectBlockConfig(id: string): UserFlowBlockConfig {
+  return {
+    language_select: {
+      block_id: id,
+      menu_config: {
+        propmt: { ru: "Выберите язык." },
+        is_blocking: false,
+        emoji_buttons: true,
+      },
+      supported_languages: ["ru"],
+      default_language: "ru",
+      language_selected_next_block_id: null,
+    },
   };
 }
