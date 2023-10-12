@@ -22,6 +22,7 @@
   import { navigate } from "svelte-routing";
   import { setContext } from "svelte";
   import BotUserBadge from "../components/BotUserBadge.svelte";
+  import EditableTitle from "./components/EditableTitle.svelte";
 
   export let botName: string;
   export let botConfig: BotConfig;
@@ -146,7 +147,7 @@
   <StudioControls position="upper-right">
     <Group noWrap spacing="xl">
       <Stack>
-        <Title>{botConfig.display_name}</Title>
+        <EditableTitle bind:title={botConfig.display_name} />
         <BotUserBadge {botName} />
       </Stack>
       <Stack spacing="xs">
