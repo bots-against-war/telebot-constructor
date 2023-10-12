@@ -143,17 +143,19 @@ export type Username = string | null;
 export type IsForum = boolean | null;
 export type Photo = string | null;
 export type Id2 = number;
-export type FirstName = string;
-export type LastName = string | null;
 export type Username1 = string;
-export type Description1 = string | null;
-export type ShortDescription1 = string | null;
+export type Name = string;
+export type Description1 = string;
+export type ShortDescription1 = string;
 export type CanJoinGroups = boolean;
 export type CanReadAllGroupMessages = boolean;
 export type Command1 = string;
 export type Description2 = string;
 export type Commands = TgBotCommand[];
 export type Userpic = string | null;
+export type Name1 = string;
+export type Description3 = string;
+export type ShortDescription2 = string;
 
 /**
  * Temporary class to pack several models into one schema; not used directly by frontend code
@@ -162,6 +164,7 @@ export interface BackendDataModels {
   bot_config: BotConfig;
   tg_group_chat: TgGroupChat;
   tg_bot_user: TgBotUser;
+  tg_bot_user_update: TgBotUserUpdate;
   [k: string]: unknown;
 }
 export interface BotConfig {
@@ -401,9 +404,8 @@ export interface TgGroupChat {
  */
 export interface TgBotUser {
   id: Id2;
-  first_name: FirstName;
-  last_name: LastName;
   username: Username1;
+  name: Name;
   description: Description1;
   short_description: ShortDescription1;
   can_join_groups: CanJoinGroups;
@@ -415,5 +417,11 @@ export interface TgBotUser {
 export interface TgBotCommand {
   command: Command1;
   description: Description2;
+  [k: string]: unknown;
+}
+export interface TgBotUserUpdate {
+  name: Name1;
+  description: Description3;
+  short_description: ShortDescription2;
   [k: string]: unknown;
 }

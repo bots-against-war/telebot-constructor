@@ -964,46 +964,21 @@
           "title": "Id",
           "type": "integer"
         },
-        "first_name": {
-          "title": "First Name",
-          "type": "string"
-        },
-        "last_name": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Last Name"
-        },
         "username": {
           "title": "Username",
           "type": "string"
         },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
         "description": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Description"
+          "title": "Description",
+          "type": "string"
         },
         "short_description": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Short Description"
+          "title": "Short Description",
+          "type": "string"
         },
         "can_join_groups": {
           "title": "Can Join Groups",
@@ -1034,9 +1009,8 @@
       },
       "required": [
         "id",
-        "first_name",
-        "last_name",
         "username",
+        "name",
         "description",
         "short_description",
         "can_join_groups",
@@ -1045,6 +1019,29 @@
         "userpic"
       ],
       "title": "TgBotUser",
+      "type": "object"
+    },
+    "TgBotUserUpdate": {
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "short_description": {
+          "title": "Short Description",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "description",
+        "short_description"
+      ],
+      "title": "TgBotUserUpdate",
       "type": "object"
     },
     "TgGroupChat": {
@@ -1288,12 +1285,16 @@
     },
     "tg_bot_user": {
       "$ref": "#/$defs/TgBotUser"
+    },
+    "tg_bot_user_update": {
+      "$ref": "#/$defs/TgBotUserUpdate"
     }
   },
   "required": [
     "bot_config",
     "tg_group_chat",
-    "tg_bot_user"
+    "tg_bot_user",
+    "tg_bot_user_update"
   ],
   "title": "BackendDataModels",
   "type": "object"
