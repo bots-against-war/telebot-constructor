@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Svelvet } from "svelvet";
-  import { Button, Group } from "@svelteuidev/core";
+  import { Button, Group, Text, Title, Stack } from "@svelteuidev/core";
 
   import CommandEntryPointNode from "./nodes/CommandEntryPoint/Node.svelte";
   import ContentBlockNode from "./nodes/ContentBlock/Node.svelte";
@@ -21,6 +21,7 @@
   import StudioControls from "./StudioControls.svelte";
   import { navigate } from "svelte-routing";
   import { setContext } from "svelte";
+  import BotUserBadge from "../components/BotUserBadge.svelte";
 
   export let botName: string;
   export let botConfig: BotConfig;
@@ -143,9 +144,15 @@
     </Group>
   </StudioControls>
   <StudioControls position="upper-right">
-    <Group direction="column" spacing="xs">
-      <Button variant="filled" fullSize loading={isSavingBotConfig} on:click={saveCurrentBotConfig}>Сохранить</Button>
-      <Button variant="outline" fullSize on:click={() => navigate(`/#${botName}`)}>Выйти</Button>
+    <Group noWrap spacing="xl">
+      <Stack>
+        <Title>{botConfig.display_name}</Title>
+        <BotUserBadge {botName} />
+      </Stack>
+      <Stack spacing="xs">
+        <Button variant="filled" fullSize loading={isSavingBotConfig} on:click={saveCurrentBotConfig}>Сохранить</Button>
+        <Button variant="outline" fullSize on:click={() => navigate(`/#${botName}`)}>Выйти</Button>
+      </Stack>
     </Group>
   </StudioControls>
 </div>

@@ -7,7 +7,6 @@
     ActionIcon,
     Stack,
     Space,
-    Alert,
     Loader,
     Button,
     Text,
@@ -21,6 +20,7 @@
   import type { TgGroupChat } from "../../api/types";
   import { ok, type Result } from "../../utils";
   import { getAvailableGroupChats, startGroupChatDiscovery, stopGroupChatDiscovery } from "../../api/groupChats";
+  import ErrorBadge from "../../components/ErrorBadge.svelte";
 
   export let label: string;
   export let botName: string;
@@ -94,9 +94,7 @@
               {/each}
             </Stack>
           {:else}
-            <Alert color="red" title="Не получилось загрузить доступные чаты">
-              {availableGroupChatsPromiseResult.error}
-            </Alert>
+            <ErrorBadge title="Не получилось загрузить доступные чаты" text={availableGroupChatsPromiseResult.error} />
           {/if}
         {/await}
         <Stack spacing="xs">

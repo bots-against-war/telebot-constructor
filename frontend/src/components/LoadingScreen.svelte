@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Centered from "./Centered.svelte";
+  import Centered from "./internal/Centered.svelte";
   import { Circle3 } from "svelte-loading-spinners";
 </script>
 

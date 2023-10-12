@@ -7,7 +7,7 @@
   <img src={bawLogo} alt="BAW logo" class="logo" />
   <div class="nav-buttons">
     <NavButton href="/">Управление</NavButton>
-    <NavButton href="/command">Команда</NavButton>
+    <NavButton href="/team">Команда</NavButton>
     <NavButton href="/actions">Действия</NavButton>
     <NavButton href="/security">Безопасность</NavButton>
   </div>

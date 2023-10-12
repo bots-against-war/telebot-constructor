@@ -564,6 +564,28 @@ class TelebotConstructorApp:
 
         ##################################################################################
         # static file routes
+        @routes.get("/api/all-languages")
+        async def all_languages(request: web.Request) -> web.Response:
+            """
+            ---
+            description: List all available languages with code, name and emoji, if exists
+            produces:
+            - application/json
+            responses:
+                "200":
+                    description: List of Language objects
+            """
+            await self.authenticate(request)
+            return web.json_response(
+                data=[
+                    {
+                        "code": lang.code,
+                        "name": lang.name,
+                        "emoji": lang.emoji,
+                    }
+                    for lang in Language.all().values()
+                ]
+            )
 
         @routes.get("/")
         async def index(request: web.Request) -> web.Response:
@@ -577,9 +599,9 @@ class TelebotConstructorApp:
 
         STATIC_FILE_GLOBS = ["assets/*"]
 
-        @routes.get("/{tail:.+}")
+        @routes.get("/{path:^(?!api/).*}")  # mathing all paths except those starting with /api prefix
         async def serve_static_file(request: web.Request) -> web.StreamResponse:
-            static_file_path = request.match_info.get("tail")
+            static_file_path = request.match_info.get("path")
             if static_file_path is None:
                 raise web.HTTPNotFound()
             if any(fnmatch.fnmatch(static_file_path, glob) for glob in STATIC_FILE_GLOBS):
@@ -592,25 +614,11 @@ class TelebotConstructorApp:
                 # falling back to index page to support client-side routing
                 return await index(request)
 
-        @routes.get("/api/all-languages")
-        async def all_languages(request: web.Request) -> web.Response:
-            _ = await self.authenticate(request)
-            return web.json_response(
-                data=[
-                    {
-                        "code": lang.code,
-                        "name": lang.name,
-                        "emoji": lang.emoji,
-                    }
-                    for lang in Language.all().values()
-                ]
-            )
-
         ##################################################################################
 
         app.add_routes(routes)
-        setup_swagger(app=app, swagger_url="/swagger")
         await self.auth.setup_routes(app)
+        setup_swagger(app=app, swagger_url="/api/swagger")
         setup_cors(app)
         setup_debugging(app)
         return app

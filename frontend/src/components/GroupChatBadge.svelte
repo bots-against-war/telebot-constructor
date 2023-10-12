@@ -3,12 +3,17 @@
     Caches stuff in localStorage for fewer backend calls.
 -->
 <script lang="ts">
-  import { Alert, Loader, Image, Group, Text, Space } from "@svelteuidev/core";
+  import { Loader, Image, Group, Text } from "@svelteuidev/core";
 
   import { getGroupChatData } from "../api/groupChats";
   import type { TgGroupChat } from "../api/types";
   import { ok, type Result } from "../utils";
-  import { ExclamationTriangle, QuestionMark } from "radix-icons-svelte";
+  import { QuestionMark } from "radix-icons-svelte";
+
+  import ErrorBadge from "../components/ErrorBadge.svelte";
+  import DataBadge from "./internal/DataBadge.svelte";
+  import EllipsisText from "./internal/EllipsisText.svelte";
+  import DataBadgeLoader from "./internal/DataBadgeLoader.svelte";
 
   export let botName: string;
   export let chatId: number | string;
@@ -51,18 +56,12 @@
       }
     }
   }
-
-  const OVERFLOWING_TEXT_STYLE = {
-    textWrap: "nowrap",
-    textOverflow: "ellipsis",
-    overflow: "hidden",
-  };
 </script>
 
-<div class="badge">
+<DataBadge>
   <Group override={{ gap: "6px", maxWidth: "300px" }} noWrap>
     {#await renderedChatDataPromise}
-      <Loader size={10} />
+      <DataBadgeLoader />
     {:then loadChatResult}
       {#if loadChatResult.ok}
         <!-- TODO: render icons, chat type, link to chat, etc -->
@@ -78,24 +77,16 @@
           </svelte:fragment>
         </Image>
         <Group override={{ gap: "6px" }}>
-          <Text override={{ maxWidth: "250px", ...OVERFLOWING_TEXT_STYLE }}>{loadChatResult.data.title}</Text>
+          <EllipsisText maxWidth="250px">{loadChatResult.data.title}</EllipsisText>
           {#if loadChatResult.data.username}
-            <Text color="dimmed" override={{ maxWidth: "250px", ...OVERFLOWING_TEXT_STYLE }}
-              >@{loadChatResult.data.username}</Text
-            >
+            <EllipsisText color="dimmed" maxWidth="250px">
+              @{loadChatResult.data.username}
+            </EllipsisText>
           {/if}
         </Group>
       {:else}
-        <Alert color="red" title="Ошибка загрузки данных чата" icon={ExclamationTriangle}>{loadChatResult.error}</Alert>
+        <ErrorBadge title="Ошибка загрузки данных чата" text={loadChatResult.error} />
       {/if}
     {/await}
   </Group>
-</div>
-
-<style>
-  div.badge {
-    padding: 5px 5px;
-    border: 1px solid rgb(222, 226, 230);
-    border-radius: 15px;
-  }
-</style>
+</DataBadge>
