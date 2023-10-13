@@ -1,45 +1,31 @@
 <script lang="ts">
-  import { Text, Tooltip } from "@svelteuidev/core";
+  import { Tooltip } from "@svelteuidev/core";
   import DataBadge from "./internal/DataBadge.svelte";
-  import type { LanguageData } from "../api/types";
-  import { err, ok, type Result } from "../utils";
-  import DataBadgeLoader from "./internal/DataBadgeLoader.svelte";
   import ErrorBadge from "./ErrorBadge.svelte";
-  import { availableLanguagesStore } from "../globalStateStores";
+  import { availableLanguagesStore, lookupLanguage } from "../globalStateStores";
+  import LanguageDataBadge from "./LanguageDataBadge.svelte";
+  import type { Result } from "../utils";
+  import type { LanguageData } from "../api/types";
 
   export let language: string;
+  export let fullName: boolean = false;
 
-  async function loadLanguageData(): Promise<Result<LanguageData>> {
-    let availableLanguages = $availableLanguagesStore;
-    if (!(language in availableLanguages)) {
-      return err(`unknown language code ${language}`);
-    } else {
-      return ok(availableLanguages[language]);
-    }
-  }
-
-  const languageDataPromise = loadLanguageData();
+  let languageLookupResult: Result<LanguageData>;
+  $: languageLookupResult = lookupLanguage(language, $availableLanguagesStore);
   let tooltipOpened = false;
 </script>
 
 <DataBadge>
-  {#await languageDataPromise}
-    <DataBadgeLoader />
-  {:then languageDataResult}
-    {#if languageDataResult.ok}
-      <Tooltip
-        opened={tooltipOpened}
-        label={languageDataResult.data.name}
-        on:mouseenter={() => (tooltipOpened = true)}
-        on:mouseleave={() => (tooltipOpened = false)}
-      >
-        <Text>
-          {languageDataResult.data.emoji || "🌐"}
-          {languageDataResult.data.code}
-        </Text>
-      </Tooltip>
-    {:else}
-      <ErrorBadge text={languageDataResult.error} />
-    {/if}
-  {/await}
+  {#if languageLookupResult.ok}
+    <Tooltip
+      opened={tooltipOpened}
+      label={fullName ? languageLookupResult.data.code : languageLookupResult.data.name}
+      on:mouseenter={() => (tooltipOpened = true)}
+      on:mouseleave={() => (tooltipOpened = false)}
+    >
+      <LanguageDataBadge languageData={languageLookupResult.data} {fullName} />
+    </Tooltip>
+  {:else}
+    <ErrorBadge text={languageLookupResult.error} />
+  {/if}
 </DataBadge>

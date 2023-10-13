@@ -22,8 +22,6 @@
 
   const setNewConfig = (newConfig: LanguageSelectBlock) => {
     config = newConfig;
-    console.log("HO config updated");
-    console.log(config);
   };
   const openEditModal = () =>
     openModal(Modal, {

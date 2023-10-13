@@ -20,6 +20,7 @@
     "@svelteuidev/core": "^0.15.3",
     "@tsconfig/svelte": "^5.0.0",
     "json-schema-to-typescript": "^13.0.2",
+    "postcss": ">=8.4.31",
     "prettier": "^3.0.2",
     "prettier-plugin-svelte": "^3.0.3",
     "radix-icons-svelte": "^1.2.1",
@@ -27,14 +28,14 @@
     "svelte-check": "^3.4.6",
     "svelte-loading-spinners": "^0.3.4",
     "svelte-routing": "^2.3.0",
+    "svelte-select": "^5.7.0",
     "svelte-simple-modal": "^1.6.1",
     "svelvet": "npm:meetspur-svelvet@^8.1.1",
     "transliteration": "^2.3.5",
     "ts-essentials": "^9.4.0",
     "tslib": "^2.6.0",
     "typescript": "^5.0.2",
-    "vite": "^4.4.5",
-    "postcss": ">=8.4.31"
+    "vite": "^4.4.5"
   },
   "prettier": {
     "printWidth": 120,

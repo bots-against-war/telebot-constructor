@@ -25,7 +25,6 @@
 
   const setNewConfig = (newConfig: HumanOperatorBlock) => {
     config = newConfig;
-    console.log("HO config updated");
     console.log(config);
   };
 

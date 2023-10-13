@@ -11,7 +11,7 @@
 </script>
 
 <SvelteUIProvider withNormalizeCSS withGlobalStyles>
-  <Modal>
+  <Modal styleContent={{ overflow: "initial" }}>
     <div use:links>
       <GlobalStateProvider>
         <Router>
