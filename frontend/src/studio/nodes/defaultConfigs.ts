@@ -57,12 +57,12 @@ export function defaultLanguageSelectBlockConfig(id: string): UserFlowBlockConfi
     language_select: {
       block_id: id,
       menu_config: {
-        propmt: { ru: "Выберите язык." },
+        propmt: {},
         is_blocking: false,
         emoji_buttons: true,
       },
-      supported_languages: ["ru"],
-      default_language: "ru",
+      supported_languages: [],
+      default_language: "",
       language_selected_next_block_id: null,
     },
   };

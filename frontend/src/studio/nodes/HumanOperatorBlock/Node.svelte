@@ -28,21 +28,23 @@
     console.log("HO config updated");
     console.log(config);
   };
+
+  function openEditModal() {
+    openModal(Modal, {
+      config,
+      botName,
+      onConfigUpdate: setNewConfig,
+    });
+  }
+
+  if (config.feedback_handler_config.admin_chat_id === PLACEHOLDER_GROUP_CHAT_ID) {
+    openEditModal();
+  }
 </script>
 
 <Node id={config.block_id} bind:position {...DEFAULT_NODE_PROPS}>
   <InputAnchor />
-  <NodeContent
-    name="Человек-оператор"
-    headerColor={headerColor(HUE.human_operator)}
-    on:delete
-    on:edit={() =>
-      openModal(Modal, {
-        config,
-        botName,
-        onConfigUpdate: setNewConfig,
-      })}
-  >
+  <NodeContent name="Человек-оператор" headerColor={headerColor(HUE.human_operator)} on:delete on:edit={openEditModal}>
     {#if config.feedback_handler_config.admin_chat_id === PLACEHOLDER_GROUP_CHAT_ID}
       <ErrorBadge text="Не выбран админ-чат" />
     {:else}

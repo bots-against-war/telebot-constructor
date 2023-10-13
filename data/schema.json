@@ -514,6 +514,36 @@
       "title": "HumanOperatorBlock",
       "type": "object"
     },
+    "LanguageData": {
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "emoji": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Emoji"
+        }
+      },
+      "required": [
+        "code",
+        "name"
+      ],
+      "title": "LanguageData",
+      "type": "object"
+    },
     "LanguageSelectBlock": {
       "description": "Language selection menu block. If specified, all texts in the containing user flow must be multilang\nand be translated to all of the supported languages. Only one such block is permitted per user flow.",
       "properties": {
@@ -1288,13 +1318,17 @@
     },
     "tg_bot_user_update": {
       "$ref": "#/$defs/TgBotUserUpdate"
+    },
+    "language_data": {
+      "$ref": "#/$defs/LanguageData"
     }
   },
   "required": [
     "bot_config",
     "tg_group_chat",
     "tg_bot_user",
-    "tg_bot_user_update"
+    "tg_bot_user_update",
+    "language_data"
   ],
   "title": "BackendDataModels",
   "type": "object"

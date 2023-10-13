@@ -44,9 +44,6 @@
           <EllipsisText color="dimmed" maxWidth="200px">@{botUserResult.data.username}</EllipsisText>
         </Group>
         <Group override={{ gap: "0" }}>
-          <ActionIcon root="a" href={`https://t.me/${botUserResult.data.username}`} external>
-            <OpenInNewWindow />
-          </ActionIcon>
           <ActionIcon
             on:click={() => {
               openModal(EditBotUserModal, {
@@ -75,6 +72,9 @@
           >
             <Update />
           </ActionIcon> -->
+          <ActionIcon root="a" href={`https://t.me/${botUserResult.data.username}`} external>
+            <OpenInNewWindow />
+          </ActionIcon>
         </Group>
       </Group>
     {:else}

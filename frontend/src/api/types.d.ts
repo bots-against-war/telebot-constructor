@@ -156,6 +156,9 @@ export type Userpic = string | null;
 export type Name1 = string;
 export type Description3 = string;
 export type ShortDescription2 = string;
+export type Code = string;
+export type Name2 = string;
+export type Emoji = string | null;
 
 /**
  * Temporary class to pack several models into one schema; not used directly by frontend code
@@ -165,6 +168,7 @@ export interface BackendDataModels {
   tg_group_chat: TgGroupChat;
   tg_bot_user: TgBotUser;
   tg_bot_user_update: TgBotUserUpdate;
+  language_data: LanguageData;
   [k: string]: unknown;
 }
 export interface BotConfig {
@@ -423,5 +427,11 @@ export interface TgBotUserUpdate {
   name: Name1;
   description: Description3;
   short_description: ShortDescription2;
+  [k: string]: unknown;
+}
+export interface LanguageData {
+  code: Code;
+  name: Name2;
+  emoji?: Emoji;
   [k: string]: unknown;
 }
