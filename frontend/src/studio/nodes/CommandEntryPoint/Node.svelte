@@ -20,6 +20,7 @@
   <NodeContent
     name="Команда"
     headerColor={headerColor(HUE.command)}
+    bind:isValid
     on:delete
     on:edit={() =>
       openModal(Modal, {
