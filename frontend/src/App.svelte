@@ -23,7 +23,7 @@
             <StudioLoader botName={params.botname} />
           </Route>
           <!-- TODO: separate each route contents to a component -->
-          <Route path="/command">
+          <Route path="/team">
             <Navbar />
             <p>Команда</p>
           </Route>
