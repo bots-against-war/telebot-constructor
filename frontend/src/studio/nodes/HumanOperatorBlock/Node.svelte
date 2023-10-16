@@ -11,10 +11,9 @@
   import GroupChatBadge from "../../../components/GroupChatBadge.svelte";
   import NodeContent from "../../components/NodeContent.svelte";
   import InputAnchor from "../../components/InputAnchor.svelte";
-  import { PLACEHOLDER_GROUP_CHAT_ID } from "../defaultConfigs";
   import { DEFAULT_NODE_PROPS } from "../nodeProps";
-  import ErrorBadge from "../../../components/ErrorBadge.svelte";
   import { HUE, headerColor } from "../colors";
+  import { validateHumanOperatorBlock } from "../nodeValidators";
 
   const openModal = getModalOpener();
 
@@ -25,7 +24,6 @@
 
   const setNewConfig = (newConfig: HumanOperatorBlock) => {
     config = newConfig;
-    console.log(config);
   };
 
   function openEditModal() {
@@ -35,19 +33,18 @@
       onConfigUpdate: setNewConfig,
     });
   }
-
-  if (config.feedback_handler_config.admin_chat_id === PLACEHOLDER_GROUP_CHAT_ID) {
-    openEditModal();
-  }
 </script>
 
 <Node id={config.block_id} bind:position {...DEFAULT_NODE_PROPS}>
   <InputAnchor />
-  <NodeContent name="Человек-оператор" headerColor={headerColor(HUE.human_operator)} on:delete on:edit={openEditModal}>
-    {#if config.feedback_handler_config.admin_chat_id === PLACEHOLDER_GROUP_CHAT_ID}
-      <ErrorBadge text="Не выбран админ-чат" />
-    {:else}
-      <GroupChatBadge {botName} chatId={config.feedback_handler_config.admin_chat_id} />
-    {/if}
+  <NodeContent
+    name="Человек-оператор"
+    headerColor={headerColor(HUE.human_operator)}
+    {config}
+    configValidator={validateHumanOperatorBlock}
+    on:delete
+    on:edit={openEditModal}
+  >
+    <GroupChatBadge {botName} chatId={config.feedback_handler_config.admin_chat_id} />
   </NodeContent>
 </Node>

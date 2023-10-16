@@ -27,11 +27,22 @@
     defaultLanguageSelectBlockConfig,
   } from "./nodes/defaultConfigs";
   import { HUE, buttonColor } from "./nodes/colors";
+  import { languageConfigStore } from "./stores";
 
   export let botName: string;
   export let botConfig: BotConfig;
 
   setContext("botName", botName);
+
+  // initial language config from the loaded config
+  for (const block of botConfig.user_flow_config.blocks) {
+    if (block.language_select) {
+      languageConfigStore.set({
+        supportedLanguageCodes: block.language_select.supported_languages,
+        defaultLanguageCode: block.language_select.default_language,
+      });
+    }
+  }
 
   function newUserFlowNodePosition(): UserFlowNodePosition {
     const currentPositions = Object.values(botConfig.user_flow_config.node_display_coords);
@@ -70,7 +81,7 @@
       ];
     };
   }
-  function getBlockDestructor(id: string) {
+  function getBlockDestructor(id: string, postDestruct: (() => void) | undefined = undefined) {
     return () => {
       const idx = botConfig.user_flow_config.blocks.map(getBlockId).findIndex((blockId) => blockId === id);
       console.debug(`Deleting block ${id}, idx = ${idx}`);
@@ -80,6 +91,7 @@
       }
       botConfig.user_flow_config.blocks = botConfig.user_flow_config.blocks.toSpliced(idx, 1);
       delete botConfig.user_flow_config.node_display_coords[id];
+      if (postDestruct !== undefined) postDestruct();
     };
   }
   function getBlockConstructor(prefix: string, blockConfigConstructor: (id: string) => UserFlowBlockConfig) {
@@ -135,7 +147,9 @@
         />
       {:else if block.language_select}
         <LanguageSelectNode
-          on:delete={getBlockDestructor(block.language_select.block_id)}
+          on:delete={getBlockDestructor(block.language_select.block_id, () => {
+            languageConfigStore.set(null);
+          })}
           bind:config={botConfig.user_flow_config.blocks[idx].language_select}
           bind:position={botConfig.user_flow_config.node_display_coords[block.language_select.block_id]}
         />
@@ -169,6 +183,7 @@
       </Button>
       <Button
         compact
+        disabled={$languageConfigStore !== null}
         variant="outline"
         color={buttonColor(HUE.language_select)}
         on:click={getBlockConstructor("language-select", defaultLanguageSelectBlockConfig)}

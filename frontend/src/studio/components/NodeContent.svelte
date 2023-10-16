@@ -2,9 +2,18 @@
   import { createEventDispatcher } from "svelte";
   import { ActionIcon, Group, Stack, Space, Flex, Divider } from "@svelteuidev/core";
   import { Pencil1, Cross1 } from "radix-icons-svelte";
+  import { languageConfigStore, type LanguageConfig } from "../stores";
+  import { ok, type Result } from "../../utils";
+  import type { ValidationError } from "../nodes/nodeValidators";
+  import ErrorBadge from "../../components/ErrorBadge.svelte";
 
   export let name: string;
   export let headerColor: string;
+  export let config: any = null;
+  export let configValidator: (config: any, langConfig: LanguageConfig | null) => Result<null, ValidationError> = (
+    _,
+    __,
+  ) => ok(null);
 
   const dispatch = createEventDispatcher<{ edit: null; delete: null }>();
 
@@ -13,6 +22,9 @@
     size: "sm",
     variant: "hover",
   };
+
+  let configValidationResult: Result<null, ValidationError>;
+  $: configValidationResult = configValidator(config, $languageConfigStore);
 </script>
 
 <div class="node-content-container">
@@ -38,7 +50,11 @@
   </Group>
   <Divider override={{ margin: 0 }} />
   <div class="node-content">
-    <slot />
+    {#if !configValidationResult.ok}
+      <ErrorBadge text={configValidationResult.error.error} />
+    {:else}
+      <slot />
+    {/if}
   </div>
 </div>
 
