@@ -597,9 +597,9 @@ class TelebotConstructorApp:
                 content_type="text/html",
             )
 
-        STATIC_FILE_GLOBS = ["assets/*"]
+        STATIC_FILE_GLOBS = ["assets/*", "favicon.ico"]
 
-        @routes.get("/{path:^(?!api/).*}")  # mathing all paths except those starting with /api prefix
+        @routes.get("/{path:(?!api/).*}")  # mathing all paths except those starting with /api prefix
         async def serve_static_file(request: web.Request) -> web.StreamResponse:
             static_file_path = request.match_info.get("path")
             if static_file_path is None:

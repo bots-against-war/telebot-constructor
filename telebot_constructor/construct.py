@@ -86,7 +86,7 @@ async def construct_bot(
         bot_commands.extend(user_flow_setup_result.bot_commands)
 
     # TODO: cleanup for possible stale bot commands (maybe on an explicit user action?)
-    logger.info(f"Setting bot commands: {bot_commands}")
+    logger.info(f"Setting bot commands: {'; '.join(str(bc) for bc in bot_commands)}")
     for _, scoped_commands_it in itertools.groupby(
         sorted(
             bot_commands,
@@ -95,7 +95,7 @@ async def construct_bot(
         key=BotCommandInfo.scope_key,
     ):
         command_info_batch = list(scoped_commands_it)
-        logger.info(f"Bot command batch: {command_info_batch}")
+        logger.info(f"Bot command batch: {'; '.join(str(bc) for bc in command_info_batch)}")
         async for attempt in rate_limit_retry():
             with attempt:
                 await bot.set_my_commands(

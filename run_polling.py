@@ -16,7 +16,7 @@ from telebot_components.utils.secrets import (
 from telebot_constructor.app import TelebotConstructorApp
 from telebot_constructor.auth import NoAuth
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO if os.environ.get("IS_HEROKU") else logging.DEBUG)
 
 
 async def main() -> None:
