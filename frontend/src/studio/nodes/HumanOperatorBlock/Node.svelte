@@ -19,6 +19,7 @@
 
   export let config: HumanOperatorBlock;
   export let position: SvelvetPosition;
+  export let isValid = true;
 
   const botName: string = getContext("botName");
 
@@ -40,6 +41,7 @@
   <NodeContent
     name="Человек-оператор"
     headerColor={headerColor(HUE.human_operator)}
+    bind:isValid
     {config}
     configValidator={validateHumanOperatorBlock}
     on:delete

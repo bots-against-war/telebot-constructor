@@ -13,6 +13,7 @@
 
   export let config: CommandEntryPoint;
   export let position: SvelvetPosition;
+  export let isValid = true;
 </script>
 
 <Node id={config.entrypoint_id} bind:position {...DEFAULT_NODE_PROPS}>

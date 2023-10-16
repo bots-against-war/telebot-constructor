@@ -103,9 +103,19 @@
     };
   }
 
+  let isNodeValid: { [k: string]: boolean } = {};
+  let isConfigValid: boolean;
+  $: {
+    isConfigValid = !(
+      botConfig.user_flow_config.blocks.some((block) => isNodeValid[getBlockId(block)] === false) ||
+      botConfig.user_flow_config.entrypoints.some((ep) => isNodeValid[getEntrypointId(ep)] === false)
+    );
+  }
+
   let isSavingBotConfig = false;
 
   async function saveCurrentBotConfig() {
+    if (!isConfigValid) return;
     isSavingBotConfig = true;
     console.log(`Saving bot config for ${botName}`, botConfig);
     const res = await saveBotConfig(botName, botConfig);
@@ -129,6 +139,7 @@
           on:delete={getEntrypointDestructor(entrypoint.command.entrypoint_id)}
           bind:config={botConfig.user_flow_config.entrypoints[idx].command}
           bind:position={botConfig.user_flow_config.node_display_coords[entrypoint.command.entrypoint_id]}
+          bind:isValid={isNodeValid[entrypoint.command.entrypoint_id]}
         />
       {/if}
     {/each}
@@ -138,12 +149,14 @@
           on:delete={getBlockDestructor(block.content.block_id)}
           bind:config={botConfig.user_flow_config.blocks[idx].content}
           bind:position={botConfig.user_flow_config.node_display_coords[block.content.block_id]}
+          bind:isValid={isNodeValid[block.content.block_id]}
         />
       {:else if block.human_operator}
         <HumanOperatorNode
           on:delete={getBlockDestructor(block.human_operator.block_id)}
           bind:config={botConfig.user_flow_config.blocks[idx].human_operator}
           bind:position={botConfig.user_flow_config.node_display_coords[block.human_operator.block_id]}
+          bind:isValid={isNodeValid[block.human_operator.block_id]}
         />
       {:else if block.language_select}
         <LanguageSelectNode
@@ -152,6 +165,7 @@
           })}
           bind:config={botConfig.user_flow_config.blocks[idx].language_select}
           bind:position={botConfig.user_flow_config.node_display_coords[block.language_select.block_id]}
+          bind:isValid={isNodeValid[block.language_select.block_id]}
         />
       {/if}
     {/each}
@@ -199,7 +213,13 @@
         <BotUserBadge {botName} />
       </Stack>
       <Stack spacing="xs">
-        <Button variant="filled" fullSize loading={isSavingBotConfig} on:click={saveCurrentBotConfig}>Сохранить</Button>
+        <Button
+          variant="filled"
+          disabled={!isConfigValid}
+          fullSize
+          loading={isSavingBotConfig}
+          on:click={saveCurrentBotConfig}>Сохранить</Button
+        >
         <Button variant="outline" fullSize on:click={() => navigate(`/#${botName}`)}>Выйти</Button>
       </Stack>
     </Group>

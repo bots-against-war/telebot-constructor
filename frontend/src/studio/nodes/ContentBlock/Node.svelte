@@ -16,6 +16,8 @@
 
   export let config: ContentBlock;
   export let position: SvelvetPosition;
+  export let isValid = true;
+
   const setNewConfig = (newConfig: ContentBlock) => {
     config = newConfig;
   };
@@ -32,6 +34,7 @@
     name="Контент"
     headerColor={headerColor(HUE.content)}
     {config}
+    bind:isValid
     configValidator={validateContentBlock}
     on:delete
     on:edit={openEditModal}

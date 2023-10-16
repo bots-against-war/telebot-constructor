@@ -20,6 +20,7 @@
 
   export let config: LanguageSelectBlock;
   export let position: SvelvetPosition;
+  export let isValid = true;
 
   const setNewConfig = (newConfig: LanguageSelectBlock) => {
     config = newConfig;
@@ -36,6 +37,7 @@
   <NodeContent
     name="Выбор языка"
     headerColor={headerColor(HUE.language_select)}
+    bind:isValid
     {config}
     configValidator={validateLanguageSelectBlock}
     on:delete

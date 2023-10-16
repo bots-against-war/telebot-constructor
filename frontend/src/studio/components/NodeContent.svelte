@@ -10,6 +10,7 @@
   export let name: string;
   export let headerColor: string;
   export let config: any = null;
+  export let isValid = true;
   export let configValidator: (config: any, langConfig: LanguageConfig | null) => Result<null, ValidationError> = (
     _,
     __,
@@ -24,7 +25,10 @@
   };
 
   let configValidationResult: Result<null, ValidationError>;
-  $: configValidationResult = configValidator(config, $languageConfigStore);
+  $: {
+    configValidationResult = configValidator(config, $languageConfigStore);
+    isValid = configValidationResult.ok;
+  }
 </script>
 
 <div class="node-content-container">
