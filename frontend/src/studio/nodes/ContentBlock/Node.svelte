@@ -11,6 +11,7 @@
   import { DEFAULT_NODE_PROPS } from "../nodeProps";
   import { HUE, headerColor } from "../colors";
   import { validateContentBlock } from "../nodeValidators";
+  import LocalizableText from "../../components/LocalizableText.svelte";
   const openModal = getModalOpener();
 
   export let config: ContentBlock;
@@ -35,7 +36,7 @@
     on:delete
     on:edit={openEditModal}
   >
-    <span>{config.contents[0].text?.text}</span>
+    <LocalizableText text={config.contents[0].text?.text} />
   </NodeContent>
   <OutputAnchor bind:nextBlockId={config.next_block_id} />
 </Node>
