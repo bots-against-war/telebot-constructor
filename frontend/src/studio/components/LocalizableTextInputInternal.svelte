@@ -7,7 +7,7 @@
   export let label: string;
   export let description: string | undefined = undefined;
   export let value: LocalizableText;
-  export let langConfig: LanguageConfig | null; // undefined = take from global writable store
+  export let langConfig: LanguageConfig | null;
 
   if (value instanceof Object && langConfig === null) {
     if (value.length) {
