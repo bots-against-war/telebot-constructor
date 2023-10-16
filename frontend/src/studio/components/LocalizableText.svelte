@@ -17,7 +17,7 @@
 {#if $languageConfigStore === null && typeof text === "string"}
   <Text>{text}</Text>
 {:else if $languageConfigStore !== null && typeof text === "object"}
-  <Group>
+  <Group noWrap spacing="sm" position="apart" align="start">
     <Text>{text[selectedLang || ""] || ""}</Text>
     <Menu override={{ padding: "0.1em" }} position="right" placement="center" gutter={15} withArrow>
       {#each $languageConfigStore.supportedLanguageCodes as language}

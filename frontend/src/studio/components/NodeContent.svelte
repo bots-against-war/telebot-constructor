@@ -1,11 +1,17 @@
+<!--
+  Main node content container. Optionally runs a provided validator func on each 
+  config update and if it detects errors, renders an error badge.
+-->
+
 <script lang="ts">
   import { createEventDispatcher } from "svelte";
-  import { ActionIcon, Group, Stack, Space, Flex, Divider } from "@svelteuidev/core";
+  import { ActionIcon, Group, Space, Flex, Divider } from "@svelteuidev/core";
   import { Pencil1, Cross1 } from "radix-icons-svelte";
   import { languageConfigStore, type LanguageConfig } from "../stores";
   import { ok, type Result } from "../../utils";
   import type { ValidationError } from "../nodes/nodeValidators";
   import ErrorBadge from "../../components/ErrorBadge.svelte";
+  import EllipsisText from "../../components/internal/EllipsisText.svelte";
 
   export let name: string;
   export let headerColor: string;
@@ -41,7 +47,7 @@
       padding: "8px",
     }}
   >
-    <h3>{name}</h3>
+    <EllipsisText override={{ fontWeight: "bold" }} maxWidth="200px">{name}</EllipsisText>
     <Space w="md" />
     <Flex>
       <ActionIcon {...actionIconProps} on:click={() => dispatch("edit")}>
@@ -64,14 +70,10 @@
 
 <style>
   div.node-content-container {
-    max-width: 300px;
+    width: 250px;
   }
 
   div.node-content {
     padding: 8px;
-  }
-
-  h3 {
-    margin: 0.2em 0;
   }
 </style>
