@@ -36,7 +36,9 @@
     on:delete
     on:edit={openEditModal}
   >
-    <LocalizableText text={config.contents[0].text?.text} />
+    {#if config.contents.length > 0 && config.contents[0].text}
+      <LocalizableText text={config.contents[0].text?.text} />
+    {/if}
   </NodeContent>
   <OutputAnchor bind:nextBlockId={config.next_block_id} />
 </Node>
