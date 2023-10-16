@@ -62,7 +62,10 @@ class BotCommandInfo:
     scope: Optional[tg.BotCommandScope]
 
     def __str__(self) -> str:
-        return f"{self.__class__.__name__}(command={self.command.to_json()}, scope={self.scope.to_json()})"
+        args_str = f"command={self.command.to_json()}"
+        if self.scope is not None:
+            args_str += f", scope={self.scope.to_json()}"
+        return f"{self.__class__.__name__}({args_str})"
 
     def scope_key(self) -> str:
         if self.scope is not None:
