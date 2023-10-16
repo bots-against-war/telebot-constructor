@@ -11,3 +11,7 @@ export interface SvelvetPosition {
 export interface BotConfigList {
   [key: string]: BotConfig;
 }
+
+export type MultilangText = { [k: string]: string };
+
+export type LocalizableText = string | MultilangText;

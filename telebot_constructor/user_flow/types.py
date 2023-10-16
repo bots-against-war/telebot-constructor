@@ -7,6 +7,7 @@ from telebot.runner import AuxBotEndpoint
 from telebot.types import service as service_types
 from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.stores.banned_users import BannedUsersStore
+from telebot_components.stores.language import LanguageStore
 
 
 @dataclass(frozen=True)
@@ -15,6 +16,7 @@ class UserFlowSetupContext:
     bot: AsyncTeleBot
     redis: RedisInterface
     banned_users_store: BannedUsersStore
+    language_store: Optional[LanguageStore]
     enter_block: "EnterUserFlowBlockCallback"
     get_active_block_id: "GetActiveUserFlowBlockId"
 
@@ -58,6 +60,12 @@ GetActiveUserFlowBlockId = Callable[[int], Awaitable[Optional[UserFlowBlockId]]]
 class BotCommandInfo:
     command: tg.BotCommand
     scope: Optional[tg.BotCommandScope]
+
+    def __str__(self) -> str:
+        args_str = f"command={self.command.to_json()}"
+        if self.scope is not None:
+            args_str += f", scope={self.scope.to_json()}"
+        return f"{self.__class__.__name__}({args_str})"
 
     def scope_key(self) -> str:
         if self.scope is not None:

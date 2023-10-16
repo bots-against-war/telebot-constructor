@@ -1,6 +1,8 @@
 <script lang="ts">
+  import { Stack } from "@svelteuidev/core";
   import type { ContentBlock } from "../../../api/types";
   import NodeModalControls from "../../components/NodeModalControls.svelte";
+  import LocalizableTextInput from "../../components/LocalizableTextInput.svelte";
 
   export let config: ContentBlock;
   export let onConfigUpdate: (newConfig: ContentBlock) => any;
@@ -15,11 +17,9 @@
 
 <div>
   <h3>Контент</h3>
-  <span>
-    <b>Текст сообщения:</b>
-    <input bind:value={editedMessageText} />
-  </span>
-
+  <Stack>
+    <LocalizableTextInput label="Текст сообщения" bind:value={editedMessageText} />
+  </Stack>
   <NodeModalControls on:save={updateConfig} />
 </div>
 

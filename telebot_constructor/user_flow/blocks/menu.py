@@ -18,16 +18,19 @@ from telebot_constructor.user_flow.types import (
     UserFlowContext,
     UserFlowSetupContext,
 )
-from telebot_constructor.utils.pydantic import ExactlyOneNonNullFieldModel
+from telebot_constructor.utils.pydantic import (
+    ExactlyOneNonNullFieldModel,
+    LocalizableText,
+)
 
 
 class MenuItem(ExactlyOneNonNullFieldModel):
-    label: str
+    label: LocalizableText
 
     # exactly one field must be non-None
     submenu: Optional["Menu"] = None
     next_block_id: Optional[str] = None  # for terminal items
-    link_url: Optional[str] = None
+    link_url: Optional[str] = None  # for link buttons (works only if mechanism is inline)
 
     def to_components_menu_item(self, global_config: ComponentsMenuConfig) -> ComponentsMenuItem:
         return ComponentsMenuItem(
@@ -40,7 +43,7 @@ class MenuItem(ExactlyOneNonNullFieldModel):
 
 
 class Menu(BaseModel):
-    text: str
+    text: LocalizableText
     no_back_button: bool
     items: list[MenuItem]
 
@@ -55,7 +58,7 @@ class Menu(BaseModel):
 
 
 class MenuConfig(BaseModel):
-    back_label: str
+    back_label: LocalizableText
     mechanism: MenuMechanism
     lock_after_termination: bool
 
@@ -92,7 +95,7 @@ class MenuBlock(UserFlowBlock):
             menu_tree=self._components_menu,
             redis=context.redis,
             category_store=None,
-            language_store=None,
+            language_store=context.language_store,
         )
 
         async def on_terminal_menu_option_selected(terminator_context: TerminatorContext) -> Optional[TerminatorResult]:

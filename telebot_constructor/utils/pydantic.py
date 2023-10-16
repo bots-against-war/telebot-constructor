@@ -1,6 +1,14 @@
-from typing import Union, get_args, get_origin
+from typing import Any, Union, get_args, get_origin
 
-from pydantic import BaseModel, model_validator
+from pydantic import (
+    BaseModel,
+    BeforeValidator,
+    PlainSerializer,
+    WithJsonSchema,
+    model_validator,
+)
+from telebot_components.language import LanguageData
+from typing_extensions import Annotated
 
 
 class ExactlyOneNonNullFieldModel(BaseModel):
@@ -25,3 +33,29 @@ class ExactlyOneNonNullFieldModel(BaseModel):
                 + f"but {len(non_null_optional_fields)} actually are: {sorted(non_null_optional_fields)}"
             )
         return self
+
+
+def _parse_language_data(code: Any) -> LanguageData:
+    if isinstance(code, LanguageData):
+        return code
+    if not isinstance(code, str):
+        raise ValueError("language code is expected to be a string containing IETF language tag")
+    try:
+        return LanguageData.lookup(code)
+    except Exception:
+        raise ValueError("unknown language code")
+
+
+# LanguageData used by telebot_components, annotated with pydantic stuff to expose it in API
+Language = Annotated[
+    LanguageData,
+    BeforeValidator(_parse_language_data),
+    PlainSerializer(lambda lang_data: lang_data.code, return_type=str),
+    WithJsonSchema({"type": "string", "format": "IETF-language-tag"}, mode="serialization"),
+    WithJsonSchema({"type": "string", "format": "IETF-language-tag"}, mode="validation"),
+]
+
+MultilangText = dict[Language, str]
+
+# AKA AnyText in telebot_components, here renamed to clearly mark strings that allow localization
+LocalizableText = Union[str, MultilangText]

@@ -87,3 +87,7 @@ function gaussianRandom(mean: number, stdev: number) {
   // Transform to the desired mean and standard deviation:
   return z * stdev + mean;
 }
+
+export function base64Image(b64: string): string {
+  return `data:image/png;base64,${b64}`;
+}

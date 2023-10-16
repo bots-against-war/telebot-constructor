@@ -5,6 +5,7 @@
   import { slugify } from "transliteration";
   import { validateBotToken } from "../api/validation";
   import type { BotConfig } from "../api/types";
+  import ErrorBadge from "../components/ErrorBadge.svelte";
 
   export let newBotCallback: (botName: string, config: BotConfig) => void;
 
@@ -107,7 +108,7 @@
     description="Можно изменить позже"
   />
   {#if error !== null}
-    <Alert title={errorTitle || "Ошибка"} color="red">{error}</Alert>
+    <ErrorBadge title={errorTitle || "Ошибка"} text={error} />
   {/if}
   <div class="save-button">
     <Button on:click={createNewBot} loading={isCreating}>Создать</Button>

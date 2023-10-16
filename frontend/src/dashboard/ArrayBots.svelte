@@ -3,7 +3,7 @@
 
   import { Button, Stack } from "@svelteuidev/core";
 
-  import type { BotConfigList } from "../types";
+  import { type BotConfigList } from "../types";
 
   // region props
   export let botConfigs: BotConfigList;

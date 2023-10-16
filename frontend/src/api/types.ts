@@ -19,7 +19,11 @@ export type Regex = string;
 export type NextBlockId2 = string | null;
 export type Entrypoints = UserFlowEntryPointConfig[];
 export type BlockId = string;
-export type Text = string;
+export type Text =
+  | string
+  | {
+      [k: string]: string;
+    };
 export type ContentTextMarkup = "none" | "html" | "markdown";
 export type Image = string | null;
 export type Attachments = ContentBlockContentAttachment[];
@@ -31,8 +35,16 @@ export type AdminChatId = number;
 export type ForumTopicPerUser = boolean;
 export type AnonimyzeUsers = boolean;
 export type MaxMessagesPerMinute = number;
-export type ForwardedToAdminOk = string;
-export type Throttling = string;
+export type ForwardedToAdminOk =
+  | string
+  | {
+      [k: string]: string;
+    };
+export type Throttling =
+  | string
+  | {
+      [k: string]: string;
+    };
 export type CopiedToUserOk = string;
 export type DeletedMessageOk = string;
 export type CanNotDeleteMessage = string;
@@ -41,8 +53,17 @@ export type UnansweredHashtag = string | null;
 export type HashtagMessageRarerThan = string | null;
 export type MessageLogToAdminChat = boolean;
 export type BlockId2 = string;
-export type Text1 = string;
-export type Label = string;
+export type Text1 =
+  | string
+  | {
+      [k: string]: string;
+    };
+export type NoBackButton = boolean;
+export type Label =
+  | string
+  | {
+      [k: string]: string;
+    };
 export type NextBlockId4 = string | null;
 export type LinkUrl = string | null;
 export type Items = MenuItem[];
@@ -50,15 +71,17 @@ export type BackLabel =
   | string
   | {
       [k: string]: string;
-    }
-  | null;
-export type LockAfterTermination = boolean;
-export type IsTextHtml = boolean;
+    };
 export type MenuMechanism = "inline_buttons" | "reply_keyboard";
+export type LockAfterTermination = boolean;
 export type BlockId3 = string;
 export type FormName = string;
 export type Id = string;
-export type Propmt = string;
+export type Propmt =
+  | string
+  | {
+      [k: string]: string;
+    };
 export type IsRequired = boolean;
 export type Descr = string;
 export type IsMultiline = boolean;
@@ -66,16 +89,49 @@ export type ValueFormatter = null;
 export type NextField = string | NextFieldMapping | null;
 export type IfSkipped = string | null;
 export type Default = string;
-export type EmptyTextErrorMsg = string;
+export type EmptyTextErrorMsg =
+  | string
+  | {
+      [k: string]: string;
+    };
 export type Fields = FormFieldConfig[];
-export type FormStart = string;
-export type FieldIsSkippable = string;
-export type FieldIsNotSkippable = string;
-export type PleaseEnterCorrectValue = string;
-export type UnsupportedCommand = string;
-export type CancellingBecauseOfError = string;
+export type FormStart =
+  | string
+  | {
+      [k: string]: string;
+    };
+export type FieldIsSkippable =
+  | string
+  | {
+      [k: string]: string;
+    };
+export type FieldIsNotSkippable =
+  | string
+  | {
+      [k: string]: string;
+    };
+export type PleaseEnterCorrectValue =
+  | string
+  | {
+      [k: string]: string;
+    };
+export type UnsupportedCommand =
+  | string
+  | {
+      [k: string]: string;
+    };
+export type CancellingBecauseOfError =
+  | string
+  | {
+      [k: string]: string;
+    };
 export type FormCompletedNextBlockId = string | null;
 export type FormCancelledNextBlockId = string | null;
+export type BlockId4 = string;
+export type IsBlocking = boolean;
+export type EmojiButtons = boolean;
+export type SupportedLanguages = string[];
+export type LanguageSelectedNextBlockId = string | null;
 export type Blocks = UserFlowBlockConfig[];
 export type X = number;
 export type Y = number;
@@ -86,6 +142,23 @@ export type Description = string | null;
 export type Username = string | null;
 export type IsForum = boolean | null;
 export type Photo = string | null;
+export type Id2 = number;
+export type Username1 = string;
+export type Name = string;
+export type Description1 = string;
+export type ShortDescription1 = string;
+export type CanJoinGroups = boolean;
+export type CanReadAllGroupMessages = boolean;
+export type Command1 = string;
+export type Description2 = string;
+export type Commands = TgBotCommand[];
+export type Userpic = string | null;
+export type Name1 = string;
+export type Description3 = string;
+export type ShortDescription2 = string;
+export type Code = string;
+export type Name2 = string;
+export type Emoji = string | null;
 
 /**
  * Temporary class to pack several models into one schema; not used directly by frontend code
@@ -93,6 +166,9 @@ export type Photo = string | null;
 export interface BackendDataModels {
   bot_config: BotConfig;
   tg_group_chat: TgGroupChat;
+  tg_bot_user: TgBotUser;
+  tg_bot_user_update: TgBotUserUpdate;
+  language_data: LanguageData;
   [k: string]: unknown;
 }
 export interface BotConfig {
@@ -108,9 +184,9 @@ export interface UserFlowConfig {
   [k: string]: unknown;
 }
 export interface UserFlowEntryPointConfig {
-  command: CommandEntryPoint | null;
-  catch_all: CatchAllEntryPoint | null;
-  regex: RegexMatchEntryPoint | null;
+  command?: CommandEntryPoint | null;
+  catch_all?: CatchAllEntryPoint | null;
+  regex?: RegexMatchEntryPoint | null;
   [k: string]: unknown;
 }
 /**
@@ -120,8 +196,8 @@ export interface CommandEntryPoint {
   entrypoint_id: EntrypointId;
   command: Command;
   next_block_id: NextBlockId;
-  scope: CommandScope & string;
-  short_description: ShortDescription;
+  scope?: CommandScope & string;
+  short_description?: ShortDescription;
   [k: string]: unknown;
 }
 /**
@@ -142,10 +218,11 @@ export interface RegexMatchEntryPoint {
   [k: string]: unknown;
 }
 export interface UserFlowBlockConfig {
-  content: ContentBlock | null;
-  human_operator: HumanOperatorBlock | null;
-  menu: MenuBlock | null;
-  form: FormBlock | null;
+  content?: ContentBlock | null;
+  human_operator?: HumanOperatorBlock | null;
+  menu?: MenuBlock | null;
+  form?: FormBlock | null;
+  language_select?: LanguageSelectBlock | null;
   [k: string]: unknown;
 }
 /**
@@ -216,21 +293,21 @@ export interface MenuBlock {
 }
 export interface Menu {
   text: Text1;
+  no_back_button: NoBackButton;
   items: Items;
   [k: string]: unknown;
 }
 export interface MenuItem {
   label: Label;
-  submenu: Menu | null;
-  next_block_id: NextBlockId4;
-  link_url: LinkUrl;
+  submenu?: Menu | null;
+  next_block_id?: NextBlockId4;
+  link_url?: LinkUrl;
   [k: string]: unknown;
 }
 export interface MenuConfig {
   back_label: BackLabel;
+  mechanism: MenuMechanism;
   lock_after_termination: LockAfterTermination;
-  is_text_html: IsTextHtml;
-  mechanism: MenuMechanism & string;
   [k: string]: unknown;
 }
 /**
@@ -262,8 +339,8 @@ export interface PlainTextFormFieldConfig {
 }
 export interface FormFieldResultFormattingOpts {
   descr: Descr;
-  is_multiline: IsMultiline;
-  value_formatter: ValueFormatter;
+  is_multiline?: IsMultiline;
+  value_formatter?: ValueFormatter;
   [k: string]: unknown;
 }
 export interface NextFieldMapping {
@@ -284,6 +361,27 @@ export interface FormMessages {
   cancelling_because_of_error: CancellingBecauseOfError;
   [k: string]: unknown;
 }
+/**
+ * Language selection menu block. If specified, all texts in the containing user flow must be multilang
+ * and be translated to all of the supported languages. Only one such block is permitted per user flow.
+ */
+export interface LanguageSelectBlock {
+  block_id: BlockId4;
+  menu_config: LanguageSelectionMenuConfig;
+  supported_languages: SupportedLanguages;
+  default_language: string;
+  language_selected_next_block_id: LanguageSelectedNextBlockId;
+  [k: string]: unknown;
+}
+export interface LanguageSelectionMenuConfig {
+  propmt: Propmt1;
+  is_blocking: IsBlocking;
+  emoji_buttons: EmojiButtons;
+  [k: string]: unknown;
+}
+export interface Propmt1 {
+  [k: string]: string;
+}
 export interface NodeDisplayCoords {
   [k: string]: UserFlowNodePosition;
 }
@@ -303,5 +401,37 @@ export interface TgGroupChat {
   username: Username;
   is_forum: IsForum;
   photo: Photo;
+  [k: string]: unknown;
+}
+/**
+ * Info on telegram bot, combining info from several Bot API endpoints
+ */
+export interface TgBotUser {
+  id: Id2;
+  username: Username1;
+  name: Name;
+  description: Description1;
+  short_description: ShortDescription1;
+  can_join_groups: CanJoinGroups;
+  can_read_all_group_messages: CanReadAllGroupMessages;
+  commands: Commands;
+  userpic: Userpic;
+  [k: string]: unknown;
+}
+export interface TgBotCommand {
+  command: Command1;
+  description: Description2;
+  [k: string]: unknown;
+}
+export interface TgBotUserUpdate {
+  name: Name1;
+  description: Description3;
+  short_description: ShortDescription2;
+  [k: string]: unknown;
+}
+export interface LanguageData {
+  code: Code;
+  name: Name2;
+  emoji?: Emoji;
   [k: string]: unknown;
 }

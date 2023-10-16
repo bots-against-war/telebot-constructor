@@ -6,6 +6,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 from telebot import types as tg
+from telebot_components.language import any_text_to_str
 from telebot_components.stores.generic import GenericStore, KeyValueStore
 
 from telebot_constructor.user_flow.blocks.base import UserFlowBlock
@@ -15,7 +16,10 @@ from telebot_constructor.user_flow.types import (
     UserFlowContext,
     UserFlowSetupContext,
 )
-from telebot_constructor.utils.pydantic import ExactlyOneNonNullFieldModel
+from telebot_constructor.utils.pydantic import (
+    ExactlyOneNonNullFieldModel,
+    LocalizableText,
+)
 
 
 class ContentTextMarkup(enum.Enum):
@@ -34,7 +38,7 @@ class ContentTextMarkup(enum.Enum):
 
 
 class ContentText(BaseModel):
-    text: str
+    text: LocalizableText
     markup: ContentTextMarkup
 
 
@@ -61,7 +65,9 @@ class ContentBlock(UserFlowBlock):
     # - splitting long text content into smaller content chunks to respect telegram's restrictions
 
     @classmethod
-    def simple_text(cls, block_id: str, message_text: str, next_block_id: Optional[UserFlowBlockId]) -> "ContentBlock":
+    def simple_text(
+        cls, block_id: str, message_text: LocalizableText, next_block_id: Optional[UserFlowBlockId]
+    ) -> "ContentBlock":
         """For use in tests"""
         return ContentBlock(
             block_id=block_id,
@@ -79,6 +85,9 @@ class ContentBlock(UserFlowBlock):
 
     async def enter(self, context: UserFlowContext) -> None:
         chat_id = context.chat.id if context.chat is not None else context.user.id
+        language = (
+            await self._language_store.get_user_language(context.user) if self._language_store is not None else None
+        )
         # TODO: deal with errors?
         for content in self.contents:
             common_kwargs = {
@@ -89,7 +98,7 @@ class ContentBlock(UserFlowBlock):
             if not content.attachments:
                 if content.text is not None:
                     await context.bot.send_message(
-                        text=content.text.text,
+                        text=any_text_to_str(content.text.text, language),
                         **common_kwargs,  # type: ignore
                     )
                 else:
@@ -98,7 +107,7 @@ class ContentBlock(UserFlowBlock):
             elif len(content.attachments) == 1:
                 common_kwargs = common_kwargs.copy()
                 if content.text is not None:
-                    common_kwargs["caption"] = content.text.text
+                    common_kwargs["caption"] = any_text_to_str(content.text.text, language)
                 attachment = content.attachments[0]
                 # TODO: generalize on other attachment types
                 if attachment.image is not None:
@@ -134,6 +143,9 @@ class ContentBlock(UserFlowBlock):
             dumper=str,
             loader=str,
         )
+
+        self._language_store = context.language_store
+
         # the store can be shared between content blocks, so they can reuse cached file_id's
         GenericStore.allow_duplicate_stores(prefix=self._file_id_by_hash_store._full_prefix)
         return SetupResult.empty()

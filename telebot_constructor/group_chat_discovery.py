@@ -1,9 +1,7 @@
-import base64
 import datetime
 import logging
 from typing import Optional, Union
 
-import cachetools  # type: ignore
 from telebot import AsyncTeleBot
 from telebot import api as tg_api
 from telebot import types as tg
@@ -12,6 +10,7 @@ from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.stores.generic import KeyFlagStore, KeySetStore
 
 from telebot_constructor.app_models import TgGroupChat, TgGroupChatType
+from telebot_constructor.telegram_files_downloader import TelegramFilesDownloader
 from telebot_constructor.utils import non_capturing_handler
 from telebot_constructor.utils.rate_limit_retry import rate_limit_retry
 
@@ -26,7 +25,7 @@ class GroupChatDiscoveryHandler:
 
     STORE_PREFIX = "telebot-constructor-group-chat-discovery"
 
-    def __init__(self, redis: RedisInterface) -> None:
+    def __init__(self, redis: RedisInterface, telegram_files_downloader: TelegramFilesDownloader) -> None:
         # "{username}-{bot name}" -> flag for group chat discovery mode
         self._bots_in_discovery_mode_store = KeyFlagStore(
             name="bot-in-discovery-mode",
@@ -43,8 +42,7 @@ class GroupChatDiscoveryHandler:
             dumper=str,
             loader=int,
         )
-        # file_id -> base64-encoded photo cache for telegram chat avatars
-        self.chat_photo_cache = cachetools.LRUCache[str, str](maxsize=128)
+        self.telegram_files_downloader = telegram_files_downloader
 
     def _full_key(self, username: str, bot_name: str) -> str:
         return f"{username}-{bot_name}"
@@ -72,20 +70,10 @@ class GroupChatDiscoveryHandler:
             return None
         photo_b64: Optional[str] = None
         if raw_chat.photo is not None:
-            chat_photo_file_id = raw_chat.photo.small_file_id  # small file = 160x160 preview
-            photo_b64 = self.chat_photo_cache.get(chat_photo_file_id)
-            if photo_b64 is not None:
-                logger.info(prefix + "Chat photo loaded from cache")
-            else:
-                logger.info(prefix + "Chat photo not in cache, downloading")
-                try:
-                    file = await bot.get_file(chat_photo_file_id)
-                    photo_bytes = await bot.download_file(file_path=file.file_path)
-                    photo_b64 = base64.b64encode(photo_bytes).decode("utf-8")
-                    self.chat_photo_cache[chat_photo_file_id] = photo_b64
-                    logger.info(prefix + f"Chat photo loaded and saved in cache (size {len(photo_b64) / 1024} KiB)")
-                except Exception:
-                    logger.info("Error downloading chat avatar photo, ignoring it", exc_info=True)
+            photo_b64 = await self.telegram_files_downloader.get_base64_file(
+                bot,
+                file_id=raw_chat.photo.small_file_id,  # small file = 160x160 preview
+            )
         return TgGroupChat(
             id=raw_chat.id,
             type=TgGroupChatType(raw_chat.type),

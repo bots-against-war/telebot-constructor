@@ -20,10 +20,14 @@ from telebot_components.form.handler import (
 from telebot_constructor.user_flow.blocks.base import UserFlowBlock
 from telebot_constructor.user_flow.types import (
     SetupResult,
+    UserFlowBlockId,
     UserFlowContext,
     UserFlowSetupContext,
 )
-from telebot_constructor.utils.pydantic import ExactlyOneNonNullFieldModel
+from telebot_constructor.utils.pydantic import (
+    ExactlyOneNonNullFieldModel,
+    LocalizableText,
+)
 
 FormFieldId = str
 
@@ -64,7 +68,7 @@ def construct_next_field_getter(next_field: NextField) -> NextFieldGetter:
 
 class BaseFormFieldConfig(BaseModel, abc.ABC):
     id: FormFieldId
-    propmt: str
+    propmt: LocalizableText
     is_required: bool
     result_formatting_opts: FormFieldResultFormattingOpts
     next_field: NextField
@@ -86,7 +90,7 @@ class BaseFormFieldConfig(BaseModel, abc.ABC):
 
 
 class PlainTextFormFieldConfig(BaseFormFieldConfig):
-    empty_text_error_msg: str
+    empty_text_error_msg: LocalizableText
 
     def construct_field(self) -> PlainTextField:
         return PlainTextField(
@@ -103,21 +107,30 @@ class FormFieldConfig(ExactlyOneNonNullFieldModel):
 
 
 class FormMessages(BaseModel):
-    form_start: str
-    field_is_skippable: str
-    field_is_not_skippable: str
-    please_enter_correct_value: str
-    unsupported_command: str
-    cancelling_because_of_error: str
+    form_start: LocalizableText
+    field_is_skippable: LocalizableText
+    field_is_not_skippable: LocalizableText
+    please_enter_correct_value: LocalizableText
+    unsupported_command: LocalizableText
+    cancelling_because_of_error: LocalizableText
 
 
-def _validate_template(template: str, placeholder_count: int, title: str) -> str:
-    actual_placeholder_count = template.count(r"{}")
-    if actual_placeholder_count != placeholder_count:
-        raise ValueError(
-            f'Expected {placeholder_count} "{{}}" placeholders in {title}, found {actual_placeholder_count}'
-        )
-    return template
+def _validate_template(template: LocalizableText, placeholder_count: int, title: str) -> LocalizableText:
+    def _validate_string(template_str: str, subtitle: Optional[str]) -> str:
+        actual_placeholder_count = template_str.count(r"{}")
+        if actual_placeholder_count != placeholder_count:
+            full_title = title
+            if subtitle:
+                full_title += f" ({subtitle})"
+            raise ValueError(
+                f'Expected {placeholder_count} "{{}}" placeholders in {full_title}, found {actual_placeholder_count}'
+            )
+        return template_str
+
+    if isinstance(template, str):
+        return _validate_string(template, subtitle=None)
+    else:
+        return {lang: _validate_string(localization, subtitle=str(lang)) for lang, localization in template.items()}
 
 
 class FormBlock(UserFlowBlock):
@@ -130,8 +143,8 @@ class FormBlock(UserFlowBlock):
     fields: list[FormFieldConfig]
     messages: FormMessages
 
-    form_completed_next_block_id: Optional[str]
-    form_cancelled_next_block_id: Optional[str]
+    form_completed_next_block_id: Optional[UserFlowBlockId]
+    form_cancelled_next_block_id: Optional[UserFlowBlockId]
 
     async def setup(self, context: UserFlowSetupContext) -> SetupResult:
         #                                          VVV impossible to generate type anntation for
@@ -165,6 +178,7 @@ class FormBlock(UserFlowBlock):
                     self.messages.unsupported_command, placeholder_count=1, title="unsupported cmd message"
                 ),
             ),
+            language_store=context.language_store,
         )
 
         def _user_flow_context_for_next_block(form_exit_context: ComponentsFormExitContext) -> UserFlowContext:

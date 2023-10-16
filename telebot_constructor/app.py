@@ -19,7 +19,7 @@ from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.stores.generic import KeyDictStore, KeySetStore
 from telebot_components.utils.secrets import SecretStore
 
-from telebot_constructor.app_models import BotTokenPayload
+from telebot_constructor.app_models import BotTokenPayload, TgBotUser, TgBotUserUpdate
 from telebot_constructor.auth import Auth
 from telebot_constructor.bot_config import BotConfig
 from telebot_constructor.build_time_config import BASE_PATH
@@ -33,6 +33,11 @@ from telebot_constructor.runners import (
     WebhookAppConstructedBotRunner,
 )
 from telebot_constructor.static import static_file_content
+from telebot_constructor.telegram_files_downloader import (
+    InmemoryCacheTelegramFilesDownloader,
+    TelegramFilesDownloader,
+)
+from telebot_constructor.utils.pydantic import Language
 
 logger = logging.getLogger(__name__)
 
@@ -53,13 +58,18 @@ class TelebotConstructorApp:
         auth: Auth,
         secret_store: SecretStore,
         static_files_dir_override: Optional[Path] = None,
+        telegram_files_downloader: Optional[TelegramFilesDownloader] = None,
     ) -> None:
         self.auth = auth
         self.secret_store = secret_store
         self.static_files_dir = static_files_dir_override or Path(__file__).parent / "static"
-        self._runner: Optional[ConstructedBotRunner] = None
-        self.redis = redis
         logger.info(f"Will serve static frontend files from {self.static_files_dir.absolute()}")
+
+        self.redis = redis
+        self.telegram_files_downloader = telegram_files_downloader or InmemoryCacheTelegramFilesDownloader()
+
+        # set during on of the setup/run methods to a concrete subclass
+        self._runner: Optional[ConstructedBotRunner] = None
 
         # username -> {bot name -> bot config}
         self.bot_config_store = KeyDictStore[BotConfig](
@@ -85,7 +95,10 @@ class TelebotConstructorApp:
             expiration_time=None,
         )
 
-        self.group_chat_discovery_handler = GroupChatDiscoveryHandler(redis=redis)
+        self.group_chat_discovery_handler = GroupChatDiscoveryHandler(
+            redis=redis,
+            telegram_files_downloader=self.telegram_files_downloader,
+        )
 
     @property
     def runner(self) -> ConstructedBotRunner:
@@ -248,7 +261,7 @@ class TelebotConstructorApp:
         # bot configs CRUD
 
         @routes.post("/api/config/{bot_name}")
-        async def upsert_new_bot_config(request: web.Request) -> web.Response:
+        async def upsert_bot_config(request: web.Request) -> web.Response:
             """
             ---
             description: Create or update bot configuration
@@ -412,11 +425,32 @@ class TelebotConstructorApp:
 
         ##################################################################################
         # endpoints for syncing constructor state with telegram
-        @routes.get("/api/bot-account/{bot_name}")
-        async def get_bot_account(request: web.Request) -> web.Response:
+        @routes.get("/api/bot-user/{bot_name}")
+        async def get_bot_user(request: web.Request) -> web.Response:
             """
             ---
             description: Retrieve info about bot account (username, name, settings, ...)
+            produces:
+            - application/json
+            responses:
+                "200":
+                    description: TgBotUser object
+            """
+            username = await self.authenticate(request)
+            bot_name = self.parse_bot_name(request)
+            bot = await self._make_raw_bot(username, bot_name)
+            try:
+                tg_bot_user = await TgBotUser.fetch(bot, telegram_files_downloader=self.telegram_files_downloader)
+                return web.json_response(tg_bot_user.model_dump())
+            except Exception:
+                logger.exception("Unexpected error retrieving tg bot user info")
+                raise web.HTTPInternalServerError(reason="Failed to retrieve bot user details")
+
+        @routes.put("/api/bot-user/{bot_name}")
+        async def update_bot_user(request: web.Request) -> web.Response:
+            """
+            ---
+            description: Update bot info (name, description and short descrition)
             produces:
             - application/json
             responses:
@@ -425,13 +459,14 @@ class TelebotConstructorApp:
             """
             username = await self.authenticate(request)
             bot_name = self.parse_bot_name(request)
-            bot = await self._make_raw_bot(
-                username,
-                bot_name,
-            )
-            await bot.get_me()
-            # TODO call several other methods to get bot's description and stuff and pack it into our custom obj
-            return web.Response()
+            bot_user_update = await self.parse_pydantic_model(request, TgBotUserUpdate)
+            bot = await self._make_raw_bot(username, bot_name)
+            try:
+                await bot_user_update.save(bot, telegram_files_downloader=self.telegram_files_downloader)
+                return web.Response(reason="OK")
+            except Exception:
+                logger.exception("Error updating bot user info")
+                raise web.HTTPInternalServerError(reason="Failed to retrieve bot user details")
 
         @routes.post("/api/start-group-chat-discovery/{bot_name}")
         async def start_discovering_group_chats(request: web.Request) -> web.Response:
@@ -453,7 +488,7 @@ class TelebotConstructorApp:
                 await self.re_start_bot(
                     username,
                     bot_name,
-                    bot_config=BotConfig.for_temporary_bot(real_config=await self.load_bot_config(username, bot_name)),
+                    bot_config=(await self.load_bot_config(username, bot_name)).for_temporary_bot(),
                     is_temporary=True,
                 )
             await self.group_chat_discovery_handler.start_discovery(username, bot_name)
@@ -529,6 +564,28 @@ class TelebotConstructorApp:
 
         ##################################################################################
         # static file routes
+        @routes.get("/api/all-languages")
+        async def all_languages(request: web.Request) -> web.Response:
+            """
+            ---
+            description: List all available languages with code, name and emoji, if exists
+            produces:
+            - application/json
+            responses:
+                "200":
+                    description: List of Language objects
+            """
+            await self.authenticate(request)
+            return web.json_response(
+                data=[
+                    {
+                        "code": lang.code,
+                        "name": lang.name,
+                        "emoji": lang.emoji,
+                    }
+                    for lang in Language.all().values()
+                ]
+            )
 
         @routes.get("/")
         async def index(request: web.Request) -> web.Response:
@@ -540,11 +597,11 @@ class TelebotConstructorApp:
                 content_type="text/html",
             )
 
-        STATIC_FILE_GLOBS = ["assets/*"]
+        STATIC_FILE_GLOBS = ["assets/*", "favicon.ico"]
 
-        @routes.get("/{tail:.+}")
+        @routes.get("/{path:(?!api/).*}")  # mathing all paths except those starting with /api prefix
         async def serve_static_file(request: web.Request) -> web.StreamResponse:
-            static_file_path = request.match_info.get("tail")
+            static_file_path = request.match_info.get("path")
             if static_file_path is None:
                 raise web.HTTPNotFound()
             if any(fnmatch.fnmatch(static_file_path, glob) for glob in STATIC_FILE_GLOBS):
@@ -560,8 +617,8 @@ class TelebotConstructorApp:
         ##################################################################################
 
         app.add_routes(routes)
-        setup_swagger(app=app, swagger_url="/swagger")
         await self.auth.setup_routes(app)
+        setup_swagger(app=app, swagger_url="/api/swagger")
         setup_cors(app)
         setup_debugging(app)
         return app
@@ -605,12 +662,16 @@ class TelebotConstructorApp:
                             ).remove(username, bot_name)
                             continue
                         if is_temporary:
-                            bot_config = BotConfig.for_temporary_bot(bot_config)
+                            bot_config = bot_config.for_temporary_bot()
                         bot_runner = await self._construct_bot(username, bot_name, bot_config)
                         await self.runner.start(username=username, bot_name=bot_name, bot_runner=bot_runner)
                         logger.info(f"Started {bot_name_full}")
 
         self._start_stored_bots_task = create_error_logging_task(_start_stored_bots(), name="start stored bots")
+
+    async def pre_web_app_setup(self) -> None:
+        self.start_stored_bots_in_background()
+        await self.telegram_files_downloader.setup()
 
     # public methods to run constructor in different scenarios
 
@@ -618,7 +679,7 @@ class TelebotConstructorApp:
         """For standalone run"""
         logger.info("Running telebot constructor w/ polling")
         self._runner = PollingConstructedBotRunner()
-        self.start_stored_bots_in_background()
+        await self.pre_web_app_setup()
         aiohttp_app = await self.create_constructor_web_app()
         aiohttp_runner = web.AppRunner(aiohttp_app)
         await aiohttp_runner.setup()
@@ -638,6 +699,6 @@ class TelebotConstructorApp:
     async def setup_on_webhook_app(self, webhook_app: WebhookApp) -> None:
         logger.info(f"Setting up telebot constructor web app on webhook app with base URL {webhook_app.base_url!r}")
         self._runner = WebhookAppConstructedBotRunner(webhook_app)
-        self.start_stored_bots_in_background()
+        await self.pre_web_app_setup()
         app = await self.create_constructor_web_app()
         webhook_app.aiohttp_app.add_subapp(BASE_PATH, app)

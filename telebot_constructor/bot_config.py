@@ -7,6 +7,7 @@ from telebot_constructor.user_flow.blocks.base import UserFlowBlock
 from telebot_constructor.user_flow.blocks.content import ContentBlock
 from telebot_constructor.user_flow.blocks.form import FormBlock
 from telebot_constructor.user_flow.blocks.human_operator import HumanOperatorBlock
+from telebot_constructor.user_flow.blocks.language_select import LanguageSelectBlock
 from telebot_constructor.user_flow.blocks.menu import MenuBlock
 from telebot_constructor.user_flow.entrypoints.base import UserFlowEntryPoint
 from telebot_constructor.user_flow.entrypoints.catch_all import CatchAllEntryPoint
@@ -30,10 +31,11 @@ class UserFlowBlockConfig(ExactlyOneNonNullFieldModel):
     human_operator: Optional[HumanOperatorBlock] = None
     menu: Optional[MenuBlock] = None
     form: Optional[FormBlock] = None
+    language_select: Optional[LanguageSelectBlock] = None
 
     def to_user_flow_block(self) -> UserFlowBlock:
         # runtime guarantee that exactly one of the options is not None
-        return self.content or self.human_operator or self.menu or self.form  # type: ignore
+        return self.content or self.human_operator or self.menu or self.form or self.language_select  # type: ignore
 
 
 class UserFlowNodePosition(BaseModel):
@@ -67,10 +69,10 @@ class BotConfig(BaseModel):
     user_flow_config: UserFlowConfig
 
     @classmethod
-    def for_temporary_bot(cls, real_config: "BotConfig") -> "BotConfig":
+    def for_temporary_bot(self) -> "BotConfig":
         """Temporary bots are run with a barebones config; it is not saved to DB and is never shown to the user"""
         return BotConfig(
             display_name="unused",
-            token_secret_name=real_config.token_secret_name,
+            token_secret_name=self.token_secret_name,
             user_flow_config=UserFlowConfig(entrypoints=[], blocks=[], node_display_coords={}),
         )

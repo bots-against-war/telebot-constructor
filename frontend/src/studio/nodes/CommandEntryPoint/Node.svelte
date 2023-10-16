@@ -8,16 +8,19 @@
   import Modal from "./Modal.svelte";
   import { getModalOpener } from "../../../utils";
   import { DEFAULT_NODE_PROPS } from "../nodeProps";
+  import { HUE, headerColor } from "../colors";
   const openModal = getModalOpener<Modal>();
 
   export let config: CommandEntryPoint;
   export let position: SvelvetPosition;
+  export let isValid = true;
 </script>
 
 <Node id={config.entrypoint_id} bind:position {...DEFAULT_NODE_PROPS}>
   <NodeContent
     name="Команда"
-    headerColor="#D2CA4D"
+    headerColor={headerColor(HUE.command)}
+    bind:isValid
     on:delete
     on:edit={() =>
       openModal(Modal, {

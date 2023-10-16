@@ -5,6 +5,8 @@
 
   import { getModalCloser } from "../../utils";
 
+  export let saveable: boolean = true;
+
   const close = getModalCloser();
 
   const dispatch = createEventDispatcher<{ save: null }>();
@@ -14,6 +16,7 @@
   <Group>
     <Button
       variant="filled"
+      disabled={!saveable}
       on:click={() => {
         dispatch("save");
         close();
