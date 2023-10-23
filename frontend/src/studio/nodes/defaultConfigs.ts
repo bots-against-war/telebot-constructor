@@ -67,3 +67,28 @@ export function defaultLanguageSelectBlockConfig(id: string): UserFlowBlockConfi
     },
   };
 }
+
+export function defaultFormBlockFonfig(id: string): UserFlowBlockConfig {
+  return {
+    form: {
+      block_id:id,
+      members: [],
+      // TODO: check these all are non-empty on validation
+      form_name: "",
+      messages: {
+        form_start: "",
+        field_is_skippable: "",
+        field_is_not_skippable: "",
+        please_enter_correct_value: "",
+        unsupported_command: "",
+        cancelling_because_of_error: "",
+      },
+      export: {
+        is_anonymous: true,
+        to_chat: null,
+      },
+      form_cancelled_next_block_id: null,
+      form_completed_next_block_id: null,
+    }
+  }
+}

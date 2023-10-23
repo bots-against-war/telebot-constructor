@@ -182,6 +182,10 @@ class FormBlock(UserFlowBlock):
     form_completed_next_block_id: Optional[UserFlowBlockId]
     form_cancelled_next_block_id: Optional[UserFlowBlockId]
 
+    def model_post_init(self, __context: Any) -> None:
+        if not self.members:
+            raise ValueError("Form must contain at least one member field")
+
     async def setup(self, context: UserFlowSetupContext) -> SetupResult:
         component_form_members: list[Union[FormField, FormBranch]] = [m.construct_member() for m in self.members]
         self._form = ComponentsForm.branching(component_form_members)

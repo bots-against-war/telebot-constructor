@@ -1,11 +1,13 @@
 <script lang="ts">
   import { Node } from "svelvet";
-  import type { CommandEntryPoint } from "../../../api/types";
+  import Modal from "./Modal.svelte";
   import NodeContent from "../../components/NodeContent.svelte";
+  import OutputAnchorsBox from "../../components/OutputAnchorsBox.svelte";
   import OutputAnchor from "../../components/OutputAnchor.svelte";
+
+  import type { CommandEntryPoint } from "../../../api/types";
   import type { SvelvetPosition } from "../../../types";
 
-  import Modal from "./Modal.svelte";
   import { getModalOpener } from "../../../utils";
   import { DEFAULT_NODE_PROPS } from "../nodeProps";
   import { HUE, headerColor } from "../colors";
@@ -32,5 +34,7 @@
   >
     <span>/{config.command}</span>
   </NodeContent>
-  <OutputAnchor bind:nextBlockId={config.next_block_id} />
+  <OutputAnchorsBox>
+    <OutputAnchor bind:nextBlockId={config.next_block_id} />
+  </OutputAnchorsBox>
 </Node>
