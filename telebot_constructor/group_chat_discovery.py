@@ -1,6 +1,6 @@
 import datetime
 import logging
-from typing import Optional, Union
+from typing import Optional
 
 from telebot import AsyncTeleBot
 from telebot import api as tg_api
@@ -11,7 +11,11 @@ from telebot_components.stores.generic import KeyFlagStore, KeySetStore
 
 from telebot_constructor.app_models import TgGroupChat, TgGroupChatType
 from telebot_constructor.telegram_files_downloader import TelegramFilesDownloader
-from telebot_constructor.utils import non_capturing_handler
+from telebot_constructor.utils import (
+    AnyChatId,
+    non_capturing_handler,
+    parse_any_chat_id,
+)
 from telebot_constructor.utils.rate_limit_retry import rate_limit_retry
 
 logger = logging.getLogger(__name__)
@@ -34,13 +38,13 @@ class GroupChatDiscoveryHandler:
             expiration_time=datetime.timedelta(days=10),
         )
         # "{username}-{bot name}" -> set of discovered group chat ids
-        self._available_group_chat_ids = KeySetStore[Union[str, int]](
+        self._available_group_chat_ids = KeySetStore[AnyChatId](
             name="available-group-chat-ids",
             prefix=self.STORE_PREFIX,
             redis=redis,
             expiration_time=None,
             dumper=str,
-            loader=int,
+            loader=parse_any_chat_id,
         )
         self.telegram_files_downloader = telegram_files_downloader
 
@@ -56,10 +60,10 @@ class GroupChatDiscoveryHandler:
     async def is_discovering(self, username: str, bot_name: str) -> bool:
         return await self._bots_in_discovery_mode_store.is_flag_set(self._full_key(username, bot_name))
 
-    async def save_discovered_chat(self, username: str, bot_name: str, chat_id: Union[str, int]) -> None:
+    async def save_discovered_chat(self, username: str, bot_name: str, chat_id: AnyChatId) -> None:
         await self._available_group_chat_ids.add(self._full_key(username, bot_name), chat_id)
 
-    async def get_group_chat(self, bot: AsyncTeleBot, chat_id: Union[int, str]) -> Optional[TgGroupChat]:
+    async def get_group_chat(self, bot: AsyncTeleBot, chat_id: AnyChatId) -> Optional[TgGroupChat]:
         prefix = f"{bot.log_marker} (getting info for chat {chat_id}) "
         try:
             async for attempt in rate_limit_retry():

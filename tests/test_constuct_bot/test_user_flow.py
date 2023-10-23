@@ -41,7 +41,7 @@ from tests.utils import (
 
 
 def test_user_flow_config_model_validation() -> None:
-    with pytest.raises(ValueError, match=r".*?Duplicate block ids: \['1'\]"):
+    with pytest.raises(ValueError, match=r".*?All block ids must be unique, but there are duplicates: 1"):
         UserFlowConfig(
             entrypoints=[],
             blocks=[

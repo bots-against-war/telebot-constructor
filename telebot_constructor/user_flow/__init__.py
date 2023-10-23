@@ -1,4 +1,3 @@
-import collections
 import dataclasses
 import datetime
 import logging
@@ -11,6 +10,7 @@ from telebot_components.stores.banned_users import BannedUsersStore
 from telebot_components.stores.generic import KeyValueStore
 
 from telebot_constructor.user_flow.blocks.base import UserFlowBlock
+from telebot_constructor.user_flow.blocks.human_operator import HumanOperatorBlock
 from telebot_constructor.user_flow.blocks.language_select import LanguageSelectBlock
 from telebot_constructor.user_flow.entrypoints.base import UserFlowEntryPoint
 from telebot_constructor.user_flow.entrypoints.command import CommandEntryPoint
@@ -20,6 +20,7 @@ from telebot_constructor.user_flow.types import (
     UserFlowContext,
     UserFlowSetupContext,
 )
+from telebot_constructor.utils import validate_unique
 
 logger = logging.getLogger(__name__)
 
@@ -32,10 +33,8 @@ class UserFlow:
     def __post_init__(self) -> None:
         self._active_block_id_store: Optional[KeyValueStore[str]] = None
 
-        block_id_counter = collections.Counter(b.block_id for b in self.blocks)
-        duplicate_block_ids = sorted(bid for bid, count in block_id_counter.items() if count > 1)
-        if duplicate_block_ids:
-            raise ValueError(f"Duplicate block ids: {duplicate_block_ids}")
+        validate_unique([b.block_id for b in self.blocks], items_name="block ids")
+        validate_unique([e.entrypoint_id for e in self.entrypoints], items_name="entrypoint ids")
         self.block_by_id = {block.block_id: block for block in self.blocks}
 
         catch_all_entities = [entrypoint for entrypoint in self.entrypoints if entrypoint.is_catch_all()] + [
@@ -47,16 +46,10 @@ class UserFlow:
                 + f"{', '.join(str(e) for e in catch_all_entities)}"
             )
 
-        command_entrypoints = [
-            entrypoint for entrypoint in self.entrypoints if isinstance(entrypoint, CommandEntryPoint)
-        ]
-        commands_counter = collections.Counter(e.command for e in command_entrypoints)
-        repeating_commands_counter = {cmd: count for cmd, count in commands_counter.items() if count > 1}
-        if repeating_commands_counter:
-            raise ValueError(
-                "All commands must be unique, but there are duplicates: "
-                + f"{', '.join(('/' + cmd) for cmd in repeating_commands_counter.keys())}"
-            )
+        validate_unique(
+            [entrypoint.command for entrypoint in self.entrypoints if isinstance(entrypoint, CommandEntryPoint)],
+            items_name="commands",
+        )
 
         language_select_blocks = [block for block in self.blocks if isinstance(block, LanguageSelectBlock)]
         if len(language_select_blocks) > 1:
@@ -64,6 +57,12 @@ class UserFlow:
                 f"At most one language selection block is allowed in the user flow, found {len(language_select_blocks)}"
             )
         self.language_select_block = language_select_blocks[0] if language_select_blocks else None
+
+        self.human_operator_blocks = [block for block in self.blocks if isinstance(block, HumanOperatorBlock)]
+        validate_unique(
+            [b.feedback_handler_config.admin_chat_id for b in self.human_operator_blocks],
+            items_name="admin chat ids in human operator blocks",
+        )
 
     @property
     def active_block_id_store(self) -> KeyValueStore[str]:
@@ -106,16 +105,28 @@ class UserFlow:
             bot=bot,
             redis=redis,
             banned_users_store=banned_users_store,
+            feedback_handlers=dict(),
             language_store=None,
             enter_block=self._enter_block,
             get_active_block_id=self._get_active_block_id,
         )
+        setup_block_ids: set[str] = set()
+
         if self.language_select_block is not None:
             logger.info(f"[{bot_prefix}] Setting up language selection block first")
             setup_result.merge(await self.language_select_block.setup(context=setup_context))
             # adding language store to the context for other blocks to use (validate their texts
             # as multilang and pass it to components)
             setup_context = dataclasses.replace(setup_context, language_store=self.language_select_block.language_store)
+            setup_block_ids.add(self.language_select_block.block_id)
+
+        logger.info(f"[{bot_prefix}] Setting up human operator blocks (total of {len(self.human_operator_blocks)})")
+        for ho_block in self.human_operator_blocks:
+            setup_block_ids.add(ho_block.block_id)
+            setup_result.merge(await ho_block.setup(context=setup_context))
+            # saving feedback handler to global context for other blocks to use
+            setup_context.feedback_handlers[ho_block.feedback_handler.admin_chat_id] = ho_block.feedback_handler
+            setup_block_ids.add(ho_block.block_id)
 
         for idx, entrypoint in enumerate(self.entrypoints):
             logger.info(f"[{bot_prefix}] Setting up entrypoint {idx + 1} / {len(self.entrypoints)}: {entrypoint}")
@@ -126,6 +137,8 @@ class UserFlow:
             setup_result.merge(entrypoint_setup_result)
 
         for idx, block in enumerate(self.blocks):
+            if block.block_id in setup_block_ids:
+                continue
             logger.info(f"[{bot_prefix}] Setting up block {idx + 1} / {len(self.blocks)}: {block}")
             try:
                 block_setup_result = await block.setup(setup_context)

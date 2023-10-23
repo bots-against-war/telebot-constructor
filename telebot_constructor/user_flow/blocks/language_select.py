@@ -36,7 +36,6 @@ class LanguageSelectBlock(UserFlowBlock):
     language_selected_next_block_id: Optional[UserFlowBlockId]
 
     def model_post_init(self, __context: Any) -> None:
-        self._setup_result: Optional[SetupResult] = None
         self._language_store: Optional[LanguageStore] = None
 
     @property
@@ -52,9 +51,6 @@ class LanguageSelectBlock(UserFlowBlock):
             await self.language_store.send_inline_selector(bot=context.bot, user=context.user)
 
     async def setup(self, context: UserFlowSetupContext) -> SetupResult:
-        if self._setup_result is not None:
-            return self._setup_result
-
         self._language_store = LanguageStore(
             redis=context.redis,
             bot_prefix=context.bot_prefix,
@@ -82,6 +78,4 @@ class LanguageSelectBlock(UserFlowBlock):
 
         await self.language_store.setup(bot=context.bot, on_language_change=on_language_change)
 
-        # NOTE: language store setup can be called several times so it's idempotent
-        self._setup_result = SetupResult.empty()
-        return self._setup_result
+        return SetupResult.empty()
