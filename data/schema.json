@@ -22,6 +22,34 @@
       "title": "BotConfig",
       "type": "object"
     },
+    "BranchingFormMemberConfig": {
+      "properties": {
+        "field": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FormFieldConfig"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "branch": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FormBranchConfig"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "title": "BranchingFormMemberConfig",
+      "type": "object"
+    },
     "CatchAllEntryPoint": {
       "description": "Entrypoint that catches all user messages",
       "properties": {
@@ -297,7 +325,7 @@
       "type": "object"
     },
     "FormBlock": {
-      "description": "UNFINISHED\n\nBlock with a series of questions to user with options to export their answers in various formats",
+      "description": "Block with a series of questions to user with options to export their answers in various formats",
       "properties": {
         "block_id": {
           "title": "Block Id",
@@ -307,15 +335,18 @@
           "title": "Form Name",
           "type": "string"
         },
-        "fields": {
+        "members": {
           "items": {
-            "$ref": "#/$defs/FormFieldConfig"
+            "$ref": "#/$defs/BranchingFormMemberConfig"
           },
-          "title": "Fields",
+          "title": "Members",
           "type": "array"
         },
         "messages": {
           "$ref": "#/$defs/FormMessages"
+        },
+        "export": {
+          "$ref": "#/$defs/FormResultsExportConfig"
         },
         "form_completed_next_block_id": {
           "anyOf": [
@@ -343,12 +374,41 @@
       "required": [
         "block_id",
         "form_name",
-        "fields",
+        "members",
         "messages",
+        "export",
         "form_completed_next_block_id",
         "form_cancelled_next_block_id"
       ],
       "title": "FormBlock",
+      "type": "object"
+    },
+    "FormBranchConfig": {
+      "properties": {
+        "members": {
+          "items": {
+            "$ref": "#/$defs/BranchingFormMemberConfig"
+          },
+          "title": "Members",
+          "type": "array"
+        },
+        "condition_match_value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Condition Match Value"
+        }
+      },
+      "required": [
+        "members"
+      ],
+      "title": "FormBranchConfig",
       "type": "object"
     },
     "FormFieldConfig": {
@@ -361,20 +421,39 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "default": null
+        },
+        "single_select": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SingleSelectFormFieldConfig"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         }
       },
-      "required": [
-        "plain_text"
-      ],
       "title": "FormFieldConfig",
       "type": "object"
     },
     "FormFieldResultFormattingOpts": {
       "properties": {
         "descr": {
-          "title": "Descr",
-          "type": "string"
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            }
+          ],
+          "title": "Descr"
         },
         "is_multiline": {
           "default": false,
@@ -489,6 +568,55 @@
         "cancelling_because_of_error"
       ],
       "title": "FormMessages",
+      "type": "object"
+    },
+    "FormResultsExportConfig": {
+      "properties": {
+        "is_anonymous": {
+          "title": "Is Anonymous",
+          "type": "boolean"
+        },
+        "to_chat": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FormResultsExportToChatConfig"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "is_anonymous",
+        "to_chat"
+      ],
+      "title": "FormResultsExportConfig",
+      "type": "object"
+    },
+    "FormResultsExportToChatConfig": {
+      "properties": {
+        "chat_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            }
+          ],
+          "title": "Chat Id"
+        },
+        "via_feedback_handler": {
+          "title": "Via Feedback Handler",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "chat_id",
+        "via_feedback_handler"
+      ],
+      "title": "FormResultsExportToChatConfig",
       "type": "object"
     },
     "HumanOperatorBlock": {
@@ -831,53 +959,13 @@
       "title": "MessagesToUser",
       "type": "object"
     },
-    "NextFieldMapping": {
-      "properties": {
-        "if_value": {
-          "additionalProperties": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "title": "If Value",
-          "type": "object"
-        },
-        "if_skipped": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "If Skipped"
-        },
-        "default": {
-          "title": "Default",
-          "type": "string"
-        }
-      },
-      "required": [
-        "if_value",
-        "if_skipped",
-        "default"
-      ],
-      "title": "NextFieldMapping",
-      "type": "object"
-    },
     "PlainTextFormFieldConfig": {
       "properties": {
         "id": {
           "title": "Id",
           "type": "string"
         },
-        "propmt": {
+        "prompt": {
           "anyOf": [
             {
               "type": "string"
@@ -889,28 +977,22 @@
               "type": "object"
             }
           ],
-          "title": "Propmt"
+          "title": "Prompt"
         },
         "is_required": {
           "title": "Is Required",
           "type": "boolean"
         },
         "result_formatting_opts": {
-          "$ref": "#/$defs/FormFieldResultFormattingOpts"
-        },
-        "next_field": {
           "anyOf": [
             {
-              "type": "string"
+              "$ref": "#/$defs/FormFieldResultFormattingOpts"
             },
             {
-              "$ref": "#/$defs/NextFieldMapping"
-            },
-            {
-              "type": "null"
+              "type": "boolean"
             }
           ],
-          "title": "Next Field"
+          "title": "Result Formatting Opts"
         },
         "empty_text_error_msg": {
           "anyOf": [
@@ -929,10 +1011,9 @@
       },
       "required": [
         "id",
-        "propmt",
+        "prompt",
         "is_required",
         "result_formatting_opts",
-        "next_field",
         "empty_text_error_msg"
       ],
       "title": "PlainTextFormFieldConfig",
@@ -967,6 +1048,84 @@
         "next_block_id"
       ],
       "title": "RegexMatchEntryPoint",
+      "type": "object"
+    },
+    "SingleSelectFormFieldConfig": {
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "prompt": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            }
+          ],
+          "title": "Prompt"
+        },
+        "is_required": {
+          "title": "Is Required",
+          "type": "boolean"
+        },
+        "result_formatting_opts": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FormFieldResultFormattingOpts"
+            },
+            {
+              "type": "boolean"
+            }
+          ],
+          "title": "Result Formatting Opts"
+        },
+        "options": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              }
+            ]
+          },
+          "title": "Options",
+          "type": "object"
+        },
+        "invalid_enum_error_msg": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            }
+          ],
+          "title": "Invalid Enum Error Msg"
+        }
+      },
+      "required": [
+        "id",
+        "prompt",
+        "is_required",
+        "result_formatting_opts",
+        "options",
+        "invalid_enum_error_msg"
+      ],
+      "title": "SingleSelectFormFieldConfig",
       "type": "object"
     },
     "TgBotCommand": {
