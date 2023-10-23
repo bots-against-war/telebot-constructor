@@ -142,7 +142,6 @@ class FormResultsExportToChatConfig(BaseModel):
 class FormResultsExportConfig(BaseModel):
     is_anonymous: bool
     to_chat: Optional[FormResultsExportToChatConfig]
-    to_internal_storage: bool
 
 
 def _validate_template(template: LocalizableText, placeholder_count: int, title: str) -> LocalizableText:
