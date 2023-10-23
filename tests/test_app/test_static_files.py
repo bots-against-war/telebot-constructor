@@ -7,7 +7,7 @@ from pytest_aiohttp.plugin import AiohttpClient  # type: ignore
 from telebot_constructor.app import TelebotConstructorApp
 
 
-async def test_serve_static_files(
+async def test_serve_index(
     constructor_app: Tuple[TelebotConstructorApp, aiohttp.web.Application], aiohttp_client: AiohttpClient
 ) -> None:
     constructor, web_app = constructor_app
@@ -23,6 +23,27 @@ async def test_serve_static_files(
     assert resp.status == 200
     assert await resp.text("utf-8") == "hello world"
     assert resp.content_type == "text/html"
+
+    resp = await client.get("/whatever/weird/path/we/use/in/client/side/routing")
+    assert resp.status == 200
+    assert await resp.text("utf-8") == "hello world"
+    assert resp.content_type == "text/html"
+
+
+async def test_serve_static_files(
+    constructor_app: Tuple[TelebotConstructorApp, aiohttp.web.Application], aiohttp_client: AiohttpClient
+) -> None:
+    constructor, web_app = constructor_app
+    client = await aiohttp_client(web_app)
+
+    assets_dir = constructor.static_files_dir / "assets"
+    assets_dir.mkdir()
+    (assets_dir / "some-asset.js").write_text("rm -rf /")
+
+    resp = await client.get("/assets/some-asset.js")
+    assert resp.status == 200
+    assert await resp.text("utf-8") == "rm -rf /"
+    assert resp.content_type == "text/javascript"
 
 
 async def test_cors(

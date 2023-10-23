@@ -23,7 +23,7 @@ from telebot_constructor.app_models import BotTokenPayload, TgBotUser, TgBotUser
 from telebot_constructor.auth import Auth
 from telebot_constructor.bot_config import BotConfig
 from telebot_constructor.build_time_config import BASE_PATH
-from telebot_constructor.construct import construct_bot, make_raw_bot
+from telebot_constructor.construct import BotFactory, construct_bot, make_raw_bot
 from telebot_constructor.cors import setup_cors
 from telebot_constructor.debug import setup_debugging
 from telebot_constructor.group_chat_discovery import GroupChatDiscoveryHandler
@@ -100,6 +100,8 @@ class TelebotConstructorApp:
             telegram_files_downloader=self.telegram_files_downloader,
         )
 
+        self._bot_factory: BotFactory = AsyncTeleBot  # for overriding during tests
+
     @property
     def runner(self) -> ConstructedBotRunner:
         if self._runner is None:
@@ -153,6 +155,7 @@ class TelebotConstructorApp:
             username,
             bot_config=await self.load_bot_config(username, bot_name),
             secret_store=self.secret_store,
+            _bot_factory=self._bot_factory,
         )
 
     async def _construct_bot(self, username: str, bot_name: str, bot_config: BotConfig) -> BotRunner:
@@ -163,6 +166,7 @@ class TelebotConstructorApp:
             secret_store=self.secret_store,
             redis=self.redis,
             group_chat_discovery_handler=self.group_chat_discovery_handler,
+            _bot_factory=self._bot_factory,
         )
 
     async def re_start_bot(
@@ -215,6 +219,8 @@ class TelebotConstructorApp:
             username = await self.authenticate(request)
             secret_name = self.parse_secret_name(request)
             secret_value = await request.text()
+            if not secret_value:
+                raise web.HTTPBadRequest(reason="Secret can't be empty")
             result = await self.secret_store.save_secret(
                 secret_name=secret_name,
                 secret_value=secret_value,

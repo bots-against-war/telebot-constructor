@@ -6,7 +6,9 @@ from typing import AsyncGenerator
 import aiohttp.web
 import pytest
 from cryptography.fernet import Fernet
+from telebot import AsyncTeleBot
 from telebot.runner import BotRunner
+from telebot.test_util import MockedAsyncTeleBot
 from telebot_components.redis_utils.emulation import RedisEmulation
 from telebot_components.stores.generic import GenericStore
 from telebot_components.utils.secrets import RedisSecretStore
@@ -32,6 +34,18 @@ class MockBotRunner(ConstructedBotRunner):
         pass
 
 
+_MOCKED_ASYNC_TELEBOT_CACHE: dict[str, AsyncTeleBot] = dict()
+
+
+def mocked_async_telebot_factory(token: str) -> AsyncTeleBot:
+    cached = _MOCKED_ASYNC_TELEBOT_CACHE.get(token)
+    if cached is not None:
+        return cached
+    bot = MockedAsyncTeleBot(token)
+    _MOCKED_ASYNC_TELEBOT_CACHE[token] = bot
+    return bot
+
+
 @pytest.fixture
 async def constructor_app() -> AsyncGenerator[tuple[TelebotConstructorApp, aiohttp.web.Application], None]:
     redis = RedisEmulation()
@@ -49,6 +63,7 @@ async def constructor_app() -> AsyncGenerator[tuple[TelebotConstructorApp, aioht
             static_files_dir_override=Path(tempdir),
         )
         telebot_constructor_app._runner = MockBotRunner()
+        telebot_constructor_app._bot_factory = mocked_async_telebot_factory
         await telebot_constructor_app.setup()
         aiohttp_app = await telebot_constructor_app.create_constructor_web_app()
         GenericStore.allow_duplicate_stores("global")
