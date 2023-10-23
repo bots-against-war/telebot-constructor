@@ -2,7 +2,7 @@ import abc
 import dataclasses
 import logging
 from enum import Enum
-from typing import Any, Optional, TypeAlias, Union
+from typing import Any, Optional, Type, TypeAlias, Union
 
 from pydantic import BaseModel
 from telebot import types as tg
@@ -45,16 +45,16 @@ FormEnd: TypeAlias = None
 
 class BaseFormFieldConfig(BaseModel, abc.ABC):
     id: FormFieldId
-    propmt: LocalizableText
+    prompt: LocalizableText
     is_required: bool
-    result_formatting_opts: FormFieldResultFormattingOpts
+    result_formatting_opts: Union[FormFieldResultFormattingOpts, bool]
 
     def base_field_kwargs(self) -> dict[str, Any]:
         return dataclasses.asdict(
             FormField(
                 name=self.id,
                 required=self.is_required,
-                query_message=self.propmt,
+                query_message=self.prompt,
                 result_formatting_opts=self.result_formatting_opts,
             )
         )
@@ -82,9 +82,16 @@ class SingleSelectFormFieldConfig(BaseFormFieldConfig):
     invalid_enum_error_msg: LocalizableText
 
     def construct_field(self) -> SingleSelectField:
+        # HACK: we need to programmatically create Enum class from a user-provided set of options
+        # see https://docs.python.org/3/howto/enum.html#functional-api
+        # but also, we need to inject this class into global scope so that (de)serializers can find this class
+        # in the present module
+        # so we do this using globals()
+        enum_class_name = f"{self.id}_single_select_field_options"
+        EnumClass: Type[Enum] = Enum(enum_class_name, self.options, module=__name__)  # type: ignore
+        globals()[enum_class_name] = EnumClass
         return SingleSelectField(
-            # see https://docs.python.org/3/howto/enum.html#functional-api
-            EnumClass=Enum(f"{self.id}-options", self.options),  # type: ignore
+            EnumClass=EnumClass,
             invalid_enum_value_error_msg=self.invalid_enum_error_msg,
             **self.base_field_kwargs(),  # type: ignore
         )
@@ -92,7 +99,7 @@ class SingleSelectFormFieldConfig(BaseFormFieldConfig):
 
 class FormFieldConfig(ExactlyOneNonNullFieldModel):
     plain_text: Optional[PlainTextFormFieldConfig] = None
-    single_select: Optional[SingleSelectField] = None
+    single_select: Optional[SingleSelectFormFieldConfig] = None
 
     def specific_config(self) -> BaseFormFieldConfig:
         return self.plain_text or self.single_select  # type: ignore
@@ -270,7 +277,7 @@ class FormBlock(UserFlowBlock):
                     _user_flow_context_for_next_block(form_exit_context),
                 )
 
-        await self._form_handler.setup(
+        self._form_handler.setup(
             bot=context.bot,
             on_form_completed=on_form_completed,
             on_form_cancelled=on_form_cancelled,

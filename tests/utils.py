@@ -3,6 +3,7 @@ import time
 from cryptography.fernet import Fernet
 from telebot import types as tg
 from telebot.test_util import MethodCall
+from telebot.types import Dictionaryable
 from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.utils.secrets import RedisSecretStore, SecretStore
 
@@ -103,3 +104,12 @@ def assert_dicts_include(actual_dicts: list[dict], required_subdicts: list[dict]
 def assert_method_call_kwargs_include(method_calls: list[MethodCall], required_call_kwargs: list[dict]) -> None:
     call_kwargs = [mc.full_kwargs for mc in method_calls]
     assert_dicts_include(call_kwargs, required_call_kwargs)
+
+
+def assert_method_call_dictified_kwargs_include(
+    method_calls: list[MethodCall], required_call_kwargs: list[dict]
+) -> None:
+    preprocessed_kwargs = [
+        {k: v.to_dict() for k, v in mc.full_kwargs.items() if isinstance(v, Dictionaryable)} for mc in method_calls
+    ]
+    assert_dicts_include(preprocessed_kwargs, required_call_kwargs)

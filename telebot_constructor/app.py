@@ -669,9 +669,16 @@ class TelebotConstructorApp:
 
         self._start_stored_bots_task = create_error_logging_task(_start_stored_bots(), name="start stored bots")
 
-    async def pre_web_app_setup(self) -> None:
+    async def setup(self) -> None:
         self.start_stored_bots_in_background()
         await self.telegram_files_downloader.setup()
+
+    async def cleanup(self) -> None:
+        logger.info("Cleanup started")
+        await self.telegram_files_downloader.cleanup()
+        await self.runner.cleanup()
+        await telebot.api.session_manager.close_session()
+        logger.info("Cleanup completed")
 
     # public methods to run constructor in different scenarios
 
@@ -679,7 +686,7 @@ class TelebotConstructorApp:
         """For standalone run"""
         logger.info("Running telebot constructor w/ polling")
         self._runner = PollingConstructedBotRunner()
-        await self.pre_web_app_setup()
+        await self.setup()
         aiohttp_app = await self.create_constructor_web_app()
         aiohttp_runner = web.AppRunner(aiohttp_app)
         await aiohttp_runner.setup()
@@ -690,15 +697,13 @@ class TelebotConstructorApp:
             while True:
                 await asyncio.sleep(3600)
         finally:
-            logger.info("Cleanup started")
-            await self.runner.cleanup()
-            await telebot.api.session_manager.close_session()
             await aiohttp_runner.cleanup()
-            logger.info("Cleanup completed")
+            await self.cleanup()
 
     async def setup_on_webhook_app(self, webhook_app: WebhookApp) -> None:
         logger.info(f"Setting up telebot constructor web app on webhook app with base URL {webhook_app.base_url!r}")
         self._runner = WebhookAppConstructedBotRunner(webhook_app)
-        await self.pre_web_app_setup()
+        await self.setup()
         app = await self.create_constructor_web_app()
+        app.on_cleanup.append(lambda _: self.cleanup())
         webhook_app.aiohttp_app.add_subapp(BASE_PATH, app)

@@ -10,7 +10,7 @@ DEBUG = bool(os.getenv("TELEBOT_CONSTRUCTOR_DEBUG"))
 SLEEP_BEFORE_REQUEST = float(os.environ.get("TELEBOT_CONSTRUCTOR_SLEEP_BEFORE_REQUEST", "0"))
 
 
-def setup_debugging(app: web.Application) -> None:
+def setup_debugging(app: web.Application) -> None:  # pragma: no cover
     if not DEBUG:
         return
 
