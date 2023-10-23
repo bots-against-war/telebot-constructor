@@ -23,7 +23,7 @@ from telebot_constructor.app_models import BotTokenPayload, TgBotUser, TgBotUser
 from telebot_constructor.auth import Auth
 from telebot_constructor.bot_config import BotConfig
 from telebot_constructor.build_time_config import BASE_PATH
-from telebot_constructor.construct import construct_bot, make_raw_bot
+from telebot_constructor.construct import BotFactory, construct_bot, make_raw_bot
 from telebot_constructor.cors import setup_cors
 from telebot_constructor.debug import setup_debugging
 from telebot_constructor.group_chat_discovery import GroupChatDiscoveryHandler
@@ -100,6 +100,8 @@ class TelebotConstructorApp:
             telegram_files_downloader=self.telegram_files_downloader,
         )
 
+        self._bot_factory: BotFactory = AsyncTeleBot  # for overriding during tests
+
     @property
     def runner(self) -> ConstructedBotRunner:
         if self._runner is None:
@@ -153,6 +155,7 @@ class TelebotConstructorApp:
             username,
             bot_config=await self.load_bot_config(username, bot_name),
             secret_store=self.secret_store,
+            _bot_factory=self._bot_factory,
         )
 
     async def _construct_bot(self, username: str, bot_name: str, bot_config: BotConfig) -> BotRunner:
@@ -163,6 +166,7 @@ class TelebotConstructorApp:
             secret_store=self.secret_store,
             redis=self.redis,
             group_chat_discovery_handler=self.group_chat_discovery_handler,
+            _bot_factory=self._bot_factory,
         )
 
     async def re_start_bot(
@@ -215,6 +219,8 @@ class TelebotConstructorApp:
             username = await self.authenticate(request)
             secret_name = self.parse_secret_name(request)
             secret_value = await request.text()
+            if not secret_value:
+                raise web.HTTPBadRequest(reason="Secret can't be empty")
             result = await self.secret_store.save_secret(
                 secret_name=secret_name,
                 secret_value=secret_value,
@@ -669,9 +675,16 @@ class TelebotConstructorApp:
 
         self._start_stored_bots_task = create_error_logging_task(_start_stored_bots(), name="start stored bots")
 
-    async def pre_web_app_setup(self) -> None:
+    async def setup(self) -> None:
         self.start_stored_bots_in_background()
         await self.telegram_files_downloader.setup()
+
+    async def cleanup(self) -> None:
+        logger.info("Cleanup started")
+        await self.telegram_files_downloader.cleanup()
+        await self.runner.cleanup()
+        await telebot.api.session_manager.close_session()
+        logger.info("Cleanup completed")
 
     # public methods to run constructor in different scenarios
 
@@ -679,7 +692,7 @@ class TelebotConstructorApp:
         """For standalone run"""
         logger.info("Running telebot constructor w/ polling")
         self._runner = PollingConstructedBotRunner()
-        await self.pre_web_app_setup()
+        await self.setup()
         aiohttp_app = await self.create_constructor_web_app()
         aiohttp_runner = web.AppRunner(aiohttp_app)
         await aiohttp_runner.setup()
@@ -690,15 +703,13 @@ class TelebotConstructorApp:
             while True:
                 await asyncio.sleep(3600)
         finally:
-            logger.info("Cleanup started")
-            await self.runner.cleanup()
-            await telebot.api.session_manager.close_session()
             await aiohttp_runner.cleanup()
-            logger.info("Cleanup completed")
+            await self.cleanup()
 
     async def setup_on_webhook_app(self, webhook_app: WebhookApp) -> None:
         logger.info(f"Setting up telebot constructor web app on webhook app with base URL {webhook_app.base_url!r}")
         self._runner = WebhookAppConstructedBotRunner(webhook_app)
-        await self.pre_web_app_setup()
+        await self.setup()
         app = await self.create_constructor_web_app()
+        app.on_cleanup.append(lambda _: self.cleanup())
         webhook_app.aiohttp_app.add_subapp(BASE_PATH, app)

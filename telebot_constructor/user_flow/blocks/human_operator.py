@@ -1,6 +1,6 @@
 import datetime
 import logging
-from typing import Optional
+from typing import Any, Optional
 
 from pydantic import BaseModel
 from telebot import types as tg
@@ -60,6 +60,15 @@ class HumanOperatorBlock(UserFlowBlock):
     catch_all: bool
     feedback_handler_config: FeedbackHandlerConfig
 
+    def model_post_init(self, __context: Any) -> None:
+        self._feedback_handler: Optional[FeedbackHandler] = None
+
+    @property
+    def feedback_handler(self) -> FeedbackHandler:
+        if self._feedback_handler is None:
+            raise RuntimeError("Attempt to get feedback handler before it is set up")
+        return self._feedback_handler
+
     async def enter(self, context: UserFlowContext) -> None:
         pass  # nothing to do on enter
 
@@ -77,7 +86,7 @@ class HumanOperatorBlock(UserFlowBlock):
                 active_block_id = await context.get_active_block_id(message.from_user.id)
                 return active_block_id == self.block_id
 
-        feedback_handler = FeedbackHandler(
+        self._feedback_handler = FeedbackHandler(
             admin_chat_id=self.feedback_handler_config.admin_chat_id,
             name=f"fh-{self.feedback_handler_config.admin_chat_id}",
             redis=context.redis,
@@ -118,12 +127,12 @@ class HumanOperatorBlock(UserFlowBlock):
             language_store=context.language_store,
         )
 
-        await feedback_handler.setup(context.bot)
+        await self._feedback_handler.setup(context.bot)
 
         admin_chat_cmd_scope = tg.BotCommandScopeChat(chat_id=self.feedback_handler_config.admin_chat_id)
         return SetupResult(
-            background_jobs=feedback_handler.background_jobs(base_url=None, server_listening_future=None),
-            aux_endpoints=await feedback_handler.aux_endpoints(),
+            background_jobs=self._feedback_handler.background_jobs(base_url=None, server_listening_future=None),
+            aux_endpoints=await self._feedback_handler.aux_endpoints(),
             bot_commands=[
                 BotCommandInfo(
                     command=tg.BotCommand(command="help", description="помощь по использованию админ-чата"),

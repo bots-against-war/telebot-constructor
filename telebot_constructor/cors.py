@@ -37,6 +37,6 @@ def setup_cors(app: web.Application) -> None:
     app.middlewares.insert(0, cors_middleware)
 
     async def preflight(request: web.Request) -> web.Response:
-        return web.Response()
+        return web.Response(text="")
 
     app.router.add_options("/{wildcard:.*}", preflight)

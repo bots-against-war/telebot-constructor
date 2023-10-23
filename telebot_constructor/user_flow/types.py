@@ -5,9 +5,12 @@ from telebot import AsyncTeleBot
 from telebot import types as tg
 from telebot.runner import AuxBotEndpoint
 from telebot.types import service as service_types
+from telebot_components.feedback import FeedbackHandler
 from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.stores.banned_users import BannedUsersStore
 from telebot_components.stores.language import LanguageStore
+
+from telebot_constructor.utils import AnyChatId
 
 
 @dataclass(frozen=True)
@@ -17,6 +20,7 @@ class UserFlowSetupContext:
     redis: RedisInterface
     banned_users_store: BannedUsersStore
     language_store: Optional[LanguageStore]
+    feedback_handlers: dict[AnyChatId, FeedbackHandler]
     enter_block: "EnterUserFlowBlockCallback"
     get_active_block_id: "GetActiveUserFlowBlockId"
 

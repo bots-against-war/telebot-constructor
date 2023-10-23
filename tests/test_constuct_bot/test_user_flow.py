@@ -11,6 +11,17 @@ from telebot_constructor.bot_config import (
 )
 from telebot_constructor.construct import construct_bot
 from telebot_constructor.user_flow.blocks.content import ContentBlock
+from telebot_constructor.user_flow.blocks.form import (
+    BranchingFormMemberConfig,
+    FormBlock,
+    FormBranchConfig,
+    FormFieldConfig,
+    FormMessages,
+    FormResultsExportConfig,
+    FormResultsExportToChatConfig,
+    PlainTextFormFieldConfig,
+    SingleSelectFormFieldConfig,
+)
 from telebot_constructor.user_flow.blocks.human_operator import (
     FeedbackHandlerConfig,
     HumanOperatorBlock,
@@ -33,6 +44,7 @@ from telebot_constructor.user_flow.entrypoints.command import CommandEntryPoint
 from telebot_constructor.user_flow.entrypoints.regex_match import RegexMatchEntryPoint
 from telebot_constructor.utils.pydantic import Language
 from tests.utils import (
+    assert_method_call_dictified_kwargs_include,
     assert_method_call_kwargs_include,
     dummy_secret_store,
     tg_update_callback_query,
@@ -41,7 +53,7 @@ from tests.utils import (
 
 
 def test_user_flow_config_model_validation() -> None:
-    with pytest.raises(ValueError, match=r".*?Duplicate block ids: \['1'\]"):
+    with pytest.raises(ValueError, match=r".*?All block ids must be unique, but there are duplicates: 1"):
         UserFlowConfig(
             entrypoints=[],
             blocks=[
@@ -682,4 +694,185 @@ async def test_multilang_user_flow() -> None:
     await bot.process_new_updates([tg_update_message_to_bot(161, first_name="User", text="/start")])
     assert len(bot.method_calls) == 1
     assert_method_call_kwargs_include(bot.method_calls["send_message"], [{"text": "привет юзер", "chat_id": 161}])
+    bot.method_calls.clear()
+
+
+async def test_user_flow_with_form() -> None:
+    bot_config = BotConfig(
+        token_secret_name="token",
+        display_name="lalala",
+        user_flow_config=UserFlowConfig(
+            entrypoints=[
+                UserFlowEntryPointConfig(
+                    command=CommandEntryPoint(
+                        entrypoint_id="start-cmd",
+                        command="start",
+                        next_block_id="hello-msg",
+                    ),
+                ),
+            ],
+            blocks=[
+                UserFlowBlockConfig(
+                    content=ContentBlock.simple_text(
+                        block_id="hello-msg",
+                        message_text="hi i'm form bot",
+                        next_block_id="form",
+                    ),
+                ),
+                UserFlowBlockConfig(
+                    content=ContentBlock.simple_text(
+                        block_id="thanks-msg",
+                        message_text="thanks for using the bot",
+                        next_block_id=None,
+                    ),
+                ),
+                UserFlowBlockConfig(
+                    form=FormBlock(
+                        block_id="form",
+                        form_name="test-form",
+                        members=[
+                            BranchingFormMemberConfig(
+                                field=FormFieldConfig(
+                                    plain_text=PlainTextFormFieldConfig(
+                                        id="name",
+                                        prompt="what is your name?",
+                                        is_required=True,
+                                        result_formatting_opts=True,
+                                        empty_text_error_msg="please provide an answer",
+                                    ),
+                                )
+                            ),
+                            BranchingFormMemberConfig(
+                                field=FormFieldConfig(
+                                    single_select=SingleSelectFormFieldConfig(
+                                        id="does_like_apples",
+                                        prompt="do you like apples?",
+                                        is_required=True,
+                                        result_formatting_opts=True,
+                                        options={"yes": "Yes I do", "no": "No!!!"},
+                                        invalid_enum_error_msg="please use reply keyboard buttons",
+                                    ),
+                                )
+                            ),
+                            BranchingFormMemberConfig(
+                                branch=FormBranchConfig(
+                                    members=[
+                                        BranchingFormMemberConfig(
+                                            field=FormFieldConfig(
+                                                plain_text=PlainTextFormFieldConfig(
+                                                    id="which_apples",
+                                                    prompt="which apples do you like?",
+                                                    is_required=True,
+                                                    result_formatting_opts=True,
+                                                    empty_text_error_msg="please answer the question",
+                                                )
+                                            )
+                                        )
+                                    ],
+                                    condition_match_value="yes",
+                                )
+                            ),
+                        ],
+                        messages=FormMessages(
+                            form_start="hi please fill the form; {} - cancel",
+                            field_is_skippable="skip field - {}",
+                            field_is_not_skippable="field is not skippable",
+                            please_enter_correct_value="please enter corrected value",
+                            unsupported_command="the only supported commands are: {}",
+                            cancelling_because_of_error="unexpected error, cancelling: {}",
+                        ),
+                        export=FormResultsExportConfig(
+                            is_anonymous=False,
+                            to_chat=FormResultsExportToChatConfig(chat_id=111222, via_feedback_handler=True),
+                        ),
+                        form_completed_next_block_id="thanks-msg",
+                        form_cancelled_next_block_id=None,
+                    ),
+                ),
+            ],
+            node_display_coords={},
+        ),
+    )
+    redis = RedisEmulation()
+    secret_store = dummy_secret_store(redis)
+    username = "bot-admin-1312"
+    await secret_store.save_secret(secret_name="token", secret_value="mock-token", owner_id=username)
+    bot_runner = await construct_bot(
+        username=username,
+        bot_name="form-bot-test",
+        bot_config=bot_config,
+        secret_store=secret_store,
+        redis=redis,
+        _bot_factory=MockedAsyncTeleBot,
+    )
+    assert not bot_runner.background_jobs
+    assert not bot_runner.aux_endpoints
+
+    bot = bot_runner.bot
+    assert isinstance(bot, MockedAsyncTeleBot)
+    bot.method_calls.clear()
+
+    # using start command to start the form
+    await bot.process_new_updates([tg_update_message_to_bot(161, first_name="User", text="/start")])
+    assert len(bot.method_calls) == 1
+    assert_method_call_kwargs_include(
+        bot.method_calls["send_message"],
+        [
+            {"text": "hi i'm form bot", "chat_id": 161},
+            {"chat_id": 161, "text": "hi please fill the form; /cancel - cancel\n\nwhat is your name?"},
+        ],
+    )
+    assert_method_call_dictified_kwargs_include(bot.method_calls["send_message"], [{}, {}])
+    bot.method_calls.clear()
+
+    await bot.process_new_updates([tg_update_message_to_bot(161, first_name="User", text="John Doe")])
+    assert len(bot.method_calls) == 1
+    assert_method_call_kwargs_include(
+        bot.method_calls["send_message"],
+        [
+            {"chat_id": 161, "text": "do you like apples?"},
+        ],
+    )
+    assert_method_call_dictified_kwargs_include(
+        bot.method_calls["send_message"],
+        [
+            {
+                "reply_markup": {
+                    "keyboard": [[{"text": "Yes I do"}, {"text": "No!!!"}]],
+                    "one_time_keyboard": True,
+                    "resize_keyboard": True,
+                },
+            }
+        ],
+    )
+    bot.method_calls.clear()
+
+    await bot.process_new_updates([tg_update_message_to_bot(161, first_name="User", text="Yes I do")])
+    assert len(bot.method_calls) == 1
+    assert_method_call_kwargs_include(
+        bot.method_calls["send_message"],
+        [
+            {"chat_id": 161, "text": "which apples do you like?"},
+        ],
+    )
+    bot.method_calls.clear()
+
+    await bot.process_new_updates([tg_update_message_to_bot(161, first_name="User", text="granny smith")])
+    assert len(bot.method_calls) == 1
+    assert_method_call_kwargs_include(
+        bot.method_calls["send_message"],
+        [
+            {
+                "chat_id": 111222,
+                "text": (
+                    '<a href="tg://user?id=161">User</a>\n\n'
+                    + "<b>what is your name?</b>: John Doe\n"
+                    + "<b>do you like apples?</b>: Yes I do\n"
+                    + "<b>which apples do you like?</b>: granny smith"
+                ),
+                "parse_mode": "HTML",
+            },
+            {"text": "thanks for using the bot", "chat_id": 161},
+        ],
+    )
     bot.method_calls.clear()
