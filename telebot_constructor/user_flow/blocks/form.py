@@ -2,7 +2,7 @@ import abc
 import dataclasses
 import logging
 from enum import Enum
-from typing import Any, Optional, Type, TypeAlias, Union
+from typing import Any, Literal, Optional, Type, Union
 
 from pydantic import BaseModel
 from telebot import types as tg
@@ -43,15 +43,28 @@ class BaseFormFieldConfig(BaseModel, abc.ABC):
     name: str
     prompt: LocalizableText
     is_required: bool
-    result_formatting_opts: Union[FormFieldResultFormattingOpts, bool]
+    result_formatting: Union[FormFieldResultFormattingOpts, Literal["auto"], None]
+
+    def auto_result_formatting_opts(self) -> FormFieldResultFormattingOpts:
+        return FormFieldResultFormattingOpts(
+            descr=self.name,
+            is_multiline=False,
+        )
 
     def base_field_kwargs(self) -> dict[str, Any]:
+        if isinstance(self.result_formatting, FormFieldResultFormattingOpts):
+            result_formatting_opts = self.result_formatting
+        elif self.result_formatting == "auto":
+            result_formatting_opts = self.auto_result_formatting_opts()
+        else:
+            result_formatting_opts = None
+
         return dataclasses.asdict(
             FormField(
                 name=self.id,
                 required=self.is_required,
                 query_message=self.prompt,
-                result_formatting_opts=self.result_formatting_opts,
+                result_formatting_opts=result_formatting_opts,
             )
         )
 
@@ -61,7 +74,14 @@ class BaseFormFieldConfig(BaseModel, abc.ABC):
 
 
 class PlainTextFormFieldConfig(BaseFormFieldConfig):
+    is_long_text: bool
     empty_text_error_msg: LocalizableText
+
+    def auto_result_formatting_opts(self) -> FormFieldResultFormattingOpts:
+        return FormFieldResultFormattingOpts(
+            descr=self.name,
+            is_multiline=self.is_long_text,
+        )
 
     def construct_field(self) -> PlainTextField:
         return PlainTextField(

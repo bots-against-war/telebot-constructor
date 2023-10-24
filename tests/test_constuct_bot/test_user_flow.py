@@ -735,9 +735,11 @@ async def test_user_flow_with_form() -> None:
                                 field=FormFieldConfig(
                                     plain_text=PlainTextFormFieldConfig(
                                         id="name",
+                                        name="Name",
                                         prompt="what is your name?",
+                                        is_long_text=False,
                                         is_required=True,
-                                        result_formatting_opts=True,
+                                        result_formatting="auto",
                                         empty_text_error_msg="please provide an answer",
                                     ),
                                 )
@@ -746,9 +748,10 @@ async def test_user_flow_with_form() -> None:
                                 field=FormFieldConfig(
                                     single_select=SingleSelectFormFieldConfig(
                                         id="does_like_apples",
+                                        name="Apples",
                                         prompt="do you like apples?",
                                         is_required=True,
-                                        result_formatting_opts=True,
+                                        result_formatting="auto",
                                         options={"yes": "Yes I do", "no": "No!!!"},
                                         invalid_enum_error_msg="please use reply keyboard buttons",
                                     ),
@@ -761,9 +764,11 @@ async def test_user_flow_with_form() -> None:
                                             field=FormFieldConfig(
                                                 plain_text=PlainTextFormFieldConfig(
                                                     id="which_apples",
+                                                    name="Which apples",
                                                     prompt="which apples do you like?",
                                                     is_required=True,
-                                                    result_formatting_opts=True,
+                                                    is_long_text=False,
+                                                    result_formatting="auto",
                                                     empty_text_error_msg="please answer the question",
                                                 )
                                             )
