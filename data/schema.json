@@ -1,5 +1,55 @@
 {
   "$defs": {
+    "BaseFormFieldConfig": {
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "prompt": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            }
+          ],
+          "title": "Prompt"
+        },
+        "is_required": {
+          "title": "Is Required",
+          "type": "boolean"
+        },
+        "result_formatting_opts": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FormFieldResultFormattingOpts"
+            },
+            {
+              "type": "boolean"
+            }
+          ],
+          "title": "Result Formatting Opts"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "prompt",
+        "is_required",
+        "result_formatting_opts"
+      ],
+      "title": "BaseFormFieldConfig",
+      "type": "object"
+    },
     "BotConfig": {
       "properties": {
         "display_name": {
@@ -965,6 +1015,10 @@
           "title": "Id",
           "type": "string"
         },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
         "prompt": {
           "anyOf": [
             {
@@ -1011,6 +1065,7 @@
       },
       "required": [
         "id",
+        "name",
         "prompt",
         "is_required",
         "result_formatting_opts",
@@ -1054,6 +1109,10 @@
       "properties": {
         "id": {
           "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
           "type": "string"
         },
         "prompt": {
@@ -1119,6 +1178,7 @@
       },
       "required": [
         "id",
+        "name",
         "prompt",
         "is_required",
         "result_formatting_opts",
@@ -1480,6 +1540,9 @@
     },
     "language_data": {
       "$ref": "#/$defs/LanguageData"
+    },
+    "base_form_field_config": {
+      "$ref": "#/$defs/BaseFormFieldConfig"
     }
   },
   "required": [
@@ -1487,7 +1550,8 @@
     "tg_group_chat",
     "tg_bot_user",
     "tg_bot_user_update",
-    "language_data"
+    "language_data",
+    "base_form_field_config"
   ],
   "title": "BackendDataModels",
   "type": "object"

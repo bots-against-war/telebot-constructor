@@ -35,16 +35,12 @@ from telebot_constructor.utils.pydantic import (
 
 logger = logging.getLogger(__name__)
 
-FormFieldId = str
-
-FormEnd: TypeAlias = None
-
-
 # region: form fields
 
 
 class BaseFormFieldConfig(BaseModel, abc.ABC):
-    id: FormFieldId
+    id: str
+    name: str
     prompt: LocalizableText
     is_required: bool
     result_formatting_opts: Union[FormFieldResultFormattingOpts, bool]

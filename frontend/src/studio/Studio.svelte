@@ -148,7 +148,7 @@
 
   const exitStudio = () => navigate(`/#${botName}`);
   const exitStudioWithConfirmation = withConfirmation(
-    "Вы уверены, что хотите выйти из студии? Несохранённые изменения будут утеряны.",
+    "Вы уверены, что хотите выйти из студии? Несохранённые изменения будут потеряны.",
     async () => exitStudio(),
     "Выйти",
   );

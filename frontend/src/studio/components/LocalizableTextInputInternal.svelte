@@ -4,8 +4,9 @@
   import type { LocalizableText } from "../../types";
   import type { LanguageConfig } from "../stores";
 
-  export let label: string;
+  export let label: string | undefined = undefined;
   export let description: string | undefined = undefined;
+  export let placeholder: string | undefined = undefined;
   export let value: LocalizableText;
   export let langConfig: LanguageConfig | null;
 
@@ -36,14 +37,14 @@
 </script>
 
 {#if langConfig === null && typeof value === "string"}
-  <Textarea resize="vertical" {label} {description} bind:value />
+  <Textarea resize="vertical" {label} {description} {placeholder} bind:value />
 {:else if langConfig !== null && langConfig.supportedLanguageCodes.length > 0 && typeof value !== "string"}
   <!--
     key block forces svelte to rerender tabs when the languages change,
     see https://github.com/svelteuidev/svelteui/issues/474 
   -->
   <!-- {#key langConfig} -->
-  <InputWrapper {label} {description}>
+  <InputWrapper {label} {description} {placeholder}>
     <Tabs
       active={activeLanguageTab}
       on:change={(

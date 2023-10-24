@@ -77,6 +77,7 @@ export type LockAfterTermination = boolean;
 export type BlockId3 = string;
 export type FormName = string;
 export type Id = string;
+export type Name = string;
 export type Prompt =
   | string
   | {
@@ -97,6 +98,7 @@ export type EmptyTextErrorMsg =
       [k: string]: string;
     };
 export type Id1 = string;
+export type Name1 = string;
 export type Prompt1 =
   | string
   | {
@@ -164,7 +166,7 @@ export type IsForum = boolean | null;
 export type Photo = string | null;
 export type Id3 = number;
 export type Username1 = string;
-export type Name = string;
+export type Name2 = string;
 export type Description1 = string;
 export type ShortDescription1 = string;
 export type CanJoinGroups = boolean;
@@ -173,12 +175,21 @@ export type Command1 = string;
 export type Description2 = string;
 export type Commands = TgBotCommand[];
 export type Userpic = string | null;
-export type Name1 = string;
+export type Name3 = string;
 export type Description3 = string;
 export type ShortDescription2 = string;
 export type Code = string;
-export type Name2 = string;
+export type Name4 = string;
 export type Emoji = string | null;
+export type Id4 = string;
+export type Name5 = string;
+export type Prompt2 =
+  | string
+  | {
+      [k: string]: string;
+    };
+export type IsRequired2 = boolean;
+export type ResultFormattingOpts2 = FormFieldResultFormattingOpts | boolean;
 
 /**
  * Temporary class to pack several models into one schema; not used directly by frontend code
@@ -189,6 +200,7 @@ export interface BackendDataModels {
   tg_bot_user: TgBotUser;
   tg_bot_user_update: TgBotUserUpdate;
   language_data: LanguageData;
+  base_form_field_config: BaseFormFieldConfig;
   [k: string]: unknown;
 }
 export interface BotConfig {
@@ -355,6 +367,7 @@ export interface FormFieldConfig {
 }
 export interface PlainTextFormFieldConfig {
   id: Id;
+  name: Name;
   prompt: Prompt;
   is_required: IsRequired;
   result_formatting_opts: ResultFormattingOpts;
@@ -369,6 +382,7 @@ export interface FormFieldResultFormattingOpts {
 }
 export interface SingleSelectFormFieldConfig {
   id: Id1;
+  name: Name1;
   prompt: Prompt1;
   is_required: IsRequired1;
   result_formatting_opts: ResultFormattingOpts1;
@@ -455,7 +469,7 @@ export interface TgGroupChat {
 export interface TgBotUser {
   id: Id3;
   username: Username1;
-  name: Name;
+  name: Name2;
   description: Description1;
   short_description: ShortDescription1;
   can_join_groups: CanJoinGroups;
@@ -470,14 +484,22 @@ export interface TgBotCommand {
   [k: string]: unknown;
 }
 export interface TgBotUserUpdate {
-  name: Name1;
+  name: Name3;
   description: Description3;
   short_description: ShortDescription2;
   [k: string]: unknown;
 }
 export interface LanguageData {
   code: Code;
-  name: Name2;
+  name: Name4;
   emoji?: Emoji;
+  [k: string]: unknown;
+}
+export interface BaseFormFieldConfig {
+  id: Id4;
+  name: Name5;
+  prompt: Prompt2;
+  is_required: IsRequired2;
+  result_formatting_opts: ResultFormattingOpts2;
   [k: string]: unknown;
 }
