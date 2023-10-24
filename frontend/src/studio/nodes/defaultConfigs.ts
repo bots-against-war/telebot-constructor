@@ -68,7 +68,7 @@ export function defaultLanguageSelectBlockConfig(id: string): UserFlowBlockConfi
   };
 }
 
-export function defaultFormBlockFonfig(id: string): UserFlowBlockConfig {
+export function defaultFormBlockConfig(id: string): UserFlowBlockConfig {
   return {
     form: {
       block_id: id,

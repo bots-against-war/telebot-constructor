@@ -84,7 +84,7 @@ export type Prompt =
       [k: string]: string;
     };
 export type IsRequired = boolean;
-export type ResultFormattingOpts = FormFieldResultFormattingOpts | boolean;
+export type ResultFormatting = FormFieldResultFormattingOpts | "auto" | null;
 export type Descr =
   | string
   | {
@@ -92,6 +92,7 @@ export type Descr =
     };
 export type IsMultiline = boolean;
 export type ValueFormatter = null;
+export type IsLongText = boolean;
 export type EmptyTextErrorMsg =
   | string
   | {
@@ -105,7 +106,7 @@ export type Prompt1 =
       [k: string]: string;
     };
 export type IsRequired1 = boolean;
-export type ResultFormattingOpts1 = FormFieldResultFormattingOpts | boolean;
+export type ResultFormatting1 = FormFieldResultFormattingOpts | "auto" | null;
 export type InvalidEnumErrorMsg =
   | string
   | {
@@ -189,7 +190,7 @@ export type Prompt2 =
       [k: string]: string;
     };
 export type IsRequired2 = boolean;
-export type ResultFormattingOpts2 = FormFieldResultFormattingOpts | boolean;
+export type ResultFormatting2 = FormFieldResultFormattingOpts | "auto" | null;
 
 /**
  * Temporary class to pack several models into one schema; not used directly by frontend code
@@ -370,7 +371,8 @@ export interface PlainTextFormFieldConfig {
   name: Name;
   prompt: Prompt;
   is_required: IsRequired;
-  result_formatting_opts: ResultFormattingOpts;
+  result_formatting: ResultFormatting;
+  is_long_text: IsLongText;
   empty_text_error_msg: EmptyTextErrorMsg;
   [k: string]: unknown;
 }
@@ -385,7 +387,7 @@ export interface SingleSelectFormFieldConfig {
   name: Name1;
   prompt: Prompt1;
   is_required: IsRequired1;
-  result_formatting_opts: ResultFormattingOpts1;
+  result_formatting: ResultFormatting1;
   options: Options;
   invalid_enum_error_msg: InvalidEnumErrorMsg;
   [k: string]: unknown;
@@ -500,6 +502,6 @@ export interface BaseFormFieldConfig {
   name: Name5;
   prompt: Prompt2;
   is_required: IsRequired2;
-  result_formatting_opts: ResultFormattingOpts2;
+  result_formatting: ResultFormatting2;
   [k: string]: unknown;
 }

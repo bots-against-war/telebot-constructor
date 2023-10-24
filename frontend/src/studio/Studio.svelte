@@ -24,7 +24,7 @@
   import {
     defaultCommandEntrypoint,
     defaultContentBlockConfig,
-    defaultFormBlockFonfig,
+    defaultFormBlockConfig,
     defaultHumanOperatorBlockCofig,
     defaultLanguageSelectBlockConfig,
   } from "./nodes/defaultConfigs";
@@ -242,7 +242,7 @@
         compact
         variant="outline"
         color={buttonColor(HUE.form)}
-        on:click={getBlockConstructor("form", defaultFormBlockFonfig)}
+        on:click={getBlockConstructor("form", defaultFormBlockConfig)}
       >
         Форма
       </Button>
@@ -252,7 +252,7 @@
     <Group noWrap spacing="xl">
       <Stack>
         <EditableTitle bind:title={botConfig.display_name} />
-        <BotUserBadge {botName} />
+        <!-- <BotUserBadge {botName} /> -->
       </Stack>
       <Stack spacing="xs">
         <Button

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { InputWrapper, Tabs, Textarea } from "@svelteuidev/core";
+  import { InputWrapper, Tabs, Textarea, TextInput } from "@svelteuidev/core";
   import Language from "../../components/Language.svelte";
   import type { LocalizableText } from "../../types";
   import type { LanguageConfig } from "../stores";
@@ -9,6 +9,8 @@
   export let placeholder: string | undefined = undefined;
   export let value: LocalizableText;
   export let langConfig: LanguageConfig | null;
+  export let isLongText: boolean = true;
+  export let required: boolean = false;
 
   if (value instanceof Object && langConfig === null) {
     if (value.length) {
@@ -37,14 +39,18 @@
 </script>
 
 {#if langConfig === null && typeof value === "string"}
-  <Textarea resize="vertical" {label} {description} {placeholder} bind:value />
+  {#if isLongText}
+    <Textarea resize="vertical" {required} {label} {description} {placeholder} bind:value />
+  {:else}
+    <TextInput {required} {label} {description} {placeholder} bind:value />
+  {/if}
 {:else if langConfig !== null && langConfig.supportedLanguageCodes.length > 0 && typeof value !== "string"}
   <!--
     key block forces svelte to rerender tabs when the languages change,
     see https://github.com/svelteuidev/svelteui/issues/474 
   -->
   <!-- {#key langConfig} -->
-  <InputWrapper {label} {description} {placeholder}>
+  <InputWrapper {required} {label} {description} {placeholder}>
     <Tabs
       active={activeLanguageTab}
       on:change={(
@@ -53,8 +59,12 @@
       ) => (activeLanguageTab = e.detail.index)}
     >
       {#each langConfig.supportedLanguageCodes as language}
-        <Tabs.Tab icon={Language} iconProps={{ language, fullName: true, tooltip: false }}>
-          <Textarea aria-label={`localization-${language}`} resize="vertical" bind:value={value[language]} />
+        <Tabs.Tab icon={Language} iconProps={{ language, fullName: isLongText, tooltip: false }}>
+          {#if isLongText}
+            <Textarea aria-label={`localization-${language}`} resize="vertical" bind:value={value[language]} />
+          {:else}
+            <TextInput bind:value />
+          {/if}
         </Tabs.Tab>
       {/each}
     </Tabs>

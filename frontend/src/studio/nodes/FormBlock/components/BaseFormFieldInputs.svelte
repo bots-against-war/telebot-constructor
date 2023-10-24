@@ -1,18 +1,13 @@
 <script lang="ts">
-  import { TextInput, Switch, Group } from "@svelteuidev/core";
-  import { slugify } from "transliteration";
+  import { TextInput, Switch, Stack } from "@svelteuidev/core";
   import LocalizableTextInput from "../../../components/LocalizableTextInput.svelte";
   import type { BaseFormFieldConfig } from "../../../../api/types";
 
   export let config: BaseFormFieldConfig;
-
-  $: {
-    config.id = slugify(config.name, { separator: "_" });
-  }
 </script>
 
-<Group position="apart" gap="xs">
-  <TextInput bind:value={config.name} placeholder="Название" override={{ flexGrow: 100 }} />
+<Stack spacing={10}>
+  <TextInput label="Поле" placeholder="Любимое животное" bind:value={config.name} />
   <Switch bind:checked={config.isRequired} size="sm" label="Обязательное" />
-</Group>
-<LocalizableTextInput placeholder="Вопрос" bind:value={config.prompt} />
+  <LocalizableTextInput label="Вопрос" placeholder="Какое ваше любимое животное?" bind:value={config.prompt} />
+</Stack>

@@ -28,16 +28,19 @@
           "title": "Is Required",
           "type": "boolean"
         },
-        "result_formatting_opts": {
+        "result_formatting": {
           "anyOf": [
             {
               "$ref": "#/$defs/FormFieldResultFormattingOpts"
             },
             {
-              "type": "boolean"
+              "const": "auto"
+            },
+            {
+              "type": "null"
             }
           ],
-          "title": "Result Formatting Opts"
+          "title": "Result Formatting"
         }
       },
       "required": [
@@ -45,7 +48,7 @@
         "name",
         "prompt",
         "is_required",
-        "result_formatting_opts"
+        "result_formatting"
       ],
       "title": "BaseFormFieldConfig",
       "type": "object"
@@ -1037,16 +1040,23 @@
           "title": "Is Required",
           "type": "boolean"
         },
-        "result_formatting_opts": {
+        "result_formatting": {
           "anyOf": [
             {
               "$ref": "#/$defs/FormFieldResultFormattingOpts"
             },
             {
-              "type": "boolean"
+              "const": "auto"
+            },
+            {
+              "type": "null"
             }
           ],
-          "title": "Result Formatting Opts"
+          "title": "Result Formatting"
+        },
+        "is_long_text": {
+          "title": "Is Long Text",
+          "type": "boolean"
         },
         "empty_text_error_msg": {
           "anyOf": [
@@ -1068,7 +1078,8 @@
         "name",
         "prompt",
         "is_required",
-        "result_formatting_opts",
+        "result_formatting",
+        "is_long_text",
         "empty_text_error_msg"
       ],
       "title": "PlainTextFormFieldConfig",
@@ -1133,16 +1144,19 @@
           "title": "Is Required",
           "type": "boolean"
         },
-        "result_formatting_opts": {
+        "result_formatting": {
           "anyOf": [
             {
               "$ref": "#/$defs/FormFieldResultFormattingOpts"
             },
             {
-              "type": "boolean"
+              "const": "auto"
+            },
+            {
+              "type": "null"
             }
           ],
-          "title": "Result Formatting Opts"
+          "title": "Result Formatting"
         },
         "options": {
           "additionalProperties": {
@@ -1181,7 +1195,7 @@
         "name",
         "prompt",
         "is_required",
-        "result_formatting_opts",
+        "result_formatting",
         "options",
         "invalid_enum_error_msg"
       ],

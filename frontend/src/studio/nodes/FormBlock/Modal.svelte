@@ -9,7 +9,6 @@
   export let onConfigUpdate: (newConfig: FormBlock) => any;
 
   function updateConfig() {
-    // config.contents = [{ text: { text: editedMessageText, markup: "none" }, attachments: [] }];
     onConfigUpdate(config);
   }
 
