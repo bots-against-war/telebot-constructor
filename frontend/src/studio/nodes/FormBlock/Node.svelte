@@ -36,6 +36,6 @@
   </NodeContent>
   <OutputAnchorsBox>
     <OutputAnchor bind:nextBlockId={config.form_completed_next_block_id} anchorLabel="ОК" />
-    <OutputAnchor bind:nextBlockId={config.form_completed_next_block_id} anchorLabel="Отмена" />
+    <OutputAnchor bind:nextBlockId={config.form_cancelled_next_block_id} anchorLabel="Отмена" />
   </OutputAnchorsBox>
 </Node>

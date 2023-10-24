@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Stack, ActionIcon } from "@svelteuidev/core";
+  import { Stack, ActionIcon, NativeSelect } from "@svelteuidev/core";
   import { Trash } from "radix-icons-svelte";
 
   import BaseFormFieldInputs from "./BaseFormFieldInputs.svelte";
@@ -11,12 +11,15 @@
 
   export let fieldConfig: FormFieldConfig;
 
+  let availableKeys = [
+    { value: "plain_text", label: "Свободный" },
+    { value: "single_select", label: "Одиночный выбор" },
+  ];
+
   let selectedKey: string;
-  $: {
-    const nonNullKey = Object.entries(fieldConfig).find(([_, config]) => Boolean(config));
-    if (nonNullKey) selectedKey = nonNullKey[0];
-    else window.alert("Internal error! All keys in field config are null!");
-  }
+  const nonNullKey = Object.entries(fieldConfig).find(([_, config]) => Boolean(config));
+  if (nonNullKey) selectedKey = nonNullKey[0];
+  else window.alert("Internal error! All keys in field config are null!");
 </script>
 
 <div class="form-field-container">
@@ -25,12 +28,13 @@
       <Trash />
     </ActionIcon>
   </div>
-  <Stack spacing={0}>
+  <Stack>
     {#if fieldConfig.plain_text}
       <BaseFormFieldInputs bind:config={fieldConfig.plain_text} />
     {:else if fieldConfig.single_select}
       <BaseFormFieldInputs bind:config={fieldConfig.single_select} />
     {/if}
+    <NativeSelect label="Ответ" data={availableKeys} bind:value={selectedKey} />
   </Stack>
 </div>
 
