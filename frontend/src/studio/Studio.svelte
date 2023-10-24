@@ -19,7 +19,7 @@
   import { getBlockId, getEntrypointId } from "../api/typeUtils";
   import type { BotConfig, UserFlowBlockConfig, UserFlowEntryPointConfig, UserFlowNodePosition } from "../api/types";
 
-  import { getError } from "../utils";
+  import { getError, withConfirmation } from "../utils";
   import { findNewNodePosition } from "./utils";
   import {
     defaultCommandEntrypoint,
@@ -35,6 +35,19 @@
   export let botConfig: BotConfig;
 
   setContext("botName", botName);
+
+  let configReactivityTriggeredCount = 0;
+  $: {
+    botConfig; // trigger svelte's reactivity by mentioning the value we're reacting to
+    configReactivityTriggeredCount += 1;
+  }
+  let isConfigModified = false;
+  $: {
+    if (configReactivityTriggeredCount > 2) {
+      // dont know why it's 2 but it just works...
+      isConfigModified = true;
+    }
+  }
 
   // initial language config from the loaded config
   let languageSelectBlockFound = false;
@@ -130,7 +143,15 @@
     if (getError(res) !== null) {
       window.alert(`Error saving bot config: ${getError(res)}`);
     }
+    isConfigModified = false;
   }
+
+  const exitStudio = () => navigate(`/#${botName}`);
+  const exitStudioWithConfirmation = withConfirmation(
+    "Вы уверены, что хотите выйти из студии? Несохранённые изменения будут утеряны.",
+    async () => exitStudio(),
+    "Выйти",
+  );
 </script>
 
 <div class="svelvet-container">
@@ -236,13 +257,16 @@
       <Stack spacing="xs">
         <Button
           variant="filled"
-          disabled={!isConfigValid}
+          disabled={!isConfigValid || !isConfigModified}
           fullSize
           loading={isSavingBotConfig}
-          on:click={saveCurrentBotConfig}>Сохранить</Button
+          on:click={saveCurrentBotConfig}
         >
-        <Button variant="outline" fullSize on:click={() => navigate(`/#${botName}`)}>Выйти</Button>
-        <!-- <Button variant="outline" fullSize on:click={() => console.log(botConfig)}>Debug</Button> -->
+          Сохранить
+        </Button>
+        <Button variant="outline" fullSize on:click={isConfigModified ? exitStudioWithConfirmation : exitStudio}>
+          Выйти
+        </Button>
       </Stack>
     </Group>
   </StudioControls>

@@ -1,5 +1,5 @@
 <div class="anchor-container">
-  <slot/>
+  <slot />
 </div>
 
 <style>

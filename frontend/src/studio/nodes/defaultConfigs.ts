@@ -71,7 +71,7 @@ export function defaultLanguageSelectBlockConfig(id: string): UserFlowBlockConfi
 export function defaultFormBlockFonfig(id: string): UserFlowBlockConfig {
   return {
     form: {
-      block_id:id,
+      block_id: id,
       members: [],
       // TODO: check these all are non-empty on validation
       form_name: "",
@@ -89,6 +89,6 @@ export function defaultFormBlockFonfig(id: string): UserFlowBlockConfig {
       },
       form_cancelled_next_block_id: null,
       form_completed_next_block_id: null,
-    }
-  }
+    },
+  };
 }

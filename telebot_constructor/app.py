@@ -328,6 +328,7 @@ class TelebotConstructorApp:
             await self.runner.stop(username, bot_name)
             await self.running_bots_store.remove(username, bot_name)
             await self.bot_config_store.remove_subkey(username, bot_name)
+            await self.secret_store.remove_secret(config.token_secret_name, owner_id=username)
             return web.json_response(text=config.model_dump_json())
 
         @routes.get("/api/config")
