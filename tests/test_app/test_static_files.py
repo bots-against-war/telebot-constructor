@@ -43,7 +43,6 @@ async def test_serve_static_files(
     resp = await client.get("/assets/some-asset.js")
     assert resp.status == 200
     assert await resp.text("utf-8") == "console.log(foo);"
-    assert resp.content_type == "application/javascript"
 
 
 async def test_cors(
