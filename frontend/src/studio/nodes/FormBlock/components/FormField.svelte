@@ -6,6 +6,9 @@
 
   import type { FormFieldConfig } from "../../../../api/types";
   import { createEventDispatcher } from "svelte";
+  import { getBaseFormFieldConfig, getDefaultFormFieldConfig } from "../utils";
+  import ExtraInputsSingleSelectField from "./ExtraInputsSingleSelectField.svelte";
+  import ExtraInputsPlainTextField from "./ExtraInputsPlainTextField.svelte";
 
   const dispatch = createEventDispatcher<{ delete: null }>();
 
@@ -34,7 +37,19 @@
     {:else if fieldConfig.single_select}
       <BaseFormFieldInputs bind:config={fieldConfig.single_select} />
     {/if}
-    <NativeSelect label="Ответ" data={availableKeys} bind:value={selectedKey} />
+    <NativeSelect
+      label="Тип ответа"
+      data={availableKeys}
+      bind:value={selectedKey}
+      on:change={() => {
+        fieldConfig = getDefaultFormFieldConfig(getBaseFormFieldConfig(fieldConfig), selectedKey);
+      }}
+    />
+    {#if fieldConfig.plain_text}
+      <ExtraInputsPlainTextField bind:config={fieldConfig.plain_text} />
+    {:else if fieldConfig.single_select}
+      <ExtraInputsSingleSelectField bind:config={fieldConfig.single_select} />
+    {/if}
   </Stack>
 </div>
 

@@ -1,8 +1,9 @@
 <script lang="ts">
-  import { InputWrapper, Tabs, Textarea, TextInput } from "@svelteuidev/core";
+  import { InputWrapper, Tabs, Textarea, TextInput, Group } from "@svelteuidev/core";
   import Language from "../../components/Language.svelte";
   import type { LocalizableText } from "../../types";
   import type { LanguageConfig } from "../stores";
+  import LanguageMenu from "./LanguageMenu.svelte";
 
   export let label: string | undefined = undefined;
   export let description: string | undefined = undefined;
@@ -29,45 +30,51 @@
       console.debug("checking localization to all supported langs");
       // @ts-expect-error
       const missingSupportedLangs = langConfig.supportedLanguageCodes.filter((lang) => !value[lang]);
-      console.debug(missingSupportedLangs);
+      console.debug(`missingSupportedLangs = ${JSON.stringify(missingSupportedLangs)}`);
       const emptyLocalizations = Object.fromEntries(missingSupportedLangs.map((lang) => [lang, ""]));
       value = { ...value, ...emptyLocalizations };
     }
+    console.debug(`after validation and type coercion value = ${JSON.stringify(value)}`);
   }
 
   let activeLanguageTab = 0;
+  let selectedLang = langConfig ? langConfig.supportedLanguageCodes[0] : null;
 </script>
 
-{#if langConfig === null && typeof value === "string"}
+{#if !langConfig && typeof value === "string"}
   {#if isLongText}
     <Textarea resize="vertical" {required} {label} {description} {placeholder} bind:value />
   {:else}
     <TextInput {required} {label} {description} {placeholder} bind:value />
   {/if}
-{:else if langConfig !== null && langConfig.supportedLanguageCodes.length > 0 && typeof value !== "string"}
+{:else if langConfig && langConfig.supportedLanguageCodes.length > 0 && typeof value !== "string" && selectedLang}
   <!--
     key block forces svelte to rerender tabs when the languages change,
     see https://github.com/svelteuidev/svelteui/issues/474 
   -->
   <!-- {#key langConfig} -->
-  <InputWrapper {required} {label} {description} {placeholder}>
-    <Tabs
-      active={activeLanguageTab}
-      on:change={(
-        // @ts-ignore
-        e,
-      ) => (activeLanguageTab = e.detail.index)}
-    >
-      {#each langConfig.supportedLanguageCodes as language}
-        <Tabs.Tab icon={Language} iconProps={{ language, fullName: isLongText, tooltip: false }}>
-          {#if isLongText}
+  <InputWrapper {required} label={label || ""} {description} {placeholder}>
+    {#if isLongText}
+      <Tabs
+        active={activeLanguageTab}
+        on:change={(
+          // @ts-ignore
+          e,
+        ) => (activeLanguageTab = e.detail.index)}
+      >
+        {#each langConfig.supportedLanguageCodes as language}
+          <Tabs.Tab>
+            <Language slot="icon" {language} fullName small tooltip={false} />
             <Textarea aria-label={`localization-${language}`} resize="vertical" bind:value={value[language]} />
-          {:else}
-            <TextInput bind:value />
-          {/if}
-        </Tabs.Tab>
-      {/each}
-    </Tabs>
+          </Tabs.Tab>
+        {/each}
+      </Tabs>
+    {:else}
+      <Group>
+        <TextInput bind:value={value[selectedLang]} />
+        <LanguageMenu bind:selectedLang />
+      </Group>
+    {/if}
   </InputWrapper>
   <!-- {/key} -->
 {/if}

@@ -306,6 +306,34 @@
       "title": "ContentTextMarkup",
       "type": "string"
     },
+    "EnumOption": {
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "label": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            }
+          ],
+          "title": "Label"
+        }
+      },
+      "required": [
+        "id",
+        "label"
+      ],
+      "title": "EnumOption",
+      "type": "object"
+    },
     "FeedbackHandlerConfig": {
       "properties": {
         "admin_chat_id": {
@@ -1159,21 +1187,11 @@
           "title": "Result Formatting"
         },
         "options": {
-          "additionalProperties": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "additionalProperties": {
-                  "type": "string"
-                },
-                "type": "object"
-              }
-            ]
+          "items": {
+            "$ref": "#/$defs/EnumOption"
           },
           "title": "Options",
-          "type": "object"
+          "type": "array"
         },
         "invalid_enum_error_msg": {
           "anyOf": [

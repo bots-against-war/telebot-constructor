@@ -90,11 +90,13 @@ class PlainTextFormFieldConfig(BaseFormFieldConfig):
         )
 
 
-EnumDef = dict[str, LocalizableText]
+class EnumOption(BaseModel):
+    id: str
+    label: LocalizableText
 
 
 class SingleSelectFormFieldConfig(BaseFormFieldConfig):
-    options: EnumDef
+    options: list[EnumOption]
     invalid_enum_error_msg: LocalizableText
 
     def construct_field(self) -> SingleSelectField:
@@ -104,7 +106,7 @@ class SingleSelectFormFieldConfig(BaseFormFieldConfig):
         # in the present module
         # so we do this using globals()
         enum_class_name = f"{self.id}_single_select_field_options"
-        EnumClass: Type[Enum] = Enum(enum_class_name, self.options, module=__name__)  # type: ignore
+        EnumClass: Type[Enum] = Enum(enum_class_name, [(o.id, o.label) for o in self.options], module=__name__)  # type: ignore
         globals()[enum_class_name] = EnumClass
         return SingleSelectField(
             EnumClass=EnumClass,

@@ -9,6 +9,7 @@
   export let onConfigUpdate: (newConfig: FormBlock) => any;
 
   function updateConfig() {
+    config = editedConfig;
     onConfigUpdate(config);
   }
 

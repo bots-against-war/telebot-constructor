@@ -107,6 +107,13 @@ export type Prompt1 =
     };
 export type IsRequired1 = boolean;
 export type ResultFormatting1 = FormFieldResultFormattingOpts | "auto" | null;
+export type Id2 = string;
+export type Label1 =
+  | string
+  | {
+      [k: string]: string;
+    };
+export type Options = EnumOption[];
 export type InvalidEnumErrorMsg =
   | string
   | {
@@ -158,14 +165,14 @@ export type LanguageSelectedNextBlockId = string | null;
 export type Blocks = UserFlowBlockConfig[];
 export type X = number;
 export type Y = number;
-export type Id2 = number;
+export type Id3 = number;
 export type TgGroupChatType = "group" | "supergroup" | "channel";
 export type Title = string;
 export type Description = string | null;
 export type Username = string | null;
 export type IsForum = boolean | null;
 export type Photo = string | null;
-export type Id3 = number;
+export type Id4 = number;
 export type Username1 = string;
 export type Name2 = string;
 export type Description1 = string;
@@ -182,7 +189,7 @@ export type ShortDescription2 = string;
 export type Code = string;
 export type Name4 = string;
 export type Emoji = string | null;
-export type Id4 = string;
+export type Id5 = string;
 export type Name5 = string;
 export type Prompt2 =
   | string
@@ -392,12 +399,10 @@ export interface SingleSelectFormFieldConfig {
   invalid_enum_error_msg: InvalidEnumErrorMsg;
   [k: string]: unknown;
 }
-export interface Options {
-  [k: string]:
-    | string
-    | {
-        [k: string]: string;
-      };
+export interface EnumOption {
+  id: Id2;
+  label: Label1;
+  [k: string]: unknown;
 }
 export interface FormBranchConfig {
   members: Members1;
@@ -456,7 +461,7 @@ export interface UserFlowNodePosition {
  * pydantic projection of https://core.telegram.org/bots/api#chat
  */
 export interface TgGroupChat {
-  id: Id2;
+  id: Id3;
   type: TgGroupChatType;
   title: Title;
   description: Description;
@@ -469,7 +474,7 @@ export interface TgGroupChat {
  * Info on telegram bot, combining info from several Bot API endpoints
  */
 export interface TgBotUser {
-  id: Id3;
+  id: Id4;
   username: Username1;
   name: Name2;
   description: Description1;
@@ -498,7 +503,7 @@ export interface LanguageData {
   [k: string]: unknown;
 }
 export interface BaseFormFieldConfig {
-  id: Id4;
+  id: Id5;
   name: Name5;
   prompt: Prompt2;
   is_required: IsRequired2;
