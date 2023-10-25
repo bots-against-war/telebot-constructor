@@ -1,6 +1,5 @@
 <script lang="ts">
-  import { Stack, ActionIcon, NativeSelect } from "@svelteuidev/core";
-  import { Trash } from "radix-icons-svelte";
+  import { Stack, NativeSelect, CloseButton } from "@svelteuidev/core";
 
   import BaseFormFieldInputs from "./BaseFormFieldInputs.svelte";
 
@@ -27,9 +26,7 @@
 
 <div class="form-field-container">
   <div class="delete-button-container">
-    <ActionIcon on:click={() => dispatch("delete")}>
-      <Trash />
-    </ActionIcon>
+    <CloseButton on:click={() => dispatch("delete")} />
   </div>
   <Stack>
     {#if fieldConfig.plain_text}

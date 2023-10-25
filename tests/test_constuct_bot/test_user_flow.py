@@ -13,6 +13,7 @@ from telebot_constructor.construct import construct_bot
 from telebot_constructor.user_flow.blocks.content import ContentBlock
 from telebot_constructor.user_flow.blocks.form import (
     BranchingFormMemberConfig,
+    EnumOption,
     FormBlock,
     FormBranchConfig,
     FormFieldConfig,
@@ -752,7 +753,10 @@ async def test_user_flow_with_form() -> None:
                                         prompt="do you like apples?",
                                         is_required=True,
                                         result_formatting="auto",
-                                        options={"yes": "Yes I do", "no": "No!!!"},
+                                        options=[
+                                            EnumOption(id="yes", label="Yes I do"),
+                                            EnumOption(id="no", label="No!!!"),
+                                        ],
                                         invalid_enum_error_msg="please use reply keyboard buttons",
                                     ),
                                 )
@@ -784,7 +788,6 @@ async def test_user_flow_with_form() -> None:
                             field_is_not_skippable="field is not skippable",
                             please_enter_correct_value="please enter corrected value",
                             unsupported_command="the only supported commands are: {}",
-                            cancelling_because_of_error="unexpected error, cancelling: {}",
                         ),
                         export=FormResultsExportConfig(
                             is_anonymous=False,

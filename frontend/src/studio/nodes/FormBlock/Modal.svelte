@@ -1,9 +1,10 @@
 <script lang="ts">
-  import { Stack } from "@svelteuidev/core";
+  import { Tabs } from "@svelteuidev/core";
   import type { FormBlock } from "../../../api/types";
   import NodeModalControls from "../../components/NodeModalControls.svelte";
 
   import FormBranch from "./components/FormBranch.svelte";
+  import FormMessages from "./components/FormMessages.svelte";
 
   export let config: FormBlock;
   export let onConfigUpdate: (newConfig: FormBlock) => any;
@@ -18,9 +19,14 @@
 
 <div>
   <h3>Форма</h3>
-  <Stack>
-    <FormBranch bind:members={editedConfig.members} />
-  </Stack>
+  <Tabs>
+    <Tabs.Tab label={`Поля (${editedConfig.members.length})`}>
+      <FormBranch bind:members={editedConfig.members} />
+    </Tabs.Tab>
+    <Tabs.Tab label="Сообщения">
+      <FormMessages bind:messages={editedConfig.messages} />
+    </Tabs.Tab>
+  </Tabs>
   <NodeModalControls on:save={updateConfig} />
 </div>
 

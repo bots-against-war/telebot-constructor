@@ -13,8 +13,9 @@
   export let isLongText: boolean = true;
   export let required: boolean = false;
 
+  console.debug(`befor type coercion value = ${JSON.stringify(value)}`);
   if (value instanceof Object && langConfig === null) {
-    if (value.length) {
+    if (Object.keys(value).length > 0) {
       console.debug("value is multilang, lang config is null, selecting the first localization");
       value = Object.values(value)[0];
     } else {
@@ -34,8 +35,8 @@
       const emptyLocalizations = Object.fromEntries(missingSupportedLangs.map((lang) => [lang, ""]));
       value = { ...value, ...emptyLocalizations };
     }
-    console.debug(`after validation and type coercion value = ${JSON.stringify(value)}`);
   }
+  console.debug(`after validation and type coercion value = ${JSON.stringify(value)}`);
 
   let activeLanguageTab = 0;
   let selectedLang = langConfig ? langConfig.supportedLanguageCodes[0] : null;

@@ -105,8 +105,9 @@ class SingleSelectFormFieldConfig(BaseFormFieldConfig):
         # but also, we need to inject this class into global scope so that (de)serializers can find this class
         # in the present module
         # so we do this using globals()
+        enum_def = [(o.id, o.label) for o in self.options]
         enum_class_name = f"{self.id}_single_select_field_options"
-        EnumClass: Type[Enum] = Enum(enum_class_name, [(o.id, o.label) for o in self.options], module=__name__)  # type: ignore
+        EnumClass: Type[Enum] = Enum(enum_class_name, enum_def, module=__name__)  # type: ignore
         globals()[enum_class_name] = EnumClass
         return SingleSelectField(
             EnumClass=EnumClass,
@@ -156,7 +157,6 @@ class FormMessages(BaseModel):
     field_is_not_skippable: LocalizableText
     please_enter_correct_value: LocalizableText
     unsupported_command: LocalizableText
-    cancelling_because_of_error: LocalizableText
 
 
 class FormResultsExportToChatConfig(BaseModel):
@@ -171,6 +171,8 @@ class FormResultsExportConfig(BaseModel):
 
 def _validate_template(template: LocalizableText, placeholder_count: int, title: str) -> LocalizableText:
     def _validate_string(template_str: str, subtitle: Optional[str]) -> str:
+        # TEMP disabled placeholder count validation
+        return template_str
         actual_placeholder_count = template_str.count(r"{}")
         if actual_placeholder_count != placeholder_count:
             full_title = title
@@ -232,9 +234,7 @@ class FormBlock(UserFlowBlock):
                 unsupported_cmd_error_template=_validate_template(
                     self.messages.unsupported_command, placeholder_count=1, title="unsupported command message"
                 ),
-                cancelling_because_of_error_template=_validate_template(
-                    self.messages.unsupported_command, placeholder_count=1, title="unsupported cmd message"
-                ),
+                cancelling_because_of_error_template="Something went wrong (details: {})",
             ),
             language_store=context.language_store,
         )

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Stack, Container, ActionIcon } from "@svelteuidev/core";
+  import { Stack, Container, Button } from "@svelteuidev/core";
   import { Plus } from "radix-icons-svelte";
 
   import FormField from "./FormField.svelte";
@@ -29,29 +29,30 @@
       {/if}
     {/each}
   </Stack>
-  <Container>
-    <ActionIcon
-      variant="outline"
-      on:click={() => {
-        members = [
-          ...members,
-          {
-            field: {
-              plain_text: {
-                id: `form_field_${crypto.randomUUID()}`,
-                name: "",
-                prompt: "",
-                is_required: true,
-                result_formatting: "auto",
-                is_long_text: false,
-                empty_text_error_msg: "",
-              },
+  <Button
+    variant="outline"
+    compact
+    color="gray"
+    on:click={() => {
+      members = [
+        ...members,
+        {
+          field: {
+            plain_text: {
+              id: `form_field_${crypto.randomUUID()}`,
+              name: "",
+              prompt: "",
+              is_required: true,
+              result_formatting: "auto",
+              is_long_text: false,
+              empty_text_error_msg: "",
             },
           },
-        ];
-      }}
-    >
-      <Plus />
-    </ActionIcon>
-  </Container>
+        },
+      ];
+    }}
+  >
+    <Plus slot="leftIcon" />
+    Добавить поле
+  </Button>
 </Stack>
