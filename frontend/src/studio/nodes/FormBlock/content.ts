@@ -1,4 +1,5 @@
 import { type FormMessages } from "../../../api/types";
+import type { FormErrorMessages } from "./prefill";
 
 interface FormExampleContent {
   name: string;
@@ -85,10 +86,12 @@ export function getRandomContent(): FormExampleContent {
   return EXAMPLE_CONTENT[idx];
 }
 
-export function formMessageName(key: keyof FormMessages | string): string {
+export function formMessageName(key: keyof FormMessages | keyof FormErrorMessages | string): string {
   switch (key) {
     case "form_start":
       return "В начале заполнения формы";
+    case "cancel_command_is":
+      return "Команда отмены";
     case "field_is_skippable":
       return "Когда поле можно пропустить";
     case "field_is_not_skippable":
@@ -97,6 +100,24 @@ export function formMessageName(key: keyof FormMessages | string): string {
       return "При некорректном значении";
     case "unsupported_command":
       return "При неподдерживаемой команде";
+    case "empty_text_error_msg":
+      return "Сообщение без текста";
+    case "not_an_integer_error_msg":
+      return "Не валидное число";
+    case "not_an_integer_list_error_msg":
+      return "Не валидный список чисел";
+    case "bad_time_format_msg":
+      return "Не валидная дата";
+    case "invalid_enum_error_msg":
+      return "Не валидный вариант ответа";
+    case "attachments_expected_error_msg":
+      return "Нет вложений";
+    case "only_one_media_message_allowed_error_msg":
+      return "Больше одного сообщения с вложениями";
+    case "bad_attachment_type_error_msg":
+      return "Неподдерживаемый тип вложений";
+    case "please_use_inline_menu":
+      return "Сообщение вместо использования меню";
     default:
       return key;
   }

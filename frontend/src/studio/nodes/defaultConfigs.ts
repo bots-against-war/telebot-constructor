@@ -80,14 +80,12 @@ export function defaultFormBlockConfig(id: string): UserFlowBlockConfig {
         field_is_not_skippable: "",
         please_enter_correct_value: "",
         unsupported_command: "",
+        cancel_command_is: "",
       },
       results_export: {
         echo_to_user: true,
         is_anonymous: true,
-        to_chat: {
-          chat_id: PLACEHOLDER_GROUP_CHAT_ID,
-          via_feedback_handler: true,
-        },
+        to_chat: null,
       },
       form_cancelled_next_block_id: null,
       form_completed_next_block_id: null,
