@@ -12,6 +12,7 @@
   import type { SvelvetPosition } from "../../../types";
   import { getModalOpener } from "../../../utils";
   import { validateFormBlock } from "../nodeValidators";
+  import { flattenedFormFields } from "../../../api/typeUtils";
 
   const openModal = getModalOpener();
 
@@ -42,7 +43,7 @@
     on:delete
     on:edit={openEditModal}
   >
-    TBD
+    Полей: {flattenedFormFields(config.members).length}
   </NodeContent>
   <OutputAnchorsBox>
     <OutputAnchor bind:nextBlockId={config.form_completed_next_block_id} anchorLabel="ОК" />
