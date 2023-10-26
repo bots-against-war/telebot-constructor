@@ -11,6 +11,8 @@
   import { type FormBlock } from "../../../api/types";
   import type { SvelvetPosition } from "../../../types";
   import { getModalOpener } from "../../../utils";
+  import { getContext } from "svelte";
+  import { validateFormBlock } from "../nodeValidators";
 
   const openModal = getModalOpener();
 
@@ -18,20 +20,30 @@
   export let position: SvelvetPosition;
   export let isValid = true;
 
+  let botName: string = getContext("botName");
+
   const setNewConfig = (newConfig: FormBlock) => {
     config = newConfig;
   };
   const openEditModal = () =>
     openModal(Modal, {
       config,
+      botName,
       onConfigUpdate: setNewConfig,
     });
 </script>
 
 <Node id={config.block_id} bind:position {...DEFAULT_NODE_PROPS}>
   <InputAnchor />
-  <NodeContent name="Форма" headerColor={headerColor(HUE.form)} bind:isValid on:delete on:edit={openEditModal}>
-    <!-- TODO add node content validation -->
+  <NodeContent
+    name="Форма"
+    headerColor={headerColor(HUE.form)}
+    {config}
+    configValidator={validateFormBlock}
+    bind:isValid
+    on:delete
+    on:edit={openEditModal}
+  >
     TBD
   </NodeContent>
   <OutputAnchorsBox>

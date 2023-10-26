@@ -1,4 +1,4 @@
-import type { ContentBlock, HumanOperatorBlock, LanguageSelectBlock } from "../../api/types";
+import type { ContentBlock, FormBlock, HumanOperatorBlock, LanguageSelectBlock } from "../../api/types";
 import type { LocalizableText } from "../../types";
 import { err, ok, type Result } from "../../utils";
 import type { LanguageConfig } from "../stores";
@@ -13,8 +13,14 @@ function validateLocalizableText(
   textName: string,
   langConfig: LanguageConfig | null,
 ): Result<null, ValidationError> {
-  if (langConfig === null && typeof text === "object") {
-    return err({ error: `${textName} локализован (${Object.keys(text).join(", ")}), но в боте нет выбора языков` });
+  if (langConfig === null) {
+    if (typeof text === "object") {
+      return err({
+        error: `${textName}: Задана локализация (${Object.keys(text).join(", ")}), но в боте нет выбора языков`,
+      });
+    } else if (text.length === 0) {
+      return err({ error: `${textName}: не заполнен` });
+    }
   } else if (langConfig !== null) {
     let missingLanguages: string[];
     if (typeof text === "string") {
@@ -25,10 +31,22 @@ function validateLocalizableText(
       );
     }
     if (missingLanguages.length > 0) {
-      return err({ error: `${textName} не локализован на языки: ${missingLanguages.join(", ")}` });
+      return err({ error: `${textName}: отсутствует локализация на языки: ${missingLanguages.join(", ")}` });
     } else {
       return ok(null);
     }
+  }
+  return ok(null);
+}
+
+function mergeResults(results: Result<null, ValidationError>[]): Result<null, ValidationError> {
+  if (results.some((res) => !res.ok)) {
+    return err({
+      error: results
+        .map((res) => (res.ok ? "" : res.error.error))
+        .filter((s) => s)
+        .join("; "),
+    });
   } else {
     return ok(null);
   }
@@ -46,16 +64,7 @@ export function validateContentBlock(
       return ok(null);
     }
   });
-  if (textValidationResults.some((res) => !res.ok)) {
-    return err({
-      error: textValidationResults
-        .map((res) => (res.ok ? "" : res.error.error))
-        .filter((s) => s)
-        .join("; "),
-    });
-  } else {
-    return ok(null);
-  }
+  return mergeResults(textValidationResults);
 }
 
 export function validateHumanOperatorBlock(
@@ -82,4 +91,26 @@ export function validateLanguageSelectBlock(
   } else {
     return validateLocalizableText(config.menu_config.propmt, "Текст в сообщении-меню", langConfig);
   }
+}
+
+export function validateFormBlock(config: FormBlock, langConfig: LanguageConfig | null): Result<null, ValidationError> {
+  if (config.members.length === 0) {
+    return err({ error: "В форму не добавлено ни одного поля" });
+  }
+  const messagesValidationResult = mergeResults(
+    Object.entries(config.messages).map(([key, text]) =>
+      validateLocalizableText(
+        // @ts-expect-error
+        text,
+        key,
+        langConfig,
+      ),
+    ),
+  );
+  if (!messagesValidationResult.ok) return messagesValidationResult;
+
+  if (!(config.results_export.echo_to_user || config.results_export.to_chat)) {
+    return err({ error: "Не выбрана обработка результатов формы" });
+  }
+  return ok(null);
 }

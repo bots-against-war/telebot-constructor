@@ -5,7 +5,7 @@
   export let messages: FormMessages;
 </script>
 
-<!-- TODO: hide most field under Advenced and fill with generic default values -->
+<!-- TODO: hide most field under Advanced and fill with generic default values -->
 <Stack>
   <Textarea label="В начале заполнения формы" bind:value={messages.form_start} />
   <Textarea label="Когда поле можно пропустить" bind:value={messages.field_is_skippable} />

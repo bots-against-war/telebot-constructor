@@ -5,8 +5,10 @@
 
   import FormBranch from "./components/FormBranch.svelte";
   import FormMessages from "./components/FormMessages.svelte";
+  import FormResultExportOptions from "./components/FormResultExportOptions.svelte";
 
   export let config: FormBlock;
+  export let botName: string;
   export let onConfigUpdate: (newConfig: FormBlock) => any;
 
   function updateConfig() {
@@ -25,6 +27,9 @@
     </Tabs.Tab>
     <Tabs.Tab label="Сообщения">
       <FormMessages bind:messages={editedConfig.messages} />
+    </Tabs.Tab>
+    <Tabs.Tab label="Обработка результатов">
+      <FormResultExportOptions bind:config={editedConfig.results_export} {botName} />
     </Tabs.Tab>
   </Tabs>
   <NodeModalControls on:save={updateConfig} />

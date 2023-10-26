@@ -14,6 +14,16 @@ export function getFormFieldId(config: FormFieldConfig): string {
   return getBaseFormFieldConfig(config).id;
 }
 
+export function getDefaultBaseFormFieldConfig(): BaseFormFieldConfig {
+  return {
+    id: `form_field_${crypto.randomUUID()}`,
+    name: "",
+    prompt: "",
+    is_required: true,
+    result_formatting: "auto",
+  };
+}
+
 export function getDefaultFormFieldConfig(
   baseConfig: BaseFormFieldConfig,
   key: keyof FormFieldConfig,

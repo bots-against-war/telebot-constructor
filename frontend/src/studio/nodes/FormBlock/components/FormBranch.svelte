@@ -5,7 +5,7 @@
   import FormField from "./FormField.svelte";
 
   import type { BranchingFormMemberConfig } from "../../../../api/types";
-  import { getFormFieldId } from "../utils";
+  import { getDefaultBaseFormFieldConfig, getDefaultFormFieldConfig, getFormFieldId } from "../utils";
 
   export let members: BranchingFormMemberConfig[];
 </script>
@@ -37,17 +37,7 @@
       members = [
         ...members,
         {
-          field: {
-            plain_text: {
-              id: `form_field_${crypto.randomUUID()}`,
-              name: "",
-              prompt: "",
-              is_required: true,
-              result_formatting: "auto",
-              is_long_text: false,
-              empty_text_error_msg: "",
-            },
-          },
+          field: getDefaultFormFieldConfig(getDefaultBaseFormFieldConfig(), "plain_text"),
         },
       ];
     }}
