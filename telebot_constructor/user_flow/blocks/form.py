@@ -164,7 +164,8 @@ class FormResultsExportToChatConfig(BaseModel):
     via_feedback_handler: bool
 
 
-class FormResultsExportConfig(BaseModel):
+class FormResultsExport(BaseModel):
+    echo_to_user: bool
     is_anonymous: bool
     to_chat: Optional[FormResultsExportToChatConfig]
 
@@ -197,7 +198,7 @@ class FormBlock(UserFlowBlock):
     form_name: str
     members: list[BranchingFormMemberConfig]
     messages: FormMessages
-    export: FormResultsExportConfig
+    results_export: FormResultsExport
 
     form_completed_next_block_id: Optional[UserFlowBlockId]
     form_cancelled_next_block_id: Optional[UserFlowBlockId]
@@ -252,15 +253,27 @@ class FormBlock(UserFlowBlock):
             )
 
         async def on_form_completed(form_exit_context: ComponentsFormExitContext):
-            if self.export.to_chat is not None:
+            user = form_exit_context.last_update.from_user
+            if self.results_export.echo_to_user:
                 try:
-                    feedback_handler = (
-                        context.feedback_handlers.get(self.export.to_chat.chat_id)
-                        if self.export.to_chat.via_feedback_handler
+                    user_lang = (
+                        await context.language_store.get_user_language(user)
+                        if context.language_store is not None
                         else None
                     )
-                    lang = context.language_store.default_language if context.language_store is not None else None
-                    text = self._form.result_to_html(result=form_exit_context.result, lang=lang)
+                    text = self._form.result_to_html(result=form_exit_context.result, lang=user_lang)
+                    await context.bot.send_message(chat_id=user.id, text=text, parse_mode="HTML")
+                except Exception:
+                    logger.exception("Error echoing form result to user")
+            if self.results_export.to_chat is not None:
+                try:
+                    feedback_handler = (
+                        context.feedback_handlers.get(self.results_export.to_chat.chat_id)
+                        if self.results_export.to_chat.via_feedback_handler
+                        else None
+                    )
+                    admin_lang = context.language_store.default_language if context.language_store is not None else None
+                    text = self._form.result_to_html(result=form_exit_context.result, lang=admin_lang)
                     if feedback_handler is not None:
                         await feedback_handler.emulate_user_message(
                             bot=context.bot,
@@ -268,14 +281,14 @@ class FormBlock(UserFlowBlock):
                             text=text,
                             attachment=None,
                             no_response=True,
-                            send_user_identifier_message=self.export.is_anonymous,
+                            send_user_identifier_message=self.results_export.is_anonymous,
                             parse_mode="HTML",
                         )
                     else:
-                        if not self.export.is_anonymous:
+                        if not self.results_export.is_anonymous:
                             text = telegram_user_link(form_exit_context.last_update.from_user) + "\n\n" + text
                         await context.bot.send_message(
-                            chat_id=self.export.to_chat.chat_id,
+                            chat_id=self.results_export.to_chat.chat_id,
                             text=text,
                             parse_mode="HTML",
                         )

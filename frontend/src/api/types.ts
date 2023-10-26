@@ -147,11 +147,7 @@ export type UnsupportedCommand =
   | {
       [k: string]: string;
     };
-export type CancellingBecauseOfError =
-  | string
-  | {
-      [k: string]: string;
-    };
+export type EchoToUser = boolean;
 export type IsAnonymous = boolean;
 export type ChatId = string | number;
 export type ViaFeedbackHandler = boolean;
@@ -358,7 +354,7 @@ export interface FormBlock {
   form_name: FormName;
   members: Members;
   messages: FormMessages;
-  export: FormResultsExportConfig;
+  results_export: FormResultsExport;
   form_completed_next_block_id: FormCompletedNextBlockId;
   form_cancelled_next_block_id: FormCancelledNextBlockId;
   [k: string]: unknown;
@@ -415,10 +411,10 @@ export interface FormMessages {
   field_is_not_skippable: FieldIsNotSkippable;
   please_enter_correct_value: PleaseEnterCorrectValue;
   unsupported_command: UnsupportedCommand;
-  cancelling_because_of_error: CancellingBecauseOfError;
   [k: string]: unknown;
 }
-export interface FormResultsExportConfig {
+export interface FormResultsExport {
+  echo_to_user: EchoToUser;
   is_anonymous: IsAnonymous;
   to_chat: FormResultsExportToChatConfig | null;
   [k: string]: unknown;

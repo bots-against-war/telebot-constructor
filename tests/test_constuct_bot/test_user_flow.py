@@ -18,7 +18,7 @@ from telebot_constructor.user_flow.blocks.form import (
     FormBranchConfig,
     FormFieldConfig,
     FormMessages,
-    FormResultsExportConfig,
+    FormResultsExport,
     FormResultsExportToChatConfig,
     PlainTextFormFieldConfig,
     SingleSelectFormFieldConfig,
@@ -789,7 +789,8 @@ async def test_user_flow_with_form() -> None:
                             please_enter_correct_value="please enter corrected value",
                             unsupported_command="the only supported commands are: {}",
                         ),
-                        export=FormResultsExportConfig(
+                        results_export=FormResultsExport(
+                            echo_to_user=True,
                             is_anonymous=False,
                             to_chat=FormResultsExportToChatConfig(chat_id=111222, via_feedback_handler=True),
                         ),
@@ -870,6 +871,15 @@ async def test_user_flow_with_form() -> None:
     assert_method_call_kwargs_include(
         bot.method_calls["send_message"],
         [
+            {
+                "chat_id": 161,
+                "text": (
+                    "<b>what is your name?</b>: John Doe\n"
+                    + "<b>do you like apples?</b>: Yes I do\n"
+                    + "<b>which apples do you like?</b>: granny smith"
+                ),
+                "parse_mode": "HTML",
+            },
             {
                 "chat_id": 111222,
                 "text": (

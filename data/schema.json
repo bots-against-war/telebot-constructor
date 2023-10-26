@@ -426,8 +426,8 @@
         "messages": {
           "$ref": "#/$defs/FormMessages"
         },
-        "export": {
-          "$ref": "#/$defs/FormResultsExportConfig"
+        "results_export": {
+          "$ref": "#/$defs/FormResultsExport"
         },
         "form_completed_next_block_id": {
           "anyOf": [
@@ -457,7 +457,7 @@
         "form_name",
         "members",
         "messages",
-        "export",
+        "results_export",
         "form_completed_next_block_id",
         "form_cancelled_next_block_id"
       ],
@@ -624,20 +624,6 @@
             }
           ],
           "title": "Unsupported Command"
-        },
-        "cancelling_because_of_error": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "additionalProperties": {
-                "type": "string"
-              },
-              "type": "object"
-            }
-          ],
-          "title": "Cancelling Because Of Error"
         }
       },
       "required": [
@@ -645,14 +631,17 @@
         "field_is_skippable",
         "field_is_not_skippable",
         "please_enter_correct_value",
-        "unsupported_command",
-        "cancelling_because_of_error"
+        "unsupported_command"
       ],
       "title": "FormMessages",
       "type": "object"
     },
-    "FormResultsExportConfig": {
+    "FormResultsExport": {
       "properties": {
+        "echo_to_user": {
+          "title": "Echo To User",
+          "type": "boolean"
+        },
         "is_anonymous": {
           "title": "Is Anonymous",
           "type": "boolean"
@@ -669,10 +658,11 @@
         }
       },
       "required": [
+        "echo_to_user",
         "is_anonymous",
         "to_chat"
       ],
-      "title": "FormResultsExportConfig",
+      "title": "FormResultsExport",
       "type": "object"
     },
     "FormResultsExportToChatConfig": {
