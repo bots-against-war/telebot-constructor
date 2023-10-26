@@ -73,7 +73,6 @@ export function defaultFormBlockConfig(id: string): UserFlowBlockConfig {
     form: {
       block_id: id,
       members: [],
-      // TODO: check these all are non-empty on validation
       form_name: `form-${crypto.randomUUID()}`,
       messages: {
         form_start: "",

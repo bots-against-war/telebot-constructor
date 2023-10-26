@@ -584,14 +584,24 @@ class TelebotConstructorApp:
             """
             await self.authenticate(request)
             return web.json_response(
-                data=[
-                    {
-                        "code": lang.code,
-                        "name": lang.name,
-                        "emoji": lang.emoji,
-                    }
-                    for lang in Language.all().values()
-                ]
+                data=[{"code": lang.code, "name": lang.name, "emoji": lang.emoji} for lang in Language.all().values()]
+            )
+
+        @routes.get("/api/prefilled-messages")
+        async def prefilled_messages(request: web.Request) -> web.Response:
+            """
+            ---
+            description: List all available languages with code, name and emoji, if exists
+            produces:
+            - application/json
+            responses:
+                "200":
+                    description: List of Language objects
+            """
+            await self.authenticate(request)
+            return web.Response(
+                body=static_file_content(Path(__file__).parent / "data/prefilled_messages.json"),
+                content_type="application/json",
             )
 
         @routes.get("/")

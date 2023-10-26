@@ -11,7 +11,6 @@
   import { type FormBlock } from "../../../api/types";
   import type { SvelvetPosition } from "../../../types";
   import { getModalOpener } from "../../../utils";
-  import { getContext } from "svelte";
   import { validateFormBlock } from "../nodeValidators";
 
   const openModal = getModalOpener();
@@ -19,8 +18,7 @@
   export let config: FormBlock;
   export let position: SvelvetPosition;
   export let isValid = true;
-
-  let botName: string = getContext("botName");
+  export let botName: string;
 
   const setNewConfig = (newConfig: FormBlock) => {
     config = newConfig;

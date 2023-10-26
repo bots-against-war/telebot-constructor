@@ -34,8 +34,6 @@
   export let botName: string;
   export let botConfig: BotConfig;
 
-  setContext("botName", botName);
-
   let configReactivityTriggeredCount = 0;
   $: {
     botConfig; // trigger svelte's reactivity by mentioning the value we're reacting to
@@ -181,6 +179,7 @@
         />
       {:else if block.human_operator}
         <HumanOperatorNode
+          {botName}
           on:delete={getBlockDestructor(block.human_operator.block_id)}
           bind:config={block.human_operator}
           bind:position={botConfig.user_flow_config.node_display_coords[block.human_operator.block_id]}
@@ -197,6 +196,7 @@
         />
       {:else if block.form}
         <FormNode
+          {botName}
           on:delete={getBlockDestructor(block.form.block_id)}
           bind:config={block.form}
           bind:position={botConfig.user_flow_config.node_display_coords[block.form.block_id]}

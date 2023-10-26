@@ -2,9 +2,17 @@ import abc
 import dataclasses
 import logging
 from enum import Enum
-from typing import Any, Literal, Optional, Type, Union
+from typing import (
+    Any,
+    Literal,
+    Optional,
+    Sequence,
+    Type,
+    Union,
+    cast,
+)
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from telebot import types as tg
 from telebot_components.form.field import (
     FormField,
@@ -31,6 +39,7 @@ from telebot_constructor.utils import AnyChatId, telegram_user_link
 from telebot_constructor.utils.pydantic import (
     ExactlyOneNonNullFieldModel,
     LocalizableText,
+    MultilangText,
 )
 
 logger = logging.getLogger(__name__)
@@ -153,10 +162,14 @@ class BranchingFormMemberConfig(ExactlyOneNonNullFieldModel):
 
 class FormMessages(BaseModel):
     form_start: LocalizableText
+    cancel_command_is: LocalizableText
     field_is_skippable: LocalizableText
     field_is_not_skippable: LocalizableText
     please_enter_correct_value: LocalizableText
     unsupported_command: LocalizableText
+
+    # for easier frontend validation
+    model_config = ConfigDict(extra="forbid")
 
 
 class FormResultsExportToChatConfig(BaseModel):
@@ -168,26 +181,6 @@ class FormResultsExport(BaseModel):
     echo_to_user: bool
     is_anonymous: bool
     to_chat: Optional[FormResultsExportToChatConfig]
-
-
-def _validate_template(template: LocalizableText, placeholder_count: int, title: str) -> LocalizableText:
-    def _validate_string(template_str: str, subtitle: Optional[str]) -> str:
-        # TEMP disabled placeholder count validation
-        return template_str
-        actual_placeholder_count = template_str.count(r"{}")
-        if actual_placeholder_count != placeholder_count:
-            full_title = title
-            if subtitle:
-                full_title += f" ({subtitle})"
-            raise ValueError(
-                f'Expected {placeholder_count} "{{}}" placeholders in {full_title}, found {actual_placeholder_count}'
-            )
-        return template_str
-
-    if isinstance(template, str):
-        return _validate_string(template, subtitle=None)
-    else:
-        return {lang: _validate_string(localization, subtitle=str(lang)) for lang, localization in template.items()}
 
 
 class FormBlock(UserFlowBlock):
@@ -220,19 +213,27 @@ class FormBlock(UserFlowBlock):
             form=self._form,
             config=ComponentsFormHandlerConfig(
                 echo_filled_field=False,
-                form_starting_template=_validate_template(
-                    self.messages.form_start, placeholder_count=1, title="form start message"
+                form_starting_template=join_localizable_texts(
+                    [
+                        validate_localizable_text(
+                            self.messages.form_start, placeholder_count=0, title="form start message"
+                        ),
+                        validate_localizable_text(
+                            self.messages.cancel_command_is, placeholder_count=1, title="cancel command message"
+                        ),
+                    ],
+                    sep=" ",
                 ),
-                can_skip_field_template=_validate_template(
+                can_skip_field_template=validate_localizable_text(
                     self.messages.field_is_skippable, placeholder_count=1, title="field is skippable message"
                 ),
-                cant_skip_field_msg=_validate_template(
+                cant_skip_field_msg=validate_localizable_text(
                     self.messages.field_is_not_skippable, placeholder_count=0, title="field is not skippable message"
                 ),
-                retry_field_msg=_validate_template(
+                retry_field_msg=validate_localizable_text(
                     self.messages.please_enter_correct_value, placeholder_count=0, title="enter correct value msg"
                 ),
-                unsupported_cmd_error_template=_validate_template(
+                unsupported_cmd_error_template=validate_localizable_text(
                     self.messages.unsupported_command, placeholder_count=1, title="unsupported command message"
                 ),
                 cancelling_because_of_error_template="Something went wrong (details: {})",
@@ -323,3 +324,45 @@ class FormBlock(UserFlowBlock):
 
     async def enter(self, context: UserFlowContext) -> None:
         await self._form_handler.start(bot=context.bot, user=context.user, initial_form_result=None)
+
+
+def validate_localizable_text(template: LocalizableText, placeholder_count: int, title: str) -> LocalizableText:
+    def _validate_string(template_str: str, subtitle: Optional[str]) -> str:
+        # TEMP disabled placeholder count validation
+        return template_str
+        actual_placeholder_count = template_str.count(r"{}")
+        if actual_placeholder_count != placeholder_count:
+            full_title = title
+            if subtitle:
+                full_title += f" ({subtitle})"
+            raise ValueError(
+                f'Expected {placeholder_count} "{{}}" placeholders in {full_title}, found {actual_placeholder_count}'
+            )
+        return template_str
+
+    if isinstance(template, str):
+        return _validate_string(template, subtitle=None)
+    else:
+        return {lang: _validate_string(localization, subtitle=str(lang)) for lang, localization in template.items()}
+
+
+def join_localizable_texts(msgs: Sequence[LocalizableText], sep: str) -> LocalizableText:
+    if not msgs:
+        raise ValueError("Nothing to join")
+
+    def _join_str(ss: list[str]) -> str:
+        return sep.join(ss)
+
+    if all(isinstance(msg, str) for msg in msgs):
+        return _join_str(cast(list[str], msgs))
+    else:
+        if any(isinstance(msg, str) for msg in msgs):
+            raise ValueError("All msgs must be strings or multilang texts, not mixed")
+        multilang_msgs = cast(list[MultilangText], msgs)
+        multilang_msgs_aggregated = {lang: [localization] for lang, localization in multilang_msgs[0].items()}
+        for msg in multilang_msgs[1:]:
+            for key, localizations in multilang_msgs_aggregated.items():
+                if key not in msg:
+                    raise ValueError(f"All msgs must be localized to the same languages, but {msg} misses {key!r}")
+                localizations.append(msg[key])
+        return {lang: _join_str(localization) for lang, localization in multilang_msgs_aggregated.items()}

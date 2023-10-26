@@ -127,6 +127,11 @@ export type FormStart =
   | {
       [k: string]: string;
     };
+export type CancelCommandIs =
+  | string
+  | {
+      [k: string]: string;
+    };
 export type FieldIsSkippable =
   | string
   | {
@@ -407,11 +412,11 @@ export interface FormBranchConfig {
 }
 export interface FormMessages {
   form_start: FormStart;
+  cancel_command_is: CancelCommandIs;
   field_is_skippable: FieldIsSkippable;
   field_is_not_skippable: FieldIsNotSkippable;
   please_enter_correct_value: PleaseEnterCorrectValue;
   unsupported_command: UnsupportedCommand;
-  [k: string]: unknown;
 }
 export interface FormResultsExport {
   echo_to_user: EchoToUser;

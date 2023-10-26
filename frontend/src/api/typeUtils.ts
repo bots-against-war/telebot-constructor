@@ -1,4 +1,4 @@
-import type { BaseFormFieldConfig, UserFlowBlockConfig, UserFlowEntryPointConfig } from "./types";
+import type { UserFlowBlockConfig, UserFlowEntryPointConfig } from "./types";
 
 export function getBlockId(c: UserFlowBlockConfig): string {
   if (c.content) {

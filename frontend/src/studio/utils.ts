@@ -87,3 +87,7 @@ function gaussianRandom(mean: number, stdev: number) {
 export function base64Image(b64: string): string {
   return `data:image/png;base64,${b64}`;
 }
+
+export function capitalize(string: string) {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+}
