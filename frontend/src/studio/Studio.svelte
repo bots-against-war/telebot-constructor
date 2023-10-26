@@ -252,7 +252,7 @@
     <Group noWrap spacing="xl">
       <Stack>
         <EditableTitle bind:title={botConfig.display_name} />
-        <!-- <BotUserBadge {botName} /> -->
+        <BotUserBadge {botName} />
       </Stack>
       <Stack spacing="xs">
         <Button
