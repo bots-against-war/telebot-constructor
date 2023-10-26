@@ -14,6 +14,14 @@
   export let onConfigUpdate: (newConfig: FormBlock) => any;
 
   function updateConfig() {
+    // inserting global error values back into form fields
+    for (const fieldConfig of flattenedFormFields(editedConfig.members)) {
+      if (fieldConfig.plain_text) {
+        fieldConfig.plain_text.empty_text_error_msg = formErrorMessages.empty_text_error_msg || "";
+      } else if (fieldConfig.single_select) {
+        fieldConfig.single_select.invalid_enum_error_msg = formErrorMessages.invalid_enum_error_msg || "";
+      }
+    }
     config = editedConfig;
     onConfigUpdate(config);
   }

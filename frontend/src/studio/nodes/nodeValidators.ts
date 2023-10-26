@@ -1,9 +1,11 @@
+import { flattenedFormFields } from "../../api/typeUtils";
 import type { ContentBlock, FormBlock, HumanOperatorBlock, LanguageSelectBlock } from "../../api/types";
 import type { LocalizableText } from "../../types";
 import { err, ok, type Result } from "../../utils";
 import type { LanguageConfig } from "../stores";
 import { capitalize } from "../utils";
 import { formMessageName } from "./FormBlock/content";
+import { getBaseFormFieldConfig } from "./FormBlock/utils";
 import { PLACEHOLDER_GROUP_CHAT_ID } from "./defaultConfigs";
 
 export interface ValidationError {
@@ -100,20 +102,32 @@ export function validateLanguageSelectBlock(
 }
 
 export function validateFormBlock(config: FormBlock, langConfig: LanguageConfig | null): Result<null, ValidationError> {
+  const results: Result<null, ValidationError>[] = [];
   if (config.members.length === 0) {
-    return err({ error: "В форму не добавлено ни одного поля" });
+    results.push(err({ error: "В форму не добавлено ни одного поля" }));
   }
-  const messagesValidationResult = mergeResults(
-    Object.entries(config.messages).map(([key, text]) =>
+  results.push(
+    ...flattenedFormFields(config.members).flatMap((field, idx) => {
+      const fieldBaseConfig = getBaseFormFieldConfig(field);
+      const results: Result<null, ValidationError>[] = [];
+      results.push(fieldBaseConfig.name.length > 0 ? ok(null) : err({ error: `Не указано название поля #${idx}` }));
+      results.push(validateLocalizableText(fieldBaseConfig.prompt, `вопрос в поле #${idx}`, langConfig));
+      if (field.single_select && field.single_select.options.length === 0) {
+        results.push(err({ error: `Не указано ни одного варианта выбора в поле #${idx}` }));
+      }
+      return mergeResults(results);
+    }),
+  );
+  results.push(
+    ...Object.entries(config.messages).map(([key, text]) =>
       validateLocalizableText(text, `текст сообщения "${formMessageName(key)}"`, langConfig),
     ),
   );
-  if (!messagesValidationResult.ok) return messagesValidationResult;
   if (!(config.results_export.echo_to_user || config.results_export.to_chat)) {
-    return err({ error: "Не выбран ни один вариант обработки результатов формы" });
+    results.push(err({ error: "Не выбран ни один вариант обработки результатов формы" }));
   }
   if (config.results_export.to_chat !== null && config.results_export.to_chat.chat_id === PLACEHOLDER_GROUP_CHAT_ID) {
-    return err({ error: "Не выбран чат для экспорта результатов" });
+    results.push(err({ error: "Не выбран чат для экспорта результатов" }));
   }
-  return ok(null);
+  return mergeResults(results);
 }

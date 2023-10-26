@@ -2,6 +2,7 @@ import abc
 import dataclasses
 import logging
 from enum import Enum
+import string
 from typing import (
     Any,
     Literal,
@@ -328,16 +329,19 @@ class FormBlock(UserFlowBlock):
 
 def validate_localizable_text(template: LocalizableText, placeholder_count: int, title: str) -> LocalizableText:
     def _validate_string(template_str: str, subtitle: Optional[str]) -> str:
-        # TEMP disabled placeholder count validation
-        return template_str
+        full_title = title
+        if subtitle:
+            full_title += f" ({subtitle})"
+        template_str = template_str.strip()
         actual_placeholder_count = template_str.count(r"{}")
         if actual_placeholder_count != placeholder_count:
-            full_title = title
-            if subtitle:
-                full_title += f" ({subtitle})"
             raise ValueError(
-                f'Expected {placeholder_count} "{{}}" placeholders in {full_title}, found {actual_placeholder_count}'
+                f'Expected {placeholder_count} "{{}}" placeholders in {full_title!r}, found {actual_placeholder_count}'
             )
+        if not template_str:
+            raise ValueError(f"Empty {full_title!r}")
+        if template_str[-1] not in string.punctuation:
+            template_str += "."
         return template_str
 
     if isinstance(template, str):
