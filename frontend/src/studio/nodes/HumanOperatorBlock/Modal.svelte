@@ -10,7 +10,7 @@
     NumberInput,
     Radio,
     Stack,
-    Switch,
+    Switch, Tabs,
     TextInput,
     Tooltip
   } from "@svelteuidev/core";
@@ -33,10 +33,13 @@
     config.feedback_handler_config.messages_to_admin.deleted_message_ok = deleted_message_ok;
     config.feedback_handler_config.messages_to_admin.can_not_delete_message = can_not_delete_message;
 
+    config.feedback_handler_config.hashtags_in_admin_chat = hashtags_in_admin_chat;
+    config.feedback_handler_config.unanswered_hashtag = unanswered_hashtag;
+    config.feedback_handler_config.message_log_to_admin_chat = message_log_to_admin_chat;
+
     onConfigUpdate(config);
   }
 
-  let errorMessage = "";
   let adminChatId = config.feedback_handler_config.admin_chat_id;
   let anonimyze_users = config.feedback_handler_config.anonimyze_users;
   let max_messages_per_minute = config.feedback_handler_config.max_messages_per_minute;
@@ -49,86 +52,105 @@
   let deleted_message_ok = config.feedback_handler_config.messages_to_admin.deleted_message_ok;
   let can_not_delete_message = config.feedback_handler_config.messages_to_admin.can_not_delete_message;
 
+  let hashtags_in_admin_chat = config.feedback_handler_config.hashtags_in_admin_chat;
+  let unanswered_hashtag = config.feedback_handler_config.unanswered_hashtag;
+  let message_log_to_admin_chat = config.feedback_handler_config.message_log_to_admin_chat;
 </script>
 
 <div>
   <h1>Человек-оператор</h1>
-  <div style="margin-top: 1em;">
-    <Stack override={{ height: 300 }} align="left">
-      <h3>Главные настройки</h3>
-      <div>
-        <GroupChatIdSelect label="Выбор админ-чата" {botName} bind:selectedGroupChatId={adminChatId} />
-      </div>
-
-      <Tooltip
-        wrapLines
-        width="220"
-        withArrow
-        transitionDuration={200}
-        label="присылать ли имя, юзернейм и id юзерки, или заменять его на эмоджи."
-      >
-        <Switch size="lg" onLabel="ON" offLabel="OFF" label="Анонимизировать юзеро_к"
-                bind:checked={anonimyze_users} />
-      </Tooltip>
-      <Tooltip
-        wrapLines
-        width="220"
-        withArrow
-        transitionDuration={200}
-        label="режим работы, где на каждую юзерку в админ-чате создается отдельная тема (позволяет выделить переписку с каждой юзеркой из общего потока)."
-      >
-        <Switch size="lg" onLabel="ON" offLabel="OFF" label="Отдельная тема на юзер_ку"
-                bind:checked={forum_topic_per_user} />
-      </Tooltip>
-
-      <Tooltip
-        wrapLines
-        width={220}
-        withArrow
-        transitionDuration={200}
-        label="После превышения будет софтбан."
-      >
-        <NumberInput
-          bind:value={max_messages_per_minute}
-          label="Сколько сообщений в минуту может писать пользовательница."
-          min={1}
-          max={60}
-          step={1}
-          type="number"
+  <Tabs orientation="vertical">
+    <Tabs.Tab label="Главные настройки">
+      <Stack align="left">
+        <div>
+          <GroupChatIdSelect label="Выбор админ-чата" {botName} bind:selectedGroupChatId={adminChatId} />
+        </div>
+        <Tooltip
+          wrapLines
+          width={220}
+          withArrow
+          transitionDuration={200}
+          label="После превышения будет софтбан."
+        >
+          <NumberInput
+            bind:value={max_messages_per_minute}
+            label="Сколько сообщений в минуту может писать пользовательница."
+            min={1}
+            max={60}
+            step={1}
+            type="number"
+          />
+        </Tooltip>
+        <Tooltip
+          wrapLines
+          width="220"
+          withArrow
+          transitionDuration={200}
+          label="присылать ли имя, юзернейм и id юзерки, или заменять его на эмоджи."
+        >
+          <Switch size="md" onLabel="ON" offLabel="OFF" label="Анонимизировать юзеро_к"
+                  bind:checked={anonimyze_users} />
+        </Tooltip>
+        <Tooltip
+          wrapLines
+          width="220"
+          withArrow
+          transitionDuration={200}
+          label="режим работы, где на каждую юзерку в админ-чате создается отдельная тема (позволяет выделить переписку с каждой юзеркой из общего потока)."
+        >
+          <Switch size="md" onLabel="ON" offLabel="OFF" label="Отдельная тема на юзер_ку"
+                  bind:checked={forum_topic_per_user} />
+        </Tooltip>
+      </Stack>
+    </Tabs.Tab>
+    <Tabs.Tab label="Сообщения для юзерок">
+      <Stack align="left">
+        <TextInput
+          placeholder="Спасибо, мы вам скоро ответим!"
+          label="Ответ на успешно принятое сообщение"
+          bind:value={forwarded_to_admin_ok}
         />
-      </Tooltip>
-    </Stack>
-
-    <Stack override={{ height: 300 }} align="left">
-      <h3>Сообщения для юзерок</h3>
-
-      <TextInput
-        placeholder="Спасибо, мы вам скоро ответим!"
-        label="ответ на успешно принятое сообщение"
-        bind:forwarded_to_admin_ok
-      />
-      <TextInput
-        placeholder="Не присылайте больше N сообщений в минуту!"
-        label="предупреждение, что сообщений слишком много (см. max_messages_per_minute)"
-        bind:throttling
-      />
-    </Stack>
-    <Stack override={{ height: 300 }} align="left">
-      <h3>Сообщения для админок</h3>
-
-      <TextInput
-        placeholder="Спасибо, мы вам скоро ответим!"
-        label="уведомление что ответ админки передан юзерке"
-        bind:copied_to_user_ok
-      />
-      <TextInput
-        placeholder="Не присылайте больше N сообщений в минуту!"
-        label="предупреждение, что сообщений слишком много (см. max_messages_per_minute)"
-        bind:throttling
-      />
-
-    </Stack>
-
+        <TextInput
+          placeholder="Не присылайте больше N сообщений в минуту!"
+          label="Предупреждение, что сообщений слишком много (см. Ограничение на кол-во сообщений в минуту)"
+          bind:value={throttling}
+        />
+      </Stack>
+    </Tabs.Tab>
+    <Tabs.Tab label="Сообщения для админок">
+      <Stack align="left">
+        <TextInput
+          placeholder="Сообщение переслано!"
+          label="Уведомление о том, что ответ админки передан юзерке"
+          bind:value={copied_to_user_ok}
+        />
+        <TextInput
+          placeholder="Сообщение удалено из чата бота и юзерки!"
+          label="Уведомление о том, что сообщение юзерке успешно удалено по команде /undo"
+          bind:value={deleted_message_ok}
+        />
+        <TextInput
+          placeholder="Не получилось удалить сообщение :(!"
+          label="Уведомление о том, что сообщение не удалось удалить"
+          bind:value={can_not_delete_message}
+        />
+      </Stack>
+    </Tabs.Tab>
+    <Tabs.Tab label="Дополнительные настройки">
+      <Stack align="left">
+        <Switch size="md" onLabel="ON" offLabel="OFF" label="По команде /log присылать лог сообщений в админ чат"
+                bind:checked={message_log_to_admin_chat} />
+        <Switch size="md" onLabel="ON" offLabel="OFF" label="Хештеги в админ-чате"
+                bind:checked={hashtags_in_admin_chat} />
+        {#if hashtags_in_admin_chat}
+          <TextInput
+            placeholder="#неотвечено"
+            label="Текст хештега, который навешивается на новые, неотвеченные сообщения"
+            bind:value={unanswered_hashtag}
+          />
+        {/if}
+      </Stack>
+    </Tabs.Tab>
+  </Tabs>
   <NodeModalControls on:save={updateConfig} />
-  </div>
 </div>
