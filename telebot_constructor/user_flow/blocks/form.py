@@ -1,17 +1,9 @@
 import abc
 import dataclasses
 import logging
-from enum import Enum
 import string
-from typing import (
-    Any,
-    Literal,
-    Optional,
-    Sequence,
-    Type,
-    Union,
-    cast,
-)
+from enum import Enum
+from typing import Any, Literal, Optional, Sequence, Type, Union, cast
 
 from pydantic import BaseModel, ConfigDict
 from telebot import types as tg

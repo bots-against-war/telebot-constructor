@@ -829,7 +829,7 @@ async def test_user_flow_with_form() -> None:
         bot.method_calls["send_message"],
         [
             {"text": "hi i'm form bot", "chat_id": 161},
-            {"chat_id": 161, "text": "hi please fill out the form! /cancel - cancel filling\n\nwhat is your name?"},
+            {"chat_id": 161, "text": "hi please fill out the form! /cancel - cancel filling.\n\nwhat is your name?"},
         ],
     )
     assert_method_call_dictified_kwargs_include(bot.method_calls["send_message"], [{}, {}])
