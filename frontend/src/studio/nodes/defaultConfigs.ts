@@ -7,8 +7,8 @@ export function defaultCommandEntrypoint(id: string): UserFlowEntryPointConfig {
       command: "command",
       scope: "private",
       short_description: "Some command",
-      next_block_id: null,
-    },
+      next_block_id: null
+    }
   };
 }
 
@@ -17,14 +17,14 @@ export function defaultContentBlockConfig(id: string): UserFlowBlockConfig {
     content: {
       block_id: id,
       contents: [{ text: { text: "Hello, I'm bot!", markup: "none" }, attachments: [] }],
-      next_block_id: null,
-    },
+      next_block_id: null
+    }
   };
 }
 
 export const PLACEHOLDER_GROUP_CHAT_ID = 0;
 
-export function defaultHumanOperatorBlockCofig(id: string): UserFlowBlockConfig {
+export function defaultHumanOperatorBlockConfig(id: string): UserFlowBlockConfig {
   return {
     human_operator: {
       block_id: id,
@@ -36,20 +36,24 @@ export function defaultHumanOperatorBlockCofig(id: string): UserFlowBlockConfig 
         max_messages_per_minute: 20,
         messages_to_user: {
           forwarded_to_admin_ok: "Message accepted!",
-          throttling: "Please don't send more than {} messages in {}",
+          throttling: "Please don't send more than {} messages in {}"
         },
         messages_to_admin: {
           copied_to_user_ok: "Copied to user",
           deleted_message_ok: "Message deleted from chat with user",
-          can_not_delete_message: "Can't delete message from chat with user",
+          can_not_delete_message: "Can't delete message from chat with user"
         },
         hashtags_in_admin_chat: false,
         hashtag_message_rarer_than: null,
         unanswered_hashtag: null,
-        message_log_to_admin_chat: true,
-      },
-    },
+        message_log_to_admin_chat: true
+      }
+    }
   };
+}
+
+export function defaultMenuBlockConfig(id: string): UserFlowBlockConfig {
+  return {};
 }
 
 export function defaultLanguageSelectBlockConfig(id: string): UserFlowBlockConfig {
@@ -59,11 +63,11 @@ export function defaultLanguageSelectBlockConfig(id: string): UserFlowBlockConfi
       menu_config: {
         propmt: {},
         is_blocking: false,
-        emoji_buttons: true,
+        emoji_buttons: true
       },
       supported_languages: [],
       default_language: "",
-      language_selected_next_block_id: null,
-    },
+      language_selected_next_block_id: null
+    }
   };
 }

@@ -9,6 +9,7 @@
   import ContentBlockNode from "./nodes/ContentBlock/Node.svelte";
   import HumanOperatorNode from "./nodes/HumanOperatorBlock/Node.svelte";
   import LanguageSelectNode from "./nodes/LanguageSelectBlock/Node.svelte";
+  import MenuNode from "./nodes/MenuBlock/Node.svelte";
   import StudioControls from "./StudioControls.svelte";
   import BotUserBadge from "../components/BotUserBadge.svelte";
   import EditableTitle from "./components/EditableTitle.svelte";
@@ -23,8 +24,8 @@
   import {
     defaultCommandEntrypoint,
     defaultContentBlockConfig,
-    defaultHumanOperatorBlockCofig,
-    defaultLanguageSelectBlockConfig,
+    defaultHumanOperatorBlockConfig,
+    defaultLanguageSelectBlockConfig, defaultMenuBlockConfig
   } from "./nodes/defaultConfigs";
   import { HUE, buttonColor } from "./nodes/colors";
   import { languageConfigStore } from "./stores";
@@ -167,6 +168,13 @@
           bind:position={botConfig.user_flow_config.node_display_coords[block.language_select.block_id]}
           bind:isValid={isNodeValid[block.language_select.block_id]}
         />
+      {:else if block.menu}
+        <MenuNode
+          on:delete={getBlockDestructor(block.menu.block_id)}
+          bind:config={botConfig.user_flow_config.blocks[idx].menu}
+          bind:position={botConfig.user_flow_config.node_display_coords[block.menu.block_id]}
+          bind:isValid={isNodeValid[block.menu.block_id]}
+        />
       {/if}
     {/each}
   </Svelvet>
@@ -191,7 +199,7 @@
         compact
         variant="outline"
         color={buttonColor(HUE.human_operator)}
-        on:click={getBlockConstructor("human-operator", defaultHumanOperatorBlockCofig)}
+        on:click={getBlockConstructor("human-operator", defaultHumanOperatorBlockConfig)}
       >
         Человек-оператор
       </Button>
@@ -203,6 +211,14 @@
         on:click={getBlockConstructor("language-select", defaultLanguageSelectBlockConfig)}
       >
         Выбор языка
+      </Button>
+      <Button
+        compact
+        variant="outline"
+        color={buttonColor(HUE.menu)}
+        on:click={getBlockConstructor("menu", defaultMenuBlockConfig)}
+      >
+        Меню
       </Button>
     </Group>
   </StudioControls>

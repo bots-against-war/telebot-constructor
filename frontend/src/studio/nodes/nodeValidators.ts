@@ -1,4 +1,4 @@
-import type { ContentBlock, HumanOperatorBlock, LanguageSelectBlock } from "../../api/types";
+import type { MenuBlock, ContentBlock, HumanOperatorBlock, LanguageSelectBlock } from "../../api/types";
 import type { LocalizableText } from "../../types";
 import { err, ok, type Result } from "../../utils";
 import type { LanguageConfig } from "../stores";
@@ -11,7 +11,7 @@ export interface ValidationError {
 function validateLocalizableText(
   text: LocalizableText,
   textName: string,
-  langConfig: LanguageConfig | null,
+  langConfig: LanguageConfig | null
 ): Result<null, ValidationError> {
   if (langConfig === null && typeof text === "object") {
     return err({ error: `${textName} локализован (${Object.keys(text).join(", ")}), но в боте нет выбора языков` });
@@ -21,7 +21,7 @@ function validateLocalizableText(
       missingLanguages = langConfig.supportedLanguageCodes;
     } else {
       missingLanguages = langConfig.supportedLanguageCodes.filter(
-        (lang) => !text[lang], // filtering out missing and empty localizations
+        (lang) => !text[lang] // filtering out missing and empty localizations
       );
     }
     if (missingLanguages.length > 0) {
@@ -36,7 +36,7 @@ function validateLocalizableText(
 
 export function validateContentBlock(
   config: ContentBlock,
-  langConfig: LanguageConfig | null,
+  langConfig: LanguageConfig | null
 ): Result<null, ValidationError> {
   const textValidationResults: Result<null, ValidationError>[] = config.contents.map((content, idx) => {
     if (content.text) {
@@ -51,7 +51,7 @@ export function validateContentBlock(
       error: textValidationResults
         .map((res) => (res.ok ? "" : res.error.error))
         .filter((s) => s)
-        .join("; "),
+        .join("; ")
     });
   } else {
     return ok(null);
@@ -60,7 +60,7 @@ export function validateContentBlock(
 
 export function validateHumanOperatorBlock(
   config: HumanOperatorBlock,
-  langConfig: LanguageConfig | null,
+  langConfig: LanguageConfig | null
 ): Result<null, ValidationError> {
   if (config.feedback_handler_config.admin_chat_id === PLACEHOLDER_GROUP_CHAT_ID) {
     return err({ error: "Не выбран админ-чат" });
@@ -69,9 +69,17 @@ export function validateHumanOperatorBlock(
   }
 }
 
+export function validateMenuBlock(
+  config: MenuBlock,
+  langConfig: LanguageConfig | null
+): Result<null, ValidationError> {
+  return ok(null);
+
+}
+
 export function validateLanguageSelectBlock(
   config: LanguageSelectBlock,
-  langConfig: LanguageConfig | null,
+  langConfig: LanguageConfig | null
 ): Result<null, ValidationError> {
   if (config.supported_languages.length === 0) {
     return err({ error: "Не выбраны поддерживаемые языки" });
