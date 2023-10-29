@@ -54,6 +54,8 @@
   div.form-field-container {
     padding: 10px;
     border: 1px rgb(206, 212, 218) solid;
+    /* TEMP */
+    background-color: rgb(236, 238, 241);
     border-radius: 5px;
     position: relative;
   }

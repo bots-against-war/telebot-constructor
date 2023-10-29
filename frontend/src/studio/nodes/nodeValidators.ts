@@ -53,6 +53,8 @@ function mergeResults(results: Result<null, ValidationError>[]): Result<null, Va
       error: results
         .map((res) => (res.ok ? "" : res.error.error))
         .filter((s) => s)
+        // TODO: return as array of errors and add support for rendering them in ErrorBadge
+        // + truncate long errors there
         .join("; "),
     });
   } else {
@@ -107,17 +109,30 @@ export function validateFormBlock(config: FormBlock, langConfig: LanguageConfig 
     results.push(err({ error: "В форму не добавлено ни одного поля" }));
   }
   results.push(
-    ...flattenedFormFields(config.members).flatMap((field, idx) => {
+    ...(flattenedFormFields(config.members).flatMap((field, idx) => {
+      idx += 1;  //  1-based indexing
+      const resultfForField: Result<null, ValidationError>[] = [];
       const fieldBaseConfig = getBaseFormFieldConfig(field);
-      const results: Result<null, ValidationError>[] = [];
-      results.push(fieldBaseConfig.name.length > 0 ? ok(null) : err({ error: `Не указано название поля #${idx}` }));
-      results.push(validateLocalizableText(fieldBaseConfig.prompt, `вопрос в поле #${idx}`, langConfig));
+      resultfForField.push(fieldBaseConfig.name.length > 0 ? ok(null) : err({ error: `Не указано название поля #${idx}` }));
+      resultfForField.push(validateLocalizableText(fieldBaseConfig.prompt, `вопрос в поле #${idx}`, langConfig));
       if (field.single_select && field.single_select.options.length === 0) {
-        results.push(err({ error: `Не указано ни одного варианта выбора в поле #${idx}` }));
+        resultfForField.push(err({ error: `Не указано ни одного варианта выбора в поле #${idx}` }));
       }
-      return mergeResults(results);
-    }),
+      return mergeResults(resultfForField);
+    })),
   );
+  const validationResultsForBranches: Result<null, ValidationError>[] = (config.members.map((member, idx) => {
+    idx += 1;  //  1-based indexing
+    if (!member.branch) return ok(null)
+    if (member.branch.members.length === 0) {
+      return err({ error: `Ветвь #${idx} не включает ни одного поля` })
+    }
+    if (!member.branch.condition_match_value) {
+      return err({ error: `Для ветви #${idx} не задано условие` })
+    }
+    return ok(null);
+  }));
+  results.push(...validationResultsForBranches);
   results.push(
     ...Object.entries(config.messages).map(([key, text]) =>
       validateLocalizableText(text, `текст сообщения "${formMessageName(key)}"`, langConfig),
