@@ -4,6 +4,7 @@ import json
 import logging
 import mimetypes
 import re
+from datetime import datetime
 from pathlib import Path
 from typing import Optional, Type, TypeVar
 
@@ -19,10 +20,14 @@ from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.stores.generic import KeyDictStore, KeySetStore
 from telebot_components.utils.secrets import SecretStore
 
-from telebot_constructor.app_models import BotTokenPayload, TgBotUser, TgBotUserUpdate
+from telebot_constructor.app_models import (
+    BotInfo,
+    BotTokenPayload,
+    TgBotUser,
+    TgBotUserUpdate,
+)
 from telebot_constructor.auth import Auth
 from telebot_constructor.bot_config import BotConfig
-from telebot_constructor.app_models import BotInfo
 from telebot_constructor.build_time_config import BASE_PATH
 from telebot_constructor.construct import BotFactory, construct_bot, make_raw_bot
 from telebot_constructor.cors import setup_cors
@@ -39,7 +44,6 @@ from telebot_constructor.telegram_files_downloader import (
     TelegramFilesDownloader,
 )
 from telebot_constructor.utils.pydantic import Language
-from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -303,8 +307,10 @@ class TelebotConstructorApp:
                 return web.json_response(text=bot_config.model_dump_json(), status=201)
             else:
                 existing_bot_info = await self.bot_info_store.get_subkey(username, bot_name)
-                existing_bot_info.updated_at = datetime.now().isoformat()
-                await self.bot_info_store.set_subkey(key=username, subkey=bot_name, value=existing_bot_info)
+                if existing_bot_info:
+                    existing_bot_info.updated_at = datetime.now().isoformat()
+                    await self.bot_info_store.set_subkey(key=username, subkey=bot_name, value=existing_bot_info)
+
                 return web.json_response(text=existing_bot_config.model_dump_json())
 
         @routes.get("/api/config/{bot_name}")
@@ -385,9 +391,10 @@ class TelebotConstructorApp:
             await self.re_start_bot(username, bot_name, bot_config)
 
             existing_bot_info = await self.bot_info_store.get_subkey(username, bot_name)
-            existing_bot_info.is_running = True
-            existing_bot_info.last_run_at = datetime.now().isoformat()
-            await self.bot_info_store.set_subkey(key=username, subkey=bot_name, value=existing_bot_info)
+            if existing_bot_info:
+                existing_bot_info.is_running = True
+                existing_bot_info.last_run_at = datetime.now().isoformat()
+                await self.bot_info_store.set_subkey(key=username, subkey=bot_name, value=existing_bot_info)
 
             return web.Response(text="OK", status=201)
 
@@ -409,8 +416,9 @@ class TelebotConstructorApp:
             if await self.runner.stop(username=username, bot_name=bot_name):
                 await self.running_bots_store.remove(username, bot_name)
                 existing_bot_info = await self.bot_info_store.get_subkey(username, bot_name)
-                existing_bot_info.is_running = False
-                await self.bot_info_store.set_subkey(key=username, subkey=bot_name, value=existing_bot_info)
+                if existing_bot_info:
+                    existing_bot_info.is_running = False
+                    await self.bot_info_store.set_subkey(key=username, subkey=bot_name, value=existing_bot_info)
                 return web.Response(text="Bot stopped")
             else:
                 return web.Response(text="Bot was not running")

@@ -1,6 +1,4 @@
 """Pydantic models for various app endpoints"""
-from datetime import datetime
-
 import enum
 from typing import Optional
 
@@ -126,8 +124,8 @@ class TgBotUserUpdate(BaseModel):
 
 class BotInfo(BaseModel):
     display_name: Optional[str] = None
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
     timezone: Optional[str] = None
     is_running: Optional[bool] = False
-    last_run_at: Optional[datetime] = None
+    last_run_at: Optional[str] = None
