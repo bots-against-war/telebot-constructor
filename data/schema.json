@@ -22,6 +22,87 @@
       "title": "BotConfig",
       "type": "object"
     },
+    "BotInfo": {
+      "properties": {
+        "display_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Display Name"
+        },
+        "created_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Created At"
+        },
+        "updated_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Updated At"
+        },
+        "timezone": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Timezone"
+        },
+        "is_running": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": false,
+          "title": "Is Running"
+        },
+        "last_run_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Last Run At"
+        }
+      },
+      "title": "BotInfo",
+      "type": "object"
+    },
     "BranchingFormMemberConfig": {
       "properties": {
         "field": {
@@ -1480,6 +1561,9 @@
     },
     "language_data": {
       "$ref": "#/$defs/LanguageData"
+    },
+    "bot_info": {
+      "$ref": "#/$defs/BotInfo"
     }
   },
   "required": [
@@ -1487,7 +1571,8 @@
     "tg_group_chat",
     "tg_bot_user",
     "tg_bot_user_update",
-    "language_data"
+    "language_data",
+    "bot_info"
   ],
   "title": "BackendDataModels",
   "type": "object"

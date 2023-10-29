@@ -179,6 +179,12 @@ export type ShortDescription2 = string;
 export type Code = string;
 export type Name2 = string;
 export type Emoji = string | null;
+export type DisplayName1 = string | null;
+export type CreatedAt = string | null;
+export type UpdatedAt = string | null;
+export type Timezone = string | null;
+export type IsRunning = boolean | null;
+export type LastRunAt = string | null;
 
 /**
  * Temporary class to pack several models into one schema; not used directly by frontend code
@@ -189,6 +195,7 @@ export interface BackendDataModels {
   tg_bot_user: TgBotUser;
   tg_bot_user_update: TgBotUserUpdate;
   language_data: LanguageData;
+  bot_info: BotInfo;
   [k: string]: unknown;
 }
 export interface BotConfig {
@@ -479,5 +486,14 @@ export interface LanguageData {
   code: Code;
   name: Name2;
   emoji?: Emoji;
+  [k: string]: unknown;
+}
+export interface BotInfo {
+  display_name?: DisplayName1;
+  created_at?: CreatedAt;
+  updated_at?: UpdatedAt;
+  timezone?: Timezone;
+  is_running?: IsRunning;
+  last_run_at?: LastRunAt;
   [k: string]: unknown;
 }

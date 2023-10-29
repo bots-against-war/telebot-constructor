@@ -1,13 +1,14 @@
 <script lang="ts">
   import { saveBotConfig } from "../api/botConfig";
-  import { Button, TextInput, Alert, Flex, PasswordInput } from "@svelteuidev/core";
+  import { Button, TextInput, Flex, PasswordInput } from "@svelteuidev/core";
   import { createBotTokenSecret, getError, getModalCloser, unwrap } from "../utils";
   import { slugify } from "transliteration";
   import { validateBotToken } from "../api/validation";
-  import type { BotConfig } from "../api/types";
+  import type { BotInfo } from "../api/types";
   import ErrorBadge from "../components/ErrorBadge.svelte";
+  import { saveBotInfo } from "../api/botInfo";
 
-  export let newBotCallback: (botName: string, config: BotConfig) => void;
+  export let newBotCallback: (botName: string, info: BotInfo) => void;
 
   const closePopup = getModalCloser();
 
@@ -76,18 +77,26 @@
         node_display_coords: {},
       },
     };
-    const res = await saveBotConfig(botName, config);
+    const res1 = await saveBotConfig(botName, config);
+
+    const botInfo = {
+      display_name: botDisplayName,
+      created_at: new Date().toISOString(),
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    };
+    const res2 = await saveBotInfo(botName, botInfo);
     isCreating = false;
 
-    console.log(res);
-
-    if (res.ok) {
+    if (res1.ok && res2.ok) {
       error = null;
-      newBotCallback(botName, config);
+      newBotCallback(botName, botInfo);
       closePopup();
-    } else {
+    } else if (!res1.ok) {
       errorTitle = "Ошибка сохранения";
-      error = getError(res);
+      error = getError(res1);
+    } else if (!res2.ok) {
+      errorTitle = "Ошибка сохранения";
+      error = getError(res2);
     }
   }
 </script>

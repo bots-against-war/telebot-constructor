@@ -1,27 +1,28 @@
 <script lang="ts">
   import ArrayBots from "./ArrayBots.svelte";
   import BotLifecycle from "./BotLifecycle.svelte";
-  import type { BotConfigList } from "../types";
+  import { type BotInfoList } from "../types";
   import { Button, Container, Space } from "@svelteuidev/core";
   import CreateBotModal from "./CreateBotModal.svelte";
   import { getModalOpener } from "../utils";
-  import type { BotConfig } from "../api/types";
+  import { type BotInfo } from "../api/types";
   const open = getModalOpener();
 
-  export let botConfigs: BotConfigList;
+  export let botInfos: BotInfoList;
 
   let selectedBot: string | null = null;
   let selectedBotHash = window.location.hash.slice(1); // slice removes # symbol from the start
-  if (selectedBotHash !== null && selectedBotHash in botConfigs) {
+  if (selectedBotHash !== null && selectedBotHash in botInfos) {
     selectedBot = selectedBotHash;
-  } else if (Object.keys(botConfigs).length > 0) {
-    selectedBot = Object.keys(botConfigs)[0];
+  } else if (Object.keys(botInfos).length > 0) {
+    selectedBot = Object.keys(botInfos)[0];
   }
 
   const showNewBotModal = () =>
     open(CreateBotModal, {
-      newBotCallback: (name: string, config: BotConfig) => {
-        botConfigs[name] = config;
+      newBotCallback: (name: string, info: BotInfo) => {
+        botInfos[name] = info;
+        selectedBot = name;
       },
     });
 </script>
@@ -37,7 +38,7 @@
       on:updateSelectedBot={(e) => {
         selectedBot = e.detail || null;
       }}
-      {botConfigs}
+      {botInfos}
       {selectedBot}
     />
   </div>
@@ -49,13 +50,12 @@
   {:else}
     <BotLifecycle
       botName={selectedBot}
-      botConfig={botConfigs[selectedBot]}
+      bind:botInfo={botInfos[selectedBot]}
       on:botDeleted={() => {
         if (selectedBot === null) return;
-        // @ts-ignore
-        let newBotConfigs = { ...botConfigs };
-        delete newBotConfigs[selectedBot];
-        botConfigs = newBotConfigs;
+        let updatedBotInfos = { ...botInfos };
+        delete updatedBotInfos[selectedBot];
+        botInfos = updatedBotInfos;
         selectedBot = null;
       }}
     />

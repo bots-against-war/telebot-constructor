@@ -3,10 +3,10 @@
 
   import { Button, Stack } from "@svelteuidev/core";
 
-  import { type BotConfigList } from "../types";
+  import { type BotInfoList } from "../types";
 
   // region props
-  export let botConfigs: BotConfigList;
+  export let botInfos: BotInfoList;
   export let selectedBot: string | null;
   // endregion
 
@@ -18,7 +18,7 @@
 </script>
 
 <Stack align="center" justify="flex-start" spacing="sm">
-  {#each Object.entries(botConfigs) as [botName, config], i}
+  {#each Object.entries(botInfos) as [botName, botInfo], i}
     <Button
       variant={selectedBot === botName ? "filled" : "outline"}
       on:click={() => {
@@ -26,7 +26,7 @@
         updateSelectedBot(botName);
       }}
     >
-      {config.display_name}</Button
+      {botInfo.display_name}</Button
     >
   {/each}
 </Stack>

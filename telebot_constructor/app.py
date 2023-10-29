@@ -22,6 +22,7 @@ from telebot_components.utils.secrets import SecretStore
 from telebot_constructor.app_models import BotTokenPayload, TgBotUser, TgBotUserUpdate
 from telebot_constructor.auth import Auth
 from telebot_constructor.bot_config import BotConfig
+from telebot_constructor.app_models import BotInfo
 from telebot_constructor.build_time_config import BASE_PATH
 from telebot_constructor.construct import BotFactory, construct_bot, make_raw_bot
 from telebot_constructor.cors import setup_cors
@@ -38,6 +39,7 @@ from telebot_constructor.telegram_files_downloader import (
     TelegramFilesDownloader,
 )
 from telebot_constructor.utils.pydantic import Language
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -93,6 +95,15 @@ class TelebotConstructorApp:
             prefix=self.STORE_PREFIX,
             redis=redis,
             expiration_time=None,
+        )
+        # username -> names of bots that were ever created
+        self.bot_info_store = KeyDictStore[BotInfo](
+            name="bot-info",
+            prefix=self.STORE_PREFIX,
+            redis=redis,
+            expiration_time=None,
+            dumper=BotInfo.model_dump_json,
+            loader=BotInfo.model_validate_json,
         )
 
         self.group_chat_discovery_handler = GroupChatDiscoveryHandler(
@@ -291,6 +302,9 @@ class TelebotConstructorApp:
             if existing_bot_config is None:
                 return web.json_response(text=bot_config.model_dump_json(), status=201)
             else:
+                existing_bot_info = await self.bot_info_store.get_subkey(username, bot_name)
+                existing_bot_info.updated_at = datetime.now().isoformat()
+                await self.bot_info_store.set_subkey(key=username, subkey=bot_name, value=existing_bot_info)
                 return web.json_response(text=existing_bot_config.model_dump_json())
 
         @routes.get("/api/config/{bot_name}")
@@ -328,6 +342,7 @@ class TelebotConstructorApp:
             await self.runner.stop(username, bot_name)
             await self.running_bots_store.remove(username, bot_name)
             await self.bot_config_store.remove_subkey(username, bot_name)
+            await self.bot_info_store.remove_subkey(username, bot_name)
             return web.json_response(text=config.model_dump_json())
 
         @routes.get("/api/config")
@@ -367,6 +382,12 @@ class TelebotConstructorApp:
             bot_name = self.parse_bot_name(request)
             bot_config = await self.load_bot_config(username, bot_name)
             await self.re_start_bot(username, bot_name, bot_config)
+
+            existing_bot_info = await self.bot_info_store.get_subkey(username, bot_name)
+            existing_bot_info.is_running = True
+            existing_bot_info.last_run_at = datetime.now().isoformat()
+            await self.bot_info_store.set_subkey(key=username, subkey=bot_name, value=existing_bot_info)
+
             return web.Response(text="OK", status=201)
 
         @routes.post("/api/stop/{bot_name}")
@@ -386,6 +407,9 @@ class TelebotConstructorApp:
             bot_name = self.parse_bot_name(request)
             if await self.runner.stop(username=username, bot_name=bot_name):
                 await self.running_bots_store.remove(username, bot_name)
+                existing_bot_info = await self.bot_info_store.get_subkey(username, bot_name)
+                existing_bot_info.is_running = False
+                await self.bot_info_store.set_subkey(key=username, subkey=bot_name, value=existing_bot_info)
                 return web.Response(text="Bot stopped")
             else:
                 return web.Response(text="Bot was not running")
@@ -404,6 +428,48 @@ class TelebotConstructorApp:
             username = await self.authenticate(request)
             running_bots = await self.running_bots_store.all(username)
             return web.json_response(data=sorted(running_bots))
+
+        ##################################################################################
+        # bot info: all stat, is_running, last_run_at, etc
+        @routes.get("/api/bots/info")
+        async def list_all_bots(request: web.Request) -> web.Response:
+            """
+            ---
+            description: List all bots
+            produces:
+            - application/json
+            responses:
+                "200":
+                    description: List of all bots name and their statuses
+            """
+            username = await self.authenticate(request)
+            bot_stats = await self.bot_info_store.load(username)
+
+            return web.json_response(data={name: config.model_dump(mode="json") for name, config in bot_stats.items()})
+
+        @routes.post("/api/bots/info/{bot_name}")
+        async def upsert_bot_info(request: web.Request) -> web.Response:
+            """
+            ---
+            description: Create or update bot configuration
+            produces:
+            - application/json
+            responses:
+                "201":
+                    description: New bot is created, config is echoed back
+                "200":
+                    description: Bot config is updated, the old version of config is returned
+            """
+            username = await self.authenticate(request)
+            bot_name = self.parse_bot_name(request)
+            existing_bot_info = await self.bot_info_store.get_subkey(username, bot_name)
+            bot_info = await self.parse_pydantic_model(request, BotInfo)
+            await self.bot_info_store.set_subkey(key=username, subkey=bot_name, value=bot_info)
+
+            if existing_bot_info is None:
+                return web.json_response(text=bot_info.model_dump_json(), status=201)
+            else:
+                return web.json_response(text=bot_info.model_dump_json())
 
         ##################################################################################
         # validation endpoints
