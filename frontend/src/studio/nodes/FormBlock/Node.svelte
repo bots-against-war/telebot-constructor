@@ -2,30 +2,32 @@
   import { Node } from "svelvet";
   import Modal from "./Modal.svelte";
   import NodeContent from "../../components/NodeContent.svelte";
-  import OutputAnchor from "../../components/OutputAnchor.svelte";
   import InputAnchor from "../../components/InputAnchor.svelte";
+  import OutputAnchor from "../../components/OutputAnchor.svelte";
   import OutputAnchorsBox from "../../components/OutputAnchorsBox.svelte";
 
-  import type { ContentBlock } from "../../../api/types";
-  import type { SvelvetPosition } from "../../../types";
-
-  import { getModalOpener } from "../../../utils";
   import { DEFAULT_NODE_PROPS } from "../nodeProps";
   import { HUE, headerColor } from "../colors";
-  import { validateContentBlock } from "../nodeValidators";
-  import LocalizableText from "../../components/LocalizableText.svelte";
+  import { type FormBlock } from "../../../api/types";
+  import type { SvelvetPosition } from "../../../types";
+  import { getModalOpener } from "../../../utils";
+  import { validateFormBlock } from "../nodeValidators";
+  import { flattenedFormFields } from "../../../api/typeUtils";
+
   const openModal = getModalOpener();
 
-  export let config: ContentBlock;
+  export let config: FormBlock;
   export let position: SvelvetPosition;
   export let isValid = true;
+  export let botName: string;
 
-  const setNewConfig = (newConfig: ContentBlock) => {
+  const setNewConfig = (newConfig: FormBlock) => {
     config = newConfig;
   };
   const openEditModal = () =>
     openModal(Modal, {
       config,
+      botName,
       onConfigUpdate: setNewConfig,
     });
 </script>
@@ -33,19 +35,18 @@
 <Node id={config.block_id} bind:position {...DEFAULT_NODE_PROPS}>
   <InputAnchor />
   <NodeContent
-    name="Контент"
-    headerColor={headerColor(HUE.content)}
+    name="Форма"
+    headerColor={headerColor(HUE.form)}
     {config}
+    configValidator={validateFormBlock}
     bind:isValid
-    configValidator={validateContentBlock}
     on:delete
     on:edit={openEditModal}
   >
-    {#if config.contents.length > 0 && config.contents[0].text}
-      <LocalizableText text={config.contents[0].text?.text} />
-    {/if}
+    Полей: {flattenedFormFields(config.members).length}
   </NodeContent>
   <OutputAnchorsBox>
-    <OutputAnchor bind:nextBlockId={config.next_block_id} />
+    <OutputAnchor bind:nextBlockId={config.form_completed_next_block_id} anchorLabel="ОК" />
+    <OutputAnchor bind:nextBlockId={config.form_cancelled_next_block_id} anchorLabel="Отмена" />
   </OutputAnchorsBox>
 </Node>

@@ -8,6 +8,7 @@
 
   export let language: string;
   export let fullName: boolean = false;
+  export let small: boolean = false;
   export let tooltip: boolean = true;
 
   let languageLookupResult: Result<LanguageData>;
@@ -26,7 +27,7 @@
       if (tooltip) tooltipOpened = false;
     }}
   >
-    <LanguageDataComponent languageData={languageLookupResult.data} {fullName} />
+    <LanguageDataComponent languageData={languageLookupResult.data} {fullName} {small} />
   </Tooltip>
 {:else}
   <ErrorBadge text={languageLookupResult.error} />

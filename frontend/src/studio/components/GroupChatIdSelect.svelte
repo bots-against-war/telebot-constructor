@@ -66,7 +66,9 @@
     </Group>
   {/if}
   <Collapse open={showGroupChatSelect}>
-    <Space h="sm" />
+    {#if selectedGroupChatId !== PLACEHOLDER_GROUP_CHAT_ID}
+      <Space h="sm" />
+    {/if}
     <Paper withBorder>
       <Stack spacing="xs">
         {#await availableGroupChatsPromise}

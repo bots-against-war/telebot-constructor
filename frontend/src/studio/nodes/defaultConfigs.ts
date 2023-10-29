@@ -1,4 +1,5 @@
-import type { UserFlowBlockConfig, UserFlowEntryPointConfig } from "../../api/types";
+import type { FormMessages, UserFlowBlockConfig, UserFlowEntryPointConfig } from "../../api/types";
+import { updateWithPrefilled } from "./FormBlock/prefill";
 
 export function defaultCommandEntrypoint(id: string): UserFlowEntryPointConfig {
   return {
@@ -64,6 +65,33 @@ export function defaultLanguageSelectBlockConfig(id: string): UserFlowBlockConfi
       supported_languages: [],
       default_language: "",
       language_selected_next_block_id: null,
+    },
+  };
+}
+
+export function defaultFormBlockConfig(id: string): UserFlowBlockConfig {
+  let messages: FormMessages = {
+    form_start: "",
+    field_is_skippable: "",
+    field_is_not_skippable: "",
+    please_enter_correct_value: "",
+    unsupported_command: "",
+    cancel_command_is: "",
+  };
+  [messages] = updateWithPrefilled(messages, null);
+  return {
+    form: {
+      block_id: id,
+      members: [],
+      form_name: `form-${crypto.randomUUID()}`,
+      messages: messages,
+      results_export: {
+        echo_to_user: true,
+        is_anonymous: true,
+        to_chat: null,
+      },
+      form_cancelled_next_block_id: null,
+      form_completed_next_block_id: null,
     },
   };
 }
