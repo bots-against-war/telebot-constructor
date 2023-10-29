@@ -92,7 +92,6 @@
         "created_at": {
           "anyOf": [
             {
-              "format": "date-time",
               "type": "string"
             },
             {
@@ -105,7 +104,6 @@
         "updated_at": {
           "anyOf": [
             {
-              "format": "date-time",
               "type": "string"
             },
             {
@@ -142,7 +140,6 @@
         "last_run_at": {
           "anyOf": [
             {
-              "format": "date-time",
               "type": "string"
             },
             {
@@ -1672,8 +1669,8 @@
     "tg_group_chat",
     "tg_bot_user",
     "tg_bot_user_update",
-    "base_form_field_config",
     "language_data",
+    "base_form_field_config",
     "bot_info"
   ],
   "title": "BackendDataModels",
