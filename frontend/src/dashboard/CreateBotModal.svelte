@@ -1,12 +1,12 @@
 <script lang="ts">
   import { saveBotConfig } from "../api/botConfig";
-  import { Button, TextInput, Flex, PasswordInput } from "@svelteuidev/core";
+  import { Button, Flex, PasswordInput, TextInput } from "@svelteuidev/core";
   import { createBotTokenSecret, getError, getModalCloser, unwrap } from "../utils";
   import { slugify } from "transliteration";
   import { validateBotToken } from "../api/validation";
   import type { BotInfo } from "../api/types";
   import ErrorBadge from "../components/ErrorBadge.svelte";
-  import { saveBotInfo } from "../api/botInfo";
+  import { loadBotsInfo } from "../api/botInfo";
 
   export let newBotCallback: (botName: string, info: BotInfo) => void;
 
@@ -78,25 +78,16 @@
       },
     };
     const res1 = await saveBotConfig(botName, config);
-
-    const botInfo = {
-      display_name: botDisplayName,
-      created_at: new Date().toISOString(),
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    };
-    const res2 = await saveBotInfo(botName, botInfo);
     isCreating = false;
 
-    if (res1.ok && res2.ok) {
+    if (res1.ok) {
       error = null;
-      newBotCallback(botName, botInfo);
+      const botInfo = unwrap(await loadBotsInfo());
+      newBotCallback(botName, botInfo[botName]);
       closePopup();
     } else if (!res1.ok) {
       errorTitle = "Ошибка сохранения";
       error = getError(res1);
-    } else if (!res2.ok) {
-      errorTitle = "Ошибка сохранения";
-      error = getError(res2);
     }
   }
 </script>

@@ -2,7 +2,7 @@
   import { startBot, stopBot } from "../api/lifecycle";
   import { deleteBotConfig } from "../api/botConfig";
   import { createEventDispatcher } from "svelte";
-  import { Alert, Center, Flex, Container, Button, Badge, Text, Input } from "@svelteuidev/core";
+  import { Alert, Badge, Button, Center, Container, Flex, Input, Text } from "@svelteuidev/core";
   import type { BotInfo } from "../api/types";
   import NavButton from "../components/NavButton.svelte";
   import { withConfirmation } from "../utils";
@@ -15,17 +15,21 @@
   let botStatus: string | null = null;
   const dispatch = createEventDispatcher<{ botDeleted: null }>();
 
-  let dateTimeFormat = Intl.DateTimeFormat("en-GB", {
-    dateStyle: "short",
-    timeStyle: "short",
-    timeZone: botInfo.timezone ? botInfo.timezone : "UTC",
-  });
+  const toBrowserTZ = (date: Date) => {
+    const dateTimeFormat = Intl.DateTimeFormat("en-GB", {
+      dateStyle: "short",
+      timeStyle: "short",
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+    });
+
+    return dateTimeFormat.format(date);
+  };
 
   async function startBotWithName(name: string) {
     const resp = await startBot(name);
     if (resp.ok) {
-      botStatus = "Started";
       botInfo.is_running = true;
+      botInfo.last_run_at = new Date().toISOString();
     } else {
       botStatus = `Failed to start: ${resp.error}`;
     }
@@ -34,7 +38,6 @@
   async function stopBotWithName(name: string) {
     const resp = await stopBot(name);
     if (resp.ok) {
-      botStatus = "Stopped";
       botInfo.is_running = false;
     } else {
       botStatus = `Failed to stop: ${resp.error}`;
@@ -77,15 +80,15 @@
 
       <Text size="lg" color="gray">
         {#if botInfo.created_at}
-          Дата создания: {dateTimeFormat.format(new Date(botInfo.created_at))}
+          Дата создания: {toBrowserTZ(new Date(botInfo.created_at))}
         {/if}
-        {#if botInfo.updated_at}
+        {#if botInfo.last_updated_at}
           <br />
-          Дата последнего редактирования: {dateTimeFormat.format(new Date(botInfo.updated_at))}
+          Дата последнего редактирования: {toBrowserTZ(new Date(botInfo.last_updated_at))}
         {/if}
         {#if botInfo.last_run_at}
           <br />
-          Дата последнего запуска: {dateTimeFormat.format(new Date(botInfo.last_run_at))}
+          Дата последнего запуска: {toBrowserTZ(new Date(botInfo.last_run_at))}
         {/if}
       </Text>
       <Flex gap="xl">

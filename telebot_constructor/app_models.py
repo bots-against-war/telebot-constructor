@@ -123,9 +123,15 @@ class TgBotUserUpdate(BaseModel):
 
 
 class BotInfo(BaseModel):
-    display_name: Optional[str] = None
-    created_at: Optional[str] = None
-    updated_at: Optional[str] = None
-    timezone: Optional[str] = None
-    is_running: Optional[bool] = False
-    last_run_at: Optional[str] = None
+    display_name: str
+    created_at: str
+    last_updated_at: str
+    last_run_at: str
+    is_running: bool
+
+
+class BotActionsHistory(BaseModel):
+    created_at: str
+    last_updated_at: str
+    last_run_at: str
+    deleted_at: Optional[str]

@@ -4,7 +4,7 @@ import json
 import logging
 import mimetypes
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional, Type, TypeVar
 
@@ -21,6 +21,7 @@ from telebot_components.stores.generic import KeyDictStore, KeySetStore
 from telebot_components.utils.secrets import SecretStore
 
 from telebot_constructor.app_models import (
+    BotActionsHistory,
     BotInfo,
     BotTokenPayload,
     TgBotUser,
@@ -100,14 +101,14 @@ class TelebotConstructorApp:
             redis=redis,
             expiration_time=None,
         )
-        # username -> names of bots that were ever created
-        self.bot_info_store = KeyDictStore[BotInfo](
-            name="bot-info",
+        # username -> names of bots and their actions history
+        self.bot_history_store = KeyDictStore[BotActionsHistory](
+            name="bot-history",
             prefix=self.STORE_PREFIX,
             redis=redis,
             expiration_time=None,
-            dumper=BotInfo.model_dump_json,
-            loader=BotInfo.model_validate_json,
+            dumper=BotActionsHistory.model_dump_json,
+            loader=BotActionsHistory.model_validate_json,
         )
 
         self.group_chat_discovery_handler = GroupChatDiscoveryHandler(
@@ -214,6 +215,10 @@ class TelebotConstructorApp:
         else:
             await self.running_bots_store.add(username, bot_name)
             await self.temporary_running_bots_store.remove(username, bot_name)
+            existing_bot_history = await self.bot_history_store.get_subkey(username, bot_name)
+            if existing_bot_history:
+                existing_bot_history.last_run_at = datetime.now(timezone.utc).isoformat()
+                await self.bot_history_store.set_subkey(key=username, subkey=bot_name, value=existing_bot_history)
 
     async def create_constructor_web_app(self) -> web.Application:
         app = web.Application()
@@ -304,12 +309,20 @@ class TelebotConstructorApp:
                 await self.re_start_bot(username, bot_name, bot_config)
 
             if existing_bot_config is None:
+                new_bot_history = BotActionsHistory(
+                    created_at=datetime.now(timezone.utc).isoformat(),
+                    last_updated_at="",
+                    last_run_at="",
+                    deleted_at="",
+                )
+                await self.bot_history_store.set_subkey(key=username, subkey=bot_name, value=new_bot_history)
+
                 return web.json_response(text=bot_config.model_dump_json(), status=201)
             else:
-                existing_bot_info = await self.bot_info_store.get_subkey(username, bot_name)
-                if existing_bot_info:
-                    existing_bot_info.updated_at = datetime.now().isoformat()
-                    await self.bot_info_store.set_subkey(key=username, subkey=bot_name, value=existing_bot_info)
+                existing_bot_history = await self.bot_history_store.get_subkey(username, bot_name)
+                if existing_bot_history:
+                    existing_bot_history.last_updated_at = datetime.now(timezone.utc).isoformat()
+                    await self.bot_history_store.set_subkey(key=username, subkey=bot_name, value=existing_bot_history)
 
                 return web.json_response(text=existing_bot_config.model_dump_json())
 
@@ -348,8 +361,12 @@ class TelebotConstructorApp:
             await self.runner.stop(username, bot_name)
             await self.running_bots_store.remove(username, bot_name)
             await self.bot_config_store.remove_subkey(username, bot_name)
-            await self.bot_info_store.remove_subkey(username, bot_name)
             await self.secret_store.remove_secret(config.token_secret_name, owner_id=username)
+            existing_bot_history = await self.bot_history_store.get_subkey(username, bot_name)
+            if existing_bot_history:
+                existing_bot_history.deleted_at = datetime.now(timezone.utc).isoformat()
+                await self.bot_history_store.set_subkey(key=username, subkey=bot_name, value=existing_bot_history)
+
             return web.json_response(text=config.model_dump_json())
 
         @routes.get("/api/config")
@@ -390,12 +407,6 @@ class TelebotConstructorApp:
             bot_config = await self.load_bot_config(username, bot_name)
             await self.re_start_bot(username, bot_name, bot_config)
 
-            existing_bot_info = await self.bot_info_store.get_subkey(username, bot_name)
-            if existing_bot_info:
-                existing_bot_info.is_running = True
-                existing_bot_info.last_run_at = datetime.now().isoformat()
-                await self.bot_info_store.set_subkey(key=username, subkey=bot_name, value=existing_bot_info)
-
             return web.Response(text="OK", status=201)
 
         @routes.post("/api/stop/{bot_name}")
@@ -415,10 +426,6 @@ class TelebotConstructorApp:
             bot_name = self.parse_bot_name(request)
             if await self.runner.stop(username=username, bot_name=bot_name):
                 await self.running_bots_store.remove(username, bot_name)
-                existing_bot_info = await self.bot_info_store.get_subkey(username, bot_name)
-                if existing_bot_info:
-                    existing_bot_info.is_running = False
-                    await self.bot_info_store.set_subkey(key=username, subkey=bot_name, value=existing_bot_info)
                 return web.Response(text="Bot stopped")
             else:
                 return web.Response(text="Bot was not running")
@@ -452,33 +459,24 @@ class TelebotConstructorApp:
                     description: List of all bots name and their statuses
             """
             username = await self.authenticate(request)
-            bot_stats = await self.bot_info_store.load(username)
+            bot_histories = await self.bot_history_store.load(username)
+            bot_infos: dict[str, BotInfo] = {}
 
-            return web.json_response(data={name: config.model_dump(mode="json") for name, config in bot_stats.items()})
+            for name, bot_info in bot_histories.items():
+                bot_config = await self.bot_config_store.get_subkey(username, name)
+                if bot_config is not None:
+                    bot_is_running = await self.running_bots_store.includes(username, name)
+                    bot_infos[name] = BotInfo(
+                        display_name=bot_config.display_name,
+                        created_at=bot_info.created_at,
+                        last_updated_at=bot_info.last_updated_at,
+                        last_run_at=bot_info.last_run_at,
+                        is_running=bot_is_running,
+                    )
 
-        @routes.post("/api/bots/info/{bot_name}")
-        async def upsert_bot_info(request: web.Request) -> web.Response:
-            """
-            ---
-            description: Create or update bot configuration
-            produces:
-            - application/json
-            responses:
-                "201":
-                    description: New bot is created, config is echoed back
-                "200":
-                    description: Bot config is updated, the old version of config is returned
-            """
-            username = await self.authenticate(request)
-            bot_name = self.parse_bot_name(request)
-            existing_bot_info = await self.bot_info_store.get_subkey(username, bot_name)
-            bot_info = await self.parse_pydantic_model(request, BotInfo)
-            await self.bot_info_store.set_subkey(key=username, subkey=bot_name, value=bot_info)
-
-            if existing_bot_info is None:
-                return web.json_response(text=bot_info.model_dump_json(), status=201)
-            else:
-                return web.json_response(text=bot_info.model_dump_json())
+            return web.json_response(
+                data={name: bot_info.model_dump(mode="json") for name, bot_info in bot_infos.items()}
+            )
 
         ##################################################################################
         # validation endpoints

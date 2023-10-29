@@ -199,12 +199,11 @@ export type Prompt2 =
     };
 export type IsRequired2 = boolean;
 export type ResultFormatting2 = FormFieldResultFormattingOpts | "auto" | null;
-export type DisplayName1 = string | null;
-export type CreatedAt = string | null;
-export type UpdatedAt = string | null;
-export type Timezone = string | null;
-export type IsRunning = boolean | null;
-export type LastRunAt = string | null;
+export type DisplayName1 = string;
+export type CreatedAt = string;
+export type LastUpdatedAt = string;
+export type LastRunAt = string;
+export type IsRunning = boolean;
 
 /**
  * Temporary class to pack several models into one schema; not used directly by frontend code
@@ -519,11 +518,10 @@ export interface BaseFormFieldConfig {
   [k: string]: unknown;
 }
 export interface BotInfo {
-  display_name?: DisplayName1;
-  created_at?: CreatedAt;
-  updated_at?: UpdatedAt;
-  timezone?: Timezone;
-  is_running?: IsRunning;
-  last_run_at?: LastRunAt;
+  display_name: DisplayName1;
+  created_at: CreatedAt;
+  last_updated_at: LastUpdatedAt;
+  last_run_at: LastRunAt;
+  is_running: IsRunning;
   [k: string]: unknown;
 }

@@ -78,78 +78,33 @@
     "BotInfo": {
       "properties": {
         "display_name": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Display Name"
+          "title": "Display Name",
+          "type": "string"
         },
         "created_at": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Created At"
+          "title": "Created At",
+          "type": "string"
         },
-        "updated_at": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Updated At"
-        },
-        "timezone": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Timezone"
-        },
-        "is_running": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": false,
-          "title": "Is Running"
+        "last_updated_at": {
+          "title": "Last Updated At",
+          "type": "string"
         },
         "last_run_at": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Last Run At"
+          "title": "Last Run At",
+          "type": "string"
+        },
+        "is_running": {
+          "title": "Is Running",
+          "type": "boolean"
         }
       },
+      "required": [
+        "display_name",
+        "created_at",
+        "last_updated_at",
+        "last_run_at",
+        "is_running"
+      ],
       "title": "BotInfo",
       "type": "object"
     },
