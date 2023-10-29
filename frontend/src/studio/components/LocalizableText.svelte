@@ -2,8 +2,8 @@
   import { Text, Group, Menu, type TextProps } from "@svelteuidev/core";
   import type { LocalizableText } from "../../types";
   import { languageConfigStore } from "../stores";
-  import Language from "../../components/Language.svelte";
   import LanguageMenu from "./LanguageMenu.svelte";
+  import ErrorBadge from "../../components/ErrorBadge.svelte";
 
   export let text: LocalizableText;
 
@@ -22,4 +22,6 @@
     <Text>{text[selectedLang || ""] || ""}</Text>
     <LanguageMenu bind:selectedLang />
   </Group>
+{:else}
+  <ErrorBadge text="Internal error: invalid text and lang config combination" />
 {/if}

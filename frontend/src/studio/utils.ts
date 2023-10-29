@@ -1,4 +1,6 @@
 import type { UserFlowNodePosition } from "../api/types";
+import type { LocalizableText } from "../types";
+import type { LanguageConfig } from "./stores";
 
 export function svelvetNodeIdToBlockId(id: string): string {
   // svelvet adds "N-" prefix to ids we pass to them, so we need to strip id back
@@ -90,4 +92,11 @@ export function base64Image(b64: string): string {
 
 export function capitalize(string: string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
+// for display purposes only
+export function localizableTextToString(lc: LocalizableText, langConfig: LanguageConfig | null): string {
+  if (langConfig === null && typeof lc === 'string') return lc;
+  else if (langConfig !== null && typeof lc === 'object') return lc[langConfig.defaultLanguageCode] || ""
+  else return ""
 }

@@ -14,19 +14,21 @@
   export let onConfigUpdate: (newConfig: FormBlock) => any;
 
   function updateConfig() {
-    config.members = topLevelBranch.members;
+    editedConfig.members = topLevelBranch.members;
     // inserting global error values back into form fields
-    for (const fieldConfig of flattenedFormFields(config.members)) {
+    for (const fieldConfig of flattenedFormFields(editedConfig.members)) {
       if (fieldConfig.plain_text) {
         fieldConfig.plain_text.empty_text_error_msg = formErrorMessages.empty_text_error_msg || "";
       } else if (fieldConfig.single_select) {
         fieldConfig.single_select.invalid_enum_error_msg = formErrorMessages.invalid_enum_error_msg || "";
       }
     }
-    onConfigUpdate(config);
+    onConfigUpdate(editedConfig);
   }
 
-  let topLevelBranch: FormBranchConfig = { members: config.members };
+  const editedConfig = JSON.parse(JSON.stringify(config));
+
+  let topLevelBranch: FormBranchConfig = { members: editedConfig.members };
 
   let formErrorMessages: FormErrorMessages = {};
   $: {
@@ -56,13 +58,13 @@
   <h3>Форма</h3>
   <Tabs>
     <Tabs.Tab label={`Поля (${flattenedFormFields(topLevelBranch.members).length})`}>
-      <FormBranch bind:branch={topLevelBranch} parentBranchMembers={[]} idxInParentBranch={0} />
+      <FormBranch bind:branch={topLevelBranch} />
     </Tabs.Tab>
     <Tabs.Tab label="Сообщения">
-      <FormMessages bind:messages={config.messages} bind:errors={formErrorMessages} />
+      <FormMessages bind:messages={editedConfig.messages} bind:errors={formErrorMessages} />
     </Tabs.Tab>
     <Tabs.Tab label="Обработка результатов">
-      <FormResultExportOptions bind:config={config.results_export} {botName} />
+      <FormResultExportOptions bind:config={editedConfig.results_export} {botName} />
     </Tabs.Tab>
   </Tabs>
   <NodeModalControls on:save={updateConfig} />
