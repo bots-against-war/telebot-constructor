@@ -105,28 +105,28 @@
       </Select>
     </InputWrapper>
 
-    {#if supportedLanguageDataList && defaultLanguage}
-      <InputWrapper
-        label="Язык по умолчанию"
-        description="Будет использоваться, если не подходит язык интерфейса Telegram"
-        override={{ width: "100%" }}
+    <InputWrapper
+      label="Язык по умолчанию"
+      description="Будет использоваться, если не подходит язык интерфейса Telegram"
+      override={{ width: "100%" }}
+    >
+      <Select
+        itemId="code"
+        placeholder=""
+        on:change={ensureDefaultLanguageIsSupported}
+        on:clear={ensureDefaultLanguageIsSupported}
+        bind:value={defaultLanguage}
+        items={supportedLanguageDataList || []}
       >
-        <Select
-          itemId="code"
-          placeholder=""
-          on:change={ensureDefaultLanguageIsSupported}
-          on:clear={ensureDefaultLanguageIsSupported}
-          bind:value={defaultLanguage}
-          items={supportedLanguageDataList || []}
-        >
-          <div slot="item" let:item class="select-internal-container">
-            <LanguageDataComponent languageData={item} fullName />
-          </div>
-          <div slot="selection" let:selection class="select-internal-container">
-            <LanguageDataComponent languageData={selection} fullName />
-          </div>
-        </Select>
-      </InputWrapper>
+        <div slot="item" let:item class="select-internal-container">
+          <LanguageDataComponent languageData={item} fullName />
+        </div>
+        <div slot="selection" let:selection class="select-internal-container">
+          <LanguageDataComponent languageData={selection} fullName />
+        </div>
+      </Select>
+    </InputWrapper>
+    {#if supportedLanguageDataList && defaultLanguage}
       <LocalizableTextInput
         label="Сообщение"
         description="Для меню выбора языка"

@@ -13,6 +13,7 @@
     "format": "prettier --write --plugin prettier-plugin-svelte frontend"
   },
   "devDependencies": {
+    "@jhubbardsf/svelte-sortablejs": "^1.1.0",
     "@rollup/plugin-node-resolve": "^15.2.1",
     "@rollup/plugin-replace": "^5.0.2",
     "@sveltejs/vite-plugin-svelte": "^2.4.2",

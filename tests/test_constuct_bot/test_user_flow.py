@@ -13,11 +13,12 @@ from telebot_constructor.construct import construct_bot
 from telebot_constructor.user_flow.blocks.content import ContentBlock
 from telebot_constructor.user_flow.blocks.form import (
     BranchingFormMemberConfig,
+    EnumOption,
     FormBlock,
     FormBranchConfig,
     FormFieldConfig,
     FormMessages,
-    FormResultsExportConfig,
+    FormResultsExport,
     FormResultsExportToChatConfig,
     PlainTextFormFieldConfig,
     SingleSelectFormFieldConfig,
@@ -735,9 +736,11 @@ async def test_user_flow_with_form() -> None:
                                 field=FormFieldConfig(
                                     plain_text=PlainTextFormFieldConfig(
                                         id="name",
+                                        name="Name",
                                         prompt="what is your name?",
+                                        is_long_text=False,
                                         is_required=True,
-                                        result_formatting_opts=True,
+                                        result_formatting="auto",
                                         empty_text_error_msg="please provide an answer",
                                     ),
                                 )
@@ -746,10 +749,14 @@ async def test_user_flow_with_form() -> None:
                                 field=FormFieldConfig(
                                     single_select=SingleSelectFormFieldConfig(
                                         id="does_like_apples",
+                                        name="Apples",
                                         prompt="do you like apples?",
                                         is_required=True,
-                                        result_formatting_opts=True,
-                                        options={"yes": "Yes I do", "no": "No!!!"},
+                                        result_formatting="auto",
+                                        options=[
+                                            EnumOption(id="yes", label="Yes I do"),
+                                            EnumOption(id="no", label="No!!!"),
+                                        ],
                                         invalid_enum_error_msg="please use reply keyboard buttons",
                                     ),
                                 )
@@ -761,9 +768,11 @@ async def test_user_flow_with_form() -> None:
                                             field=FormFieldConfig(
                                                 plain_text=PlainTextFormFieldConfig(
                                                     id="which_apples",
+                                                    name="Which apples",
                                                     prompt="which apples do you like?",
                                                     is_required=True,
-                                                    result_formatting_opts=True,
+                                                    is_long_text=False,
+                                                    result_formatting="auto",
                                                     empty_text_error_msg="please answer the question",
                                                 )
                                             )
@@ -774,14 +783,15 @@ async def test_user_flow_with_form() -> None:
                             ),
                         ],
                         messages=FormMessages(
-                            form_start="hi please fill the form; {} - cancel",
+                            form_start="hi please fill out the form!",
+                            cancel_command_is="{} - cancel filling",
                             field_is_skippable="skip field - {}",
                             field_is_not_skippable="field is not skippable",
                             please_enter_correct_value="please enter corrected value",
                             unsupported_command="the only supported commands are: {}",
-                            cancelling_because_of_error="unexpected error, cancelling: {}",
                         ),
-                        export=FormResultsExportConfig(
+                        results_export=FormResultsExport(
+                            echo_to_user=True,
                             is_anonymous=False,
                             to_chat=FormResultsExportToChatConfig(chat_id=111222, via_feedback_handler=True),
                         ),
@@ -819,7 +829,7 @@ async def test_user_flow_with_form() -> None:
         bot.method_calls["send_message"],
         [
             {"text": "hi i'm form bot", "chat_id": 161},
-            {"chat_id": 161, "text": "hi please fill the form; /cancel - cancel\n\nwhat is your name?"},
+            {"chat_id": 161, "text": "hi please fill out the form! /cancel - cancel filling.\n\nwhat is your name?"},
         ],
     )
     assert_method_call_dictified_kwargs_include(bot.method_calls["send_message"], [{}, {}])
@@ -862,6 +872,15 @@ async def test_user_flow_with_form() -> None:
     assert_method_call_kwargs_include(
         bot.method_calls["send_message"],
         [
+            {
+                "chat_id": 161,
+                "text": (
+                    "<b>what is your name?</b>: John Doe\n"
+                    + "<b>do you like apples?</b>: Yes I do\n"
+                    + "<b>which apples do you like?</b>: granny smith"
+                ),
+                "parse_mode": "HTML",
+            },
             {
                 "chat_id": 111222,
                 "text": (

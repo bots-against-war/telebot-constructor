@@ -1,5 +1,58 @@
 {
   "$defs": {
+    "BaseFormFieldConfig": {
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "prompt": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            }
+          ],
+          "title": "Prompt"
+        },
+        "is_required": {
+          "title": "Is Required",
+          "type": "boolean"
+        },
+        "result_formatting": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FormFieldResultFormattingOpts"
+            },
+            {
+              "const": "auto"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Result Formatting"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "prompt",
+        "is_required",
+        "result_formatting"
+      ],
+      "title": "BaseFormFieldConfig",
+      "type": "object"
+    },
     "BotConfig": {
       "properties": {
         "display_name": {
@@ -253,6 +306,34 @@
       "title": "ContentTextMarkup",
       "type": "string"
     },
+    "EnumOption": {
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "label": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            }
+          ],
+          "title": "Label"
+        }
+      },
+      "required": [
+        "id",
+        "label"
+      ],
+      "title": "EnumOption",
+      "type": "object"
+    },
     "FeedbackHandlerConfig": {
       "properties": {
         "admin_chat_id": {
@@ -345,8 +426,8 @@
         "messages": {
           "$ref": "#/$defs/FormMessages"
         },
-        "export": {
-          "$ref": "#/$defs/FormResultsExportConfig"
+        "results_export": {
+          "$ref": "#/$defs/FormResultsExport"
         },
         "form_completed_next_block_id": {
           "anyOf": [
@@ -376,7 +457,7 @@
         "form_name",
         "members",
         "messages",
-        "export",
+        "results_export",
         "form_completed_next_block_id",
         "form_cancelled_next_block_id"
       ],
@@ -473,6 +554,7 @@
       "type": "object"
     },
     "FormMessages": {
+      "additionalProperties": false,
       "properties": {
         "form_start": {
           "anyOf": [
@@ -487,6 +569,20 @@
             }
           ],
           "title": "Form Start"
+        },
+        "cancel_command_is": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            }
+          ],
+          "title": "Cancel Command Is"
         },
         "field_is_skippable": {
           "anyOf": [
@@ -543,35 +639,25 @@
             }
           ],
           "title": "Unsupported Command"
-        },
-        "cancelling_because_of_error": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "additionalProperties": {
-                "type": "string"
-              },
-              "type": "object"
-            }
-          ],
-          "title": "Cancelling Because Of Error"
         }
       },
       "required": [
         "form_start",
+        "cancel_command_is",
         "field_is_skippable",
         "field_is_not_skippable",
         "please_enter_correct_value",
-        "unsupported_command",
-        "cancelling_because_of_error"
+        "unsupported_command"
       ],
       "title": "FormMessages",
       "type": "object"
     },
-    "FormResultsExportConfig": {
+    "FormResultsExport": {
       "properties": {
+        "echo_to_user": {
+          "title": "Echo To User",
+          "type": "boolean"
+        },
         "is_anonymous": {
           "title": "Is Anonymous",
           "type": "boolean"
@@ -588,10 +674,11 @@
         }
       },
       "required": [
+        "echo_to_user",
         "is_anonymous",
         "to_chat"
       ],
-      "title": "FormResultsExportConfig",
+      "title": "FormResultsExport",
       "type": "object"
     },
     "FormResultsExportToChatConfig": {
@@ -965,6 +1052,10 @@
           "title": "Id",
           "type": "string"
         },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
         "prompt": {
           "anyOf": [
             {
@@ -983,16 +1074,23 @@
           "title": "Is Required",
           "type": "boolean"
         },
-        "result_formatting_opts": {
+        "result_formatting": {
           "anyOf": [
             {
               "$ref": "#/$defs/FormFieldResultFormattingOpts"
             },
             {
-              "type": "boolean"
+              "const": "auto"
+            },
+            {
+              "type": "null"
             }
           ],
-          "title": "Result Formatting Opts"
+          "title": "Result Formatting"
+        },
+        "is_long_text": {
+          "title": "Is Long Text",
+          "type": "boolean"
         },
         "empty_text_error_msg": {
           "anyOf": [
@@ -1011,9 +1109,11 @@
       },
       "required": [
         "id",
+        "name",
         "prompt",
         "is_required",
-        "result_formatting_opts",
+        "result_formatting",
+        "is_long_text",
         "empty_text_error_msg"
       ],
       "title": "PlainTextFormFieldConfig",
@@ -1056,6 +1156,10 @@
           "title": "Id",
           "type": "string"
         },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
         "prompt": {
           "anyOf": [
             {
@@ -1074,33 +1178,26 @@
           "title": "Is Required",
           "type": "boolean"
         },
-        "result_formatting_opts": {
+        "result_formatting": {
           "anyOf": [
             {
               "$ref": "#/$defs/FormFieldResultFormattingOpts"
             },
             {
-              "type": "boolean"
+              "const": "auto"
+            },
+            {
+              "type": "null"
             }
           ],
-          "title": "Result Formatting Opts"
+          "title": "Result Formatting"
         },
         "options": {
-          "additionalProperties": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "additionalProperties": {
-                  "type": "string"
-                },
-                "type": "object"
-              }
-            ]
+          "items": {
+            "$ref": "#/$defs/EnumOption"
           },
           "title": "Options",
-          "type": "object"
+          "type": "array"
         },
         "invalid_enum_error_msg": {
           "anyOf": [
@@ -1119,9 +1216,10 @@
       },
       "required": [
         "id",
+        "name",
         "prompt",
         "is_required",
-        "result_formatting_opts",
+        "result_formatting",
         "options",
         "invalid_enum_error_msg"
       ],
@@ -1480,6 +1578,9 @@
     },
     "language_data": {
       "$ref": "#/$defs/LanguageData"
+    },
+    "base_form_field_config": {
+      "$ref": "#/$defs/BaseFormFieldConfig"
     }
   },
   "required": [
@@ -1487,7 +1588,8 @@
     "tg_group_chat",
     "tg_bot_user",
     "tg_bot_user_update",
-    "language_data"
+    "language_data",
+    "base_form_field_config"
   ],
   "title": "BackendDataModels",
   "type": "object"

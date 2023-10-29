@@ -20,8 +20,7 @@
   export let config: HumanOperatorBlock;
   export let position: SvelvetPosition;
   export let isValid = true;
-
-  const botName: string = getContext("botName");
+  export let botName: string;
 
   const setNewConfig = (newConfig: HumanOperatorBlock) => {
     config = newConfig;

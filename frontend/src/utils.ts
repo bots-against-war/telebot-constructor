@@ -2,6 +2,7 @@ import { getContext, type ComponentProps } from "svelte";
 import { type SvelteComponent } from "svelte";
 import type { Newable } from "ts-essentials";
 import { saveSecret } from "./api/secrets";
+import ConfirmationModal from "./components/ConfirmationModal.svelte";
 
 // rust-like result type with convenience functions
 
@@ -84,4 +85,15 @@ export async function createBotTokenSecret(botName: string, token: string): Prom
   } else {
     return ok(secretName);
   }
+}
+
+export function withConfirmation(text: string, onConfirm: () => Promise<any>, confirmButtonLabel: string) {
+  const open = getModalOpener();
+  return () => {
+    open(ConfirmationModal, {
+      text,
+      onConfirm,
+      confirmButtonLabel,
+    });
+  };
 }

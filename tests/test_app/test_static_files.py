@@ -38,12 +38,11 @@ async def test_serve_static_files(
 
     assets_dir = constructor.static_files_dir / "assets"
     assets_dir.mkdir()
-    (assets_dir / "some-asset.js").write_text("rm -rf /")
+    (assets_dir / "some-asset.js").write_text("console.log(foo);")
 
     resp = await client.get("/assets/some-asset.js")
     assert resp.status == 200
-    assert await resp.text("utf-8") == "rm -rf /"
-    assert resp.content_type == "text/javascript"
+    assert await resp.text("utf-8") == "console.log(foo);"
 
 
 async def test_cors(

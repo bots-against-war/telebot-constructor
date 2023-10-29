@@ -5,6 +5,7 @@
   import { Alert, Center, Flex, Container, Button } from "@svelteuidev/core";
   import type { BotConfig } from "../api/types";
   import NavButton from "../components/NavButton.svelte";
+  import { withConfirmation } from "../utils";
 
   // region props
   export let botName: string;
@@ -39,6 +40,12 @@
       botStatus = `Failed to delete: ${resp.error}`;
     }
   }
+
+  const deleteBotWithConfirmation = withConfirmation(
+    "Вы уверены, что хотите удалить бота? Это действие дельзя отменить.",
+    () => removeBotConfig(botName),
+    "Удалить",
+  );
 </script>
 
 <Container>
@@ -49,7 +56,7 @@
         <NavButton href={`/studio/${botName}`}>Редактировать</NavButton>
         <Button on:click={() => startBotWithName(botName)}>Запустить</Button>
         <Button on:click={() => stopBotWithName(botName)}>Остановить</Button>
-        <Button color="red" on:click={() => removeBotConfig(botName)}>Удалить</Button>
+        <Button color="red" on:click={deleteBotWithConfirmation}>Удалить</Button>
       </Flex>
       {#if botStatus !== null}
         <Alert color="yellow">{botStatus}</Alert>

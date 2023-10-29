@@ -3,6 +3,7 @@
   import type { LocalizableText } from "../../types";
   import { languageConfigStore } from "../stores";
   import Language from "../../components/Language.svelte";
+  import LanguageMenu from "./LanguageMenu.svelte";
 
   export let text: LocalizableText;
 
@@ -19,12 +20,6 @@
 {:else if $languageConfigStore !== null && typeof text === "object"}
   <Group noWrap spacing="sm" position="apart" align="start">
     <Text>{text[selectedLang || ""] || ""}</Text>
-    <Menu override={{ padding: "0.1em" }} position="right" placement="center" gutter={15} withArrow>
-      {#each $languageConfigStore.supportedLanguageCodes as language}
-        <Menu.Item on:click={() => (selectedLang = language)}>
-          <Language {language} tooltip={false} />
-        </Menu.Item>
-      {/each}
-    </Menu>
+    <LanguageMenu bind:selectedLang />
   </Group>
 {/if}

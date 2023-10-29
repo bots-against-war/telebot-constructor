@@ -10,6 +10,7 @@ from telebot_components.stores.banned_users import BannedUsersStore
 from telebot_components.stores.generic import KeyValueStore
 
 from telebot_constructor.user_flow.blocks.base import UserFlowBlock
+from telebot_constructor.user_flow.blocks.form import FormBlock
 from telebot_constructor.user_flow.blocks.human_operator import HumanOperatorBlock
 from telebot_constructor.user_flow.blocks.language_select import LanguageSelectBlock
 from telebot_constructor.user_flow.entrypoints.base import UserFlowEntryPoint
@@ -63,6 +64,8 @@ class UserFlow:
             [b.feedback_handler_config.admin_chat_id for b in self.human_operator_blocks],
             items_name="admin chat ids in human operator blocks",
         )
+
+        validate_unique([b.form_name for b in self.blocks if isinstance(b, FormBlock)], items_name="form names")
 
     @property
     def active_block_id_store(self) -> KeyValueStore[str]:
