@@ -35,7 +35,7 @@
 
   const dispatch = createEventDispatcher<{ delete: null }>();
 
-  // each branch is requires a previous Single Select field as a switch (condition)
+  // each (sub)branch requires a previous Single Select field as a switch (condition)
   // here we find in advance (and update with reactive block), which single select
   // field acts as switch for any given position in the members array
   // these arrays are one item longer than branch.members to account for adding stuff
