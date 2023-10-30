@@ -22,11 +22,18 @@
       disabled={!saveable}
       loading={isSaving}
       on:click={async () => {
-        // HACK: in case saving config requires some pre-processing, the content of the modal
-        // may not be unmounted after "close" is called on the modal. in this case, after opening
-        // the modal again there will be multiple copies of modal content
-        // hopefully, this pause should give "save config" callback enough time to complete so that
+        // HACK: after dispatching "save" event, the component may need to do some processing
+        // in this case, it's possible we close modal before the saving is actually completed
+        // in this case for some reason modal content may not be unmounted after "close" is.
+        // subsequently, after opening the modal again there will be multiple copies of its content
+
+        // hopefully, this pause should give "save config" event handler enough time to run so that
         // modal content is actually removed from DOM on "close"
+
+        // in case of bugs we can try fixing this further through patching svelte internals
+        // see https://github.com/sveltejs/svelte/issues/6915
+        // and https://svelte.dev/repl/1a046c7df84b4145a42df2df4be1cbbb?version=3.48.0
+        // or just using synchronous "saveConfig" callback instead of events
         isSaving = true;
         dispatch("save");
         await sleep(100);

@@ -217,7 +217,6 @@
 
   div.conditional-branch-header {
     padding: 15px;
-    /* background: red; */
   }
 
   div.conditional-branch-body {
