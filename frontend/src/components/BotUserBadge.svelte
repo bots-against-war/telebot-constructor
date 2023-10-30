@@ -2,7 +2,7 @@
 
 <script lang="ts">
   import { ActionIcon, Group, Image } from "@svelteuidev/core";
-  import { OpenInNewWindow, QuestionMark } from "radix-icons-svelte";
+  import { Gear, OpenInNewWindow, QuestionMark } from "radix-icons-svelte";
 
   import { getBotUser } from "../api/botUser";
   import ErrorBadge from "./ErrorBadge.svelte";
@@ -54,7 +54,7 @@
               });
             }}
           >
-            <!--            <Gear />-->
+            <Gear />
           </ActionIcon>
           <!-- <ActionIcon
             on:click={() => {
