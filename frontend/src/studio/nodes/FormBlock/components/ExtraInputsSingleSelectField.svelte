@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { Stack, Group, ActionIcon, InputWrapper, CloseButton } from "@svelteuidev/core";
+  import { ActionIcon, CloseButton, Group, InputWrapper, Space, Stack } from "@svelteuidev/core";
   import { SortableList } from "@jhubbardsf/svelte-sortablejs";
-  import { DragHandleDots2, Plus } from "radix-icons-svelte";
+  import { BarsOutline, PlusOutline } from "flowbite-svelte-icons";
   import type { SingleSelectFormFieldConfig } from "../../../../api/types";
   import LocalizableTextInput from "../../../components/LocalizableTextInput.svelte";
 
@@ -29,7 +29,8 @@
           <Group override={{ padding: "5px 0" }}>
             <LocalizableTextInput bind:value={option.label} isLongText={false} />
             <div class="grip-handle">
-              <DragHandleDots2 />
+              <Space w="md" />
+              <BarsOutline />
             </div>
             <CloseButton
               on:click={() => {
@@ -45,7 +46,7 @@
         config.options = [...config.options, { id: `opt-${crypto.randomUUID()}`, label: "" }];
       }}
     >
-      <Plus />
+      <PlusOutline />
     </ActionIcon>
   </InputWrapper>
 </Stack>

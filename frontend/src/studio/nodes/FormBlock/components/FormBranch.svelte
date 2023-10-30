@@ -1,7 +1,6 @@
 <script lang="ts">
-  import { Stack, Container, Button } from "@svelteuidev/core";
-  import { Plus } from "radix-icons-svelte";
-
+  import { Button, Stack } from "@svelteuidev/core";
+  import { PlusOutline } from "flowbite-svelte-icons";
   import FormField from "./FormField.svelte";
 
   import type { BranchingFormMemberConfig } from "../../../../api/types";
@@ -42,7 +41,7 @@
       ];
     }}
   >
-    <Plus slot="leftIcon" />
+    <PlusOutline slot="leftIcon" />
     Добавить поле
   </Button>
 </Stack>

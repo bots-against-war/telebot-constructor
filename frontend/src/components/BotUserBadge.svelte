@@ -1,8 +1,8 @@
 <!-- Data badge with info about a bot and action icons to edit or replace it; loads a bot user on each render -->
 
 <script lang="ts">
-  import { Group, Image, ActionIcon } from "@svelteuidev/core";
-  import { QuestionMark, OpenInNewWindow, Gear, Update } from "radix-icons-svelte";
+  import { ActionIcon, Group, Image } from "@svelteuidev/core";
+  import { OpenInNewWindow, QuestionMark } from "radix-icons-svelte";
 
   import { getBotUser } from "../api/botUser";
   import ErrorBadge from "./ErrorBadge.svelte";
@@ -11,7 +11,6 @@
   import DataBadgeLoader from "./internal/DataBadgeLoader.svelte";
   import { getModalOpener, ok } from "../utils";
   import EditBotUserModal from "./internal/EditBotUserModal.svelte";
-  import ReplaceBotUserModal from "./internal/ReplaceBotUserModal.svelte";
 
   const openModal = getModalOpener();
 
@@ -55,7 +54,7 @@
               });
             }}
           >
-            <Gear />
+            <!--            <Gear />-->
           </ActionIcon>
           <!-- <ActionIcon
             on:click={() => {
