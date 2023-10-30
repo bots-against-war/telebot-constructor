@@ -38,7 +38,7 @@ export function findNewNodePosition(
   };
 }
 
-function linspace(start: number, stop: number, len: number): number[] {
+export function linspace(start: number, stop: number, len: number): number[] {
   if (len === 0) {
     return [];
   } else if (len === 1) {
@@ -54,6 +54,10 @@ function linspace(start: number, stop: number, len: number): number[] {
   }
 
   return out;
+}
+
+export function range(size: number, start: number, step: number): number[] {
+  return [...Array(size).keys()].map((i) => start + step * i);
 }
 
 function argmin(arr: number[]): number {
@@ -96,7 +100,7 @@ export function capitalize(string: string) {
 
 // for display purposes only
 export function localizableTextToString(lc: LocalizableText, langConfig: LanguageConfig | null): string {
-  if (langConfig === null && typeof lc === 'string') return lc;
-  else if (langConfig !== null && typeof lc === 'object') return lc[langConfig.defaultLanguageCode] || ""
-  else return ""
+  if (langConfig === null && typeof lc === "string") return lc;
+  else if (langConfig !== null && typeof lc === "object") return lc[langConfig.defaultLanguageCode] || "";
+  else return "";
 }

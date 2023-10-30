@@ -13,30 +13,30 @@
   export let isLongText: boolean = true;
   export let required: boolean = false;
 
-  console.debug(`befor type coercion value = ${JSON.stringify(value)}`);
+  // console.debug(`befor type coercion value = ${JSON.stringify(value)}`);
   if (value instanceof Object && langConfig === null) {
     if (Object.keys(value).length > 0) {
-      console.debug("value is multilang, lang config is null, selecting the first localization");
+      // console.debug("value is multilang, lang config is null, selecting the first localization");
       value = Object.values(value)[0];
     } else {
-      console.debug("value is empty object, lang config is null, setting text to empty str");
+      // console.debug("value is empty object, lang config is null, setting text to empty str");
       value = "";
     }
   } else if (langConfig !== null) {
     if (typeof value === "string") {
-      console.debug("value is string, setting as localization to first lang, others empty");
+      // console.debug("value is string, setting as localization to first lang, others empty");
       // @ts-expect-error
       value = Object.fromEntries(langConfig.supportedLanguageCodes.map((lang, idx) => [lang, idx == 0 ? value : ""]));
     } else {
-      console.debug("checking localization to all supported langs");
+      // console.debug("checking localization to all supported langs");
       // @ts-expect-error
       const missingSupportedLangs = langConfig.supportedLanguageCodes.filter((lang) => !value[lang]);
-      console.debug(`missingSupportedLangs = ${JSON.stringify(missingSupportedLangs)}`);
+      // console.debug(`missingSupportedLangs = ${JSON.stringify(missingSupportedLangs)}`);
       const emptyLocalizations = Object.fromEntries(missingSupportedLangs.map((lang) => [lang, ""]));
       value = { ...value, ...emptyLocalizations };
     }
   }
-  console.debug(`after validation and type coercion value = ${JSON.stringify(value)}`);
+  // console.debug(`after validation and type coercion value = ${JSON.stringify(value)}`);
 
   let activeLanguageTab = 0;
   let selectedLang = langConfig ? langConfig.supportedLanguageCodes[0] : null;

@@ -15,7 +15,7 @@
 
   let availableKeys = [
     { value: "plain_text", label: "Свободный" },
-    { value: "single_select", label: "Одиночный выбор" },
+    { value: "single_select", label: "Выбор" },
   ];
 
   let selectedKey: string;
@@ -35,7 +35,7 @@
       <BaseFormFieldInputs bind:config={fieldConfig.single_select} />
     {/if}
     <NativeSelect
-      label="Тип ответа"
+      label="Ответ"
       data={availableKeys}
       bind:value={selectedKey}
       on:change={() => {
