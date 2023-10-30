@@ -11,7 +11,7 @@
 </script>
 
 <SvelteUIProvider withNormalizeCSS withGlobalStyles>
-  <Modal styleBg={{ justifyContent: "flex-start" }} closeButton={false}>
+  <Modal closeButton={false}>
     <div use:links>
       <GlobalStateProvider>
         <Router>
