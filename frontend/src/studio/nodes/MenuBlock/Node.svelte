@@ -11,7 +11,9 @@
   import { DEFAULT_NODE_PROPS } from "../nodeProps";
   import { HUE, headerColor } from "../colors";
   import { validateMenuBlock } from "../nodeValidators";
-  import LocalizableText from "../../components/LocalizableText.svelte";
+  import OutputAnchorsBox from "../../components/OutputAnchorsBox.svelte";
+  import { localizableTextToString } from "../../utils";
+  import { languageConfigStore } from "../../stores";
   const openModal = getModalOpener();
 
   export let config: MenuBlock;
@@ -39,9 +41,16 @@
     on:delete
     on:edit={openEditModal}
   >
-    <!--{#if config.contents.length > 0 && config.contents[0].text}-->
-    <!--  <LocalizableText text={config.contents[0].text?.text} />-->
-    <!--{/if}-->
+    TBD
   </NodeContent>
-  <!--  <OutputAnchor bind:nextBlockId={config.next_block_id} />-->
+  <OutputAnchorsBox>
+    {#each config.menu.items as item (item.label)}
+      {#if item.next_block_id !== undefined}
+        <OutputAnchor
+          bind:nextBlockId={item.next_block_id}
+          anchorLabel={localizableTextToString(item.label, $languageConfigStore)}
+        />
+      {/if}
+    {/each}
+  </OutputAnchorsBox>
 </Node>

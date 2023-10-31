@@ -29,7 +29,7 @@
     defaultFormBlockConfig,
   } from "./nodes/defaultConfigs";
   import { HUE, buttonColor } from "./nodes/colors";
-  import { languageConfigStore } from "./stores";
+  import { languageConfigStore, type LanguageConfig } from "./stores";
 
   export let botName: string;
   export let botConfig: BotConfig;
@@ -68,7 +68,7 @@
       return { x: 0, y: 0 };
     } else {
       const findFunc = isEntrypoing ? findNewNodePositionRight : findNewNodePositionDown;
-      return findFunc(Object.values(botConfig.user_flow_config.node_display_coords), 250, 150, 10);
+      return findFunc(Object.values(botConfig.user_flow_config.node_display_coords), 250, 150, 30);
     }
   }
 
@@ -88,7 +88,7 @@
   }
   function getEntrypointConstructor(
     prefix: string,
-    entryPointConfigConstructor: (id: string) => UserFlowEntryPointConfig,
+    entryPointConfigConstructor: (id: string, langConfig: LanguageConfig | null) => UserFlowEntryPointConfig,
   ) {
     return () => {
       const id = `entrypoint-${prefix}-${crypto.randomUUID()}`;
@@ -96,7 +96,7 @@
       botConfig.user_flow_config.node_display_coords[id] = newUserFlowNodePosition(true);
       botConfig.user_flow_config.entrypoints = [
         ...botConfig.user_flow_config.entrypoints,
-        entryPointConfigConstructor(id),
+        entryPointConfigConstructor(id, $languageConfigStore),
       ];
     };
   }
@@ -113,12 +113,18 @@
       if (postDestruct !== undefined) postDestruct();
     };
   }
-  function getBlockConstructor(prefix: string, blockConfigConstructor: (id: string) => UserFlowBlockConfig) {
+  function getBlockConstructor(
+    prefix: string,
+    blockConfigConstructor: (id: string, langConfig: LanguageConfig | null) => UserFlowBlockConfig,
+  ) {
     return () => {
       const id = `block-${prefix}-${crypto.randomUUID()}`;
       console.debug(`Creating new block ${id}`);
       botConfig.user_flow_config.node_display_coords[id] = newUserFlowNodePosition(false);
-      botConfig.user_flow_config.blocks = [...botConfig.user_flow_config.blocks, blockConfigConstructor(id)];
+      botConfig.user_flow_config.blocks = [
+        ...botConfig.user_flow_config.blocks,
+        blockConfigConstructor(id, $languageConfigStore),
+      ];
     };
   }
 

@@ -17,7 +17,7 @@ import { getBaseFormFieldConfig } from "./FormBlock/utils";
 import { PLACEHOLDER_GROUP_CHAT_ID } from "./defaultConfigs";
 
 export interface ValidationError {
-  error: string;
+  error: string | string[];
 }
 
 export function validateLocalizableText(
@@ -46,7 +46,7 @@ export function validateLocalizableText(
     }
     if (missingLanguages.length > 0) {
       return err({
-        error: `${capitalize(textName)}: отсутствует локализация на языки: ${missingLanguages.join(", ")}`,
+        error: `${capitalize(textName)}: отсутствует локализация на языки ${missingLanguages.join(", ")}`,
       });
     } else {
       return ok(null);
@@ -58,12 +58,7 @@ export function validateLocalizableText(
 function mergeResults(results: Result<null, ValidationError>[]): Result<null, ValidationError> {
   if (results.some((res) => !res.ok)) {
     return err({
-      error: results
-        .map((res) => (res.ok ? "" : res.error.error))
-        .filter((s) => s)
-        // TODO: return as array of errors and add support for rendering them in ErrorBadge
-        // + truncate long errors there
-        .join("; "),
+      error: results.flatMap((res) => (res.ok ? "" : res.error.error)).filter((s) => s),
     });
   } else {
     return ok(null);
@@ -97,7 +92,17 @@ export function validateHumanOperatorBlock(
 }
 
 export function validateMenuBlock(config: MenuBlock, langConfig: LanguageConfig | null): Result<null, ValidationError> {
-  return ok(null);
+  const results: Result<null, ValidationError>[] = [];
+  results.push(validateLocalizableText(config.menu.text, "текст сообщения с меню", langConfig));
+
+  for (const [idx, item] of config.menu.items.entries()) {
+    results.push(validateLocalizableText(item.label, `пункт #${idx + 1}`, langConfig));
+    if (!item.next_block_id) {
+      results.push(err({ error: `Для пункта #${idx + 1} не выбран следующий блок` }));
+    }
+  }
+
+  return mergeResults(results);
 }
 
 export function validateLanguageSelectBlock(
@@ -118,7 +123,7 @@ export function validateLanguageSelectBlock(
 export function validateFormBlock(config: FormBlock, langConfig: LanguageConfig | null): Result<null, ValidationError> {
   const results: Result<null, ValidationError>[] = [];
   if (config.members.length === 0) {
-    results.push(err({ error: "В форму не добавлено ни одного поля" }));
+    results.push(err({ error: "Пустая форма" }));
   }
   results.push(
     ...flattenedFormFields(config.members).flatMap((field, idx) => {

@@ -13,30 +13,42 @@
   export let isLongText: boolean = true;
   export let required: boolean = false;
 
-  // console.debug(`befor type coercion value = ${JSON.stringify(value)}`);
+  const DEBUG_LOG = false;
+
+  function debugLog(msg: string) {
+    if (DEBUG_LOG) {
+      console.debug(msg);
+    }
+  }
+
+  debugLog(`before type coercion value = ${JSON.stringify(value)}`);
   if (value instanceof Object && langConfig === null) {
     if (Object.keys(value).length > 0) {
-      // console.debug("value is multilang, lang config is null, selecting the first localization");
+      debugLog("value is multilang, lang config is null, selecting the first localization");
       value = Object.values(value)[0];
     } else {
-      // console.debug("value is empty object, lang config is null, setting text to empty str");
+      debugLog("value is empty object, lang config is null, setting text to empty str");
       value = "";
     }
   } else if (langConfig !== null) {
     if (typeof value === "string") {
-      // console.debug("value is string, setting as localization to first lang, others empty");
+      debugLog("value is string, setting as localization to first lang, others empty");
       // @ts-expect-error
       value = Object.fromEntries(langConfig.supportedLanguageCodes.map((lang, idx) => [lang, idx == 0 ? value : ""]));
     } else {
-      // console.debug("checking localization to all supported langs");
+      debugLog("checking localization to all supported langs");
       // @ts-expect-error
       const missingSupportedLangs = langConfig.supportedLanguageCodes.filter((lang) => !value[lang]);
-      // console.debug(`missingSupportedLangs = ${JSON.stringify(missingSupportedLangs)}`);
+      debugLog(`missingSupportedLangs = ${JSON.stringify(missingSupportedLangs)}`);
       const emptyLocalizations = Object.fromEntries(missingSupportedLangs.map((lang) => [lang, ""]));
-      value = { ...value, ...emptyLocalizations };
+      const existingLocalizations = Object.fromEntries(
+        // @ts-expect-error
+        Object.entries(value).filter(([langCode]) => langConfig.supportedLanguageCodes.includes(langCode)),
+      );
+      value = { ...existingLocalizations, ...emptyLocalizations };
     }
   }
-  // console.debug(`after validation and type coercion value = ${JSON.stringify(value)}`);
+  debugLog(`after validation and type coercion value = ${JSON.stringify(value)}`);
 
   let activeLanguageTab = 0;
   let selectedLang = langConfig ? langConfig.supportedLanguageCodes[0] : null;
@@ -63,7 +75,7 @@
           e,
         ) => (activeLanguageTab = e.detail.index)}
       >
-        {#each langConfig.supportedLanguageCodes as language}
+        {#each langConfig.supportedLanguageCodes as language (language)}
           <Tabs.Tab>
             <Language slot="icon" {language} fullName small tooltip={false} />
             <Textarea aria-label={`localization-${language}`} resize="vertical" bind:value={value[language]} />
