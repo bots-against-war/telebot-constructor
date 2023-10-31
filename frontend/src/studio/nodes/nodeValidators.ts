@@ -23,7 +23,7 @@ export interface ValidationError {
 export function validateLocalizableText(
   text: LocalizableText,
   textName: string,
-  langConfig: LanguageConfig | null
+  langConfig: LanguageConfig | null,
 ): Result<null, ValidationError> {
   if (langConfig === null) {
     if (typeof text === "object") {
@@ -41,7 +41,7 @@ export function validateLocalizableText(
       missingLanguages = langConfig.supportedLanguageCodes;
     } else {
       missingLanguages = langConfig.supportedLanguageCodes.filter(
-        (lang) => !text[lang] // filtering out missing and empty localizations
+        (lang) => !text[lang], // filtering out missing and empty localizations
       );
     }
     if (missingLanguages.length > 0) {
@@ -72,7 +72,7 @@ function mergeResults(results: Result<null, ValidationError>[]): Result<null, Va
 
 export function validateContentBlock(
   config: ContentBlock,
-  langConfig: LanguageConfig | null
+  langConfig: LanguageConfig | null,
 ): Result<null, ValidationError> {
   const textValidationResults: Result<null, ValidationError>[] = config.contents.map((content, idx) => {
     if (content.text) {
@@ -87,7 +87,7 @@ export function validateContentBlock(
 
 export function validateHumanOperatorBlock(
   config: HumanOperatorBlock,
-  langConfig: LanguageConfig | null
+  langConfig: LanguageConfig | null,
 ): Result<null, ValidationError> {
   if (config.feedback_handler_config.admin_chat_id === PLACEHOLDER_GROUP_CHAT_ID) {
     return err({ error: "Не выбран админ-чат" });
@@ -96,17 +96,13 @@ export function validateHumanOperatorBlock(
   }
 }
 
-export function validateMenuBlock(
-  config: MenuBlock,
-  langConfig: LanguageConfig | null
-): Result<null, ValidationError> {
+export function validateMenuBlock(config: MenuBlock, langConfig: LanguageConfig | null): Result<null, ValidationError> {
   return ok(null);
-
 }
 
 export function validateLanguageSelectBlock(
   config: LanguageSelectBlock,
-  langConfig: LanguageConfig | null
+  langConfig: LanguageConfig | null,
 ): Result<null, ValidationError> {
   if (config.supported_languages.length === 0) {
     return err({ error: "Не выбраны поддерживаемые языки" });

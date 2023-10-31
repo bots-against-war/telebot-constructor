@@ -24,7 +24,8 @@
     defaultCommandEntrypoint,
     defaultContentBlockConfig,
     defaultHumanOperatorBlockConfig,
-    defaultLanguageSelectBlockConfig, defaultMenuBlockConfig,
+    defaultLanguageSelectBlockConfig,
+    defaultMenuBlockConfig,
     defaultFormBlockConfig,
   } from "./nodes/defaultConfigs";
   import { HUE, buttonColor } from "./nodes/colors";
@@ -199,7 +200,7 @@
           bind:config={block.menu}
           bind:position={botConfig.user_flow_config.node_display_coords[block.menu.block_id]}
           bind:isValid={isNodeValid[block.menu.block_id]}
-          />
+        />
       {:else if block.form}
         <FormNode
           {botName}
@@ -252,7 +253,7 @@
       >
         Меню
       </Button>
-<Button
+      <Button
         compact
         variant="outline"
         color={buttonColor(HUE.form)}
