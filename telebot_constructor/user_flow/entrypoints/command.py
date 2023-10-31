@@ -12,6 +12,7 @@ from telebot_constructor.user_flow.types import (
     UserFlowContext,
     UserFlowSetupContext,
 )
+from telebot_constructor.utils import without_nones
 
 
 class CommandScope(enum.Enum):
@@ -71,3 +72,6 @@ class CommandEntryPoint(UserFlowEntryPoint):
                 )
             )
         return res
+
+    def possible_next_block_ids(self) -> list[str]:
+        return without_nones([self.next_block_id])

@@ -40,3 +40,7 @@ class UserFlowBlock(BaseModel, abc.ABC):
 
     def is_catch_all(self) -> bool:
         return False
+
+    @abc.abstractmethod
+    def possible_next_block_ids(self) -> list[str]:
+        ...

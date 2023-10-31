@@ -28,7 +28,7 @@ from telebot_constructor.user_flow.types import (
     UserFlowContext,
     UserFlowSetupContext,
 )
-from telebot_constructor.utils import AnyChatId, telegram_user_link
+from telebot_constructor.utils import AnyChatId, telegram_user_link, without_nones
 from telebot_constructor.utils.pydantic import (
     ExactlyOneNonNullFieldModel,
     LocalizableText,
@@ -188,6 +188,9 @@ class FormBlock(UserFlowBlock):
 
     form_completed_next_block_id: Optional[UserFlowBlockId]
     form_cancelled_next_block_id: Optional[UserFlowBlockId]
+
+    def possible_next_block_ids(self) -> list[str]:
+        return without_nones([self.form_cancelled_next_block_id, self.form_completed_next_block_id])
 
     def model_post_init(self, __context: Any) -> None:
         if not self.members:

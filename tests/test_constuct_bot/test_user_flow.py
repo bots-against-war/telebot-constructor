@@ -313,16 +313,15 @@ async def test_flow_with_menu() -> None:
                         block_id="menu",
                         menu=Menu(
                             text="top level menu",
-                            no_back_button=False,
                             items=[
                                 MenuItem(label="one", next_block_id="message-1"),
                                 MenuItem(label="two", next_block_id="message-2"),
                             ],
-                        ),
-                        config=MenuConfig(
-                            back_label="<-",
-                            lock_after_termination=False,
-                            mechanism=MenuMechanism.INLINE_BUTTONS,
+                            config=MenuConfig(
+                                back_label="<-",
+                                lock_after_termination=False,
+                                mechanism=MenuMechanism.INLINE_BUTTONS,
+                            ),
                         ),
                     )
                 ),
@@ -396,6 +395,149 @@ async def test_flow_with_menu() -> None:
         bot.method_calls["send_message"], [{"chat_id": 1312, "text": "message on option two"}]
     )
     assert bot.method_calls["send_message"][0].full_kwargs["reply_markup"].to_json() == '{"remove_keyboard":true}'
+    bot.method_calls.clear()
+
+
+async def test_flow_with_nexted_menu() -> None:
+    USER_ID = 1312
+    bot_config = BotConfig(
+        token_secret_name="token",
+        display_name="Menu bot",
+        user_flow_config=UserFlowConfig(
+            entrypoints=[
+                UserFlowEntryPointConfig(
+                    command=CommandEntryPoint(
+                        entrypoint_id="start-cmd",
+                        command="start",
+                        next_block_id="menu",
+                    ),
+                )
+            ],
+            blocks=[
+                UserFlowBlockConfig(
+                    menu=MenuBlock(
+                        block_id="menu",
+                        menu=Menu(
+                            text="top level menu",
+                            items=[
+                                MenuItem(label="one", next_block_id="submenu"),
+                                MenuItem(label="two", next_block_id="message-fin"),
+                            ],
+                            config=MenuConfig(
+                                back_label="<-",
+                                lock_after_termination=False,
+                                mechanism=MenuMechanism.INLINE_BUTTONS,
+                            ),
+                        ),
+                    )
+                ),
+                UserFlowBlockConfig(
+                    menu=MenuBlock(
+                        block_id="submenu",
+                        menu=Menu(
+                            text="second level menu",
+                            items=[
+                                MenuItem(label="foo", next_block_id="message-fin"),
+                                MenuItem(label="bar", next_block_id="message-fin"),
+                            ],
+                            config=MenuConfig(
+                                back_label="<-",
+                                lock_after_termination=False,
+                                mechanism=MenuMechanism.INLINE_BUTTONS,
+                            ),
+                        ),
+                    )
+                ),
+                UserFlowBlockConfig(
+                    content=ContentBlock.simple_text(
+                        block_id="message-fin",
+                        message_text="message after menu",
+                        next_block_id=None,
+                    ),
+                ),
+            ],
+            node_display_coords={},
+        ),
+    )
+
+    redis = RedisEmulation()
+    secret_store = dummy_secret_store(redis)
+    username = "user123"
+    await secret_store.save_secret(secret_name="token", secret_value="mock-token", owner_id=username)
+    bot_runner = await construct_bot(
+        username=username,
+        bot_name="menu-bot",
+        bot_config=bot_config,
+        secret_store=secret_store,
+        redis=redis,
+        _bot_factory=MockedAsyncTeleBot,
+    )
+
+    assert not bot_runner.background_jobs
+    assert not bot_runner.aux_endpoints
+
+    bot = bot_runner.bot
+    assert isinstance(bot, MockedAsyncTeleBot)
+    bot.method_calls.clear()  # remove construct-time calls
+
+    # /start command
+    await bot.process_new_updates([tg_update_message_to_bot(USER_ID, first_name="User", text="/start")])
+    assert_method_call_kwargs_include(
+        bot.method_calls["send_message"],
+        [
+            {"chat_id": USER_ID, "text": "top level menu"},
+        ],
+    )
+    assert_method_call_dictified_kwargs_include(
+        bot.method_calls["send_message"],
+        [
+            {
+                "reply_markup": {
+                    "inline_keyboard": [
+                        [{"text": "one", "callback_data": "menu:1"}],
+                        [{"text": "two", "callback_data": "terminator:1"}],
+                    ]
+                }
+            }
+        ],
+    )
+    bot.method_calls.clear()
+
+    # pressing the second button
+    await bot.process_new_updates([tg_update_callback_query(USER_ID, first_name="User", callback_query="terminator:1")])
+    assert_method_call_kwargs_include(
+        bot.method_calls["send_message"], [{"chat_id": 1312, "text": "message after menu"}]
+    )
+    assert bot.method_calls["send_message"][0].full_kwargs["reply_markup"].to_json() == '{"remove_keyboard":true}'
+    bot.method_calls.clear()
+
+    # pressing the first button
+    await bot.process_new_updates([tg_update_callback_query(USER_ID, first_name="User", callback_query="menu:1")])
+    assert not bot.method_calls.get("send_message")
+    assert_method_call_kwargs_include(
+        bot.method_calls["edit_message_text"], [{"chat_id": 1312, "text": "second level menu", "message_id": 1}]
+    )
+    assert_method_call_dictified_kwargs_include(
+        bot.method_calls["edit_message_text"],
+        [
+            {
+                "reply_markup": {
+                    "inline_keyboard": [
+                        [{"text": "foo", "callback_data": "terminator:2"}],
+                        [{"text": "bar", "callback_data": "terminator:3"}],
+                        [{"text": "<-", "callback_data": "menu:0"}],
+                    ]
+                }
+            }
+        ],
+    )
+    bot.method_calls.clear()
+
+    # pressing the first button in submeny
+    await bot.process_new_updates([tg_update_callback_query(USER_ID, first_name="User", callback_query="terminator:2")])
+    assert_method_call_kwargs_include(
+        bot.method_calls["send_message"], [{"chat_id": 1312, "text": "message after menu"}]
+    )
     bot.method_calls.clear()
 
 
