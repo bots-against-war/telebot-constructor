@@ -8,7 +8,27 @@ export function svelvetNodeIdToBlockId(id: string): string {
   return id.replace(/^N-/, "");
 }
 
-export function findNewNodePosition(
+export function findNewNodePositionRight(
+  current: UserFlowNodePosition[],
+  nodeWidth: number,
+  nodeHeight: number,
+  margin: number,
+) {
+  // reusing "down" logic in transposed form
+  const transposed = findNewNodePositionDown(
+    // x, y => y, x
+    current.map(({ x, y }) => {
+      return { x: y, y: x };
+    }),
+    // switching height and width
+    nodeHeight,
+    nodeWidth,
+    margin,
+  );
+  return { x: transposed.y, y: transposed.x };
+}
+
+export function findNewNodePositionDown(
   current: UserFlowNodePosition[],
   nodeWidth: number,
   nodeHeight: number,
@@ -29,7 +49,7 @@ export function findNewNodePosition(
 
   const leftEdgeMin = Math.min(...current.map((pos) => pos.x)) - nodeWidth / 2;
   const leftEdgeMax = Math.max(...current.map((pos) => pos.x)) - nodeWidth / 2;
-  const leftEdgeVariants = linspace(leftEdgeMin, leftEdgeMax, 8).map((v) => v + gaussianRandom(0, margin));
+  const leftEdgeVariants = linspace(leftEdgeMin, leftEdgeMax, 10).map((v) => v + gaussianRandom(0, margin));
   const leftEdgeOptimalVariantIdx = argmin(leftEdgeVariants.map((x) => Math.max(yMax(x), yMax(x + nodeWidth))));
   const xOptimal = leftEdgeVariants[leftEdgeOptimalVariantIdx] + nodeWidth / 2;
   return {

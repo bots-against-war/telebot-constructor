@@ -63,6 +63,9 @@ class HumanOperatorBlock(UserFlowBlock):
     def model_post_init(self, __context: Any) -> None:
         self._feedback_handler: Optional[FeedbackHandler] = None
 
+    def possible_next_block_ids(self) -> list[str]:
+        return []
+
     @property
     def feedback_handler(self) -> FeedbackHandler:
         if self._feedback_handler is None:
