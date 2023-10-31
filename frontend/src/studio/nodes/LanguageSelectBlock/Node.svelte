@@ -45,7 +45,7 @@
     on:edit={openEditModal}
   >
     <Group spacing="xs" override={{ maxWidth: "300px" }}>
-      {#each config.supported_languages as language}
+      {#each config.supported_languages as language (language)}
         <DataBadge>
           <Langauge {language} />
         </DataBadge>

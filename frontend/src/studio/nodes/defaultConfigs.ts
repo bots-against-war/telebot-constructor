@@ -58,14 +58,17 @@ export function defaultMenuBlockConfig(id: string, langConfig: LanguageConfig | 
   return {
     menu: {
       block_id: id,
-      menu: { text: "", items: [], no_back_button: false },
-      config: {
-        back_label:
-          langConfig === null
-            ? "⬅️"
-            : Object.fromEntries(langConfig.supportedLanguageCodes.map((lang) => [lang, "⬅️"])),
-        mechanism: "inline_buttons",
-        lock_after_termination: false,
+      menu: {
+        text: "",
+        items: [],
+        config: {
+          back_label:
+            langConfig === null
+              ? "⬅️"
+              : Object.fromEntries(langConfig.supportedLanguageCodes.map((lang) => [lang, "⬅️"])),
+          mechanism: "inline_buttons",
+          lock_after_termination: false,
+        },
       },
     },
   };

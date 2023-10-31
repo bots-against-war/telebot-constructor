@@ -68,7 +68,7 @@
       return { x: 0, y: 0 };
     } else {
       const findFunc = isEntrypoing ? findNewNodePositionRight : findNewNodePositionDown;
-      return findFunc(Object.values(botConfig.user_flow_config.node_display_coords), 250, 150, 30);
+      return findFunc(Object.values(botConfig.user_flow_config.node_display_coords), 250, 220, 30);
     }
   }
 
@@ -77,11 +77,13 @@
       const idx = botConfig.user_flow_config.entrypoints
         .map(getEntrypointId)
         .findIndex((entrypointId) => entrypointId === id);
-      console.debug(`Removing entrypoint ${id}, idx = ${idx}`);
       if (idx === -1) {
         console.log(`Entrypoing with id '${id}' not found`);
         return;
       }
+      console.debug(
+        `Deleting entrypoint [idx = ${idx}] ${JSON.stringify(botConfig.user_flow_config.entrypoints[idx])}`,
+      );
       botConfig.user_flow_config.entrypoints = botConfig.user_flow_config.entrypoints.toSpliced(idx, 1);
       delete botConfig.user_flow_config.node_display_coords[id];
     };
@@ -103,11 +105,11 @@
   function getBlockDestructor(id: string, postDestruct: (() => void) | undefined = undefined) {
     return () => {
       const idx = botConfig.user_flow_config.blocks.map(getBlockId).findIndex((blockId) => blockId === id);
-      console.debug(`Deleting block ${id}, idx = ${idx}`);
       if (idx === -1) {
         console.log(`Block with id '${id}' not found`);
         return;
       }
+      console.debug(`Deleting block [idx = ${idx}] ${JSON.stringify(botConfig.user_flow_config.blocks[idx])}`);
       botConfig.user_flow_config.blocks = botConfig.user_flow_config.blocks.toSpliced(idx, 1);
       delete botConfig.user_flow_config.node_display_coords[id];
       if (postDestruct !== undefined) postDestruct();
@@ -166,7 +168,7 @@
     fitView={botConfig.user_flow_config.blocks.length + botConfig.user_flow_config.entrypoints.length >= 1}
     edge={DeletableEdge}
   >
-    {#each botConfig.user_flow_config.entrypoints as entrypoint, idx}
+    {#each botConfig.user_flow_config.entrypoints as entrypoint (getEntrypointId(entrypoint))}
       {#if entrypoint.command}
         <CommandEntryPointNode
           on:delete={getEntrypointDestructor(entrypoint.command.entrypoint_id)}
@@ -176,7 +178,7 @@
         />
       {/if}
     {/each}
-    {#each botConfig.user_flow_config.blocks as block, idx}
+    {#each botConfig.user_flow_config.blocks as block (getBlockId(block))}
       {#if block.content}
         <ContentBlockNode
           on:delete={getBlockDestructor(block.content.block_id)}

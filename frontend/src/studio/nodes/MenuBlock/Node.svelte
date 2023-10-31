@@ -14,6 +14,7 @@
   import OutputAnchorsBox from "../../components/OutputAnchorsBox.svelte";
   import { localizableTextToString } from "../../utils";
   import { languageConfigStore } from "../../stores";
+  import LocalizableText from "../../components/LocalizableText.svelte";
   const openModal = getModalOpener();
 
   export let config: MenuBlock;
@@ -41,7 +42,7 @@
     on:delete
     on:edit={openEditModal}
   >
-    TBD
+    <LocalizableText text={config.menu.text} />
   </NodeContent>
   <OutputAnchorsBox>
     {#each config.menu.items as item (item.label)}

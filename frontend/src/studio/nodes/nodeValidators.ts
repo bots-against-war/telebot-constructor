@@ -94,6 +94,13 @@ export function validateHumanOperatorBlock(
 export function validateMenuBlock(config: MenuBlock, langConfig: LanguageConfig | null): Result<null, ValidationError> {
   const results: Result<null, ValidationError>[] = [];
   results.push(validateLocalizableText(config.menu.text, "текст сообщения с меню", langConfig));
+  if (config.menu.config.back_label !== null) {
+    results.push(validateLocalizableText(config.menu.config.back_label, 'текст на кнопке "назад"', langConfig));
+  }
+
+  if (config.menu.items.length === 0) {
+    results.push(err({ error: "Ни одного пункта в меню" }));
+  }
 
   for (const [idx, item] of config.menu.items.entries()) {
     results.push(validateLocalizableText(item.label, `пункт #${idx + 1}`, langConfig));

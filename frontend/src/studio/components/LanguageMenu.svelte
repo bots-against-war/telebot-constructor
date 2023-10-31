@@ -12,7 +12,7 @@
     <ActionIcon slot="control">
       <Globe />
     </ActionIcon>
-    {#each $languageConfigStore.supportedLanguageCodes as language}
+    {#each $languageConfigStore.supportedLanguageCodes as language (language)}
       <Menu.Item on:click={() => (selectedLang = language)}>
         <Language {language} tooltip={false} />
       </Menu.Item>

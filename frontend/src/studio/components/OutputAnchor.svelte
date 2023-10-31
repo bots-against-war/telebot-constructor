@@ -42,6 +42,9 @@
     background-color: var(--prop-anchor-color, var(--anchor-color, var(--default-anchor-color)));
     padding: 0 5px;
     border-radius: 5px;
+    max-width: 60px;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   div.linked {

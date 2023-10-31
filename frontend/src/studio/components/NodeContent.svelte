@@ -41,8 +41,10 @@
   function detectOverflow(node: HTMLElement) {
     // console.log(node);
     if (node.scrollHeight > node.clientHeight) {
-      console.log("DETECTED OVERFLOW");
+      // console.log("DETECTED OVERFLOW");
       isContentOverflown = true;
+    } else {
+      isContentOverflown = false;
     }
   }
 
@@ -54,7 +56,8 @@
   }
 </script>
 
-<div class="node-content-container" use:detectOverflow>
+<div class="node-content-container">
+  <!-- <div class="node-content-container" use:detectOverflow> -->
   <Group
     spacing="xs"
     position="apart"
@@ -96,8 +99,8 @@
 <style>
   div.node-content-container {
     width: 250px;
-    height: 125px;
-    overflow-y: scroll;
+    max-height: 200px;
+    overflow-y: hidden;
     position: relative;
   }
 
