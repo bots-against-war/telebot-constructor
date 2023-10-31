@@ -375,8 +375,8 @@ async def test_flow_with_menu() -> None:
     )
     assert bot.method_calls["send_message"][1].full_kwargs["reply_markup"].to_dict() == {
         "inline_keyboard": [
-            [{"text": "one", "callback_data": "terminator:0"}],
-            [{"text": "two", "callback_data": "terminator:1"}],
+            [{"text": "one", "callback_data": "terminator:8d6ab84ca2af9fcc-0"}],
+            [{"text": "two", "callback_data": "terminator:8d6ab84ca2af9fcc-1"}],
         ]
     }
     bot.method_calls.clear()
@@ -494,8 +494,8 @@ async def test_flow_with_nexted_menu() -> None:
             {
                 "reply_markup": {
                     "inline_keyboard": [
-                        [{"text": "one", "callback_data": "menu:1"}],
-                        [{"text": "two", "callback_data": "terminator:1"}],
+                        [{"text": "one", "callback_data": "menu:8d6ab84ca2af9fcc-1"}],
+                        [{"text": "two", "callback_data": "terminator:8d6ab84ca2af9fcc-1"}],
                     ]
                 }
             }
@@ -523,9 +523,9 @@ async def test_flow_with_nexted_menu() -> None:
             {
                 "reply_markup": {
                     "inline_keyboard": [
-                        [{"text": "foo", "callback_data": "terminator:2"}],
-                        [{"text": "bar", "callback_data": "terminator:3"}],
-                        [{"text": "<-", "callback_data": "menu:0"}],
+                        [{"text": "foo", "callback_data": "terminator:8d6ab84ca2af9fcc-2"}],
+                        [{"text": "bar", "callback_data": "terminator:8d6ab84ca2af9fcc-3"}],
+                        [{"text": "<-", "callback_data": "menu:8d6ab84ca2af9fcc-0"}],
                     ]
                 }
             }
