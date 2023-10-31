@@ -99,9 +99,9 @@
 <style>
   div.node-content-container {
     width: 250px;
-    max-height: 200px;
-    overflow-y: hidden;
-    position: relative;
+    /* max-height: 200px; */
+    /* overflow-y: hidden; */
+    /* position: relative; */
   }
 
   div.node-content {
