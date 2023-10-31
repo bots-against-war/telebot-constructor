@@ -19,7 +19,7 @@
   import type { BotConfig, UserFlowBlockConfig, UserFlowEntryPointConfig, UserFlowNodePosition } from "../api/types";
 
   import { getError, withConfirmation } from "../utils";
-  import { findNewNodePosition } from "./utils";
+  import { findNewNodePositionDown, findNewNodePositionRight } from "./utils";
   import {
     defaultCommandEntrypoint,
     defaultContentBlockConfig,
@@ -62,12 +62,13 @@
     languageConfigStore.set(null);
   }
 
-  function newUserFlowNodePosition(): UserFlowNodePosition {
+  function newUserFlowNodePosition(isEntrypoing: boolean): UserFlowNodePosition {
     const currentPositions = Object.values(botConfig.user_flow_config.node_display_coords);
     if (currentPositions.length === 0) {
       return { x: 0, y: 0 };
     } else {
-      return findNewNodePosition(Object.values(botConfig.user_flow_config.node_display_coords), 200, 100, 30);
+      const findFunc = isEntrypoing ? findNewNodePositionRight : findNewNodePositionDown;
+      return findFunc(Object.values(botConfig.user_flow_config.node_display_coords), 250, 150, 10);
     }
   }
 
@@ -92,7 +93,7 @@
     return () => {
       const id = `entrypoint-${prefix}-${crypto.randomUUID()}`;
       console.debug(`Creating new entrypoint ${id}`);
-      botConfig.user_flow_config.node_display_coords[id] = newUserFlowNodePosition();
+      botConfig.user_flow_config.node_display_coords[id] = newUserFlowNodePosition(true);
       botConfig.user_flow_config.entrypoints = [
         ...botConfig.user_flow_config.entrypoints,
         entryPointConfigConstructor(id),
@@ -116,7 +117,7 @@
     return () => {
       const id = `block-${prefix}-${crypto.randomUUID()}`;
       console.debug(`Creating new block ${id}`);
-      botConfig.user_flow_config.node_display_coords[id] = newUserFlowNodePosition();
+      botConfig.user_flow_config.node_display_coords[id] = newUserFlowNodePosition(false);
       botConfig.user_flow_config.blocks = [...botConfig.user_flow_config.blocks, blockConfigConstructor(id)];
     };
   }
