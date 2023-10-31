@@ -1,10 +1,11 @@
 import abc
 import dataclasses
 import logging
+import string
 from enum import Enum
-from typing import Any, Optional, Type, TypeAlias, Union
+from typing import Any, Literal, Optional, Sequence, Type, Union, cast
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from telebot import types as tg
 from telebot_components.form.field import (
     FormField,
@@ -31,31 +32,41 @@ from telebot_constructor.utils import AnyChatId, telegram_user_link
 from telebot_constructor.utils.pydantic import (
     ExactlyOneNonNullFieldModel,
     LocalizableText,
+    MultilangText,
 )
 
 logger = logging.getLogger(__name__)
-
-FormFieldId = str
-
-FormEnd: TypeAlias = None
-
 
 # region: form fields
 
 
 class BaseFormFieldConfig(BaseModel, abc.ABC):
-    id: FormFieldId
+    id: str
+    name: str
     prompt: LocalizableText
     is_required: bool
-    result_formatting_opts: Union[FormFieldResultFormattingOpts, bool]
+    result_formatting: Union[FormFieldResultFormattingOpts, Literal["auto"], None]
+
+    def auto_result_formatting_opts(self) -> FormFieldResultFormattingOpts:
+        return FormFieldResultFormattingOpts(
+            descr=self.name,
+            is_multiline=False,
+        )
 
     def base_field_kwargs(self) -> dict[str, Any]:
+        if isinstance(self.result_formatting, FormFieldResultFormattingOpts):
+            result_formatting_opts = self.result_formatting
+        elif self.result_formatting == "auto":
+            result_formatting_opts = self.auto_result_formatting_opts()
+        else:
+            result_formatting_opts = None
+
         return dataclasses.asdict(
             FormField(
                 name=self.id,
                 required=self.is_required,
                 query_message=self.prompt,
-                result_formatting_opts=self.result_formatting_opts,
+                result_formatting_opts=result_formatting_opts,
             )
         )
 
@@ -65,7 +76,14 @@ class BaseFormFieldConfig(BaseModel, abc.ABC):
 
 
 class PlainTextFormFieldConfig(BaseFormFieldConfig):
+    is_long_text: bool
     empty_text_error_msg: LocalizableText
+
+    def auto_result_formatting_opts(self) -> FormFieldResultFormattingOpts:
+        return FormFieldResultFormattingOpts(
+            descr=self.name,
+            is_multiline=self.is_long_text,
+        )
 
     def construct_field(self) -> PlainTextField:
         return PlainTextField(
@@ -74,11 +92,13 @@ class PlainTextFormFieldConfig(BaseFormFieldConfig):
         )
 
 
-EnumDef = dict[str, LocalizableText]
+class EnumOption(BaseModel):
+    id: str
+    label: LocalizableText
 
 
 class SingleSelectFormFieldConfig(BaseFormFieldConfig):
-    options: EnumDef
+    options: list[EnumOption]
     invalid_enum_error_msg: LocalizableText
 
     def construct_field(self) -> SingleSelectField:
@@ -87,8 +107,9 @@ class SingleSelectFormFieldConfig(BaseFormFieldConfig):
         # but also, we need to inject this class into global scope so that (de)serializers can find this class
         # in the present module
         # so we do this using globals()
+        enum_def = [(o.id, o.label) for o in self.options]
         enum_class_name = f"{self.id}_single_select_field_options"
-        EnumClass: Type[Enum] = Enum(enum_class_name, self.options, module=__name__)  # type: ignore
+        EnumClass: Type[Enum] = Enum(enum_class_name, enum_def, module=__name__)  # type: ignore
         globals()[enum_class_name] = EnumClass
         return SingleSelectField(
             EnumClass=EnumClass,
@@ -134,11 +155,14 @@ class BranchingFormMemberConfig(ExactlyOneNonNullFieldModel):
 
 class FormMessages(BaseModel):
     form_start: LocalizableText
+    cancel_command_is: LocalizableText
     field_is_skippable: LocalizableText
     field_is_not_skippable: LocalizableText
     please_enter_correct_value: LocalizableText
     unsupported_command: LocalizableText
-    cancelling_because_of_error: LocalizableText
+
+    # for easier frontend validation
+    model_config = ConfigDict(extra="forbid")
 
 
 class FormResultsExportToChatConfig(BaseModel):
@@ -146,27 +170,10 @@ class FormResultsExportToChatConfig(BaseModel):
     via_feedback_handler: bool
 
 
-class FormResultsExportConfig(BaseModel):
+class FormResultsExport(BaseModel):
+    echo_to_user: bool
     is_anonymous: bool
     to_chat: Optional[FormResultsExportToChatConfig]
-
-
-def _validate_template(template: LocalizableText, placeholder_count: int, title: str) -> LocalizableText:
-    def _validate_string(template_str: str, subtitle: Optional[str]) -> str:
-        actual_placeholder_count = template_str.count(r"{}")
-        if actual_placeholder_count != placeholder_count:
-            full_title = title
-            if subtitle:
-                full_title += f" ({subtitle})"
-            raise ValueError(
-                f'Expected {placeholder_count} "{{}}" placeholders in {full_title}, found {actual_placeholder_count}'
-            )
-        return template_str
-
-    if isinstance(template, str):
-        return _validate_string(template, subtitle=None)
-    else:
-        return {lang: _validate_string(localization, subtitle=str(lang)) for lang, localization in template.items()}
 
 
 class FormBlock(UserFlowBlock):
@@ -177,10 +184,14 @@ class FormBlock(UserFlowBlock):
     form_name: str
     members: list[BranchingFormMemberConfig]
     messages: FormMessages
-    export: FormResultsExportConfig
+    results_export: FormResultsExport
 
     form_completed_next_block_id: Optional[UserFlowBlockId]
     form_cancelled_next_block_id: Optional[UserFlowBlockId]
+
+    def model_post_init(self, __context: Any) -> None:
+        if not self.members:
+            raise ValueError("Form must contain at least one member field")
 
     async def setup(self, context: UserFlowSetupContext) -> SetupResult:
         component_form_members: list[Union[FormField, FormBranch]] = [m.construct_member() for m in self.members]
@@ -195,24 +206,30 @@ class FormBlock(UserFlowBlock):
             form=self._form,
             config=ComponentsFormHandlerConfig(
                 echo_filled_field=False,
-                form_starting_template=_validate_template(
-                    self.messages.form_start, placeholder_count=1, title="form start message"
+                form_starting_template=join_localizable_texts(
+                    [
+                        validate_localizable_text(
+                            self.messages.form_start, placeholder_count=0, title="form start message"
+                        ),
+                        validate_localizable_text(
+                            self.messages.cancel_command_is, placeholder_count=1, title="cancel command message"
+                        ),
+                    ],
+                    sep=" ",
                 ),
-                can_skip_field_template=_validate_template(
+                can_skip_field_template=validate_localizable_text(
                     self.messages.field_is_skippable, placeholder_count=1, title="field is skippable message"
                 ),
-                cant_skip_field_msg=_validate_template(
+                cant_skip_field_msg=validate_localizable_text(
                     self.messages.field_is_not_skippable, placeholder_count=0, title="field is not skippable message"
                 ),
-                retry_field_msg=_validate_template(
+                retry_field_msg=validate_localizable_text(
                     self.messages.please_enter_correct_value, placeholder_count=0, title="enter correct value msg"
                 ),
-                unsupported_cmd_error_template=_validate_template(
+                unsupported_cmd_error_template=validate_localizable_text(
                     self.messages.unsupported_command, placeholder_count=1, title="unsupported command message"
                 ),
-                cancelling_because_of_error_template=_validate_template(
-                    self.messages.unsupported_command, placeholder_count=1, title="unsupported cmd message"
-                ),
+                cancelling_because_of_error_template="Something went wrong (details: {})",
             ),
             language_store=context.language_store,
         )
@@ -230,15 +247,27 @@ class FormBlock(UserFlowBlock):
             )
 
         async def on_form_completed(form_exit_context: ComponentsFormExitContext):
-            if self.export.to_chat is not None:
+            user = form_exit_context.last_update.from_user
+            if self.results_export.echo_to_user:
                 try:
-                    feedback_handler = (
-                        context.feedback_handlers.get(self.export.to_chat.chat_id)
-                        if self.export.to_chat.via_feedback_handler
+                    user_lang = (
+                        await context.language_store.get_user_language(user)
+                        if context.language_store is not None
                         else None
                     )
-                    lang = context.language_store.default_language if context.language_store is not None else None
-                    text = self._form.result_to_html(result=form_exit_context.result, lang=lang)
+                    text = self._form.result_to_html(result=form_exit_context.result, lang=user_lang)
+                    await context.bot.send_message(chat_id=user.id, text=text, parse_mode="HTML")
+                except Exception:
+                    logger.exception("Error echoing form result to user")
+            if self.results_export.to_chat is not None:
+                try:
+                    feedback_handler = (
+                        context.feedback_handlers.get(self.results_export.to_chat.chat_id)
+                        if self.results_export.to_chat.via_feedback_handler
+                        else None
+                    )
+                    admin_lang = context.language_store.default_language if context.language_store is not None else None
+                    text = self._form.result_to_html(result=form_exit_context.result, lang=admin_lang)
                     if feedback_handler is not None:
                         await feedback_handler.emulate_user_message(
                             bot=context.bot,
@@ -246,14 +275,14 @@ class FormBlock(UserFlowBlock):
                             text=text,
                             attachment=None,
                             no_response=True,
-                            send_user_identifier_message=self.export.is_anonymous,
+                            send_user_identifier_message=self.results_export.is_anonymous,
                             parse_mode="HTML",
                         )
                     else:
-                        if not self.export.is_anonymous:
+                        if not self.results_export.is_anonymous:
                             text = telegram_user_link(form_exit_context.last_update.from_user) + "\n\n" + text
                         await context.bot.send_message(
-                            chat_id=self.export.to_chat.chat_id,
+                            chat_id=self.results_export.to_chat.chat_id,
                             text=text,
                             parse_mode="HTML",
                         )
@@ -288,3 +317,48 @@ class FormBlock(UserFlowBlock):
 
     async def enter(self, context: UserFlowContext) -> None:
         await self._form_handler.start(bot=context.bot, user=context.user, initial_form_result=None)
+
+
+def validate_localizable_text(template: LocalizableText, placeholder_count: int, title: str) -> LocalizableText:
+    def _validate_string(template_str: str, subtitle: Optional[str]) -> str:
+        full_title = title
+        if subtitle:
+            full_title += f" ({subtitle})"
+        template_str = template_str.strip()
+        actual_placeholder_count = template_str.count(r"{}")
+        if actual_placeholder_count != placeholder_count:
+            raise ValueError(
+                f'Expected {placeholder_count} "{{}}" placeholders in {full_title!r}, found {actual_placeholder_count}'
+            )
+        if not template_str:
+            raise ValueError(f"Empty {full_title!r}")
+        if template_str[-1] not in string.punctuation:
+            template_str += "."
+        return template_str
+
+    if isinstance(template, str):
+        return _validate_string(template, subtitle=None)
+    else:
+        return {lang: _validate_string(localization, subtitle=str(lang)) for lang, localization in template.items()}
+
+
+def join_localizable_texts(msgs: Sequence[LocalizableText], sep: str) -> LocalizableText:
+    if not msgs:
+        raise ValueError("Nothing to join")
+
+    def _join_str(ss: list[str]) -> str:
+        return sep.join(ss)
+
+    if all(isinstance(msg, str) for msg in msgs):
+        return _join_str(cast(list[str], msgs))
+    else:
+        if any(isinstance(msg, str) for msg in msgs):
+            raise ValueError("All msgs must be strings or multilang texts, not mixed")
+        multilang_msgs = cast(list[MultilangText], msgs)
+        multilang_msgs_aggregated = {lang: [localization] for lang, localization in multilang_msgs[0].items()}
+        for msg in multilang_msgs[1:]:
+            for key, localizations in multilang_msgs_aggregated.items():
+                if key not in msg:
+                    raise ValueError(f"All msgs must be localized to the same languages, but {msg} misses {key!r}")
+                localizations.append(msg[key])
+        return {lang: _join_str(localization) for lang, localization in multilang_msgs_aggregated.items()}

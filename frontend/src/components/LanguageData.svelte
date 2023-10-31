@@ -4,9 +4,10 @@
 
   export let languageData: LanguageData;
   export let fullName: boolean = false;
+  export let small: boolean = false;
 </script>
 
-<Text>
+<Text size={small ? "xs" : "md"}>
   {languageData.emoji || "🌐"}
   {fullName ? languageData.name : languageData.code}
 </Text>

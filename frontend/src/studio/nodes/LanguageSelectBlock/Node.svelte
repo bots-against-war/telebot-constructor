@@ -1,20 +1,21 @@
 <script lang="ts">
   import { Group } from "@svelteuidev/core";
   import { Node } from "svelvet";
-
-  import type { SvelvetPosition } from "../../../types";
-  import type { LanguageSelectBlock } from "../../../api/types";
-  import { getModalOpener } from "../../../utils";
-
+  import OutputAnchorsBox from "../../components/OutputAnchorsBox.svelte";
   import Modal from "./Modal.svelte";
   import NodeContent from "../../components/NodeContent.svelte";
   import InputAnchor from "../../components/InputAnchor.svelte";
   import OutputAnchor from "../../components/OutputAnchor.svelte";
-  import { DEFAULT_NODE_PROPS } from "../nodeProps";
-  import { HUE, headerColor } from "../colors";
   import Langauge from "../../../components/Language.svelte";
   import DataBadge from "../../../components/internal/DataBadge.svelte";
+
+  import type { SvelvetPosition } from "../../../types";
+  import type { LanguageSelectBlock } from "../../../api/types";
+
+  import { DEFAULT_NODE_PROPS } from "../nodeProps";
+  import { HUE, headerColor } from "../colors";
   import { validateLanguageSelectBlock } from "../nodeValidators";
+  import { getModalOpener } from "../../../utils";
 
   const openModal = getModalOpener();
 
@@ -51,5 +52,7 @@
       {/each}
     </Group>
   </NodeContent>
-  <OutputAnchor bind:nextBlockId={config.language_selected_next_block_id} />
+  <OutputAnchorsBox>
+    <OutputAnchor bind:nextBlockId={config.language_selected_next_block_id} />
+  </OutputAnchorsBox>
 </Node>

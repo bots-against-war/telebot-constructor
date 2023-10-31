@@ -3,7 +3,8 @@ export const HUE = {
   content: 197,
   human_operator: 77,
   language_select: 329,
-  menu: 250,
+  menu: 27,
+  form: 259,
 };
 
 export function headerColor(hue: number): string {

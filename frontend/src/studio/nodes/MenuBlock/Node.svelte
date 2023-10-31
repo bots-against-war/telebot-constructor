@@ -43,5 +43,5 @@
     <!--  <LocalizableText text={config.contents[0].text?.text} />-->
     <!--{/if}-->
   </NodeContent>
-<!--  <OutputAnchor bind:nextBlockId={config.next_block_id} />-->
+  <!--  <OutputAnchor bind:nextBlockId={config.next_block_id} />-->
 </Node>

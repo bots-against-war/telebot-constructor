@@ -1,4 +1,6 @@
 import type { UserFlowNodePosition } from "../api/types";
+import type { LocalizableText } from "../types";
+import type { LanguageConfig } from "./stores";
 
 export function svelvetNodeIdToBlockId(id: string): string {
   // svelvet adds "N-" prefix to ids we pass to them, so we need to strip id back
@@ -13,7 +15,6 @@ export function findNewNodePosition(
   margin: number,
 ): UserFlowNodePosition {
   const yMin = Math.min(...current.map(({ _, y }) => y));
-  // console.debug(yMin);
 
   function yMax(x: number): number {
     return Math.max(
@@ -29,18 +30,15 @@ export function findNewNodePosition(
   const leftEdgeMin = Math.min(...current.map((pos) => pos.x)) - nodeWidth / 2;
   const leftEdgeMax = Math.max(...current.map((pos) => pos.x)) - nodeWidth / 2;
   const leftEdgeVariants = linspace(leftEdgeMin, leftEdgeMax, 8).map((v) => v + gaussianRandom(0, margin));
-  // console.debug(leftEdgeVariants);
   const leftEdgeOptimalVariantIdx = argmin(leftEdgeVariants.map((x) => Math.max(yMax(x), yMax(x + nodeWidth))));
   const xOptimal = leftEdgeVariants[leftEdgeOptimalVariantIdx] + nodeWidth / 2;
-  // console.debug(xOptimal);
-  // console.debug(yMax(xOptimal));
   return {
     x: xOptimal,
     y: yMax(xOptimal),
   };
 }
 
-function linspace(start: number, stop: number, len: number): number[] {
+export function linspace(start: number, stop: number, len: number): number[] {
   if (len === 0) {
     return [];
   } else if (len === 1) {
@@ -56,6 +54,10 @@ function linspace(start: number, stop: number, len: number): number[] {
   }
 
   return out;
+}
+
+export function range(size: number, start: number, step: number): number[] {
+  return [...Array(size).keys()].map((i) => start + step * i);
 }
 
 function argmin(arr: number[]): number {
@@ -90,4 +92,15 @@ function gaussianRandom(mean: number, stdev: number) {
 
 export function base64Image(b64: string): string {
   return `data:image/png;base64,${b64}`;
+}
+
+export function capitalize(string: string) {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
+// for display purposes only
+export function localizableTextToString(lc: LocalizableText, langConfig: LanguageConfig | null): string {
+  if (langConfig === null && typeof lc === "string") return lc;
+  else if (langConfig !== null && typeof lc === "object") return lc[langConfig.defaultLanguageCode] || "";
+  else return "";
 }

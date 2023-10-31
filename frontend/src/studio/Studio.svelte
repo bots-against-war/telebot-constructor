@@ -1,6 +1,4 @@
 <script lang="ts">
-  import { setContext } from "svelte";
-
   import { Button, Group, Stack } from "@svelteuidev/core";
   import { Svelvet } from "svelvet";
   import { navigate } from "svelte-routing";
@@ -10,6 +8,7 @@
   import HumanOperatorNode from "./nodes/HumanOperatorBlock/Node.svelte";
   import LanguageSelectNode from "./nodes/LanguageSelectBlock/Node.svelte";
   import MenuNode from "./nodes/MenuBlock/Node.svelte";
+  import FormNode from "./nodes/FormBlock/Node.svelte";
   import StudioControls from "./StudioControls.svelte";
   import BotUserBadge from "../components/BotUserBadge.svelte";
   import EditableTitle from "./components/EditableTitle.svelte";
@@ -19,13 +18,14 @@
   import { getBlockId, getEntrypointId } from "../api/typeUtils";
   import type { BotConfig, UserFlowBlockConfig, UserFlowEntryPointConfig, UserFlowNodePosition } from "../api/types";
 
-  import { getError } from "../utils";
+  import { getError, withConfirmation } from "../utils";
   import { findNewNodePosition } from "./utils";
   import {
     defaultCommandEntrypoint,
     defaultContentBlockConfig,
     defaultHumanOperatorBlockConfig,
-    defaultLanguageSelectBlockConfig, defaultMenuBlockConfig
+    defaultLanguageSelectBlockConfig, defaultMenuBlockConfig,
+    defaultFormBlockConfig,
   } from "./nodes/defaultConfigs";
   import { HUE, buttonColor } from "./nodes/colors";
   import { languageConfigStore } from "./stores";
@@ -33,16 +33,32 @@
   export let botName: string;
   export let botConfig: BotConfig;
 
-  setContext("botName", botName);
+  let configReactivityTriggeredCount = 0;
+  $: {
+    botConfig; // trigger svelte's reactivity by mentioning the value we're reacting to
+    configReactivityTriggeredCount += 1;
+  }
+  let isConfigModified = false;
+  $: {
+    if (configReactivityTriggeredCount > 2) {
+      // dont know why it's 2 but it just works...
+      isConfigModified = true;
+    }
+  }
 
   // initial language config from the loaded config
+  let languageSelectBlockFound = false;
   for (const block of botConfig.user_flow_config.blocks) {
     if (block.language_select) {
+      languageSelectBlockFound = true;
       languageConfigStore.set({
         supportedLanguageCodes: block.language_select.supported_languages,
         defaultLanguageCode: block.language_select.default_language,
       });
     }
+  }
+  if (!languageSelectBlockFound) {
+    languageConfigStore.set(null);
   }
 
   function newUserFlowNodePosition(): UserFlowNodePosition {
@@ -124,7 +140,15 @@
     if (getError(res) !== null) {
       window.alert(`Error saving bot config: ${getError(res)}`);
     }
+    isConfigModified = false;
   }
+
+  const exitStudio = () => navigate(`/#${botName}`);
+  const exitStudioWithConfirmation = withConfirmation(
+    "Вы уверены, что хотите выйти из студии? Несохранённые изменения будут потеряны.",
+    async () => exitStudio(),
+    "Выйти",
+  );
 </script>
 
 <div class="svelvet-container">
@@ -138,7 +162,7 @@
       {#if entrypoint.command}
         <CommandEntryPointNode
           on:delete={getEntrypointDestructor(entrypoint.command.entrypoint_id)}
-          bind:config={botConfig.user_flow_config.entrypoints[idx].command}
+          bind:config={entrypoint.command}
           bind:position={botConfig.user_flow_config.node_display_coords[entrypoint.command.entrypoint_id]}
           bind:isValid={isNodeValid[entrypoint.command.entrypoint_id]}
         />
@@ -148,14 +172,15 @@
       {#if block.content}
         <ContentBlockNode
           on:delete={getBlockDestructor(block.content.block_id)}
-          bind:config={botConfig.user_flow_config.blocks[idx].content}
+          bind:config={block.content}
           bind:position={botConfig.user_flow_config.node_display_coords[block.content.block_id]}
           bind:isValid={isNodeValid[block.content.block_id]}
         />
       {:else if block.human_operator}
         <HumanOperatorNode
+          {botName}
           on:delete={getBlockDestructor(block.human_operator.block_id)}
-          bind:config={botConfig.user_flow_config.blocks[idx].human_operator}
+          bind:config={block.human_operator}
           bind:position={botConfig.user_flow_config.node_display_coords[block.human_operator.block_id]}
           bind:isValid={isNodeValid[block.human_operator.block_id]}
         />
@@ -164,23 +189,30 @@
           on:delete={getBlockDestructor(block.language_select.block_id, () => {
             languageConfigStore.set(null);
           })}
-          bind:config={botConfig.user_flow_config.blocks[idx].language_select}
+          bind:config={block.language_select}
           bind:position={botConfig.user_flow_config.node_display_coords[block.language_select.block_id]}
           bind:isValid={isNodeValid[block.language_select.block_id]}
         />
       {:else if block.menu}
         <MenuNode
           on:delete={getBlockDestructor(block.menu.block_id)}
-          bind:config={botConfig.user_flow_config.blocks[idx].menu}
+          bind:config={block.menu}
           bind:position={botConfig.user_flow_config.node_display_coords[block.menu.block_id]}
           bind:isValid={isNodeValid[block.menu.block_id]}
+          />
+      {:else if block.form}
+        <FormNode
+          {botName}
+          on:delete={getBlockDestructor(block.form.block_id)}
+          bind:config={block.form}
+          bind:position={botConfig.user_flow_config.node_display_coords[block.form.block_id]}
+          bind:isValid={isNodeValid[block.form.block_id]}
         />
       {/if}
     {/each}
   </Svelvet>
   <StudioControls title="Добавить" position="upper-left">
     <Group direction="column" spacing="xs">
-      <!-- TODO: coloring buttons for each block type -->
       <Button
         compact
         variant="outline"
@@ -220,6 +252,14 @@
       >
         Меню
       </Button>
+<Button
+        compact
+        variant="outline"
+        color={buttonColor(HUE.form)}
+        on:click={getBlockConstructor("form", defaultFormBlockConfig)}
+      >
+        Форма
+      </Button>
     </Group>
   </StudioControls>
   <StudioControls position="upper-right">
@@ -231,12 +271,16 @@
       <Stack spacing="xs">
         <Button
           variant="filled"
-          disabled={!isConfigValid}
+          disabled={!isConfigValid || !isConfigModified}
           fullSize
           loading={isSavingBotConfig}
-          on:click={saveCurrentBotConfig}>Сохранить</Button
+          on:click={saveCurrentBotConfig}
         >
-        <Button variant="outline" fullSize on:click={() => navigate(`/#${botName}`)}>Выйти</Button>
+          Сохранить
+        </Button>
+        <Button variant="outline" fullSize on:click={isConfigModified ? exitStudioWithConfirmation : exitStudio}>
+          Выйти
+        </Button>
       </Stack>
     </Group>
   </StudioControls>

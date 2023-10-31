@@ -15,16 +15,15 @@
   let fields = writable([{ id: 1, text: "" }]);
 
   const addField = () => {
-    fields.update(n => {
+    fields.update((n) => {
       const newId = n[n.length - 1].id + 1;
       return [...n, { id: newId, text: "" }];
     });
   };
 
-  const deleteField = id => {
-    fields.update(n => n.filter(item => item.id !== id));
+  const deleteField = (id) => {
+    fields.update((n) => n.filter((item) => item.id !== id));
   };
-
 </script>
 
 <div>

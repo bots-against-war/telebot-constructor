@@ -1,4 +1,9 @@
-import type { UserFlowBlockConfig, UserFlowEntryPointConfig } from "./types";
+import type {
+  BranchingFormMemberConfig,
+  FormFieldConfig,
+  UserFlowBlockConfig,
+  UserFlowEntryPointConfig,
+} from "./types";
 
 export function getBlockId(c: UserFlowBlockConfig): string {
   if (c.content) {
@@ -26,4 +31,16 @@ export function getEntrypointId(c: UserFlowEntryPointConfig): string {
   } else {
     throw new Error(`getEntrypointId got unexpected config variant: ${c}`);
   }
+}
+
+export function flattenedFormFields(members: BranchingFormMemberConfig[]): FormFieldConfig[] {
+  const fields: FormFieldConfig[] = [];
+  for (const m of members) {
+    if (m.field) {
+      fields.push(m.field);
+    } else if (m.branch) {
+      fields.push(...flattenedFormFields(m.branch.members));
+    }
+  }
+  return fields;
 }
