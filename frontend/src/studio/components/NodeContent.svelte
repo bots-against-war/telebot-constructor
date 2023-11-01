@@ -5,7 +5,7 @@
 
 <script lang="ts">
   import { createEventDispatcher } from "svelte";
-  import { ActionIcon, Divider, Flex, Group, Space } from "@svelteuidev/core";
+  import { ActionIcon, Divider, Flex, Group } from "@svelteuidev/core";
   import { PenOutline, TrashBinOutline } from "flowbite-svelte-icons";
   import { type LanguageConfig, languageConfigStore } from "../stores";
   import { ok, type Result } from "../../utils";
@@ -39,7 +39,7 @@
 
 <div class="node-content-container">
   <Group
-    spacing="xs"
+    spacing="sm"
     position="apart"
     override={{
       backgroundColor: headerColor,
@@ -48,12 +48,10 @@
     }}
   >
     <EllipsisText override={{ fontWeight: "bold" }} maxWidth="200px">{name}</EllipsisText>
-    <Space w="md" />
     <Flex>
       <ActionIcon {...actionIconProps} on:click={() => dispatch("edit")}>
         <PenOutline />
       </ActionIcon>
-      <Space w="md" />
       <ActionIcon {...actionIconProps} on:click={() => dispatch("delete")}>
         <TrashBinOutline />
       </ActionIcon>
