@@ -5,8 +5,8 @@
 
 <script lang="ts">
   import { createEventDispatcher } from "svelte";
-  import { ActionIcon, Group, Space, Flex, Divider } from "@svelteuidev/core";
-  import { Pencil1, Cross1 } from "radix-icons-svelte";
+  import { ActionIcon, Group, Flex, Divider } from "@svelteuidev/core";
+  import { PenOutline, TrashBinOutline } from "flowbite-svelte-icons";
   import { languageConfigStore, type LanguageConfig } from "../stores";
   import { getModalOpener, ok, type Result } from "../../utils";
   import type { ValidationError } from "../nodes/nodeValidators";
@@ -59,7 +59,7 @@
 <div class="node-content-container">
   <!-- <div class="node-content-container" use:detectOverflow> -->
   <Group
-    spacing="xs"
+    spacing="sm"
     position="apart"
     override={{
       backgroundColor: headerColor,
@@ -68,13 +68,12 @@
     }}
   >
     <EllipsisText override={{ fontWeight: "bold" }} maxWidth="200px">{name}</EllipsisText>
-    <Space w="md" />
     <Flex>
       <ActionIcon {...actionIconProps} on:click={() => dispatch("edit")}>
-        <Pencil1 />
+        <PenOutline />
       </ActionIcon>
       <ActionIcon {...actionIconProps} on:click={() => dispatch("delete")}>
-        <Cross1 />
+        <TrashBinOutline />
       </ActionIcon>
     </Flex>
   </Group>
