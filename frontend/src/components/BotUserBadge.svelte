@@ -42,7 +42,7 @@
           </EllipsisText>
           <EllipsisText color="dimmed" maxWidth="200px">@{botUserResult.data.username}</EllipsisText>
         </Group>
-        <Group override={{ gap: "4px"}}>
+        <Group override={{ gap: "4px" }}>
           <ActionIcon
             size="sm"
             on:click={() => {
