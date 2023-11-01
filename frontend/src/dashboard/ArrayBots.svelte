@@ -18,7 +18,7 @@
 </script>
 
 <Stack align="center" justify="flex-start" spacing="sm">
-  {#each Object.entries(botConfigs) as [botName, config], i}
+  {#each Object.entries(botConfigs) as [botName, config] (botName)}
     <Button
       variant={selectedBot === botName ? "filled" : "outline"}
       on:click={() => {

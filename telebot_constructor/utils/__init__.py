@@ -70,3 +70,10 @@ def telegram_user_link_raw(user_id: int, title: str) -> str:
 
 def telegram_user_link(user: tg.User) -> str:
     return telegram_user_link_raw(user_id=user.id, title=format_telegram_user(user))
+
+
+ItemT = TypeVar("ItemT")
+
+
+def without_nones(it: Iterable[Optional[ItemT]]) -> list[ItemT]:
+    return [i for i in it if i is not None]

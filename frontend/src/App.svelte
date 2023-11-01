@@ -20,7 +20,7 @@
 </script>
 
 <SvelteUIProvider withNormalizeCSS withGlobalStyles>
-  <Modal>
+  <Modal closeButton={false}>
     <div use:links>
       <GlobalStateProvider>
         <Router>

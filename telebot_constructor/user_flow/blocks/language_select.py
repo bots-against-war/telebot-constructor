@@ -14,6 +14,7 @@ from telebot_constructor.user_flow.types import (
     UserFlowContext,
     UserFlowSetupContext,
 )
+from telebot_constructor.utils import without_nones
 from telebot_constructor.utils.pydantic import Language, MultilangText
 
 
@@ -34,6 +35,9 @@ class LanguageSelectBlock(UserFlowBlock):
     # if not selected AND user's Telegram interface language is not supported, use this
     default_language: Language
     language_selected_next_block_id: Optional[UserFlowBlockId]
+
+    def possible_next_block_ids(self) -> list[str]:
+        return without_nones([self.language_selected_next_block_id])
 
     def model_post_init(self, __context: Any) -> None:
         self._language_store: Optional[LanguageStore] = None

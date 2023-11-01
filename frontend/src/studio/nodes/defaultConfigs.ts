@@ -1,4 +1,5 @@
 import type { FormMessages, UserFlowBlockConfig, UserFlowEntryPointConfig } from "../../api/types";
+import type { LanguageConfig } from "../stores";
 import { updateWithPrefilled } from "./FormBlock/prefill";
 
 export function defaultCommandEntrypoint(id: string): UserFlowEntryPointConfig {
@@ -25,7 +26,7 @@ export function defaultContentBlockConfig(id: string): UserFlowBlockConfig {
 
 export const PLACEHOLDER_GROUP_CHAT_ID = 0;
 
-export function defaultHumanOperatorBlockCofig(id: string): UserFlowBlockConfig {
+export function defaultHumanOperatorBlockConfig(id: string): UserFlowBlockConfig {
   return {
     human_operator: {
       block_id: id,
@@ -53,6 +54,26 @@ export function defaultHumanOperatorBlockCofig(id: string): UserFlowBlockConfig 
   };
 }
 
+export function defaultMenuBlockConfig(id: string, langConfig: LanguageConfig | null): UserFlowBlockConfig {
+  return {
+    menu: {
+      block_id: id,
+      menu: {
+        text: "",
+        items: [],
+        config: {
+          back_label:
+            langConfig === null
+              ? "⬅️"
+              : Object.fromEntries(langConfig.supportedLanguageCodes.map((lang) => [lang, "⬅️"])),
+          mechanism: "inline_buttons",
+          lock_after_termination: false,
+        },
+      },
+    },
+  };
+}
+
 export function defaultLanguageSelectBlockConfig(id: string): UserFlowBlockConfig {
   return {
     language_select: {
@@ -69,7 +90,7 @@ export function defaultLanguageSelectBlockConfig(id: string): UserFlowBlockConfi
   };
 }
 
-export function defaultFormBlockConfig(id: string): UserFlowBlockConfig {
+export function defaultFormBlockConfig(id: string, langConfig: LanguageConfig | null): UserFlowBlockConfig {
   let messages: FormMessages = {
     form_start: "",
     field_is_skippable: "",
@@ -78,7 +99,7 @@ export function defaultFormBlockConfig(id: string): UserFlowBlockConfig {
     unsupported_command: "",
     cancel_command_is: "",
   };
-  [messages] = updateWithPrefilled(messages, null);
+  [messages] = updateWithPrefilled(messages, langConfig);
   return {
     form: {
       block_id: id,

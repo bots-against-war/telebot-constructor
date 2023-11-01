@@ -10,6 +10,7 @@ from telebot_constructor.user_flow.types import (
     UserFlowContext,
     UserFlowSetupContext,
 )
+from telebot_constructor.utils import without_nones
 
 
 class RegexMatchEntryPoint(UserFlowEntryPoint):
@@ -46,3 +47,6 @@ class RegexMatchEntryPoint(UserFlowEntryPoint):
                 )
 
         return SetupResult.empty()
+
+    def possible_next_block_ids(self) -> list[str]:
+        return without_nones([self.next_block_id])
