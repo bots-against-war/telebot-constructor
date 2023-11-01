@@ -19,7 +19,7 @@
     const dateTimeFormat = Intl.DateTimeFormat("en-GB", {
       dateStyle: "short",
       timeStyle: "short",
-      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     });
 
     return dateTimeFormat.format(date);
