@@ -58,7 +58,6 @@ export type Text1 =
   | {
       [k: string]: string;
     };
-export type NoBackButton = boolean;
 export type Label =
   | string
   | {
@@ -67,12 +66,13 @@ export type Label =
 export type NextBlockId4 = string | null;
 export type LinkUrl = string | null;
 export type Items = MenuItem[];
+export type MenuMechanism = "inline_buttons" | "reply_keyboard";
 export type BackLabel =
   | string
   | {
       [k: string]: string;
-    };
-export type MenuMechanism = "inline_buttons" | "reply_keyboard";
+    }
+  | null;
 export type LockAfterTermination = boolean;
 export type BlockId3 = string;
 export type FormName = string;
@@ -335,13 +335,12 @@ export interface MessagesToAdmin {
 export interface MenuBlock {
   block_id: BlockId2;
   menu: Menu;
-  config: MenuConfig;
   [k: string]: unknown;
 }
 export interface Menu {
   text: Text1;
-  no_back_button: NoBackButton;
   items: Items;
+  config: MenuConfig;
   [k: string]: unknown;
 }
 export interface MenuItem {
@@ -352,8 +351,8 @@ export interface MenuItem {
   [k: string]: unknown;
 }
 export interface MenuConfig {
-  back_label: BackLabel;
   mechanism: MenuMechanism;
+  back_label: BackLabel;
   lock_after_termination: LockAfterTermination;
   [k: string]: unknown;
 }

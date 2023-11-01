@@ -1,6 +1,4 @@
 <script lang="ts">
-  import { setContext } from "svelte";
-
   import { Button, Group, Stack } from "@svelteuidev/core";
   import { Svelvet } from "svelvet";
   import { navigate } from "svelte-routing";
@@ -9,6 +7,7 @@
   import ContentBlockNode from "./nodes/ContentBlock/Node.svelte";
   import HumanOperatorNode from "./nodes/HumanOperatorBlock/Node.svelte";
   import LanguageSelectNode from "./nodes/LanguageSelectBlock/Node.svelte";
+  import MenuNode from "./nodes/MenuBlock/Node.svelte";
   import FormNode from "./nodes/FormBlock/Node.svelte";
   import StudioControls from "./StudioControls.svelte";
   import BotUserBadge from "../components/BotUserBadge.svelte";
@@ -20,16 +19,17 @@
   import type { BotConfig, UserFlowBlockConfig, UserFlowEntryPointConfig, UserFlowNodePosition } from "../api/types";
 
   import { getError, withConfirmation } from "../utils";
-  import { findNewNodePosition } from "./utils";
+  import { findNewNodePositionDown, findNewNodePositionRight } from "./utils";
   import {
     defaultCommandEntrypoint,
     defaultContentBlockConfig,
-    defaultFormBlockConfig,
-    defaultHumanOperatorBlockCofig,
+    defaultHumanOperatorBlockConfig,
     defaultLanguageSelectBlockConfig,
+    defaultMenuBlockConfig,
+    defaultFormBlockConfig,
   } from "./nodes/defaultConfigs";
   import { HUE, buttonColor } from "./nodes/colors";
-  import { languageConfigStore } from "./stores";
+  import { languageConfigStore, type LanguageConfig } from "./stores";
 
   export let botName: string;
   export let botConfig: BotConfig;
@@ -62,12 +62,13 @@
     languageConfigStore.set(null);
   }
 
-  function newUserFlowNodePosition(): UserFlowNodePosition {
+  function newUserFlowNodePosition(isEntrypoing: boolean): UserFlowNodePosition {
     const currentPositions = Object.values(botConfig.user_flow_config.node_display_coords);
     if (currentPositions.length === 0) {
       return { x: 0, y: 0 };
     } else {
-      return findNewNodePosition(Object.values(botConfig.user_flow_config.node_display_coords), 200, 100, 30);
+      const findFunc = isEntrypoing ? findNewNodePositionRight : findNewNodePositionDown;
+      return findFunc(Object.values(botConfig.user_flow_config.node_display_coords), 250, 220, 30);
     }
   }
 
@@ -76,48 +77,56 @@
       const idx = botConfig.user_flow_config.entrypoints
         .map(getEntrypointId)
         .findIndex((entrypointId) => entrypointId === id);
-      console.debug(`Removing entrypoint ${id}, idx = ${idx}`);
       if (idx === -1) {
         console.log(`Entrypoing with id '${id}' not found`);
         return;
       }
+      console.debug(
+        `Deleting entrypoint [idx = ${idx}] ${JSON.stringify(botConfig.user_flow_config.entrypoints[idx])}`,
+      );
       botConfig.user_flow_config.entrypoints = botConfig.user_flow_config.entrypoints.toSpliced(idx, 1);
       delete botConfig.user_flow_config.node_display_coords[id];
     };
   }
   function getEntrypointConstructor(
     prefix: string,
-    entryPointConfigConstructor: (id: string) => UserFlowEntryPointConfig,
+    entryPointConfigConstructor: (id: string, langConfig: LanguageConfig | null) => UserFlowEntryPointConfig,
   ) {
     return () => {
       const id = `entrypoint-${prefix}-${crypto.randomUUID()}`;
       console.debug(`Creating new entrypoint ${id}`);
-      botConfig.user_flow_config.node_display_coords[id] = newUserFlowNodePosition();
+      botConfig.user_flow_config.node_display_coords[id] = newUserFlowNodePosition(true);
       botConfig.user_flow_config.entrypoints = [
         ...botConfig.user_flow_config.entrypoints,
-        entryPointConfigConstructor(id),
+        entryPointConfigConstructor(id, $languageConfigStore),
       ];
     };
   }
   function getBlockDestructor(id: string, postDestruct: (() => void) | undefined = undefined) {
     return () => {
       const idx = botConfig.user_flow_config.blocks.map(getBlockId).findIndex((blockId) => blockId === id);
-      console.debug(`Deleting block ${id}, idx = ${idx}`);
       if (idx === -1) {
         console.log(`Block with id '${id}' not found`);
         return;
       }
+      console.debug(`Deleting block [idx = ${idx}] ${JSON.stringify(botConfig.user_flow_config.blocks[idx])}`);
       botConfig.user_flow_config.blocks = botConfig.user_flow_config.blocks.toSpliced(idx, 1);
       delete botConfig.user_flow_config.node_display_coords[id];
       if (postDestruct !== undefined) postDestruct();
     };
   }
-  function getBlockConstructor(prefix: string, blockConfigConstructor: (id: string) => UserFlowBlockConfig) {
+  function getBlockConstructor(
+    prefix: string,
+    blockConfigConstructor: (id: string, langConfig: LanguageConfig | null) => UserFlowBlockConfig,
+  ) {
     return () => {
       const id = `block-${prefix}-${crypto.randomUUID()}`;
       console.debug(`Creating new block ${id}`);
-      botConfig.user_flow_config.node_display_coords[id] = newUserFlowNodePosition();
-      botConfig.user_flow_config.blocks = [...botConfig.user_flow_config.blocks, blockConfigConstructor(id)];
+      botConfig.user_flow_config.node_display_coords[id] = newUserFlowNodePosition(false);
+      botConfig.user_flow_config.blocks = [
+        ...botConfig.user_flow_config.blocks,
+        blockConfigConstructor(id, $languageConfigStore),
+      ];
     };
   }
 
@@ -159,7 +168,7 @@
     fitView={botConfig.user_flow_config.blocks.length + botConfig.user_flow_config.entrypoints.length >= 1}
     edge={DeletableEdge}
   >
-    {#each botConfig.user_flow_config.entrypoints as entrypoint, idx}
+    {#each botConfig.user_flow_config.entrypoints as entrypoint (getEntrypointId(entrypoint))}
       {#if entrypoint.command}
         <CommandEntryPointNode
           on:delete={getEntrypointDestructor(entrypoint.command.entrypoint_id)}
@@ -169,7 +178,7 @@
         />
       {/if}
     {/each}
-    {#each botConfig.user_flow_config.blocks as block, idx}
+    {#each botConfig.user_flow_config.blocks as block (getBlockId(block))}
       {#if block.content}
         <ContentBlockNode
           on:delete={getBlockDestructor(block.content.block_id)}
@@ -193,6 +202,13 @@
           bind:config={block.language_select}
           bind:position={botConfig.user_flow_config.node_display_coords[block.language_select.block_id]}
           bind:isValid={isNodeValid[block.language_select.block_id]}
+        />
+      {:else if block.menu}
+        <MenuNode
+          on:delete={getBlockDestructor(block.menu.block_id)}
+          bind:config={block.menu}
+          bind:position={botConfig.user_flow_config.node_display_coords[block.menu.block_id]}
+          bind:isValid={isNodeValid[block.menu.block_id]}
         />
       {:else if block.form}
         <FormNode
@@ -225,7 +241,7 @@
         compact
         variant="outline"
         color={buttonColor(HUE.human_operator)}
-        on:click={getBlockConstructor("human-operator", defaultHumanOperatorBlockCofig)}
+        on:click={getBlockConstructor("human-operator", defaultHumanOperatorBlockConfig)}
       >
         Человек-оператор
       </Button>
@@ -237,6 +253,14 @@
         on:click={getBlockConstructor("language-select", defaultLanguageSelectBlockConfig)}
       >
         Выбор языка
+      </Button>
+      <Button
+        compact
+        variant="outline"
+        color={buttonColor(HUE.menu)}
+        on:click={getBlockConstructor("menu", defaultMenuBlockConfig)}
+      >
+        Меню
       </Button>
       <Button
         compact

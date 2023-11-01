@@ -6,6 +6,7 @@
   import CreateBotModal from "./CreateBotModal.svelte";
   import { getModalOpener } from "../utils";
   import { type BotInfo } from "../api/types";
+
   const open = getModalOpener();
 
   export let botInfos: BotInfoList;
@@ -29,7 +30,7 @@
 
 <div style="display:flex; flex-flow: row; align-items: center;">
   <div class="right">
-    <Space h="s" />
+    <Space h="xs" />
     <Container>
       <Button on:click={showNewBotModal}>Добавить</Button>
     </Container>

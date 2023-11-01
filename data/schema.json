@@ -878,22 +878,21 @@
           ],
           "title": "Text"
         },
-        "no_back_button": {
-          "title": "No Back Button",
-          "type": "boolean"
-        },
         "items": {
           "items": {
             "$ref": "#/$defs/MenuItem"
           },
           "title": "Items",
           "type": "array"
+        },
+        "config": {
+          "$ref": "#/$defs/MenuConfig"
         }
       },
       "required": [
         "text",
-        "no_back_button",
-        "items"
+        "items",
+        "config"
       ],
       "title": "Menu",
       "type": "object"
@@ -907,21 +906,20 @@
         },
         "menu": {
           "$ref": "#/$defs/Menu"
-        },
-        "config": {
-          "$ref": "#/$defs/MenuConfig"
         }
       },
       "required": [
         "block_id",
-        "menu",
-        "config"
+        "menu"
       ],
       "title": "MenuBlock",
       "type": "object"
     },
     "MenuConfig": {
       "properties": {
+        "mechanism": {
+          "$ref": "#/$defs/MenuMechanism"
+        },
         "back_label": {
           "anyOf": [
             {
@@ -932,12 +930,12 @@
                 "type": "string"
               },
               "type": "object"
+            },
+            {
+              "type": "null"
             }
           ],
           "title": "Back Label"
-        },
-        "mechanism": {
-          "$ref": "#/$defs/MenuMechanism"
         },
         "lock_after_termination": {
           "title": "Lock After Termination",
@@ -945,8 +943,8 @@
         }
       },
       "required": [
-        "back_label",
         "mechanism",
+        "back_label",
         "lock_after_termination"
       ],
       "title": "MenuConfig",

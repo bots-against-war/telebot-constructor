@@ -82,7 +82,7 @@ export function prefilledMessage(
 }
 
 export function updateWithPrefilled<T>(messages: T, langConfig: LanguageConfig | null): [T, string[]] {
-  console.debug(`Prefilling ${JSON.stringify(messages)}`);
+  // console.debug(`Prefilling ${JSON.stringify(messages)}`);
   const prefilledMessages = getPrefilledMessages();
   const messagesCopy = JSON.parse(JSON.stringify(messages));
   const prefilledKeys: string[] = [];
@@ -92,6 +92,6 @@ export function updateWithPrefilled<T>(messages: T, langConfig: LanguageConfig |
       prefilledKeys.push(key);
     }
   }
-  console.debug(`Prefilling result: ${JSON.stringify(messagesCopy)}, keys ${prefilledKeys}`);
+  // console.debug(`Prefilling result: ${JSON.stringify(messagesCopy)}, keys ${prefilledKeys}`);
   return [messagesCopy, prefilledKeys];
 }

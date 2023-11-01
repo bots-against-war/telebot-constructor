@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { Group, Stack, Image, Text, Title, Input, Textarea, Button } from "@svelteuidev/core";
-  import { QuestionMark } from "radix-icons-svelte";
+  import { Button, Group, Image, Input, Stack, Text, Textarea, Title } from "@svelteuidev/core";
+  import { QuestionCircleOutline } from "flowbite-svelte-icons";
 
   import type { TgBotUser } from "../../api/types";
   import { base64Image } from "../../studio/utils";
@@ -44,7 +44,7 @@
       usePlaceholder
     >
       <svelte:fragment slot="placeholder">
-        <QuestionMark />
+        <QuestionCircleOutline />
       </svelte:fragment>
     </Image>
     <Stack>

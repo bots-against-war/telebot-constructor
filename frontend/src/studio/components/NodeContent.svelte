@@ -5,10 +5,10 @@
 
 <script lang="ts">
   import { createEventDispatcher } from "svelte";
-  import { ActionIcon, Group, Space, Flex, Divider } from "@svelteuidev/core";
-  import { Pencil1, Cross1 } from "radix-icons-svelte";
+  import { ActionIcon, Group, Flex, Divider } from "@svelteuidev/core";
+  import { PenOutline, TrashBinOutline } from "flowbite-svelte-icons";
   import { languageConfigStore, type LanguageConfig } from "../stores";
-  import { ok, type Result } from "../../utils";
+  import { getModalOpener, ok, type Result } from "../../utils";
   import type { ValidationError } from "../nodes/nodeValidators";
   import ErrorBadge from "../../components/ErrorBadge.svelte";
   import EllipsisText from "../../components/internal/EllipsisText.svelte";
@@ -35,11 +35,31 @@
     configValidationResult = configValidator(config, $languageConfigStore);
     isValid = configValidationResult.ok;
   }
+
+  let isContentOverflown = false;
+
+  function detectOverflow(node: HTMLElement) {
+    // console.log(node);
+    if (node.scrollHeight > node.clientHeight) {
+      // console.log("DETECTED OVERFLOW");
+      isContentOverflown = true;
+    } else {
+      isContentOverflown = false;
+    }
+  }
+
+  const open = getModalOpener();
+  function openErrorInModal() {
+    if (!configValidationResult.ok) {
+      open(ErrorBadge, { text: configValidationResult.error.error });
+    }
+  }
 </script>
 
 <div class="node-content-container">
+  <!-- <div class="node-content-container" use:detectOverflow> -->
   <Group
-    spacing="xs"
+    spacing="sm"
     position="apart"
     override={{
       backgroundColor: headerColor,
@@ -48,13 +68,12 @@
     }}
   >
     <EllipsisText override={{ fontWeight: "bold" }} maxWidth="200px">{name}</EllipsisText>
-    <Space w="md" />
     <Flex>
       <ActionIcon {...actionIconProps} on:click={() => dispatch("edit")}>
-        <Pencil1 />
+        <PenOutline />
       </ActionIcon>
       <ActionIcon {...actionIconProps} on:click={() => dispatch("delete")}>
-        <Cross1 />
+        <TrashBinOutline />
       </ActionIcon>
     </Flex>
   </Group>
@@ -66,14 +85,42 @@
       <slot />
     {/if}
   </div>
+
+  {#if isContentOverflown}
+    <button
+      class="overflow-ellipsis"
+      style={configValidationResult.ok ? "" : "cursor:pointer;"}
+      on:click={openErrorInModal}>{configValidationResult.ok ? "" : "..."}</button
+    >
+  {/if}
 </div>
 
 <style>
   div.node-content-container {
     width: 250px;
+    /* max-height: 200px; */
+    /* overflow-y: hidden; */
+    /* position: relative; */
   }
 
   div.node-content {
     padding: 8px;
+  }
+
+  button.overflow-ellipsis {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    border-radius: 0 0 10px 10px;
+    width: 100%;
+    height: 2em;
+    font-weight: 800;
+    font-size: larger;
+    background: linear-gradient(0deg, white, rgba(255, 255, 255, 0.9), transparent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    padding-bottom: 0.2em;
   }
 </style>

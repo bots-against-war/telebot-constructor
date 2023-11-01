@@ -1,3 +1,5 @@
+import collections
+import copy
 import dataclasses
 import datetime
 import logging
@@ -13,6 +15,7 @@ from telebot_constructor.user_flow.blocks.base import UserFlowBlock
 from telebot_constructor.user_flow.blocks.form import FormBlock
 from telebot_constructor.user_flow.blocks.human_operator import HumanOperatorBlock
 from telebot_constructor.user_flow.blocks.language_select import LanguageSelectBlock
+from telebot_constructor.user_flow.blocks.menu import MenuBlock
 from telebot_constructor.user_flow.entrypoints.base import UserFlowEntryPoint
 from telebot_constructor.user_flow.entrypoints.command import CommandEntryPoint
 from telebot_constructor.user_flow.types import (
@@ -38,13 +41,24 @@ class UserFlow:
         validate_unique([e.entrypoint_id for e in self.entrypoints], items_name="entrypoint ids")
         self.block_by_id = {block.block_id: block for block in self.blocks}
 
-        catch_all_entities = [entrypoint for entrypoint in self.entrypoints if entrypoint.is_catch_all()] + [
+        self.nodes_leading_to: dict[str, list[str]] = collections.defaultdict(list)
+        for node in self.blocks + self.entrypoints:
+            for next_block_id in node.possible_next_block_ids():
+                if next_block_id not in self.block_by_id:
+                    raise ValueError(
+                        f"Block/entrypoing {node} references non-existent block as possible next: {next_block_id}"
+                    )
+                self.nodes_leading_to[next_block_id].append(
+                    node.block_id if isinstance(node, UserFlowBlock) else node.entrypoint_id
+                )
+
+        catch_all_nodes = [entrypoint for entrypoint in self.entrypoints if entrypoint.is_catch_all()] + [
             block for block in self.blocks if block.is_catch_all()
         ]
-        if len(catch_all_entities) > 1:
+        if len(catch_all_nodes) > 1:
             raise ValueError(
                 "At most one catch-all block/entrypoint is allowed, but found: "
-                + f"{', '.join(str(e) for e in catch_all_entities)}"
+                + f"{', '.join(str(e) for e in catch_all_nodes)}"
             )
 
         validate_unique(
@@ -66,6 +80,18 @@ class UserFlow:
         )
 
         validate_unique([b.form_name for b in self.blocks if isinstance(b, FormBlock)], items_name="form names")
+
+        for block in self.blocks:
+            if isinstance(block, MenuBlock):
+                for menu_item in block.menu.items:
+                    if menu_item.next_block_id is None:
+                        continue
+                    # if an item leads to another menu, we short-circuit it and and add as a submenu within the
+                    # same menu block to allow "back" button functionality and both menus in one tg message
+                    next_block = self.block_by_id[menu_item.next_block_id]
+                    if isinstance(next_block, MenuBlock):
+                        menu_item.next_block_id = None
+                        menu_item.submenu = copy.deepcopy(next_block.menu)
 
     @property
     def active_block_id_store(self) -> KeyValueStore[str]:
