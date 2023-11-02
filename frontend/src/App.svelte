@@ -13,7 +13,7 @@
 
   // Global icon settings
   const iconCtx = {
-    size: "xs",
+    size: 1,
     strokeWidth: "1",
   };
   setContext("iconCtx", iconCtx);

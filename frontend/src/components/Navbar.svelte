@@ -1,7 +1,8 @@
 <script lang="ts">
-  import { Header, Group, Image } from "@svelteuidev/core";
+  import { Header, Group, Image, Menu, Text, Anchor, Stack } from "@svelteuidev/core";
   import bawLogo from "../assets/baw.svg";
   import { loggedInUserStore } from "../globalStateStores";
+  import { QuestionCircleOutline } from "flowbite-svelte-icons";
 </script>
 
 <Header
@@ -20,18 +21,37 @@
       <NavButton href="/actions">Действия</NavButton>
       <NavButton href="/security">Безопасность</NavButton>
     </div> -->
-    {$loggedInUserStore.name}
-    <Image
-      src={$loggedInUserStore.userpic !== null ? `data:image/png;base64,${$loggedInUserStore.userpic}` : null}
-      width={25}
-      height={25}
-      radius={1000}
-      usePlaceholder
-    >
-      <svelte:fragment slot="placeholder">
-        <!-- <QuestionMark /> -->
-      </svelte:fragment>
-    </Image>
+    <Menu>
+      <Image
+        slot="control"
+        src={$loggedInUserStore.userpic !== null ? `data:image/png;base64,${$loggedInUserStore.userpic}` : null}
+        width={40}
+        height={40}
+        radius={1000}
+        usePlaceholder
+      >
+        <svelte:fragment slot="placeholder">
+          <QuestionCircleOutline />
+        </svelte:fragment>
+      </Image>
+      <Stack>
+        <Text>
+          {$loggedInUserStore.name}
+          <br />
+          <Text color="dimmed">
+            {$loggedInUserStore.username}
+          </Text>
+        </Text>
+        <Anchor
+          on:click={() => {
+            // deleting the cookie by setting it to empty with expire date in the past
+            // TODO: test in real browser
+            document.cookie = `tc_access_token=;Expires=${new Date(2000).toUTCString()};Path=/`;
+            window.location.reload();
+          }}>Выйти</Anchor
+        >
+      </Stack>
+    </Menu>
   </Group>
 </Header>
 
