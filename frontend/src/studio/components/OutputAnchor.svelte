@@ -34,7 +34,9 @@
     align-items: center;
     gap: 3px;
     position: relative;
-    top: -6px;
+    top: -8px;
+    --anchor-width: 16px;
+    --anchor-height: 16px;
   }
 
   div.floating-anchor-name {

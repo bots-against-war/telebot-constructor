@@ -26,7 +26,7 @@
 
   const actionIconProps = {
     color: "dark",
-    size: "sm",
+    size: "xs",
     variant: "hover",
   };
 
@@ -73,14 +73,14 @@
       </div>
       <EllipsisText override={{ fontWeight: "bold" }} maxWidth="200px">{NODE_TITLE[key]}</EllipsisText>
     </Group>
-    <Flex>
+    <Group spacing={5}>
       <ActionIcon {...actionIconProps} on:click={() => dispatch("edit")}>
         <PenOutline />
       </ActionIcon>
       <ActionIcon {...actionIconProps} on:click={() => dispatch("delete")}>
         <TrashBinOutline />
       </ActionIcon>
-    </Flex>
+    </Group>
   </Group>
   <Divider override={{ margin: 0 }} />
   <div class="node-content">

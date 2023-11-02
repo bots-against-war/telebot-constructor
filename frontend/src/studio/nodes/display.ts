@@ -19,12 +19,12 @@ export enum NodeTypeKey {
 }
 
 export const NODE_HUE: { [key in NodeTypeKey]: number } = {
-  command: 60,
-  content: 197,
-  human_operator: 77,
-  language_select: 329,
-  menu: 27,
-  form: 259,
+  command: 280,
+  content: 25,
+  human_operator: 345,
+  language_select: 220,
+  menu: 120,
+  form: 67,
 };
 
 export function headerColor(hue: number): string {

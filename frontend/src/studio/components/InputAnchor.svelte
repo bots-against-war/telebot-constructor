@@ -13,6 +13,8 @@
     flex-direction: row;
     justify-content: center;
     position: absolute;
-    top: -6px;
+    top: -8px;
+    --anchor-width: 16px;
+    --anchor-height: 16px;
   }
 </style>

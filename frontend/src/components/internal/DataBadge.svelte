@@ -8,7 +8,7 @@
   div.badge {
     padding: 5px 5px;
     border: 1px solid rgb(206, 213, 220);
-    background-color: rgb(213, 218, 224);
+    background-color: rgb(238, 240, 245);
     border-radius: 20px;
   }
 </style>
