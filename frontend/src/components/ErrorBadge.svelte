@@ -1,12 +1,12 @@
 <script lang="ts">
   import { Alert } from "@svelteuidev/core";
-  import { ExclamationTriangle } from "radix-icons-svelte";
+  import { ExclamationCircleOutline } from "flowbite-svelte-icons";
 
   export let title: string | undefined = undefined;
   export let text: string | string[];
 </script>
 
-<Alert color="red" {title} icon={ExclamationTriangle}>
+<Alert color="red" {title} icon={ExclamationCircleOutline}>
   {#if typeof text === "string"}
     {text}
   {:else}

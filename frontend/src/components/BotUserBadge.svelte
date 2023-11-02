@@ -1,8 +1,8 @@
 <!-- Data badge with info about a bot and action icons to edit or replace it; loads a bot user on each render -->
 
 <script lang="ts">
-  import { Group, Image, ActionIcon } from "@svelteuidev/core";
-  import { QuestionMark, OpenInNewWindow, Gear, Update } from "radix-icons-svelte";
+  import { ActionIcon, Group, Image } from "@svelteuidev/core";
+  import { ArrowUpRightFromSquareOutline, CogOutline, QuestionCircleOutline } from "flowbite-svelte-icons";
 
   import { getBotUser } from "../api/botUser";
   import ErrorBadge from "./ErrorBadge.svelte";
@@ -11,7 +11,6 @@
   import DataBadgeLoader from "./internal/DataBadgeLoader.svelte";
   import { getModalOpener, ok } from "../utils";
   import EditBotUserModal from "./internal/EditBotUserModal.svelte";
-  import ReplaceBotUserModal from "./internal/ReplaceBotUserModal.svelte";
 
   const openModal = getModalOpener();
 
@@ -35,7 +34,7 @@
             usePlaceholder
           >
             <svelte:fragment slot="placeholder">
-              <QuestionMark />
+              <QuestionCircleOutline />
             </svelte:fragment>
           </Image>
           <EllipsisText weight="bold" maxWidth="200px">
@@ -43,8 +42,9 @@
           </EllipsisText>
           <EllipsisText color="dimmed" maxWidth="200px">@{botUserResult.data.username}</EllipsisText>
         </Group>
-        <Group override={{ gap: "0" }}>
+        <Group override={{ gap: "4px" }}>
           <ActionIcon
+            size="sm"
             on:click={() => {
               openModal(EditBotUserModal, {
                 botName: botName,
@@ -55,7 +55,7 @@
               });
             }}
           >
-            <Gear />
+            <CogOutline />
           </ActionIcon>
           <!-- <ActionIcon
             on:click={() => {
@@ -72,8 +72,8 @@
           >
             <Update />
           </ActionIcon> -->
-          <ActionIcon root="a" href={`https://t.me/${botUserResult.data.username}`} external>
-            <OpenInNewWindow />
+          <ActionIcon size="sm" root="a" href={`https://t.me/${botUserResult.data.username}`} external>
+            <ArrowUpRightFromSquareOutline />
           </ActionIcon>
         </Group>
       </Group>

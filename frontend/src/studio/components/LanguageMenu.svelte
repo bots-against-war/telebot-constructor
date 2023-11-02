@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { Menu, ActionIcon } from "@svelteuidev/core";
-  import { Globe } from "radix-icons-svelte";
+  import { ActionIcon, Menu } from "@svelteuidev/core";
+  import { GlobeSolid } from "flowbite-svelte-icons";
   import { languageConfigStore } from "../stores";
   import Language from "../../components/Language.svelte";
 
@@ -10,7 +10,7 @@
 {#if $languageConfigStore}
   <Menu position="right" placement="center" gutter={15} withArrow zIndex={10000}>
     <ActionIcon slot="control">
-      <Globe />
+      <GlobeSolid />
     </ActionIcon>
     {#each $languageConfigStore.supportedLanguageCodes as language (language)}
       <Menu.Item on:click={() => (selectedLang = language)}>

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Stack, Button, Group, NativeSelect, CloseButton } from "@svelteuidev/core";
   import { createEventDispatcher } from "svelte";
-  import { Plus } from "radix-icons-svelte";
+  import { PlusOutline } from "flowbite-svelte-icons";
 
   import FormField from "./FormField.svelte";
 
@@ -112,7 +112,7 @@
                 });
               }}
             >
-              <Plus slot="leftIcon" />
+              <PlusOutline slot="leftIcon" />
               Поле
             </Button>
             {#if currentSwitchFieldAt[idx] !== null}
@@ -131,7 +131,7 @@
                   });
                 }}
               >
-                <Plus slot="leftIcon" />
+                <PlusOutline slot="leftIcon" />
                 <span>
                   Ветвь с условием на "{(currentSwitchFieldAt[idx] || { name: "" }).name}"
                 </span>
@@ -177,7 +177,7 @@
             ];
           }}
         >
-          <Plus slot="leftIcon" />
+          <PlusOutline slot="leftIcon" />
           Поле
         </Button>
         {#if currentSwitchFieldAt[branch.members.length] !== null}
@@ -199,7 +199,7 @@
               ];
             }}
           >
-            <Plus slot="leftIcon" />
+            <PlusOutline slot="leftIcon" />
             <span>
               Ветвь с условием на "{(currentSwitchFieldAt[branch.members.length] || { name: "" }).name}"
             </span>
