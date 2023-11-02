@@ -11,7 +11,7 @@
 
   import { getModalOpener } from "../../../utils";
   import { DEFAULT_NODE_PROPS } from "../nodeProps";
-  import { HUE, headerColor } from "../colors";
+  import { NodeTypeKey } from "../display";
   import { validateContentBlock } from "../nodeValidators";
   import LocalizableText from "../../components/LocalizableText.svelte";
   const openModal = getModalOpener();
@@ -33,8 +33,7 @@
 <Node id={config.block_id} bind:position {...DEFAULT_NODE_PROPS}>
   <InputAnchor />
   <NodeContent
-    name="Контент"
-    headerColor={headerColor(HUE.content)}
+    key={NodeTypeKey.content}
     {config}
     bind:isValid
     configValidator={validateContentBlock}

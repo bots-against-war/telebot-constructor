@@ -1,7 +1,8 @@
 <script lang="ts">
   import LoadingScreen from "./components/LoadingScreen.svelte";
-  import { availableLanguagesStore } from "./globalStateStores";
-  import { getAvailableLanguages, fetchPrefilledMessages } from "./api/misc";
+
+  import { availableLanguagesStore, loggedInUserStore } from "./globalStateStores";
+  import { getAvailableLanguages, fetchPrefilledMessages, getLoggedInUser } from "./api/misc";
   import { err, ok, type Result } from "./utils";
   import FatalError from "./components/FatalError.svelte";
   import { getPrefilledMessages, savePrefilledMessages } from "./studio/nodes/FormBlock/prefill";
@@ -37,6 +38,14 @@
         console.error(`Failed to load prefilled messages: ${res.error}`);
       }
     }
+
+    // 3. logged-in user details
+    // TODO: this can be bundled with some other request to reduce network latency
+    // but for now that'll do
+    const loggedInUser = await getLoggedInUser();
+    if (!loggedInUser.ok) return loggedInUser;
+    loggedInUserStore.set(loggedInUser.data);
+
     return ok(null);
   }
 

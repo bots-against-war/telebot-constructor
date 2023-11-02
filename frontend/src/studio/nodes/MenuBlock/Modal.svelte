@@ -4,6 +4,7 @@
   import NodeModalControls from "../../components/NodeModalControls.svelte";
   import LocalizableTextInput from "../../components/LocalizableTextInput.svelte";
   import SortableListInput from "../../components/SortableListInput.svelte";
+  import { NODE_TITLE } from "../display";
 
   export let config: MenuBlock;
   export let onConfigUpdate: (newConfig: MenuBlock) => any;
@@ -31,10 +32,10 @@
 </script>
 
 <div>
-  <h3>Меню</h3>
+  <h3>{NODE_TITLE.menu}</h3>
   <Stack>
     <LocalizableTextInput label="Текст" bind:value={editedConfig.menu.text} />
-    <SortableListInput label="Пункты" bind:options={editedConfig.menu.items} optionConstructor={newMenuItem} />
+    <SortableListInput label="Кнопки" bind:options={editedConfig.menu.items} optionConstructor={newMenuItem} />
     <Switch label="Возможность выйти на предыдущий уровень" bind:checked={addBackButton} />
     {#if addBackButton}
       <LocalizableTextInput label={'Кнопка "назад"'} bind:value={backButtonLabel} />

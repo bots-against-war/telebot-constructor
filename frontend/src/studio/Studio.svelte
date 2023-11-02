@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Button, Group, Stack } from "@svelteuidev/core";
+  import { Button, Group, Divider } from "@svelteuidev/core";
   import { Svelvet } from "svelvet";
   import { navigate } from "svelte-routing";
 
@@ -9,9 +9,8 @@
   import LanguageSelectNode from "./nodes/LanguageSelectBlock/Node.svelte";
   import MenuNode from "./nodes/MenuBlock/Node.svelte";
   import FormNode from "./nodes/FormBlock/Node.svelte";
-  import StudioControls from "./StudioControls.svelte";
+  import StudioSidePandel from "./components/StudioSidePanel.svelte";
   import BotUserBadge from "../components/BotUserBadge.svelte";
-  import EditableTitle from "./components/EditableTitle.svelte";
   import DeletableEdge from "./components/DeletableEdge.svelte";
 
   import { saveBotConfig } from "../api/botConfig";
@@ -28,8 +27,11 @@
     defaultMenuBlockConfig,
     defaultFormBlockConfig,
   } from "./nodes/defaultConfigs";
-  import { HUE, buttonColor } from "./nodes/colors";
+  import { NodeTypeKey } from "./nodes/display";
   import { languageConfigStore, type LanguageConfig } from "./stores";
+  import Navbar from "../components/Navbar.svelte";
+  import EllipsisText from "../components/internal/EllipsisText.svelte";
+  import AddNodeButton from "./components/AddNodeButton.svelte";
 
   export let botName: string;
   export let botConfig: BotConfig;
@@ -162,6 +164,25 @@
 </script>
 
 <div class="svelvet-container">
+  <div class="navbar-container">
+    <Navbar>
+      <Group noWrap override={{ flexGrow: "100" }} position="right">
+        <EllipsisText maxWidth="300px" size={24}>
+          {botConfig.display_name}
+        </EllipsisText>
+        <BotUserBadge {botName} />
+        <Button
+          variant="filled"
+          disabled={!isConfigValid || !isConfigModified}
+          loading={isSavingBotConfig}
+          on:click={saveCurrentBotConfig}
+        >
+          Сохранить
+        </Button>
+        <Button variant="outline" on:click={isConfigModified ? exitStudioWithConfirmation : exitStudio}>Выйти</Button>
+      </Group>
+    </Navbar>
+  </div>
   <Svelvet
     TD
     controls
@@ -221,84 +242,37 @@
       {/if}
     {/each}
   </Svelvet>
-  <StudioControls title="Добавить" position="upper-left">
+  <StudioSidePandel>
     <Group direction="column" spacing="xs">
-      <Button
-        compact
-        variant="outline"
-        color={buttonColor(HUE.command)}
+      <AddNodeButton
+        key={NodeTypeKey.command}
         on:click={getEntrypointConstructor("command", defaultCommandEntrypoint)}
-      >
-        Команда
-      </Button>
-      <Button
-        compact
-        variant="outline"
-        color={buttonColor(HUE.content)}
-        on:click={getBlockConstructor("content", defaultContentBlockConfig)}>Контент</Button
-      >
-      <Button
-        compact
-        variant="outline"
-        color={buttonColor(HUE.human_operator)}
+      />
+      <Divider override={{ width: "100%", margin: 0 }} />
+      <AddNodeButton key={NodeTypeKey.content} on:click={getBlockConstructor("content", defaultContentBlockConfig)} />
+      <AddNodeButton
+        key={NodeTypeKey.human_operator}
         on:click={getBlockConstructor("human-operator", defaultHumanOperatorBlockConfig)}
-      >
-        Человек-оператор
-      </Button>
-      <Button
-        compact
-        disabled={$languageConfigStore !== null}
-        variant="outline"
-        color={buttonColor(HUE.language_select)}
+      />
+      <AddNodeButton
+        key={NodeTypeKey.language_select}
         on:click={getBlockConstructor("language-select", defaultLanguageSelectBlockConfig)}
-      >
-        Выбор языка
-      </Button>
-      <Button
-        compact
-        variant="outline"
-        color={buttonColor(HUE.menu)}
-        on:click={getBlockConstructor("menu", defaultMenuBlockConfig)}
-      >
-        Меню
-      </Button>
-      <Button
-        compact
-        variant="outline"
-        color={buttonColor(HUE.form)}
-        on:click={getBlockConstructor("form", defaultFormBlockConfig)}
-      >
-        Форма
-      </Button>
+      />
+      <AddNodeButton key={NodeTypeKey.menu} on:click={getBlockConstructor("menu", defaultMenuBlockConfig)} />
+      <AddNodeButton key={NodeTypeKey.form} on:click={getBlockConstructor("form", defaultFormBlockConfig)} />
     </Group>
-  </StudioControls>
-  <StudioControls position="upper-right">
-    <Group noWrap spacing="xl">
-      <Stack>
-        <EditableTitle bind:title={botConfig.display_name} />
-        <BotUserBadge {botName} />
-      </Stack>
-      <Stack spacing="xs">
-        <Button
-          variant="filled"
-          disabled={!isConfigValid || !isConfigModified}
-          fullSize
-          loading={isSavingBotConfig}
-          on:click={saveCurrentBotConfig}
-        >
-          Сохранить
-        </Button>
-        <Button variant="outline" fullSize on:click={isConfigModified ? exitStudioWithConfirmation : exitStudio}>
-          Выйти
-        </Button>
-      </Stack>
-    </Group>
-  </StudioControls>
+  </StudioSidePandel>
 </div>
 
 <style>
   .svelvet-container {
     width: 100%;
     height: 100vh;
+  }
+  div.navbar-container {
+    position: absolute;
+    top: 0;
+    z-index: 1000;
+    width: 100%;
   }
 </style>

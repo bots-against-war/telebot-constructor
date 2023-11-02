@@ -10,6 +10,7 @@
   import { availableLanguagesStore, lookupLanguage } from "../../../globalStateStores";
   import { unwrap } from "../../../utils";
   import { languageConfigStore } from "../../stores";
+  import { NODE_TITLE } from "../display";
 
   export let config: LanguageSelectBlock;
   export let onConfigUpdate: (newConfig: LanguageSelectBlock) => any;
@@ -82,7 +83,7 @@
 </script>
 
 <div>
-  <h3>Выбор языка</h3>
+  <h3>{NODE_TITLE.language_select}</h3>
   <Stack>
     <InputWrapper
       label="Поддерживаемые языки"

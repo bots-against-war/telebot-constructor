@@ -96,8 +96,8 @@
   <TextInput
     bind:value={botDisplayNameInput}
     error={userClickedCreate && !botDisplayNameInput}
-    label="Название"
-    description="Не видно пользователь:ницам, только в конструкторе; можно изменить позже"
+    label="Имя"
+    description="Это название бота в конструкторе. Его не увидят пользователь:ницы и его можно изменять."
     placeholder="Бот-волонтер"
   />
   <PasswordInput
@@ -105,7 +105,7 @@
     error={userClickedCreate && !botTokenInput}
     label="Токен"
     placeholder="123456789:ABCDEFGHIJKLMOPQRSTUVWXYZabcdefghij"
-    description="Можно изменить позже"
+    description="Можно изменить позже TBD"
   />
   {#if error !== null}
     <ErrorBadge title={errorTitle || "Ошибка"} text={error} />

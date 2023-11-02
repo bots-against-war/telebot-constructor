@@ -12,9 +12,9 @@
   import type { ValidationError } from "../nodes/nodeValidators";
   import ErrorBadge from "../../components/ErrorBadge.svelte";
   import EllipsisText from "../../components/internal/EllipsisText.svelte";
+  import { headerColor, NODE_HUE, NODE_ICON, NODE_TITLE, type NodeTypeKey } from "../nodes/display";
 
-  export let name: string;
-  export let headerColor: string;
+  export let key: NodeTypeKey;
   export let config: any = null;
   export let isValid = true;
   export let configValidator: (config: any, langConfig: LanguageConfig | null) => Result<null, ValidationError> = (
@@ -26,7 +26,7 @@
 
   const actionIconProps = {
     color: "dark",
-    size: "sm",
+    size: "xs",
     variant: "hover",
   };
 
@@ -62,13 +62,18 @@
     spacing="sm"
     position="apart"
     override={{
-      backgroundColor: headerColor,
+      backgroundColor: headerColor(NODE_HUE[key]),
       borderRadius: "10px 10px 0 0;",
       padding: "8px",
     }}
   >
-    <EllipsisText override={{ fontWeight: "bold" }} maxWidth="200px">{name}</EllipsisText>
-    <Flex>
+    <Group spacing="xs" override={{ alignItems: "baseline" }}>
+      <div class="icon-container">
+        <svelte:component this={NODE_ICON[key]} />
+      </div>
+      <EllipsisText override={{ fontWeight: "bold" }} maxWidth="200px">{NODE_TITLE[key]}</EllipsisText>
+    </Group>
+    <Group spacing={5}>
       <ActionIcon {...actionIconProps} on:click={() => dispatch("edit")}>
         <PenOutline />
       </ActionIcon>
@@ -76,7 +81,7 @@
       <ActionIcon {...actionIconProps} on:click={() => dispatch("delete")}>
         <TrashBinOutline />
       </ActionIcon>
-    </Flex>
+    </Group>
   </Group>
   <Divider override={{ margin: 0 }} />
   <div class="node-content">
@@ -102,6 +107,13 @@
     /* max-height: 200px; */
     /* overflow-y: hidden; */
     /* position: relative; */
+  }
+
+  div.icon-container {
+    width: 15px;
+    height: 15px;
+    display: flex;
+    justify-content: center;
   }
 
   div.node-content {

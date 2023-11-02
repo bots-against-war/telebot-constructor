@@ -11,6 +11,7 @@ from pydantic.json_schema import GenerateJsonSchema, JsonSchemaValue
 
 from telebot_constructor.app_models import (
     BotInfo,
+    LoggedInUser,
     TgBotUser,
     TgBotUserUpdate,
     TgGroupChat,
@@ -43,6 +44,7 @@ if __name__ == "__main__":
         tg_bot_user_update: TgBotUserUpdate
         language_data: LanguageData
         base_form_field_config: BaseFormFieldConfig
+        logged_in_user: LoggedInUser
         bot_info: BotInfo
 
     current_schema = BackendDataModels.model_json_schema(

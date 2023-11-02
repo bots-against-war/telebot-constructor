@@ -24,6 +24,7 @@ from telebot_constructor.app_models import (
     BotActionsHistory,
     BotInfo,
     BotTokenPayload,
+    LoggedInUser,
     TgBotUser,
     TgBotUserUpdate,
 )
@@ -124,11 +125,19 @@ class TelebotConstructorApp:
             raise RuntimeError("Constructed bot runner was not initialized properly")
         return self._runner
 
-    async def authenticate(self, request: web.Request) -> str:
-        username = await self.auth.authenticate_request(request)
-        if username is None:
+    async def _authenticate_full(self, request: web.Request) -> LoggedInUser:
+        try:
+            logged_in_user = await self.auth.authenticate_request(request)
+        except Exception:
+            logger.exception("Error autorizing user")
+            logged_in_user = None
+        if logged_in_user is None:
             raise web.HTTPUnauthorized(reason="Authentication required")
-        return username
+        return logged_in_user
+
+    async def authenticate(self, request: web.Request) -> str:
+        logged_in_user = await self._authenticate_full(request)
+        return logged_in_user.username
 
     VALID_NAME_RE = re.compile(r"^[0-9a-zA-Z\-_]{3,64}$")
 
@@ -708,6 +717,23 @@ class TelebotConstructorApp:
             await self.authenticate(request)
             return web.Response(
                 body=static_file_content(Path(__file__).parent / "data/prefilled_messages.json"),
+                content_type="application/json",
+            )
+
+        @routes.get("/api/logged-in-user")
+        async def get_logged_in_user(request: web.Request) -> web.Response:
+            """
+            ---
+            description: Get logged in user with auth-specific details
+            produces:
+            - application/json
+            responses:
+                "200":
+                    description: LoggedInUser object
+            """
+            user = await self._authenticate_full(request)
+            return web.Response(
+                body=user.model_dump_json(),
                 content_type="application/json",
             )
 
