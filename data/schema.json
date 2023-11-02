@@ -83,6 +83,49 @@
       "title": "BotConfig",
       "type": "object"
     },
+    "BotInfo": {
+      "properties": {
+        "display_name": {
+          "title": "Display Name",
+          "type": "string"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "last_updated_at": {
+          "format": "date-time",
+          "title": "Last Updated At",
+          "type": "string"
+        },
+        "last_run_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Last Run At"
+        },
+        "is_running": {
+          "title": "Is Running",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "display_name",
+        "created_at",
+        "last_updated_at",
+        "last_run_at",
+        "is_running"
+      ],
+      "title": "BotInfo",
+      "type": "object"
+    },
     "BranchingFormMemberConfig": {
       "properties": {
         "field": {
@@ -1624,6 +1667,9 @@
     },
     "logged_in_user": {
       "$ref": "#/$defs/LoggedInUser"
+    },
+    "bot_info": {
+      "$ref": "#/$defs/BotInfo"
     }
   },
   "required": [
@@ -1633,7 +1679,8 @@
     "tg_bot_user_update",
     "language_data",
     "base_form_field_config",
-    "logged_in_user"
+    "logged_in_user",
+    "bot_info"
   ],
   "title": "BackendDataModels",
   "type": "object"

@@ -5,9 +5,9 @@
 
 <script lang="ts">
   import { createEventDispatcher } from "svelte";
-  import { ActionIcon, Group, Flex, Divider } from "@svelteuidev/core";
+  import { ActionIcon, Divider, Flex, Group, Space } from "@svelteuidev/core";
   import { PenOutline, TrashBinOutline } from "flowbite-svelte-icons";
-  import { languageConfigStore, type LanguageConfig } from "../stores";
+  import { type LanguageConfig, languageConfigStore } from "../stores";
   import { getModalOpener, ok, type Result } from "../../utils";
   import type { ValidationError } from "../nodes/nodeValidators";
   import ErrorBadge from "../../components/ErrorBadge.svelte";
@@ -77,6 +77,7 @@
       <ActionIcon {...actionIconProps} on:click={() => dispatch("edit")}>
         <PenOutline />
       </ActionIcon>
+      <Space w="xs" />
       <ActionIcon {...actionIconProps} on:click={() => dispatch("delete")}>
         <TrashBinOutline />
       </ActionIcon>

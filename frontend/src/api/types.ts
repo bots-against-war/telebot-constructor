@@ -203,6 +203,11 @@ export type AuthType = "no_auth" | "tg_group_auth";
 export type Username2 = string;
 export type Name6 = string;
 export type Userpic1 = string | null;
+export type DisplayName1 = string;
+export type CreatedAt = string;
+export type LastUpdatedAt = string;
+export type LastRunAt = string | null;
+export type IsRunning = boolean;
 
 /**
  * Temporary class to pack several models into one schema; not used directly by frontend code
@@ -215,6 +220,7 @@ export interface BackendDataModels {
   language_data: LanguageData;
   base_form_field_config: BaseFormFieldConfig;
   logged_in_user: LoggedInUser;
+  bot_info: BotInfo;
   [k: string]: unknown;
 }
 export interface BotConfig {
@@ -520,5 +526,13 @@ export interface LoggedInUser {
   username: Username2;
   name: Name6;
   userpic: Userpic1;
+  [k: string]: unknown;
+}
+export interface BotInfo {
+  display_name: DisplayName1;
+  created_at: CreatedAt;
+  last_updated_at: LastUpdatedAt;
+  last_run_at: LastRunAt;
+  is_running: IsRunning;
   [k: string]: unknown;
 }

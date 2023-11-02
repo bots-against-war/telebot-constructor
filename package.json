@@ -10,7 +10,8 @@
     "preview": "vite build frontend && vite preview frontend",
     "check": "svelte-check --tsconfig tsconfig.json --workspace frontend/ --compiler-warnings \"ts:ignore\"",
     "check:watch": "svelte-check --tsconfig ./tsconfig.json --workspace frontend/ --watch",
-    "format": "prettier --write --plugin prettier-plugin-svelte frontend"
+    "format": "prettier --write --plugin prettier-plugin-svelte frontend",
+    "pydantic:to:ts": "poetry run python3 scripts/models/pydantic2jsonschema.py && node scripts/models/jsonschema2ts.mjs "
   },
   "devDependencies": {
     "@jhubbardsf/svelte-sortablejs": "^1.1.0",

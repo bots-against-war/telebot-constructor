@@ -1,4 +1,4 @@
-import { type BotConfig } from "./api/types";
+import { type BotConfig, type BotInfo } from "./api/types";
 
 // see svelvet's docs
 export type SvelvetConnection = string | number | [string | number, string | number];
@@ -10,6 +10,10 @@ export interface SvelvetPosition {
 
 export interface BotConfigList {
   [key: string]: BotConfig;
+}
+
+export interface BotInfoList {
+  [key: string]: BotInfo;
 }
 
 export type MultilangText = { [k: string]: string };
