@@ -10,10 +10,10 @@
   import GlobalStateProvider from "./GlobalStateProvider.svelte";
 </script>
 
-<SvelteUIProvider withNormalizeCSS withGlobalStyles>
-  <Modal closeButton={false}>
-    <div use:links>
-      <GlobalStateProvider>
+<GlobalStateProvider>
+  <SvelteUIProvider withNormalizeCSS withGlobalStyles>
+    <Modal closeButton={false}>
+      <div use:links>
         <Router>
           <Route path="/">
             <Navbar />
@@ -23,7 +23,7 @@
             <StudioLoader botName={params.botname} />
           </Route>
           <!-- TODO: separate each route contents to a component -->
-          <Route path="/team">
+          <!-- <Route path="/team">
             <Navbar />
             <p>Команда</p>
           </Route>
@@ -34,9 +34,9 @@
           <Route path="/security">
             <Navbar />
             <p>Безопасность</p>
-          </Route>
+          </Route> -->
         </Router>
-      </GlobalStateProvider>
-    </div>
-  </Modal>
-</SvelteUIProvider>
+      </div>
+    </Modal>
+  </SvelteUIProvider>
+</GlobalStateProvider>

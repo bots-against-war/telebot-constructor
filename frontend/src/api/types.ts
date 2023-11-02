@@ -199,6 +199,10 @@ export type Prompt2 =
     };
 export type IsRequired2 = boolean;
 export type ResultFormatting2 = FormFieldResultFormattingOpts | "auto" | null;
+export type AuthType = "no_auth" | "tg_group_auth";
+export type Username2 = string;
+export type Name6 = string;
+export type Userpic1 = string | null;
 
 /**
  * Temporary class to pack several models into one schema; not used directly by frontend code
@@ -210,6 +214,7 @@ export interface BackendDataModels {
   tg_bot_user_update: TgBotUserUpdate;
   language_data: LanguageData;
   base_form_field_config: BaseFormFieldConfig;
+  logged_in_user: LoggedInUser;
   [k: string]: unknown;
 }
 export interface BotConfig {
@@ -508,5 +513,12 @@ export interface BaseFormFieldConfig {
   prompt: Prompt2;
   is_required: IsRequired2;
   result_formatting: ResultFormatting2;
+  [k: string]: unknown;
+}
+export interface LoggedInUser {
+  auth_type: AuthType;
+  username: Username2;
+  name: Name6;
+  userpic: Userpic1;
   [k: string]: unknown;
 }

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { InputWrapper, Tabs, Textarea, TextInput, Group } from "@svelteuidev/core";
+  import { ExclamationTriangle } from "radix-icons-svelte";
   import Language from "../../components/Language.svelte";
   import type { LocalizableText } from "../../types";
   import type { LanguageConfig } from "../stores";
@@ -76,8 +77,8 @@
         ) => (activeLanguageTab = e.detail.index)}
       >
         {#each langConfig.supportedLanguageCodes as language (language)}
-          <Tabs.Tab>
-            <Language slot="icon" {language} fullName small tooltip={false} />
+          <Tabs.Tab icon={value[language] ? null : ExclamationTriangle} iconProps={{ color: "red" }}>
+            <Language slot="label" {language} fullName small tooltip={false} />
             <Textarea aria-label={`localization-${language}`} resize="vertical" bind:value={value[language]} />
           </Tabs.Tab>
         {/each}

@@ -1,5 +1,13 @@
 {
   "$defs": {
+    "AuthType": {
+      "enum": [
+        "no_auth",
+        "tg_group_auth"
+      ],
+      "title": "AuthType",
+      "type": "string"
+    },
     "BaseFormFieldConfig": {
       "properties": {
         "id": {
@@ -829,6 +837,40 @@
       "title": "LanguageSelectionMenuConfig",
       "type": "object"
     },
+    "LoggedInUser": {
+      "properties": {
+        "auth_type": {
+          "$ref": "#/$defs/AuthType"
+        },
+        "username": {
+          "title": "Username",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "userpic": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Userpic"
+        }
+      },
+      "required": [
+        "auth_type",
+        "username",
+        "name",
+        "userpic"
+      ],
+      "title": "LoggedInUser",
+      "type": "object"
+    },
     "Menu": {
       "properties": {
         "text": {
@@ -1579,6 +1621,9 @@
     },
     "base_form_field_config": {
       "$ref": "#/$defs/BaseFormFieldConfig"
+    },
+    "logged_in_user": {
+      "$ref": "#/$defs/LoggedInUser"
     }
   },
   "required": [
@@ -1587,7 +1632,8 @@
     "tg_bot_user",
     "tg_bot_user_update",
     "language_data",
-    "base_form_field_config"
+    "base_form_field_config",
+    "logged_in_user"
   ],
   "title": "BackendDataModels",
   "type": "object"

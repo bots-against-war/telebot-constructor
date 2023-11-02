@@ -14,7 +14,7 @@
   export let fieldConfig: FormFieldConfig;
 
   let availableKeys = [
-    { value: "plain_text", label: "Свободный" },
+    { value: "plain_text", label: "Свободный ответ" },
     { value: "single_select", label: "Выбор" },
   ];
 
@@ -35,7 +35,6 @@
       <BaseFormFieldInputs bind:config={fieldConfig.single_select} />
     {/if}
     <NativeSelect
-      label="Ответ"
       data={availableKeys}
       bind:value={selectedKey}
       on:change={() => {
@@ -63,5 +62,6 @@
     position: absolute;
     right: 5px;
     top: 5px;
+    z-index: 1000;
   }
 </style>

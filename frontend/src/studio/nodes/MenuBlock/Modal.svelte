@@ -34,7 +34,7 @@
   <h3>Меню</h3>
   <Stack>
     <LocalizableTextInput label="Текст" bind:value={editedConfig.menu.text} />
-    <SortableListInput label="Пункты" bind:options={editedConfig.menu.items} optionConstructor={newMenuItem} />
+    <SortableListInput label="Кнопки" bind:options={editedConfig.menu.items} optionConstructor={newMenuItem} />
     <Switch label="Возможность выйти на предыдущий уровень" bind:checked={addBackButton} />
     {#if addBackButton}
       <LocalizableTextInput label={'Кнопка "назад"'} bind:value={backButtonLabel} />

@@ -30,7 +30,7 @@
   <div class="right">
     <Space h="s" />
     <Container>
-      <Button on:click={showNewBotModal}>Добавить</Button>
+      <Button on:click={showNewBotModal}>Создать</Button>
     </Container>
     <hr />
     <ArrayBots
