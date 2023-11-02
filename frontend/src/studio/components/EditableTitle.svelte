@@ -1,6 +1,7 @@
 <script lang="ts">
   import { ActionIcon, Group, Input, Space, Title } from "@svelteuidev/core";
   import { CheckOutline, CloseOutline, PenOutline } from "flowbite-svelte-icons";
+  import EllipsisText from "../../components/internal/EllipsisText.svelte";
 
   export let title: string;
 
@@ -28,9 +29,9 @@
       </ActionIcon>
     </Group>
   {:else}
-    <Title>
+    <EllipsisText maxWidth="300px" size={24}>
       {title}
-    </Title>
+    </EllipsisText>
     <ActionIcon on:click={() => (isEditing = true)}>
       <PenOutline />
     </ActionIcon>

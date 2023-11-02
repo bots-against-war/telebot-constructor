@@ -2,8 +2,11 @@
   import ArrayBots from "./ArrayBots.svelte";
   import BotLifecycle from "./BotLifecycle.svelte";
   import type { BotConfigList } from "../types";
-  import { Button, Container, Space } from "@svelteuidev/core";
+  import { Button, Container, Space, Group, Divider, Stack, Text } from "@svelteuidev/core";
   import CreateBotModal from "./CreateBotModal.svelte";
+
+  import { PlusOutline } from "flowbite-svelte-icons";
+
   import { getModalOpener } from "../utils";
   import type { BotConfig } from "../api/types";
 
@@ -29,24 +32,28 @@
 
 <div style="display:flex; flex-flow: row; align-items: center;">
   <div class="right">
-    <Space h="xs" />
-    <Container>
-      <Button on:click={showNewBotModal}>Создать</Button>
-    </Container>
-    <hr />
-    <ArrayBots
-      on:updateSelectedBot={(e) => {
-        selectedBot = e.detail || null;
-      }}
-      {botConfigs}
-      {selectedBot}
-    />
+    <Stack align="center" spacing={5}>
+      <Button on:click={showNewBotModal}>
+        <PlusOutline slot="leftIcon" width={15} />
+        Создать
+      </Button>
+      <Divider override={{ borderColor: "#0776a0", width: "100%" }} />
+      <ArrayBots
+        on:updateSelectedBot={(e) => {
+          selectedBot = e.detail || null;
+        }}
+        {botConfigs}
+        {selectedBot}
+      />
+    </Stack>
   </div>
   {#if selectedBot === null}
-    <p class="lifecycle-placeholder">
-      Добро пожаловать в B.A.W., современный конструктор чат-ботов, который поможет вашей инициативе стать еще ближе к
-      пользователям.
-    </p>
+    <Container>
+      <Text override={{ fontSize: 30, textAlign: "center" }}>
+        Добро пожаловать в B.A.W., современный конструктор чат-ботов, который поможет вашей инициативе стать еще ближе к
+        пользователям
+      </Text>
+    </Container>
   {:else}
     <BotLifecycle
       botName={selectedBot}
@@ -65,28 +72,14 @@
 
 <style>
   .right {
-    /* float: left; */
-    width: 332px;
-    min-height: 700px;
-    /* flex-shrink: 0; */
-    border-radius: 0 40px 40px 0;
-    background: linear-gradient(180deg, #85d0ee 0%, rgba(133, 208, 238, 0.6) 100%);
-    margin-top: calc(144px - 88px);
+    /* TODO: better side panel styling with less or no hard-coded pixels */
+    width: 200px;
+    padding: 10px;
+    padding-top: 20px;
+    min-height: calc(100vh - 60px - 60px);
+    border-radius: 0 20px 20px 0;
+    margin-top: 30px;
     margin-bottom: 30px;
-    display: flex;
-    flex-direction: column;
-  }
-  hr {
-    width: 240px;
-    height: 2px;
-    background: #0776a0;
-  }
-  p.lifecycle-placeholder {
-    width: 781px;
-    height: 147px;
-    flex-shrink: 0;
-    text-align: center;
-    margin: auto;
-    font-size: 32px;
+    background: linear-gradient(180deg, #85d0ee 0%, rgba(133, 208, 238, 0.6) 100%);
   }
 </style>

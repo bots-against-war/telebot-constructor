@@ -25,8 +25,9 @@
         selectedBot = botName;
         updateSelectedBot(botName);
       }}
+      override={{ height: "auto", padding: "8px 18px" }}
     >
-      {config.display_name}</Button
-    >
+      {config.display_name}
+    </Button>
   {/each}
 </Stack>

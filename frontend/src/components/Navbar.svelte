@@ -9,11 +9,11 @@
   height=""
   override={{
     background: "radial-gradient(50.62% 8113.21% at 50.62% 49.54%, #62b1d0 0%, rgba(2, 172, 239, 0.3) 100%);",
-    padding: "10px",
+    padding: "5px",
   }}
 >
   <Group position="apart">
-    <Image src={bawLogo} alt="BAW logo" class="logo" />
+    <Image src={bawLogo} alt="BAW logo" class="logo" height={40} />
     <!-- TODO: navigation will go there -->
     <!-- <div class="nav-buttons">
       <NavButton href="/">Управление</NavButton>
@@ -25,10 +25,11 @@
       <Image
         slot="control"
         src={$loggedInUserStore.userpic !== null ? `data:image/png;base64,${$loggedInUserStore.userpic}` : null}
-        width={40}
-        height={40}
+        width={30}
+        height={30}
         radius={1000}
         usePlaceholder
+        override={{ cursor: "pointer" }}
       >
         <svelte:fragment slot="placeholder">
           <QuestionCircleOutline />
