@@ -13,7 +13,7 @@
   import type { LanguageSelectBlock } from "../../../api/types";
 
   import { DEFAULT_NODE_PROPS } from "../nodeProps";
-  import { HUE, headerColor } from "../colors";
+  import { NodeTypeKey } from "../display";
   import { validateLanguageSelectBlock } from "../nodeValidators";
   import { getModalOpener } from "../../../utils";
 
@@ -36,8 +36,7 @@
 <Node id={config.block_id} bind:position {...DEFAULT_NODE_PROPS}>
   <InputAnchor />
   <NodeContent
-    name="Выбор языка"
-    headerColor={headerColor(HUE.language_select)}
+    key={NodeTypeKey.language_select}
     bind:isValid
     {config}
     configValidator={validateLanguageSelectBlock}

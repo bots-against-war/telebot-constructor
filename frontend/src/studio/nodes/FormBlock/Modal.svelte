@@ -8,6 +8,7 @@
   import FormResultExportOptions from "./components/FormResultExportOptions.svelte";
   import type { FormErrorMessages } from "./prefill";
   import { flattenedFormFields } from "../../../api/typeUtils";
+  import { NODE_TITLE } from "../display";
 
   export let config: FormBlock;
   export let botName: string;
@@ -55,7 +56,7 @@
 </script>
 
 <div>
-  <h3>Форма</h3>
+  <h3>{NODE_TITLE.form}</h3>
   <Tabs>
     <Tabs.Tab label={`Поля (${flattenedFormFields(topLevelBranch.members).length})`}>
       <FormBranch bind:branch={topLevelBranch} />

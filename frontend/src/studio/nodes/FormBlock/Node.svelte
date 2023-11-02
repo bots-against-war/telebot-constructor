@@ -7,7 +7,7 @@
   import OutputAnchorsBox from "../../components/OutputAnchorsBox.svelte";
 
   import { DEFAULT_NODE_PROPS } from "../nodeProps";
-  import { HUE, headerColor } from "../colors";
+  import { NodeTypeKey } from "../display";
   import { type FormBlock } from "../../../api/types";
   import type { SvelvetPosition } from "../../../types";
   import { getModalOpener } from "../../../utils";
@@ -35,8 +35,7 @@
 <Node id={config.block_id} bind:position {...DEFAULT_NODE_PROPS}>
   <InputAnchor />
   <NodeContent
-    name="Форма"
-    headerColor={headerColor(HUE.form)}
+    key={NodeTypeKey.form}
     {config}
     configValidator={validateFormBlock}
     bind:isValid

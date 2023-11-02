@@ -77,7 +77,7 @@
   override={{
     // FOR SOME REASON RADIUS IS NOT OVERRIDEN LIKE COLOR
     // BUT WITH THIS SHIT??????????
-    "--svelteui-radii-sm": "20px",
+    "--svelteui-radii-sm": "15px",
   }}
 >
   <slot />

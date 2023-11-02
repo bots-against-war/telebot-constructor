@@ -10,7 +10,7 @@
 
   import { getModalOpener } from "../../../utils";
   import { DEFAULT_NODE_PROPS } from "../nodeProps";
-  import { HUE, headerColor } from "../colors";
+  import { NodeTypeKey } from "../display";
   const openModal = getModalOpener<Modal>();
 
   export let config: CommandEntryPoint;
@@ -20,8 +20,7 @@
 
 <Node id={config.entrypoint_id} bind:position {...DEFAULT_NODE_PROPS}>
   <NodeContent
-    name="Команда"
-    headerColor={headerColor(HUE.command)}
+    key={NodeTypeKey.command}
     bind:isValid
     on:delete
     on:edit={() =>

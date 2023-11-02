@@ -28,8 +28,8 @@
         <Group override={{ gap: "6px" }}>
           <Image
             src={botUserResult.data.userpic !== null ? `data:image/png;base64,${botUserResult.data.userpic}` : null}
-            width={30}
-            height={30}
+            width={25}
+            height={25}
             radius={1000}
             usePlaceholder
           >
@@ -37,14 +37,14 @@
               <QuestionCircleOutline />
             </svelte:fragment>
           </Image>
-          <EllipsisText weight="bold" maxWidth="200px">
+          <EllipsisText size="sm" weight="bold" maxWidth="200px">
             {botUserResult.data.name}
           </EllipsisText>
-          <EllipsisText color="dimmed" maxWidth="200px">@{botUserResult.data.username}</EllipsisText>
+          <EllipsisText size="sm" color="dimmed" maxWidth="200px">@{botUserResult.data.username}</EllipsisText>
         </Group>
         <Group override={{ gap: "4px" }}>
           <ActionIcon
-            size="sm"
+            size={15}
             on:click={() => {
               openModal(EditBotUserModal, {
                 botName: botName,
@@ -72,7 +72,7 @@
           >
             <Update />
           </ActionIcon> -->
-          <ActionIcon size="sm" root="a" href={`https://t.me/${botUserResult.data.username}`} external>
+          <ActionIcon size={15} root="a" href={`https://t.me/${botUserResult.data.username}`} external>
             <ArrowUpRightFromSquareOutline />
           </ActionIcon>
         </Group>

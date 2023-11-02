@@ -3,6 +3,7 @@
   import type { ContentBlock } from "../../../api/types";
   import NodeModalControls from "../../components/NodeModalControls.svelte";
   import LocalizableTextInput from "../../components/LocalizableTextInput.svelte";
+  import { NODE_TITLE } from "../display";
 
   export let config: ContentBlock;
   export let onConfigUpdate: (newConfig: ContentBlock) => any;
@@ -16,7 +17,7 @@
 </script>
 
 <div>
-  <h3>Контент</h3>
+  <h3>{NODE_TITLE.content}</h3>
   <Stack>
     <LocalizableTextInput label="Текст сообщения" bind:value={editedMessageText} />
   </Stack>

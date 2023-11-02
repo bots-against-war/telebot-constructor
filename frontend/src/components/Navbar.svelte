@@ -12,7 +12,7 @@
     padding: "5px",
   }}
 >
-  <Group position="apart">
+  <Group position="apart" noWrap>
     <Image src={bawLogo} alt="BAW logo" class="logo" height={40} />
     <!-- TODO: navigation will go there -->
     <!-- <div class="nav-buttons">
@@ -21,38 +21,40 @@
       <NavButton href="/actions">Действия</NavButton>
       <NavButton href="/security">Безопасность</NavButton>
     </div> -->
-    <Menu>
-      <Image
-        slot="control"
-        src={$loggedInUserStore.userpic !== null ? `data:image/png;base64,${$loggedInUserStore.userpic}` : null}
-        width={30}
-        height={30}
-        radius={1000}
-        usePlaceholder
-        override={{ cursor: "pointer" }}
-      >
-        <svelte:fragment slot="placeholder">
-          <QuestionCircleOutline />
-        </svelte:fragment>
-      </Image>
-      <Stack>
-        <Text>
-          {$loggedInUserStore.name}
-          <br />
-          <Text color="dimmed">
-            {$loggedInUserStore.username}
-          </Text>
-        </Text>
-        <Anchor
-          on:click={() => {
-            // deleting the cookie by setting it to empty with expire date in the past
-            // TODO: test in real browser
-            document.cookie = `tc_access_token=;Expires=${new Date(2000).toUTCString()};Path=/`;
-            window.location.reload();
-          }}>Выйти</Anchor
+    <slot>
+      <Menu>
+        <Image
+          slot="control"
+          src={$loggedInUserStore.userpic !== null ? `data:image/png;base64,${$loggedInUserStore.userpic}` : null}
+          width={30}
+          height={30}
+          radius={1000}
+          usePlaceholder
+          override={{ cursor: "pointer" }}
         >
-      </Stack>
-    </Menu>
+          <svelte:fragment slot="placeholder">
+            <QuestionCircleOutline />
+          </svelte:fragment>
+        </Image>
+        <Stack>
+          <Text>
+            {$loggedInUserStore.name}
+            <br />
+            <Text color="dimmed">
+              {$loggedInUserStore.username}
+            </Text>
+          </Text>
+          <Anchor
+            on:click={() => {
+              // deleting the cookie by setting it to empty with expire date in the past
+              // TODO: test in real browser
+              document.cookie = `tc_access_token=;Expires=${new Date(2000).toUTCString()};Path=/`;
+              window.location.reload();
+            }}>Выйти</Anchor
+          >
+        </Stack>
+      </Menu>
+    </slot>
   </Group>
 </Header>
 

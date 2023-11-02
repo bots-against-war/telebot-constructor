@@ -2,6 +2,7 @@
   import type { HumanOperatorBlock } from "../../../api/types";
   import NodeModalControls from "../../components/NodeModalControls.svelte";
   import GroupChatIdSelect from "../../components/GroupChatIdSelect.svelte";
+  import { NODE_TITLE } from "../display";
 
   export let botName: string; //required for admin chat id rendering, and context does not propagate here
   export let config: HumanOperatorBlock;
@@ -16,7 +17,7 @@
 </script>
 
 <div>
-  <h3>Человек-оператор</h3>
+  <h3>{NODE_TITLE.language_select}</h3>
   <div>
     <GroupChatIdSelect label="Админ-чат" {botName} bind:selectedGroupChatId={adminChatId} />
   </div>

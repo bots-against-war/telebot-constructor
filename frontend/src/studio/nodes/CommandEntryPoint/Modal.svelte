@@ -2,6 +2,8 @@
   import type { CommandEntryPoint } from "../../../api/types";
   import NodeModalControls from "../../components/NodeModalControls.svelte";
 
+  import { NODE_TITLE } from "../display";
+
   export let config: CommandEntryPoint;
   export let onConfigUpdate: (newConfig: CommandEntryPoint) => any;
 
@@ -14,7 +16,7 @@
 </script>
 
 <div>
-  <h3>Команда</h3>
+  <h3>{NODE_TITLE.command}</h3>
   /<input bind:value={editedCommand} />
   <NodeModalControls on:save={updateConfig} />
 </div>
