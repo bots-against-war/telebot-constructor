@@ -123,7 +123,6 @@ class TgBotUserUpdate(BaseModel):
                     await bot.set_my_short_description(short_description=self.short_description)
 
 
-
 class AuthType(enum.Enum):
     NO_AUTH = "no_auth"
     TELEGRAM_GROUP_AUTH = "tg_group_auth"
@@ -134,6 +133,8 @@ class LoggedInUser(BaseModel):
     username: str
     name: str
     userpic: Optional[str]
+
+
 class BotInfo(BaseModel):
     display_name: str
     created_at: datetime

@@ -11,10 +11,10 @@ from pydantic.json_schema import GenerateJsonSchema, JsonSchemaValue
 
 from telebot_constructor.app_models import (
     BotInfo,
+    LoggedInUser,
     TgBotUser,
     TgBotUserUpdate,
     TgGroupChat,
-LoggedInUser
 )
 from telebot_constructor.bot_config import BotConfig
 from telebot_constructor.user_flow.blocks.form import BaseFormFieldConfig

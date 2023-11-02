@@ -1,5 +1,4 @@
 import abc
-from telebot import types as tg
 import datetime
 import logging
 import secrets
@@ -8,10 +7,11 @@ from typing import Optional
 
 from aiohttp import hdrs, web
 from telebot import AsyncTeleBot
+from telebot import types as tg
 from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.stores.generic import KeyValueStore
-from telebot_constructor.app_models import AuthType, LoggedInUser
 
+from telebot_constructor.app_models import AuthType, LoggedInUser
 from telebot_constructor.static import static_file_content
 
 
