@@ -10,7 +10,7 @@
     Paper,
     Space,
     Stack,
-    Text
+    Text,
   } from "@svelteuidev/core";
   import { PenOutline, TrashBinOutline } from "flowbite-svelte-icons";
 
