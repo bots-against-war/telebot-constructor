@@ -169,7 +169,7 @@ class TelebotConstructorApp:
     async def load_bot_info(self, username: str, bot_name: str) -> BotInfo:
         bot_config = await self.bot_config_store.get_subkey(username, bot_name)
         bot_history = await self.bot_history_store.get_subkey(username, bot_name)
-        if bot_history or bot_config is None:
+        if bot_config is None or bot_history is None:
             raise web.HTTPNotFound(reason=f"Not found info about bot name {bot_name!r}")
         else:
             bot_is_running = await self.running_bots_store.includes(username, bot_name)
@@ -233,7 +233,7 @@ class TelebotConstructorApp:
             await self.temporary_running_bots_store.remove(username, bot_name)
             existing_bot_history = await self.bot_history_store.get_subkey(username, bot_name)
             if existing_bot_history:
-                existing_bot_history.last_run_at = datetime.now(timezone.utc).isoformat()
+                existing_bot_history.last_run_at = datetime.now(timezone.utc)
                 await self.bot_history_store.set_subkey(key=username, subkey=bot_name, value=existing_bot_history)
 
     async def create_constructor_web_app(self) -> web.Application:
@@ -326,10 +326,10 @@ class TelebotConstructorApp:
 
             if existing_bot_config is None:
                 new_bot_history = BotActionsHistory(
-                    created_at=datetime.now(timezone.utc).isoformat(),
-                    last_updated_at=datetime.now(timezone.utc).isoformat(),
-                    last_run_at="",
-                    deleted_at="",
+                    created_at=datetime.now(timezone.utc),
+                    last_updated_at=datetime.now(timezone.utc),
+                    last_run_at=None,
+                    deleted_at=None,
                 )
                 await self.bot_history_store.set_subkey(key=username, subkey=bot_name, value=new_bot_history)
 
@@ -337,7 +337,7 @@ class TelebotConstructorApp:
             else:
                 existing_bot_history = await self.bot_history_store.get_subkey(username, bot_name)
                 if existing_bot_history:
-                    existing_bot_history.last_updated_at = datetime.now(timezone.utc).isoformat()
+                    existing_bot_history.last_updated_at = datetime.now(timezone.utc)
                     await self.bot_history_store.set_subkey(key=username, subkey=bot_name, value=existing_bot_history)
 
                 return web.json_response(text=existing_bot_config.model_dump_json())
@@ -380,7 +380,7 @@ class TelebotConstructorApp:
             await self.secret_store.remove_secret(config.token_secret_name, owner_id=username)
             existing_bot_history = await self.bot_history_store.get_subkey(username, bot_name)
             if existing_bot_history:
-                existing_bot_history.deleted_at = datetime.now(timezone.utc).isoformat()
+                existing_bot_history.deleted_at = datetime.now(timezone.utc)
                 await self.bot_history_store.set_subkey(key=username, subkey=bot_name, value=existing_bot_history)
 
             return web.json_response(text=config.model_dump_json())

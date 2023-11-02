@@ -202,7 +202,7 @@ export type ResultFormatting2 = FormFieldResultFormattingOpts | "auto" | null;
 export type DisplayName1 = string;
 export type CreatedAt = string;
 export type LastUpdatedAt = string;
-export type LastRunAt = string;
+export type LastRunAt = string | null;
 export type IsRunning = boolean;
 
 /**

@@ -1,5 +1,6 @@
 """Pydantic models for various app endpoints"""
 import enum
+from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel
@@ -124,14 +125,14 @@ class TgBotUserUpdate(BaseModel):
 
 class BotInfo(BaseModel):
     display_name: str
-    created_at: str
-    last_updated_at: str
-    last_run_at: str
+    created_at: datetime
+    last_updated_at: datetime
+    last_run_at: Optional[datetime]
     is_running: bool
 
 
 class BotActionsHistory(BaseModel):
-    created_at: str
-    last_updated_at: str
-    last_run_at: str
-    deleted_at: Optional[str]
+    created_at: datetime
+    last_updated_at: datetime
+    last_run_at: Optional[datetime]
+    deleted_at: Optional[datetime]

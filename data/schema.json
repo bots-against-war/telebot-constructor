@@ -82,16 +82,26 @@
           "type": "string"
         },
         "created_at": {
+          "format": "date-time",
           "title": "Created At",
           "type": "string"
         },
         "last_updated_at": {
+          "format": "date-time",
           "title": "Last Updated At",
           "type": "string"
         },
         "last_run_at": {
-          "title": "Last Run At",
-          "type": "string"
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Last Run At"
         },
         "is_running": {
           "title": "Is Running",
