@@ -1,6 +1,6 @@
 """Pydantic models for various app endpoints"""
-
 import enum
+from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel
@@ -121,3 +121,18 @@ class TgBotUserUpdate(BaseModel):
             async for attempt in rate_limit_retry():
                 with attempt:
                     await bot.set_my_short_description(short_description=self.short_description)
+
+
+class BotInfo(BaseModel):
+    display_name: str
+    created_at: datetime
+    last_updated_at: datetime
+    last_run_at: Optional[datetime]
+    is_running: bool
+
+
+class BotActionsHistory(BaseModel):
+    created_at: datetime
+    last_updated_at: datetime
+    last_run_at: Optional[datetime]
+    deleted_at: Optional[datetime]

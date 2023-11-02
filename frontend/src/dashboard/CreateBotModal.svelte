@@ -1,13 +1,14 @@
 <script lang="ts">
   import { saveBotConfig } from "../api/botConfig";
-  import { Button, TextInput, Alert, Flex, PasswordInput } from "@svelteuidev/core";
+  import { Button, Flex, PasswordInput, TextInput } from "@svelteuidev/core";
   import { createBotTokenSecret, getError, getModalCloser, unwrap } from "../utils";
   import { slugify } from "transliteration";
   import { validateBotToken } from "../api/validation";
-  import type { BotConfig } from "../api/types";
+  import type { BotInfo } from "../api/types";
   import ErrorBadge from "../components/ErrorBadge.svelte";
+  import { getBotInfo } from "../api/botInfo";
 
-  export let newBotCallback: (botName: string, config: BotConfig) => void;
+  export let newBotCallback: (botName: string, info: BotInfo) => void;
 
   const closePopup = getModalCloser();
 
@@ -76,18 +77,17 @@
         node_display_coords: {},
       },
     };
-    const res = await saveBotConfig(botName, config);
+    const res1 = await saveBotConfig(botName, config);
     isCreating = false;
 
-    console.log(res);
-
-    if (res.ok) {
+    if (res1.ok) {
       error = null;
-      newBotCallback(botName, config);
+      const botInfo = unwrap(await getBotInfo(botName));
+      newBotCallback(botName, botInfo);
       closePopup();
-    } else {
+    } else if (!res1.ok) {
       errorTitle = "Ошибка сохранения";
-      error = getError(res);
+      error = getError(res1);
     }
   }
 </script>

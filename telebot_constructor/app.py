@@ -4,6 +4,7 @@ import json
 import logging
 import mimetypes
 import re
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional, Type, TypeVar
 
@@ -19,7 +20,13 @@ from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.stores.generic import KeyDictStore, KeySetStore
 from telebot_components.utils.secrets import SecretStore
 
-from telebot_constructor.app_models import BotTokenPayload, TgBotUser, TgBotUserUpdate
+from telebot_constructor.app_models import (
+    BotActionsHistory,
+    BotInfo,
+    BotTokenPayload,
+    TgBotUser,
+    TgBotUserUpdate,
+)
 from telebot_constructor.auth import Auth
 from telebot_constructor.bot_config import BotConfig
 from telebot_constructor.build_time_config import BASE_PATH
@@ -94,6 +101,15 @@ class TelebotConstructorApp:
             redis=redis,
             expiration_time=None,
         )
+        # username -> names of bots and their actions history
+        self.bot_history_store = KeyDictStore[BotActionsHistory](
+            name="bot-history",
+            prefix=self.STORE_PREFIX,
+            redis=redis,
+            expiration_time=None,
+            dumper=BotActionsHistory.model_dump_json,
+            loader=BotActionsHistory.model_validate_json,
+        )
 
         self.group_chat_discovery_handler = GroupChatDiscoveryHandler(
             redis=redis,
@@ -150,6 +166,22 @@ class TelebotConstructorApp:
             raise web.HTTPNotFound(reason=f"No config found for bot name {bot_name!r}")
         return config
 
+    async def load_bot_info(self, username: str, bot_name: str) -> BotInfo:
+        bot_config = await self.bot_config_store.get_subkey(username, bot_name)
+        bot_history = await self.bot_history_store.get_subkey(username, bot_name)
+        if bot_config is None or bot_history is None:
+            raise web.HTTPNotFound(reason=f"Not found info about bot name {bot_name!r}")
+        else:
+            bot_is_running = await self.running_bots_store.includes(username, bot_name)
+            bot_info = BotInfo(
+                display_name=bot_config.display_name,
+                created_at=bot_history.created_at,
+                last_updated_at=bot_history.last_updated_at,
+                last_run_at=bot_history.last_run_at,
+                is_running=bot_is_running,
+            )
+            return bot_info
+
     async def _make_raw_bot(self, username: str, bot_name: str) -> AsyncTeleBot:
         return await make_raw_bot(
             username,
@@ -199,6 +231,10 @@ class TelebotConstructorApp:
         else:
             await self.running_bots_store.add(username, bot_name)
             await self.temporary_running_bots_store.remove(username, bot_name)
+            existing_bot_history = await self.bot_history_store.get_subkey(username, bot_name)
+            if existing_bot_history:
+                existing_bot_history.last_run_at = datetime.now(timezone.utc)
+                await self.bot_history_store.set_subkey(key=username, subkey=bot_name, value=existing_bot_history)
 
     async def create_constructor_web_app(self) -> web.Application:
         app = web.Application()
@@ -289,8 +325,21 @@ class TelebotConstructorApp:
                 await self.re_start_bot(username, bot_name, bot_config)
 
             if existing_bot_config is None:
+                new_bot_history = BotActionsHistory(
+                    created_at=datetime.now(timezone.utc),
+                    last_updated_at=datetime.now(timezone.utc),
+                    last_run_at=None,
+                    deleted_at=None,
+                )
+                await self.bot_history_store.set_subkey(key=username, subkey=bot_name, value=new_bot_history)
+
                 return web.json_response(text=bot_config.model_dump_json(), status=201)
             else:
+                existing_bot_history = await self.bot_history_store.get_subkey(username, bot_name)
+                if existing_bot_history:
+                    existing_bot_history.last_updated_at = datetime.now(timezone.utc)
+                    await self.bot_history_store.set_subkey(key=username, subkey=bot_name, value=existing_bot_history)
+
                 return web.json_response(text=existing_bot_config.model_dump_json())
 
         @routes.get("/api/config/{bot_name}")
@@ -329,6 +378,11 @@ class TelebotConstructorApp:
             await self.running_bots_store.remove(username, bot_name)
             await self.bot_config_store.remove_subkey(username, bot_name)
             await self.secret_store.remove_secret(config.token_secret_name, owner_id=username)
+            existing_bot_history = await self.bot_history_store.get_subkey(username, bot_name)
+            if existing_bot_history:
+                existing_bot_history.deleted_at = datetime.now(timezone.utc)
+                await self.bot_history_store.set_subkey(key=username, subkey=bot_name, value=existing_bot_history)
+
             return web.json_response(text=config.model_dump_json())
 
         @routes.get("/api/config")
@@ -368,6 +422,7 @@ class TelebotConstructorApp:
             bot_name = self.parse_bot_name(request)
             bot_config = await self.load_bot_config(username, bot_name)
             await self.re_start_bot(username, bot_name, bot_config)
+
             return web.Response(text="OK", status=201)
 
         @routes.post("/api/stop/{bot_name}")
@@ -405,6 +460,58 @@ class TelebotConstructorApp:
             username = await self.authenticate(request)
             running_bots = await self.running_bots_store.all(username)
             return web.json_response(data=sorted(running_bots))
+
+        ##################################################################################
+        # bot info: all stat, is_running, last_run_at, etc
+        @routes.get("/api/bots/info/{bot_name}")
+        async def get_bot_info(request: web.Request) -> web.Response:
+            """
+            ---
+            description: Get info for bot with a given name
+            produces:
+            - application/json
+            responses:
+                "200":
+                    description: OK
+                "404":
+                    description: No config found
+            """
+            username = await self.authenticate(request)
+            bot_name = self.parse_bot_name(request)
+            bot_info = await self.load_bot_info(username, bot_name)
+
+            return web.json_response(text=bot_info.model_dump_json())
+
+        @routes.get("/api/bots/info")
+        async def list_bot_infos(request: web.Request) -> web.Response:
+            """
+            ---
+            description: List all bots with general info about running status, recent actions, etc
+            produces:
+            - application/json
+            responses:
+                "200":
+                    description: List of all bots name and their statuses
+            """
+            username = await self.authenticate(request)
+            bot_histories = await self.bot_history_store.load(username)
+            bot_infos: dict[str, BotInfo] = {}
+
+            for name, bot_info in bot_histories.items():
+                bot_config = await self.bot_config_store.get_subkey(username, name)
+                if bot_config is not None:
+                    bot_is_running = await self.running_bots_store.includes(username, name)
+                    bot_infos[name] = BotInfo(
+                        display_name=bot_config.display_name,
+                        created_at=bot_info.created_at,
+                        last_updated_at=bot_info.last_updated_at,
+                        last_run_at=bot_info.last_run_at,
+                        is_running=bot_is_running,
+                    )
+
+            return web.json_response(
+                data={name: bot_info.model_dump(mode="json") for name, bot_info in bot_infos.items()}
+            )
 
         ##################################################################################
         # validation endpoints
