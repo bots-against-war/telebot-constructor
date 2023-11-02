@@ -6,7 +6,7 @@
   import { validateBotToken } from "../api/validation";
   import type { BotInfo } from "../api/types";
   import ErrorBadge from "../components/ErrorBadge.svelte";
-  import { loadBotsInfo } from "../api/botInfo";
+  import { getBotInfo } from "../api/botInfo";
 
   export let newBotCallback: (botName: string, info: BotInfo) => void;
 
@@ -82,8 +82,8 @@
 
     if (res1.ok) {
       error = null;
-      const botInfo = unwrap(await loadBotsInfo());
-      newBotCallback(botName, botInfo[botName]);
+      const botInfo = unwrap(await getBotInfo(botName));
+      newBotCallback(botName, botInfo);
       closePopup();
     } else if (!res1.ok) {
       errorTitle = "Ошибка сохранения";

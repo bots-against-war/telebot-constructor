@@ -166,6 +166,22 @@ class TelebotConstructorApp:
             raise web.HTTPNotFound(reason=f"No config found for bot name {bot_name!r}")
         return config
 
+    async def load_bot_info(self, username: str, bot_name: str) -> BotInfo:
+        bot_config = await self.bot_config_store.get_subkey(username, bot_name)
+        bot_history = await self.bot_history_store.get_subkey(username, bot_name)
+        if bot_history or bot_config is None:
+            raise web.HTTPNotFound(reason=f"Not found info about bot name {bot_name!r}")
+        else:
+            bot_is_running = await self.running_bots_store.includes(username, bot_name)
+            bot_info = BotInfo(
+                display_name=bot_config.display_name,
+                created_at=bot_history.created_at,
+                last_updated_at=bot_history.last_updated_at,
+                last_run_at=bot_history.last_run_at,
+                is_running=bot_is_running,
+            )
+            return bot_info
+
     async def _make_raw_bot(self, username: str, bot_name: str) -> AsyncTeleBot:
         return await make_raw_bot(
             username,
@@ -311,7 +327,7 @@ class TelebotConstructorApp:
             if existing_bot_config is None:
                 new_bot_history = BotActionsHistory(
                     created_at=datetime.now(timezone.utc).isoformat(),
-                    last_updated_at="",
+                    last_updated_at=datetime.now(timezone.utc).isoformat(),
                     last_run_at="",
                     deleted_at="",
                 )
@@ -447,11 +463,30 @@ class TelebotConstructorApp:
 
         ##################################################################################
         # bot info: all stat, is_running, last_run_at, etc
-        @routes.get("/api/bots/info")
-        async def list_all_bots(request: web.Request) -> web.Response:
+        @routes.get("/api/bots/info/{bot_name}")
+        async def get_bot_info(request: web.Request) -> web.Response:
             """
             ---
-            description: List all bots
+            description: Get info for bot with a given name
+            produces:
+            - application/json
+            responses:
+                "200":
+                    description: OK
+                "404":
+                    description: No config found
+            """
+            username = await self.authenticate(request)
+            bot_name = self.parse_bot_name(request)
+            bot_info = await self.load_bot_info(username, bot_name)
+
+            return web.json_response(text=bot_info.model_dump_json())
+
+        @routes.get("/api/bots/info")
+        async def list_bot_infos(request: web.Request) -> web.Response:
+            """
+            ---
+            description: List all bots with general info about running status, recent actions, etc
             produces:
             - application/json
             responses:

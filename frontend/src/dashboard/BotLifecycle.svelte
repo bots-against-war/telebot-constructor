@@ -2,7 +2,7 @@
   import { startBot, stopBot } from "../api/lifecycle";
   import { deleteBotConfig } from "../api/botConfig";
   import { createEventDispatcher } from "svelte";
-  import { Alert, Badge, Button, Center, Container, Flex, Input, Text } from "@svelteuidev/core";
+  import { Alert, Badge, Button, Center, Container, Flex, Group, Text, Title } from "@svelteuidev/core";
   import type { BotInfo } from "../api/types";
   import NavButton from "../components/NavButton.svelte";
   import { withConfirmation } from "../utils";
@@ -68,25 +68,21 @@
 <Container>
   <Center>
     <Flex direction="column" gap="xl">
-      <Input
-        override={h1TextStyle}
-        variant="unstyled"
-        size="xl"
-        rightSectionWidth={120}
-        bind:value={botInfo.display_name}
-      >
-        <Badge slot="rightSection" color="green">{botInfo.is_running ? "Запущен" : "Остановлен"}</Badge>
-      </Input>
-
+      <Group position="apart">
+        <Title>{botInfo.display_name}</Title>
+        <Badge color="green">{botInfo.is_running ? "Запущен" : "Остановлен"}</Badge>
+      </Group>
       <Text size="lg" color="gray">
         {#if botInfo.created_at}
           Дата создания: {toBrowserTZ(new Date(botInfo.created_at))}
         {/if}
         {#if botInfo.last_updated_at}
           <br />
+          <br />
           Дата последнего редактирования: {toBrowserTZ(new Date(botInfo.last_updated_at))}
         {/if}
         {#if botInfo.last_run_at}
+          <br />
           <br />
           Дата последнего запуска: {toBrowserTZ(new Date(botInfo.last_run_at))}
         {/if}

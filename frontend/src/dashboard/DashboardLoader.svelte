@@ -3,9 +3,9 @@
   import LoadingScreen from "../components/LoadingScreen.svelte";
   import { unwrap } from "../utils.js";
   import Dashboard from "./Dashboard.svelte";
-  import { loadBotsInfo } from "../api/botInfo";
+  import { listBotInfos } from "../api/botInfo";
 
-  const loadBotInfo = async () => unwrap(await loadBotsInfo());
+  const loadBotInfo = async () => unwrap(await listBotInfos());
 </script>
 
 {#await loadBotInfo()}
