@@ -7,6 +7,7 @@
   import type { BotConfig, BotInfo } from "../api/types";
   import ErrorBadge from "../components/ErrorBadge.svelte";
   import { getBotInfo } from "../api/botInfo";
+  import { BOT_INFO_NODE_ID, DEFAULT_START_COMMAND_ENTRYPOINT_ID } from "../constants";
 
   export let newBotCallback: (botName: string, info: BotInfo) => void;
 
@@ -75,7 +76,7 @@
         entrypoints: [
           {
             command: {
-              entrypoint_id: `default-start-command`,
+              entrypoint_id: DEFAULT_START_COMMAND_ENTRYPOINT_ID,
               command: "start",
               short_description: "начать работу бота",
               next_block_id: null,
@@ -83,7 +84,10 @@
           },
         ],
         blocks: [],
-        node_display_coords: {},
+        node_display_coords: Object.fromEntries([
+          [DEFAULT_START_COMMAND_ENTRYPOINT_ID, { x: 0, y: 0 }],
+          [BOT_INFO_NODE_ID, { x: 0, y: -100 }],
+        ]),
       },
     };
     const res1 = await saveBotConfig(botName, config);

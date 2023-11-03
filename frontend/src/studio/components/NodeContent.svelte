@@ -18,6 +18,7 @@
   export let config: any = null;
   export let isValid = true;
   export let deletable = true;
+  export let colorOverride: string | null = null;
   export let configValidator: (config: any, langConfig: LanguageConfig | null) => Result<null, ValidationError> = (
     _,
     __,
@@ -64,7 +65,7 @@
     spacing="sm"
     position="apart"
     override={{
-      backgroundColor: headerColor(NODE_HUE[key]),
+      backgroundColor: colorOverride || headerColor(NODE_HUE[key]),
       borderRadius: "10px 10px 0 0;",
       padding: "8px",
     }}

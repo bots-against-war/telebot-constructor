@@ -17,6 +17,7 @@
     textWrap: "nowrap",
     textOverflow: "ellipsis",
     overflowX: "hidden",
+    lineHeight: "1.5",
   }}
   {...$$restProps}><slot /></Text
 >
