@@ -11,16 +11,23 @@
   import { getModalOpener } from "../../../utils";
   import { DEFAULT_NODE_PROPS } from "../nodeProps";
   import { NodeTypeKey } from "../display";
+  import InputAnchor from "../../components/InputAnchor.svelte";
   const openModal = getModalOpener<Modal>();
 
   export let config: CommandEntryPoint;
   export let position: SvelvetPosition;
   export let isValid = true;
+
+  let isStart = config.command === "start";
 </script>
 
 <Node id={config.entrypoint_id} bind:position {...DEFAULT_NODE_PROPS}>
+  {#if isStart}
+    <InputAnchor dummy />
+  {/if}
   <NodeContent
     key={NodeTypeKey.command}
+    deletable={!isStart}
     bind:isValid
     on:delete
     on:edit={() =>

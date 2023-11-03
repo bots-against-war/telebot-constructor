@@ -7,6 +7,7 @@ import {
   CodeForkSolid,
   NewspaperSolid,
   ClipboardSolid,
+  InfoCircleSolid,
 } from "flowbite-svelte-icons";
 
 export enum NodeTypeKey {
@@ -16,6 +17,7 @@ export enum NodeTypeKey {
   language_select = "language_select",
   menu = "menu",
   form = "form",
+  info = "info",
 }
 
 export const NODE_HUE: { [key in NodeTypeKey]: number } = {
@@ -25,6 +27,7 @@ export const NODE_HUE: { [key in NodeTypeKey]: number } = {
   language_select: 220,
   menu: 120,
   form: 67,
+  info: 0, // white is used
 };
 
 export function headerColor(hue: number): string {
@@ -38,6 +41,7 @@ export const NODE_TITLE: { [key in NodeTypeKey]: string } = {
   language_select: "Выбор языка",
   menu: "Меню",
   form: "Форма",
+  info: "Аккаунт бота",
 };
 
 export const NODE_ICON: { [key in NodeTypeKey]: Newable<SvelteComponent> } = {
@@ -47,4 +51,5 @@ export const NODE_ICON: { [key in NodeTypeKey]: Newable<SvelteComponent> } = {
   language_select: GlobeSolid,
   menu: CodeForkSolid,
   form: ClipboardSolid,
+  info: InfoCircleSolid,
 };

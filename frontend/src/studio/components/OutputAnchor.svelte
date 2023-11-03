@@ -1,17 +1,21 @@
 <script lang="ts">
   import { Anchor, type Connections } from "svelvet";
   import { svelvetNodeIdToBlockId } from "../utils";
+  import DummyEdge from "./DummyEdge.svelte";
 
   export let nextBlockId: string | null;
   export let anchorLabel: string | null = null;
+  export let dummy: boolean = false;
 
   let initialConnections: Connections = nextBlockId !== null ? [nextBlockId] : [];
 </script>
 
-<div class="anchor-and-label">
+<div class="anchor-and-label" class:dummy>
   <Anchor
     direction="south"
     multiple={false}
+    edge={dummy ? DummyEdge : null}
+    locked={dummy}
     output
     connections={initialConnections}
     on:connection={(e) => {
@@ -37,6 +41,11 @@
     top: -8px;
     --anchor-width: 16px;
     --anchor-height: 16px;
+  }
+  div.dummy {
+    top: -3px;
+    --anchor-width: 6px;
+    --anchor-height: 6px;
   }
 
   div.floating-anchor-name {

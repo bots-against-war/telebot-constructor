@@ -3,6 +3,7 @@
   import { Svelvet } from "svelvet";
   import { navigate } from "svelte-routing";
 
+  import BotInfoNode from "./nodes/BotInfo/Node.svelte";
   import CommandEntryPointNode from "./nodes/CommandEntryPoint/Node.svelte";
   import ContentBlockNode from "./nodes/ContentBlock/Node.svelte";
   import HumanOperatorNode from "./nodes/HumanOperatorBlock/Node.svelte";
@@ -10,7 +11,6 @@
   import MenuNode from "./nodes/MenuBlock/Node.svelte";
   import FormNode from "./nodes/FormBlock/Node.svelte";
   import StudioSidePandel from "./components/StudioSidePanel.svelte";
-  import BotUserBadge from "../components/BotUserBadge.svelte";
   import DeletableEdge from "./components/DeletableEdge.svelte";
 
   import { saveBotConfig } from "../api/botConfig";
@@ -170,7 +170,6 @@
         <EllipsisText maxWidth="300px" size={24}>
           {botConfig.display_name}
         </EllipsisText>
-        <BotUserBadge {botName} />
         <Button
           variant="filled"
           disabled={!isConfigValid || !isConfigModified}
@@ -189,6 +188,7 @@
     fitView={botConfig.user_flow_config.blocks.length + botConfig.user_flow_config.entrypoints.length >= 1}
     edge={DeletableEdge}
   >
+    <BotInfoNode {botName} bind:position={botConfig.user_flow_config.node_display_coords["bot-info-block"]} />
     {#each botConfig.user_flow_config.entrypoints as entrypoint (getEntrypointId(entrypoint))}
       {#if entrypoint.command}
         <CommandEntryPointNode
@@ -272,7 +272,7 @@
   div.navbar-container {
     position: absolute;
     top: 0;
-    z-index: 1000;
+    z-index: 100;
     width: 100%;
   }
 </style>
