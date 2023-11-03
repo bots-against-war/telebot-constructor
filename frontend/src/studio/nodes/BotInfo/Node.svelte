@@ -72,10 +72,12 @@
                   <QuestionCircleOutline />
                 </svelte:fragment>
               </Image>
-              <EllipsisText size="sm" weight="bold" maxWidth="150px">
+              <EllipsisText size="sm" weight="bold" maxWidth="160px">
                 {botUserResult.data.name}
               </EllipsisText>
-              <EllipsisText size="sm" color="dimmed" maxWidth="90px">@{botUserResult.data.username}</EllipsisText>
+              <!-- <EllipsisText size="sm" color="dimmed" maxWidth="100px"> -->
+              <!-- @{botUserResult.data.username} -->
+              <!-- </EllipsisText> -->
             </Group>
             <ActionIcon size={15} root="a" href={`https://t.me/${botUserResult.data.username}`} external>
               <ArrowUpRightFromSquareOutline />
