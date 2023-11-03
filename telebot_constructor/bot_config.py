@@ -1,3 +1,4 @@
+import copy
 from typing import Optional
 
 from pydantic import BaseModel, model_validator
@@ -23,7 +24,7 @@ class UserFlowEntryPointConfig(ExactlyOneNonNullFieldModel):
 
     def to_user_flow_entrypoint(self) -> UserFlowEntryPoint:
         # runtime guarantee that exactly one of the options is not None
-        return self.command or self.catch_all or self.regex  # type: ignore
+        return copy.deepcopy(self.command or self.catch_all or self.regex)  # type: ignore
 
 
 class UserFlowBlockConfig(ExactlyOneNonNullFieldModel):
@@ -35,7 +36,9 @@ class UserFlowBlockConfig(ExactlyOneNonNullFieldModel):
 
     def to_user_flow_block(self) -> UserFlowBlock:
         # runtime guarantee that exactly one of the options is not None
-        return self.content or self.human_operator or self.menu or self.form or self.language_select  # type: ignore
+        return copy.deepcopy(  # type: ignore
+            self.content or self.human_operator or self.menu or self.form or self.language_select,
+        )
 
 
 class UserFlowNodePosition(BaseModel):
@@ -68,7 +71,6 @@ class BotConfig(BaseModel):
     token_secret_name: str  # must correspond to a valid secret in secret store
     user_flow_config: UserFlowConfig
 
-    @classmethod
     def for_temporary_bot(self) -> "BotConfig":
         """Temporary bots are run with a barebones config; it is not saved to DB and is never shown to the user"""
         return BotConfig(

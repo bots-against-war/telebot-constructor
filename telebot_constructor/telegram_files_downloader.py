@@ -27,6 +27,10 @@ class TelegramFilesDownloader(abc.ABC):
     async def setup(self) -> None:
         ...
 
+    @abc.abstractmethod
+    async def cleanup(self) -> None:
+        ...
+
 
 class RedisCacheTelegramFilesDownloader(TelegramFilesDownloader):
     def __init__(self, redis: RedisInterface, max_cached: int = 1024) -> None:
@@ -114,6 +118,13 @@ class RedisCacheTelegramFilesDownloader(TelegramFilesDownloader):
             self._evict_extra_cached_in_background(),
             name="Evicting extra files from telegram-downloaded files cache",
         )
+
+    async def cleanup(self) -> None:
+        self._task.cancel()
+        try:
+            await self._task
+        except asyncio.CancelledError:
+            pass
 
 
 class InmemoryCacheTelegramFilesDownloader(RedisCacheTelegramFilesDownloader):

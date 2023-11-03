@@ -1,18 +1,18 @@
 <script lang="ts">
   import { onDestroy } from "svelte";
   import {
-    InputWrapper,
+    ActionIcon,
+    Button,
     Collapse,
     Group,
-    ActionIcon,
-    Stack,
-    Space,
+    InputWrapper,
     Loader,
-    Button,
-    Text,
     Paper,
+    Space,
+    Stack,
+    Text,
   } from "@svelteuidev/core";
-  import { Cross1, Pencil1 } from "radix-icons-svelte";
+  import { PenOutline, TrashBinOutline } from "flowbite-svelte-icons";
 
   import GroupChatBadge from "../../components/GroupChatBadge.svelte";
 
@@ -58,15 +58,17 @@
         }}
       >
         {#if showGroupChatSelect}
-          <Cross1 />
+          <TrashBinOutline />
         {:else}
-          <Pencil1 />
+          <PenOutline />
         {/if}
       </ActionIcon>
     </Group>
   {/if}
   <Collapse open={showGroupChatSelect}>
-    <Space h="sm" />
+    {#if selectedGroupChatId !== PLACEHOLDER_GROUP_CHAT_ID}
+      <Space h="sm" />
+    {/if}
     <Paper withBorder>
       <Stack spacing="xs">
         {#await availableGroupChatsPromise}

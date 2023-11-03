@@ -12,7 +12,7 @@
   import NodeContent from "../../components/NodeContent.svelte";
   import InputAnchor from "../../components/InputAnchor.svelte";
   import { DEFAULT_NODE_PROPS } from "../nodeProps";
-  import { HUE, headerColor } from "../colors";
+  import { NodeTypeKey } from "../display";
   import { validateHumanOperatorBlock } from "../nodeValidators";
 
   const openModal = getModalOpener();
@@ -20,8 +20,7 @@
   export let config: HumanOperatorBlock;
   export let position: SvelvetPosition;
   export let isValid = true;
-
-  const botName: string = getContext("botName");
+  export let botName: string;
 
   const setNewConfig = (newConfig: HumanOperatorBlock) => {
     config = newConfig;
@@ -39,8 +38,7 @@
 <Node id={config.block_id} bind:position {...DEFAULT_NODE_PROPS}>
   <InputAnchor />
   <NodeContent
-    name="Человек-оператор"
-    headerColor={headerColor(HUE.human_operator)}
+    key={NodeTypeKey.human_operator}
     bind:isValid
     {config}
     configValidator={validateHumanOperatorBlock}

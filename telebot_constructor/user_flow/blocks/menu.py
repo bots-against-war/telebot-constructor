@@ -1,4 +1,3 @@
-import dataclasses
 from typing import Any, Optional
 
 from pydantic import BaseModel
@@ -18,6 +17,7 @@ from telebot_constructor.user_flow.types import (
     UserFlowContext,
     UserFlowSetupContext,
 )
+from telebot_constructor.utils import without_nones
 from telebot_constructor.utils.pydantic import (
     ExactlyOneNonNullFieldModel,
     LocalizableText,
@@ -32,52 +32,52 @@ class MenuItem(ExactlyOneNonNullFieldModel):
     next_block_id: Optional[str] = None  # for terminal items
     link_url: Optional[str] = None  # for link buttons (works only if mechanism is inline)
 
-    def to_components_menu_item(self, global_config: ComponentsMenuConfig) -> ComponentsMenuItem:
+    def to_components_menu_item(self) -> ComponentsMenuItem:
         return ComponentsMenuItem(
             label=self.label,
-            submenu=None if self.submenu is None else self.submenu.to_components_menu(global_config),
+            submenu=None if self.submenu is None else self.submenu.to_components_menu(),
             terminator=self.next_block_id,
             link_url=self.link_url,
             bound_category=None,
         )
 
 
-class Menu(BaseModel):
-    text: LocalizableText
-    no_back_button: bool
-    items: list[MenuItem]
-
-    def to_components_menu(self, global_config: ComponentsMenuConfig) -> ComponentsMenu:
-        config_override = {"back_label": None} if self.no_back_button else {}
-        config = dataclasses.replace(global_config, **config_override)  # type: ignore
-        return ComponentsMenu(
-            text=self.text,
-            menu_items=[item.to_components_menu_item(global_config) for item in self.items],
-            config=config,
-        )
-
-
 class MenuConfig(BaseModel):
-    back_label: LocalizableText
     mechanism: MenuMechanism
+    back_label: Optional[LocalizableText]
     lock_after_termination: bool
 
 
-class MenuBlock(UserFlowBlock):
-    """Multilevel menu block powered by Telegram inline buttons"""
-
-    menu: Menu
+class Menu(BaseModel):
+    text: LocalizableText
+    items: list[MenuItem]
     config: MenuConfig
 
-    def model_post_init(self, __context: Any) -> None:
-        self._components_config = ComponentsMenuConfig(
+    def to_components_menu(self) -> ComponentsMenu:
+        config = ComponentsMenuConfig(
             back_label=self.config.back_label,
             lock_after_termination=self.config.lock_after_termination,
             # TODO: convert markdown and plain texts to HTML and set is_text_html to True
             is_text_html=False,
             mechanism=self.config.mechanism,
         )
-        self._components_menu = self.menu.to_components_menu(global_config=self._components_config)
+        return ComponentsMenu(
+            text=self.text,
+            menu_items=[item.to_components_menu_item() for item in self.items],
+            config=config,
+        )
+
+
+class MenuBlock(UserFlowBlock):
+    """Multilevel menu block powered by Telegram inline buttons"""
+
+    menu: Menu
+
+    def possible_next_block_ids(self) -> list[str]:
+        return without_nones([item.next_block_id for item in self.menu.items])
+
+    def model_post_init(self, __context: Any) -> None:
+        self.menu.to_components_menu()  # to validate
 
     @property
     def menu_handler(self) -> MenuHandler:
@@ -89,6 +89,7 @@ class MenuBlock(UserFlowBlock):
         await self.menu_handler.start_menu(bot=context.bot, user=context.user)
 
     async def setup(self, context: UserFlowSetupContext) -> SetupResult:
+        self._components_menu = self.menu.to_components_menu()
         self._components_menu_handler = MenuHandler(
             name=self.block_id,
             bot_prefix=context.bot_prefix,

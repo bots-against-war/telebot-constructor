@@ -4,7 +4,7 @@
   import { languageConfigStore } from "../stores";
   import type { ComponentProps } from "svelte";
 
-  type $$Props = Omit<ComponentProps<LocalizableTextInputInternal>, "languages">;
+  type $$Props = Omit<ComponentProps<LocalizableTextInputInternal>, "langConfig">;
 
   export let value: LocalizableText;
 </script>

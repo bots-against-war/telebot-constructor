@@ -1,26 +1,13 @@
-<script lang="ts">
-  export let title: string | null = null;
-  export let position: "upper-left" | "upper-right" | "lower-right";
-
-  let style: string = "";
-  if (position === "upper-left") style = "left: 10px; top: 10px;";
-  else if (position === "upper-right") style = "right: 10px; top: 10px;";
-  else if (position === "lower-right") style = "right: 10px; bottom: 10px;";
-
-  if (title !== null) style = style.concat("padding-top: 4px;");
-</script>
-
-<div class="custom-controls" {style}>
-  {#if title !== null}
-    <h3>{title}</h3>
-  {/if}
+<div class="custom-controls">
   <slot />
 </div>
 
 <style>
   div.custom-controls {
     position: fixed;
-    border-radius: 6px;
+    top: 60px; /* TODO: unhardcode header height */
+    left: 10px;
+    border-radius: 15px;
     display: flex;
     flex-direction: column;
     align-items: center;

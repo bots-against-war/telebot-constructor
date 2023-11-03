@@ -1,6 +1,5 @@
 <script lang="ts">
-  import { Router, Route, links } from "svelte-routing";
-  import { SvelteUIProvider } from "@svelteuidev/core";
+  import { links, Route, Router } from "svelte-routing";
   // @ts-expect-error
   import Modal from "svelte-simple-modal";
 
@@ -8,12 +7,23 @@
   import StudioLoader from "./studio/StudioLoader.svelte";
   import Navbar from "./components/Navbar.svelte";
   import GlobalStateProvider from "./GlobalStateProvider.svelte";
+  import ThemeProvider from "./ThemeProvider.svelte";
+
+  import { setContext } from "svelte";
+
+  // Global icon settings
+  const iconCtx = {
+    size: "xs",
+    width: 15,
+    strokeWidth: "1",
+  };
+  setContext("iconCtx", iconCtx);
 </script>
 
-<SvelteUIProvider withNormalizeCSS withGlobalStyles>
-  <Modal styleContent={{ overflow: "initial" }}>
-    <div use:links>
-      <GlobalStateProvider>
+<GlobalStateProvider>
+  <ThemeProvider>
+    <Modal closeButton={false}>
+      <div use:links>
         <Router>
           <Route path="/">
             <Navbar />
@@ -23,7 +33,7 @@
             <StudioLoader botName={params.botname} />
           </Route>
           <!-- TODO: separate each route contents to a component -->
-          <Route path="/team">
+          <!-- <Route path="/team">
             <Navbar />
             <p>Команда</p>
           </Route>
@@ -34,9 +44,9 @@
           <Route path="/security">
             <Navbar />
             <p>Безопасность</p>
-          </Route>
+          </Route> -->
         </Router>
-      </GlobalStateProvider>
-    </div>
-  </Modal>
-</SvelteUIProvider>
+      </div>
+    </Modal>
+  </ThemeProvider>
+</GlobalStateProvider>

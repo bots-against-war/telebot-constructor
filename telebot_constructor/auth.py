@@ -7,9 +7,11 @@ from typing import Optional
 
 from aiohttp import hdrs, web
 from telebot import AsyncTeleBot
+from telebot import types as tg
 from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.stores.generic import KeyValueStore
 
+from telebot_constructor.app_models import AuthType, LoggedInUser
 from telebot_constructor.static import static_file_content
 
 
@@ -17,8 +19,8 @@ class Auth(abc.ABC):
     """Interface class for different ways to authorize web requests to bot constructor"""
 
     @abc.abstractmethod
-    async def authenticate_request(self, request: web.Request) -> Optional[str]:
-        """Request authentication, must return constructor's internal username (user id)"""
+    async def authenticate_request(self, request: web.Request) -> Optional[LoggedInUser]:
+        """Request authentication, must return details on logged-in user"""
         ...
 
     @abc.abstractmethod
@@ -37,8 +39,13 @@ class NoAuth(Auth):
     Useful when running in a private network or during development.
     """
 
-    async def authenticate_request(self, request: web.Request) -> Optional[str]:
-        return "no-auth"
+    async def authenticate_request(self, request: web.Request) -> Optional[LoggedInUser]:
+        return LoggedInUser(
+            username="no-auth",
+            name="Anonymous user",
+            auth_type=AuthType.NO_AUTH,
+            userpic=None,
+        )
 
     async def unauthenticated_client_response(self, request: web.Request, static_files_dir: Path) -> web.Response:
         raise NotImplementedError()
@@ -63,6 +70,7 @@ class GroupChatAuth(Auth):
     ):
         self.bot = bot
         self.auth_chat_id = auth_chat_id
+        self._auth_chat: Optional[tg.Chat] = None  # fetched lazily
         self.logger = logging.getLogger(__name__ + f"[{self.__class__.__name__}]")
 
         self.access_code_store = KeyValueStore[str](
@@ -82,9 +90,15 @@ class GroupChatAuth(Auth):
             loader=lambda x: None,
         )
 
+    async def get_auth_chat(self) -> tg.Chat:
+        if self._auth_chat is None:
+            chat = await self.bot.get_chat(chat_id=self.auth_chat_id)
+            self._auth_chat = chat
+        return self._auth_chat
+
     ACCESS_TOKEN_COOKIE_NAME = "tc_access_token"
 
-    async def authenticate_request(self, request: web.Request) -> Optional[str]:
+    async def authenticate_request(self, request: web.Request) -> Optional[LoggedInUser]:
         token = request.cookies.get(self.ACCESS_TOKEN_COOKIE_NAME)
         if token is None:
             self.logger.info("No auth cookie found in request")
@@ -93,7 +107,13 @@ class GroupChatAuth(Auth):
             self.logger.info("Invalid auth cookie in request")
             return None
         self.logger.info("Auth OK")
-        return "admin"  # all request are authenticated as the same user
+        auth_chat = await self.get_auth_chat()
+        return LoggedInUser(
+            username="admin",
+            name=f"Anonymous admin (member of {auth_chat.title or '<unnamed chat>'!r})",
+            auth_type=AuthType.TELEGRAM_GROUP_AUTH,
+            userpic=None,
+        )
 
     async def unauthenticated_client_response(self, request: web.Request, static_files_dir: Path) -> web.Response:
         return web.Response(

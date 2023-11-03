@@ -1,13 +1,14 @@
 <script lang="ts">
-  import { setContext } from "svelte";
   import LoadingScreen from "./components/LoadingScreen.svelte";
-  import { availableLanguagesStore } from "./globalStateStores";
-  import { getAvailableLanguages } from "./api/misc";
+
+  import { availableLanguagesStore, loggedInUserStore } from "./globalStateStores";
+  import { getAvailableLanguages, fetchPrefilledMessages, getLoggedInUser } from "./api/misc";
   import { err, ok, type Result } from "./utils";
   import FatalError from "./components/FatalError.svelte";
+  import { getPrefilledMessages, savePrefilledMessages } from "./studio/nodes/FormBlock/prefill";
 
   async function loadGlobalState(): Promise<Result<null>> {
-    // available language list
+    // 1. available language list
     const LANGUAGE_DATA_BY_CODE_LOCALSTORAGE_KEY = "languageDataByCode";
     // try loading from localStorage
     const storedDump = localStorage.getItem(LANGUAGE_DATA_BY_CODE_LOCALSTORAGE_KEY);
@@ -25,6 +26,26 @@
       localStorage.setItem(LANGUAGE_DATA_BY_CODE_LOCALSTORAGE_KEY, JSON.stringify(loaded));
       availableLanguagesStore.set(loaded);
     }
+
+    // 2. prefilled messages
+    if (Object.keys(getPrefilledMessages()).length === 0) {
+      const res = await fetchPrefilledMessages();
+      if (res.ok) {
+        console.log("Loaded prefilled messages, will save to localStorage");
+        console.log(res);
+        savePrefilledMessages(res.data);
+      } else {
+        console.error(`Failed to load prefilled messages: ${res.error}`);
+      }
+    }
+
+    // 3. logged-in user details
+    // TODO: this can be bundled with some other request to reduce network latency
+    // but for now that'll do
+    const loggedInUser = await getLoggedInUser();
+    if (!loggedInUser.ok) return loggedInUser;
+    loggedInUserStore.set(loggedInUser.data);
+
     return ok(null);
   }
 

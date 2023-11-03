@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { Group, ActionIcon, Title, Input } from "@svelteuidev/core";
-
-  import { Pencil1, Check, Cross1 } from "radix-icons-svelte";
+  import { ActionIcon, Group, Input, Space, Title } from "@svelteuidev/core";
+  import { CheckOutline, CloseOutline, PenOutline } from "flowbite-svelte-icons";
+  import EllipsisText from "../../components/internal/EllipsisText.svelte";
 
   export let title: string;
 
@@ -21,18 +21,19 @@
           isEditing = false;
         }}
       >
-        <Check />
+        <CheckOutline />
       </ActionIcon>
+      <Space w="md" />
       <ActionIcon on:click={() => (isEditing = false)}>
-        <Cross1 />
+        <CloseOutline />
       </ActionIcon>
     </Group>
   {:else}
-    <Title>
+    <EllipsisText maxWidth="300px" size={24}>
       {title}
-    </Title>
+    </EllipsisText>
     <ActionIcon on:click={() => (isEditing = true)}>
-      <Pencil1 />
+      <PenOutline />
     </ActionIcon>
   {/if}
 </Group>

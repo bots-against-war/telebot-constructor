@@ -11,6 +11,18 @@ from telebot_constructor.bot_config import (
 )
 from telebot_constructor.construct import construct_bot
 from telebot_constructor.user_flow.blocks.content import ContentBlock
+from telebot_constructor.user_flow.blocks.form import (
+    BranchingFormMemberConfig,
+    EnumOption,
+    FormBlock,
+    FormBranchConfig,
+    FormFieldConfig,
+    FormMessages,
+    FormResultsExport,
+    FormResultsExportToChatConfig,
+    PlainTextFormFieldConfig,
+    SingleSelectFormFieldConfig,
+)
 from telebot_constructor.user_flow.blocks.human_operator import (
     FeedbackHandlerConfig,
     HumanOperatorBlock,
@@ -33,6 +45,7 @@ from telebot_constructor.user_flow.entrypoints.command import CommandEntryPoint
 from telebot_constructor.user_flow.entrypoints.regex_match import RegexMatchEntryPoint
 from telebot_constructor.utils.pydantic import Language
 from tests.utils import (
+    assert_method_call_dictified_kwargs_include,
     assert_method_call_kwargs_include,
     dummy_secret_store,
     tg_update_callback_query,
@@ -41,7 +54,7 @@ from tests.utils import (
 
 
 def test_user_flow_config_model_validation() -> None:
-    with pytest.raises(ValueError, match=r".*?Duplicate block ids: \['1'\]"):
+    with pytest.raises(ValueError, match=r".*?All block ids must be unique, but there are duplicates: 1"):
         UserFlowConfig(
             entrypoints=[],
             blocks=[
@@ -300,16 +313,15 @@ async def test_flow_with_menu() -> None:
                         block_id="menu",
                         menu=Menu(
                             text="top level menu",
-                            no_back_button=False,
                             items=[
                                 MenuItem(label="one", next_block_id="message-1"),
                                 MenuItem(label="two", next_block_id="message-2"),
                             ],
-                        ),
-                        config=MenuConfig(
-                            back_label="<-",
-                            lock_after_termination=False,
-                            mechanism=MenuMechanism.INLINE_BUTTONS,
+                            config=MenuConfig(
+                                back_label="<-",
+                                lock_after_termination=False,
+                                mechanism=MenuMechanism.INLINE_BUTTONS,
+                            ),
                         ),
                     )
                 ),
@@ -363,8 +375,8 @@ async def test_flow_with_menu() -> None:
     )
     assert bot.method_calls["send_message"][1].full_kwargs["reply_markup"].to_dict() == {
         "inline_keyboard": [
-            [{"text": "one", "callback_data": "terminator:0"}],
-            [{"text": "two", "callback_data": "terminator:1"}],
+            [{"text": "one", "callback_data": "terminator:8d6ab84ca2af9fcc-0"}],
+            [{"text": "two", "callback_data": "terminator:8d6ab84ca2af9fcc-1"}],
         ]
     }
     bot.method_calls.clear()
@@ -383,6 +395,149 @@ async def test_flow_with_menu() -> None:
         bot.method_calls["send_message"], [{"chat_id": 1312, "text": "message on option two"}]
     )
     assert bot.method_calls["send_message"][0].full_kwargs["reply_markup"].to_json() == '{"remove_keyboard":true}'
+    bot.method_calls.clear()
+
+
+async def test_flow_with_nexted_menu() -> None:
+    USER_ID = 1312
+    bot_config = BotConfig(
+        token_secret_name="token",
+        display_name="Menu bot",
+        user_flow_config=UserFlowConfig(
+            entrypoints=[
+                UserFlowEntryPointConfig(
+                    command=CommandEntryPoint(
+                        entrypoint_id="start-cmd",
+                        command="start",
+                        next_block_id="menu",
+                    ),
+                )
+            ],
+            blocks=[
+                UserFlowBlockConfig(
+                    menu=MenuBlock(
+                        block_id="menu",
+                        menu=Menu(
+                            text="top level menu",
+                            items=[
+                                MenuItem(label="one", next_block_id="submenu"),
+                                MenuItem(label="two", next_block_id="message-fin"),
+                            ],
+                            config=MenuConfig(
+                                back_label="<-",
+                                lock_after_termination=False,
+                                mechanism=MenuMechanism.INLINE_BUTTONS,
+                            ),
+                        ),
+                    )
+                ),
+                UserFlowBlockConfig(
+                    menu=MenuBlock(
+                        block_id="submenu",
+                        menu=Menu(
+                            text="second level menu",
+                            items=[
+                                MenuItem(label="foo", next_block_id="message-fin"),
+                                MenuItem(label="bar", next_block_id="message-fin"),
+                            ],
+                            config=MenuConfig(
+                                back_label="<-",
+                                lock_after_termination=False,
+                                mechanism=MenuMechanism.INLINE_BUTTONS,
+                            ),
+                        ),
+                    )
+                ),
+                UserFlowBlockConfig(
+                    content=ContentBlock.simple_text(
+                        block_id="message-fin",
+                        message_text="message after menu",
+                        next_block_id=None,
+                    ),
+                ),
+            ],
+            node_display_coords={},
+        ),
+    )
+
+    redis = RedisEmulation()
+    secret_store = dummy_secret_store(redis)
+    username = "user123"
+    await secret_store.save_secret(secret_name="token", secret_value="mock-token", owner_id=username)
+    bot_runner = await construct_bot(
+        username=username,
+        bot_name="menu-bot",
+        bot_config=bot_config,
+        secret_store=secret_store,
+        redis=redis,
+        _bot_factory=MockedAsyncTeleBot,
+    )
+
+    assert not bot_runner.background_jobs
+    assert not bot_runner.aux_endpoints
+
+    bot = bot_runner.bot
+    assert isinstance(bot, MockedAsyncTeleBot)
+    bot.method_calls.clear()  # remove construct-time calls
+
+    # /start command
+    await bot.process_new_updates([tg_update_message_to_bot(USER_ID, first_name="User", text="/start")])
+    assert_method_call_kwargs_include(
+        bot.method_calls["send_message"],
+        [
+            {"chat_id": USER_ID, "text": "top level menu"},
+        ],
+    )
+    assert_method_call_dictified_kwargs_include(
+        bot.method_calls["send_message"],
+        [
+            {
+                "reply_markup": {
+                    "inline_keyboard": [
+                        [{"text": "one", "callback_data": "menu:8d6ab84ca2af9fcc-1"}],
+                        [{"text": "two", "callback_data": "terminator:8d6ab84ca2af9fcc-1"}],
+                    ]
+                }
+            }
+        ],
+    )
+    bot.method_calls.clear()
+
+    # pressing the second button
+    await bot.process_new_updates([tg_update_callback_query(USER_ID, first_name="User", callback_query="terminator:1")])
+    assert_method_call_kwargs_include(
+        bot.method_calls["send_message"], [{"chat_id": 1312, "text": "message after menu"}]
+    )
+    assert bot.method_calls["send_message"][0].full_kwargs["reply_markup"].to_json() == '{"remove_keyboard":true}'
+    bot.method_calls.clear()
+
+    # pressing the first button
+    await bot.process_new_updates([tg_update_callback_query(USER_ID, first_name="User", callback_query="menu:1")])
+    assert not bot.method_calls.get("send_message")
+    assert_method_call_kwargs_include(
+        bot.method_calls["edit_message_text"], [{"chat_id": 1312, "text": "second level menu", "message_id": 1}]
+    )
+    assert_method_call_dictified_kwargs_include(
+        bot.method_calls["edit_message_text"],
+        [
+            {
+                "reply_markup": {
+                    "inline_keyboard": [
+                        [{"text": "foo", "callback_data": "terminator:8d6ab84ca2af9fcc-2"}],
+                        [{"text": "bar", "callback_data": "terminator:8d6ab84ca2af9fcc-3"}],
+                        [{"text": "<-", "callback_data": "menu:8d6ab84ca2af9fcc-0"}],
+                    ]
+                }
+            }
+        ],
+    )
+    bot.method_calls.clear()
+
+    # pressing the first button in submeny
+    await bot.process_new_updates([tg_update_callback_query(USER_ID, first_name="User", callback_query="terminator:2")])
+    assert_method_call_kwargs_include(
+        bot.method_calls["send_message"], [{"chat_id": 1312, "text": "message after menu"}]
+    )
     bot.method_calls.clear()
 
 
@@ -682,4 +837,203 @@ async def test_multilang_user_flow() -> None:
     await bot.process_new_updates([tg_update_message_to_bot(161, first_name="User", text="/start")])
     assert len(bot.method_calls) == 1
     assert_method_call_kwargs_include(bot.method_calls["send_message"], [{"text": "привет юзер", "chat_id": 161}])
+    bot.method_calls.clear()
+
+
+async def test_user_flow_with_form() -> None:
+    bot_config = BotConfig(
+        token_secret_name="token",
+        display_name="lalala",
+        user_flow_config=UserFlowConfig(
+            entrypoints=[
+                UserFlowEntryPointConfig(
+                    command=CommandEntryPoint(
+                        entrypoint_id="start-cmd",
+                        command="start",
+                        next_block_id="hello-msg",
+                    ),
+                ),
+            ],
+            blocks=[
+                UserFlowBlockConfig(
+                    content=ContentBlock.simple_text(
+                        block_id="hello-msg",
+                        message_text="hi i'm form bot",
+                        next_block_id="form",
+                    ),
+                ),
+                UserFlowBlockConfig(
+                    content=ContentBlock.simple_text(
+                        block_id="thanks-msg",
+                        message_text="thanks for using the bot",
+                        next_block_id=None,
+                    ),
+                ),
+                UserFlowBlockConfig(
+                    form=FormBlock(
+                        block_id="form",
+                        form_name="test-form",
+                        members=[
+                            BranchingFormMemberConfig(
+                                field=FormFieldConfig(
+                                    plain_text=PlainTextFormFieldConfig(
+                                        id="name",
+                                        name="Name",
+                                        prompt="what is your name?",
+                                        is_long_text=False,
+                                        is_required=True,
+                                        result_formatting="auto",
+                                        empty_text_error_msg="please provide an answer",
+                                    ),
+                                )
+                            ),
+                            BranchingFormMemberConfig(
+                                field=FormFieldConfig(
+                                    single_select=SingleSelectFormFieldConfig(
+                                        id="does_like_apples",
+                                        name="Apples",
+                                        prompt="do you like apples?",
+                                        is_required=True,
+                                        result_formatting="auto",
+                                        options=[
+                                            EnumOption(id="yes", label="Yes I do"),
+                                            EnumOption(id="no", label="No!!!"),
+                                        ],
+                                        invalid_enum_error_msg="please use reply keyboard buttons",
+                                    ),
+                                )
+                            ),
+                            BranchingFormMemberConfig(
+                                branch=FormBranchConfig(
+                                    members=[
+                                        BranchingFormMemberConfig(
+                                            field=FormFieldConfig(
+                                                plain_text=PlainTextFormFieldConfig(
+                                                    id="which_apples",
+                                                    name="Which apples",
+                                                    prompt="which apples do you like?",
+                                                    is_required=True,
+                                                    is_long_text=False,
+                                                    result_formatting="auto",
+                                                    empty_text_error_msg="please answer the question",
+                                                )
+                                            )
+                                        )
+                                    ],
+                                    condition_match_value="yes",
+                                )
+                            ),
+                        ],
+                        messages=FormMessages(
+                            form_start="hi please fill out the form!",
+                            cancel_command_is="{} - cancel filling",
+                            field_is_skippable="skip field - {}",
+                            field_is_not_skippable="field is not skippable",
+                            please_enter_correct_value="please enter corrected value",
+                            unsupported_command="the only supported commands are: {}",
+                        ),
+                        results_export=FormResultsExport(
+                            echo_to_user=True,
+                            is_anonymous=False,
+                            to_chat=FormResultsExportToChatConfig(chat_id=111222, via_feedback_handler=True),
+                        ),
+                        form_completed_next_block_id="thanks-msg",
+                        form_cancelled_next_block_id=None,
+                    ),
+                ),
+            ],
+            node_display_coords={},
+        ),
+    )
+    redis = RedisEmulation()
+    secret_store = dummy_secret_store(redis)
+    username = "bot-admin-1312"
+    await secret_store.save_secret(secret_name="token", secret_value="mock-token", owner_id=username)
+    bot_runner = await construct_bot(
+        username=username,
+        bot_name="form-bot-test",
+        bot_config=bot_config,
+        secret_store=secret_store,
+        redis=redis,
+        _bot_factory=MockedAsyncTeleBot,
+    )
+    assert not bot_runner.background_jobs
+    assert not bot_runner.aux_endpoints
+
+    bot = bot_runner.bot
+    assert isinstance(bot, MockedAsyncTeleBot)
+    bot.method_calls.clear()
+
+    # using start command to start the form
+    await bot.process_new_updates([tg_update_message_to_bot(161, first_name="User", text="/start")])
+    assert len(bot.method_calls) == 1
+    assert_method_call_kwargs_include(
+        bot.method_calls["send_message"],
+        [
+            {"text": "hi i'm form bot", "chat_id": 161},
+            {"chat_id": 161, "text": "hi please fill out the form! /cancel - cancel filling.\n\nwhat is your name?"},
+        ],
+    )
+    assert_method_call_dictified_kwargs_include(bot.method_calls["send_message"], [{}, {}])
+    bot.method_calls.clear()
+
+    await bot.process_new_updates([tg_update_message_to_bot(161, first_name="User", text="John Doe")])
+    assert len(bot.method_calls) == 1
+    assert_method_call_kwargs_include(
+        bot.method_calls["send_message"],
+        [
+            {"chat_id": 161, "text": "do you like apples?"},
+        ],
+    )
+    assert_method_call_dictified_kwargs_include(
+        bot.method_calls["send_message"],
+        [
+            {
+                "reply_markup": {
+                    "keyboard": [[{"text": "Yes I do"}, {"text": "No!!!"}]],
+                    "one_time_keyboard": True,
+                    "resize_keyboard": True,
+                },
+            }
+        ],
+    )
+    bot.method_calls.clear()
+
+    await bot.process_new_updates([tg_update_message_to_bot(161, first_name="User", text="Yes I do")])
+    assert len(bot.method_calls) == 1
+    assert_method_call_kwargs_include(
+        bot.method_calls["send_message"],
+        [
+            {"chat_id": 161, "text": "which apples do you like?"},
+        ],
+    )
+    bot.method_calls.clear()
+
+    await bot.process_new_updates([tg_update_message_to_bot(161, first_name="User", text="granny smith")])
+    assert len(bot.method_calls) == 1
+    assert_method_call_kwargs_include(
+        bot.method_calls["send_message"],
+        [
+            {
+                "chat_id": 161,
+                "text": (
+                    "<b>what is your name?</b>: John Doe\n"
+                    + "<b>do you like apples?</b>: Yes I do\n"
+                    + "<b>which apples do you like?</b>: granny smith"
+                ),
+                "parse_mode": "HTML",
+            },
+            {
+                "chat_id": 111222,
+                "text": (
+                    '<a href="tg://user?id=161">User</a>\n\n'
+                    + "<b>what is your name?</b>: John Doe\n"
+                    + "<b>do you like apples?</b>: Yes I do\n"
+                    + "<b>which apples do you like?</b>: granny smith"
+                ),
+                "parse_mode": "HTML",
+            },
+            {"text": "thanks for using the bot", "chat_id": 161},
+        ],
+    )
     bot.method_calls.clear()

@@ -58,7 +58,6 @@ export type Text1 =
   | {
       [k: string]: string;
     };
-export type NoBackButton = boolean;
 export type Label =
   | string
   | {
@@ -67,35 +66,68 @@ export type Label =
 export type NextBlockId4 = string | null;
 export type LinkUrl = string | null;
 export type Items = MenuItem[];
+export type MenuMechanism = "inline_buttons" | "reply_keyboard";
 export type BackLabel =
   | string
   | {
       [k: string]: string;
-    };
-export type MenuMechanism = "inline_buttons" | "reply_keyboard";
+    }
+  | null;
 export type LockAfterTermination = boolean;
 export type BlockId3 = string;
 export type FormName = string;
 export type Id = string;
-export type Propmt =
+export type Name = string;
+export type Prompt =
   | string
   | {
       [k: string]: string;
     };
 export type IsRequired = boolean;
-export type Descr = string;
+export type ResultFormatting = FormFieldResultFormattingOpts | "auto" | null;
+export type Descr =
+  | string
+  | {
+      [k: string]: string;
+    };
 export type IsMultiline = boolean;
 export type ValueFormatter = null;
-export type NextField = string | NextFieldMapping | null;
-export type IfSkipped = string | null;
-export type Default = string;
+export type IsLongText = boolean;
 export type EmptyTextErrorMsg =
   | string
   | {
       [k: string]: string;
     };
-export type Fields = FormFieldConfig[];
+export type Id1 = string;
+export type Name1 = string;
+export type Prompt1 =
+  | string
+  | {
+      [k: string]: string;
+    };
+export type IsRequired1 = boolean;
+export type ResultFormatting1 = FormFieldResultFormattingOpts | "auto" | null;
+export type Id2 = string;
+export type Label1 =
+  | string
+  | {
+      [k: string]: string;
+    };
+export type Options = EnumOption[];
+export type InvalidEnumErrorMsg =
+  | string
+  | {
+      [k: string]: string;
+    };
+export type Members1 = BranchingFormMemberConfig[];
+export type ConditionMatchValue = string | null;
+export type Members = BranchingFormMemberConfig[];
 export type FormStart =
+  | string
+  | {
+      [k: string]: string;
+    };
+export type CancelCommandIs =
   | string
   | {
       [k: string]: string;
@@ -120,11 +152,10 @@ export type UnsupportedCommand =
   | {
       [k: string]: string;
     };
-export type CancellingBecauseOfError =
-  | string
-  | {
-      [k: string]: string;
-    };
+export type EchoToUser = boolean;
+export type IsAnonymous = boolean;
+export type ChatId = string | number;
+export type ViaFeedbackHandler = boolean;
 export type FormCompletedNextBlockId = string | null;
 export type FormCancelledNextBlockId = string | null;
 export type BlockId4 = string;
@@ -135,16 +166,16 @@ export type LanguageSelectedNextBlockId = string | null;
 export type Blocks = UserFlowBlockConfig[];
 export type X = number;
 export type Y = number;
-export type Id1 = number;
+export type Id3 = number;
 export type TgGroupChatType = "group" | "supergroup" | "channel";
 export type Title = string;
 export type Description = string | null;
 export type Username = string | null;
 export type IsForum = boolean | null;
 export type Photo = string | null;
-export type Id2 = number;
+export type Id4 = number;
 export type Username1 = string;
-export type Name = string;
+export type Name2 = string;
 export type Description1 = string;
 export type ShortDescription1 = string;
 export type CanJoinGroups = boolean;
@@ -153,12 +184,30 @@ export type Command1 = string;
 export type Description2 = string;
 export type Commands = TgBotCommand[];
 export type Userpic = string | null;
-export type Name1 = string;
+export type Name3 = string;
 export type Description3 = string;
 export type ShortDescription2 = string;
 export type Code = string;
-export type Name2 = string;
+export type Name4 = string;
 export type Emoji = string | null;
+export type Id5 = string;
+export type Name5 = string;
+export type Prompt2 =
+  | string
+  | {
+      [k: string]: string;
+    };
+export type IsRequired2 = boolean;
+export type ResultFormatting2 = FormFieldResultFormattingOpts | "auto" | null;
+export type AuthType = "no_auth" | "tg_group_auth";
+export type Username2 = string;
+export type Name6 = string;
+export type Userpic1 = string | null;
+export type DisplayName1 = string;
+export type CreatedAt = string;
+export type LastUpdatedAt = string;
+export type LastRunAt = string | null;
+export type IsRunning = boolean;
 
 /**
  * Temporary class to pack several models into one schema; not used directly by frontend code
@@ -169,6 +218,9 @@ export interface BackendDataModels {
   tg_bot_user: TgBotUser;
   tg_bot_user_update: TgBotUserUpdate;
   language_data: LanguageData;
+  base_form_field_config: BaseFormFieldConfig;
+  logged_in_user: LoggedInUser;
+  bot_info: BotInfo;
   [k: string]: unknown;
 }
 export interface BotConfig {
@@ -288,13 +340,12 @@ export interface MessagesToAdmin {
 export interface MenuBlock {
   block_id: BlockId2;
   menu: Menu;
-  config: MenuConfig;
   [k: string]: unknown;
 }
 export interface Menu {
   text: Text1;
-  no_back_button: NoBackButton;
   items: Items;
+  config: MenuConfig;
   [k: string]: unknown;
 }
 export interface MenuItem {
@@ -305,35 +356,41 @@ export interface MenuItem {
   [k: string]: unknown;
 }
 export interface MenuConfig {
-  back_label: BackLabel;
   mechanism: MenuMechanism;
+  back_label: BackLabel;
   lock_after_termination: LockAfterTermination;
   [k: string]: unknown;
 }
 /**
- * UNFINISHED
- *
  * Block with a series of questions to user with options to export their answers in various formats
  */
 export interface FormBlock {
   block_id: BlockId3;
   form_name: FormName;
-  fields: Fields;
+  members: Members;
   messages: FormMessages;
+  results_export: FormResultsExport;
   form_completed_next_block_id: FormCompletedNextBlockId;
   form_cancelled_next_block_id: FormCancelledNextBlockId;
   [k: string]: unknown;
 }
+export interface BranchingFormMemberConfig {
+  field?: FormFieldConfig | null;
+  branch?: FormBranchConfig | null;
+  [k: string]: unknown;
+}
 export interface FormFieldConfig {
-  plain_text: PlainTextFormFieldConfig | null;
+  plain_text?: PlainTextFormFieldConfig | null;
+  single_select?: SingleSelectFormFieldConfig | null;
   [k: string]: unknown;
 }
 export interface PlainTextFormFieldConfig {
   id: Id;
-  propmt: Propmt;
+  name: Name;
+  prompt: Prompt;
   is_required: IsRequired;
-  result_formatting_opts: FormFieldResultFormattingOpts;
-  next_field: NextField;
+  result_formatting: ResultFormatting;
+  is_long_text: IsLongText;
   empty_text_error_msg: EmptyTextErrorMsg;
   [k: string]: unknown;
 }
@@ -343,22 +400,43 @@ export interface FormFieldResultFormattingOpts {
   value_formatter?: ValueFormatter;
   [k: string]: unknown;
 }
-export interface NextFieldMapping {
-  if_value: IfValue;
-  if_skipped: IfSkipped;
-  default: Default;
+export interface SingleSelectFormFieldConfig {
+  id: Id1;
+  name: Name1;
+  prompt: Prompt1;
+  is_required: IsRequired1;
+  result_formatting: ResultFormatting1;
+  options: Options;
+  invalid_enum_error_msg: InvalidEnumErrorMsg;
   [k: string]: unknown;
 }
-export interface IfValue {
-  [k: string]: string | null;
+export interface EnumOption {
+  id: Id2;
+  label: Label1;
+  [k: string]: unknown;
+}
+export interface FormBranchConfig {
+  members: Members1;
+  condition_match_value?: ConditionMatchValue;
+  [k: string]: unknown;
 }
 export interface FormMessages {
   form_start: FormStart;
+  cancel_command_is: CancelCommandIs;
   field_is_skippable: FieldIsSkippable;
   field_is_not_skippable: FieldIsNotSkippable;
   please_enter_correct_value: PleaseEnterCorrectValue;
   unsupported_command: UnsupportedCommand;
-  cancelling_because_of_error: CancellingBecauseOfError;
+}
+export interface FormResultsExport {
+  echo_to_user: EchoToUser;
+  is_anonymous: IsAnonymous;
+  to_chat: FormResultsExportToChatConfig | null;
+  [k: string]: unknown;
+}
+export interface FormResultsExportToChatConfig {
+  chat_id: ChatId;
+  via_feedback_handler: ViaFeedbackHandler;
   [k: string]: unknown;
 }
 /**
@@ -374,12 +452,12 @@ export interface LanguageSelectBlock {
   [k: string]: unknown;
 }
 export interface LanguageSelectionMenuConfig {
-  propmt: Propmt1;
+  propmt: Propmt;
   is_blocking: IsBlocking;
   emoji_buttons: EmojiButtons;
   [k: string]: unknown;
 }
-export interface Propmt1 {
+export interface Propmt {
   [k: string]: string;
 }
 export interface NodeDisplayCoords {
@@ -394,7 +472,7 @@ export interface UserFlowNodePosition {
  * pydantic projection of https://core.telegram.org/bots/api#chat
  */
 export interface TgGroupChat {
-  id: Id1;
+  id: Id3;
   type: TgGroupChatType;
   title: Title;
   description: Description;
@@ -407,9 +485,9 @@ export interface TgGroupChat {
  * Info on telegram bot, combining info from several Bot API endpoints
  */
 export interface TgBotUser {
-  id: Id2;
+  id: Id4;
   username: Username1;
-  name: Name;
+  name: Name2;
   description: Description1;
   short_description: ShortDescription1;
   can_join_groups: CanJoinGroups;
@@ -424,14 +502,37 @@ export interface TgBotCommand {
   [k: string]: unknown;
 }
 export interface TgBotUserUpdate {
-  name: Name1;
+  name: Name3;
   description: Description3;
   short_description: ShortDescription2;
   [k: string]: unknown;
 }
 export interface LanguageData {
   code: Code;
-  name: Name2;
+  name: Name4;
   emoji?: Emoji;
+  [k: string]: unknown;
+}
+export interface BaseFormFieldConfig {
+  id: Id5;
+  name: Name5;
+  prompt: Prompt2;
+  is_required: IsRequired2;
+  result_formatting: ResultFormatting2;
+  [k: string]: unknown;
+}
+export interface LoggedInUser {
+  auth_type: AuthType;
+  username: Username2;
+  name: Name6;
+  userpic: Userpic1;
+  [k: string]: unknown;
+}
+export interface BotInfo {
+  display_name: DisplayName1;
+  created_at: CreatedAt;
+  last_updated_at: LastUpdatedAt;
+  last_run_at: LastRunAt;
+  is_running: IsRunning;
   [k: string]: unknown;
 }

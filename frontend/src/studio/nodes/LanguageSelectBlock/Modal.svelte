@@ -10,6 +10,7 @@
   import { availableLanguagesStore, lookupLanguage } from "../../../globalStateStores";
   import { unwrap } from "../../../utils";
   import { languageConfigStore } from "../../stores";
+  import { NODE_TITLE } from "../display";
 
   export let config: LanguageSelectBlock;
   export let onConfigUpdate: (newConfig: LanguageSelectBlock) => any;
@@ -57,9 +58,10 @@
       });
   }
 
-  let supportedLanguageDataList: LanguageData[] | undefined = config.supported_languages.map((code) =>
+  let supportedLanguageDataList: LanguageData[] = config.supported_languages.map((code) =>
     unwrap(lookupLanguage(code, $availableLanguagesStore)),
   );
+  let supportedLanguageDataListUpdatedCounter = 0;
   let defaultLanguage: LanguageData | null | undefined = config.default_language
     ? unwrap(lookupLanguage(config.default_language, $availableLanguagesStore))
     : null;
@@ -68,19 +70,20 @@
   let isConfigValid: boolean;
   $: isConfigValid = Boolean(supportedLanguageDataList && defaultLanguage !== null);
 
-  function ensureDefaultLanguageIsSupported() {
+  function handleSupportedLanguageListUpdate() {
     if (
       supportedLanguageDataList &&
       (!defaultLanguage || !supportedLanguageDataList.map(getCode).includes(defaultLanguage.code))
     ) {
+      // console.log("resetting default language to the first supported");
       defaultLanguage = supportedLanguageDataList[0];
     }
+    supportedLanguageDataListUpdatedCounter += 1;
   }
-  ensureDefaultLanguageIsSupported();
 </script>
 
 <div>
-  <h3>Выбор языка</h3>
+  <h3>{NODE_TITLE.language_select}</h3>
   <Stack>
     <InputWrapper
       label="Поддерживаемые языки"
@@ -92,8 +95,8 @@
         placeholder=""
         bind:value={supportedLanguageDataList}
         loadOptions={loadMatchingLanguages}
-        on:change={ensureDefaultLanguageIsSupported}
-        on:clear={ensureDefaultLanguageIsSupported}
+        on:change={handleSupportedLanguageListUpdate}
+        on:clear={handleSupportedLanguageListUpdate}
         multiple
       >
         <div slot="item" let:item class="select-internal-container">
@@ -105,20 +108,13 @@
       </Select>
     </InputWrapper>
 
-    {#if supportedLanguageDataList && defaultLanguage}
+    {#key supportedLanguageDataListUpdatedCounter}
       <InputWrapper
         label="Язык по умолчанию"
         description="Будет использоваться, если не подходит язык интерфейса Telegram"
         override={{ width: "100%" }}
       >
-        <Select
-          itemId="code"
-          placeholder=""
-          on:change={ensureDefaultLanguageIsSupported}
-          on:clear={ensureDefaultLanguageIsSupported}
-          bind:value={defaultLanguage}
-          items={supportedLanguageDataList || []}
-        >
+        <Select itemId="code" placeholder="" bind:value={defaultLanguage} items={supportedLanguageDataList}>
           <div slot="item" let:item class="select-internal-container">
             <LanguageDataComponent languageData={item} fullName />
           </div>
@@ -127,16 +123,18 @@
           </div>
         </Select>
       </InputWrapper>
-      <LocalizableTextInput
-        label="Сообщение"
-        description="Для меню выбора языка"
-        bind:value={prompt}
-        langConfig={{
-          supportedLanguageCodes: supportedLanguageDataList.map((ld) => ld.code),
-          defaultLanguageCode: defaultLanguage.code,
-        }}
-      />
-    {/if}
+      {#if supportedLanguageDataList && defaultLanguage}
+        <LocalizableTextInput
+          label="Сообщение"
+          description="Для меню выбора языка"
+          bind:value={prompt}
+          langConfig={{
+            supportedLanguageCodes: supportedLanguageDataList.map((ld) => ld.code),
+            defaultLanguageCode: defaultLanguage.code,
+          }}
+        />
+      {/if}
+    {/key}
   </Stack>
   <NodeModalControls saveable={isConfigValid} on:save={updateConfig} />
 </div>

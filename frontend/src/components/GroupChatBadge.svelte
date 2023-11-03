@@ -3,12 +3,12 @@
     Caches stuff in localStorage for fewer backend calls.
 -->
 <script lang="ts">
-  import { Loader, Image, Group, Text } from "@svelteuidev/core";
+  import { Group, Image } from "@svelteuidev/core";
 
   import { getGroupChatData } from "../api/groupChats";
   import type { TgGroupChat } from "../api/types";
   import { ok, type Result } from "../utils";
-  import { QuestionMark } from "radix-icons-svelte";
+  import { QuestionCircleOutline } from "flowbite-svelte-icons";
 
   import ErrorBadge from "../components/ErrorBadge.svelte";
   import DataBadge from "./internal/DataBadge.svelte";
@@ -73,7 +73,7 @@
           usePlaceholder
         >
           <svelte:fragment slot="placeholder">
-            <QuestionMark />
+            <QuestionCircleOutline />
           </svelte:fragment>
         </Image>
         <Group override={{ gap: "6px" }}>

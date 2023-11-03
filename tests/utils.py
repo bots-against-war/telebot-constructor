@@ -1,8 +1,10 @@
 import time
+from typing import Optional
 
 from cryptography.fernet import Fernet
 from telebot import types as tg
 from telebot.test_util import MethodCall
+from telebot.types import Dictionaryable
 from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.utils.secrets import RedisSecretStore, SecretStore
 
@@ -17,14 +19,25 @@ def dummy_secret_store(redis: RedisInterface) -> SecretStore:
     )
 
 
-def tg_update_message_to_bot(user_id: int, first_name: str, text: str) -> tg.Update:
+def tg_update_message_to_bot(
+    user_id: int,
+    first_name: str,
+    text: str,
+    group_chat_id: Optional[int] = None,
+) -> tg.Update:
     return tg.Update(
         update_id=1,
         message=tg.Message(
             message_id=1,
             from_user=tg.User(id=user_id, is_bot=False, first_name=first_name),
             date=int(time.time()),
-            chat=tg.Chat(id=user_id, type="private", first_name=first_name),
+            chat=tg.Chat(id=user_id, type="private", first_name=first_name)
+            if group_chat_id is None
+            else tg.Chat(
+                id=group_chat_id,
+                title="group chat",
+                type="supergroup",
+            ),
             content_type="text",
             options={"text": text},
             json_string="",
@@ -103,3 +116,12 @@ def assert_dicts_include(actual_dicts: list[dict], required_subdicts: list[dict]
 def assert_method_call_kwargs_include(method_calls: list[MethodCall], required_call_kwargs: list[dict]) -> None:
     call_kwargs = [mc.full_kwargs for mc in method_calls]
     assert_dicts_include(call_kwargs, required_call_kwargs)
+
+
+def assert_method_call_dictified_kwargs_include(
+    method_calls: list[MethodCall], required_call_kwargs: list[dict]
+) -> None:
+    preprocessed_kwargs = [
+        {k: v.to_dict() for k, v in mc.full_kwargs.items() if isinstance(v, Dictionaryable)} for mc in method_calls
+    ]
+    assert_dicts_include(preprocessed_kwargs, required_call_kwargs)

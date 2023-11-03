@@ -2,6 +2,7 @@
   import type { HumanOperatorBlock } from "../../../api/types";
   import NodeModalControls from "../../components/NodeModalControls.svelte";
   import GroupChatIdSelect from "../../components/GroupChatIdSelect.svelte";
+  import { NODE_TITLE } from "../display";
   import {
     ActionIcon,
     Badge,
@@ -58,7 +59,7 @@
 </script>
 
 <div>
-  <h1>Человек-оператор</h1>
+  <h1>{NODE_TITLE.language_select}</h1>
   <Tabs orientation="vertical">
     <Tabs.Tab label="Главные настройки">
       <Stack align="left">

@@ -1,5 +1,5 @@
 import { writable } from "svelte/store";
-import type { LanguageData } from "./api/types";
+import { type LoggedInUser, type LanguageData } from "./api/types";
 import { err, ok, type Result } from "./utils";
 
 export const availableLanguagesStore = writable<{ [k: string]: LanguageData }>({});
@@ -14,3 +14,5 @@ export function lookupLanguage(
     return ok(availableLanguages[language]);
   }
 }
+
+export const loggedInUserStore = writable<LoggedInUser>();

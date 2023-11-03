@@ -1,13 +1,15 @@
 <script lang="ts">
   import { saveBotConfig } from "../api/botConfig";
-  import { Button, TextInput, Alert, Flex, PasswordInput } from "@svelteuidev/core";
+  import { Button, Flex, PasswordInput, TextInput } from "@svelteuidev/core";
   import { createBotTokenSecret, getError, getModalCloser, unwrap } from "../utils";
   import { slugify } from "transliteration";
   import { validateBotToken } from "../api/validation";
-  import type { BotConfig } from "../api/types";
+  import type { BotConfig, BotInfo } from "../api/types";
   import ErrorBadge from "../components/ErrorBadge.svelte";
+  import { getBotInfo } from "../api/botInfo";
+  import { BOT_INFO_NODE_ID, DEFAULT_START_COMMAND_ENTRYPOINT_ID } from "../constants";
 
-  export let newBotCallback: (botName: string, config: BotConfig) => void;
+  export let newBotCallback: (botName: string, info: BotInfo) => void;
 
   const closePopup = getModalCloser();
 
@@ -67,27 +69,38 @@
       return;
     }
 
-    const config = {
+    const config: BotConfig = {
       token_secret_name: unwrap(newTokenSecretRes),
       display_name: botDisplayName,
       user_flow_config: {
-        entrypoints: [],
+        entrypoints: [
+          {
+            command: {
+              entrypoint_id: DEFAULT_START_COMMAND_ENTRYPOINT_ID,
+              command: "start",
+              short_description: "запустить бот",
+              next_block_id: null,
+            },
+          },
+        ],
         blocks: [],
-        node_display_coords: {},
+        node_display_coords: Object.fromEntries([
+          [DEFAULT_START_COMMAND_ENTRYPOINT_ID, { x: 0, y: 0 }],
+          [BOT_INFO_NODE_ID, { x: 0, y: -150 }],
+        ]),
       },
     };
-    const res = await saveBotConfig(botName, config);
+    const res1 = await saveBotConfig(botName, config);
     isCreating = false;
 
-    console.log(res);
-
-    if (res.ok) {
+    if (res1.ok) {
       error = null;
-      newBotCallback(botName, config);
+      const botInfo = unwrap(await getBotInfo(botName));
+      newBotCallback(botName, botInfo);
       closePopup();
-    } else {
+    } else if (!res1.ok) {
       errorTitle = "Ошибка сохранения";
-      error = getError(res);
+      error = getError(res1);
     }
   }
 </script>
@@ -96,8 +109,8 @@
   <TextInput
     bind:value={botDisplayNameInput}
     error={userClickedCreate && !botDisplayNameInput}
-    label="Название"
-    description="Не видно пользователь:ницам, только в конструкторе; можно изменить позже"
+    label="Имя"
+    description="Это название бота в конструкторе. Его не увидят пользователь:ницы и его можно изменять."
     placeholder="Бот-волонтер"
   />
   <PasswordInput
@@ -105,7 +118,7 @@
     error={userClickedCreate && !botTokenInput}
     label="Токен"
     placeholder="123456789:ABCDEFGHIJKLMOPQRSTUVWXYZabcdefghij"
-    description="Можно изменить позже"
+    description="Можно изменить позже TBD"
   />
   {#if error !== null}
     <ErrorBadge title={errorTitle || "Ошибка"} text={error} />
