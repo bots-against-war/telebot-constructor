@@ -5,6 +5,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from redis.asyncio import Redis  # type: ignore
+from telebot import AsyncTeleBot
 from telebot_components.redis_utils.emulation import PersistentRedisEmulation
 from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.utils.secrets import (
@@ -14,7 +15,7 @@ from telebot_components.utils.secrets import (
 )
 
 from telebot_constructor.app import TelebotConstructorApp
-from telebot_constructor.auth import NoAuth
+from telebot_constructor.auth import Auth, GroupChatAuth, NoAuth
 
 logging.basicConfig(level=logging.INFO if os.environ.get("IS_HEROKU") else logging.DEBUG)
 
@@ -42,9 +43,19 @@ async def main() -> None:
             scope_secrets_to_user=False,
         )
 
+    try:
+        auth: Auth = GroupChatAuth(
+            redis=redis,
+            bot=AsyncTeleBot(token=os.environ["AUTH_BOT_TOKEN"]),
+            auth_chat_id=int(os.environ["AUTH_CHAT_ID"]),
+        )
+    except Exception:
+        logging.exception("Error setting up group chat auth, running without auth")
+        auth = NoAuth()
+
     app = TelebotConstructorApp(
         redis=redis,
-        auth=NoAuth(),
+        auth=auth,
         secret_store=secret_store,
         static_files_dir_override=Path("frontend/dist"),
     )
