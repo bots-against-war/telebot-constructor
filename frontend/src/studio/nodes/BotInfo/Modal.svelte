@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Group, Image, Input, Stack, Text, Textarea, Title } from "@svelteuidev/core";
-  import { ImageSolid } from "flowbite-svelte-icons";
+  import { QuestionCircleOutline } from "flowbite-svelte-icons";
 
   import type { TgBotUser } from "../../../api/types";
   import { base64Image } from "../../../studio/utils";
@@ -45,7 +45,7 @@
       usePlaceholder
     >
       <svelte:fragment slot="placeholder">
-        <ImageSolid />
+        <QuestionCircleOutline />
       </svelte:fragment>
     </Image>
     <Stack>
