@@ -60,7 +60,7 @@
       {:then botUserResult}
         {#if botUserResult.ok}
           <Group noWrap position="apart" spacing="xs">
-            <Group override={{ gap: "6px" }} noWrap>
+            <Group override={{ gap: "6px" }}>
               <Image
                 src={botUserResult.data.userpic !== null ? `data:image/png;base64,${botUserResult.data.userpic}` : null}
                 width={25}
