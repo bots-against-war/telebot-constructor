@@ -78,7 +78,7 @@
             command: {
               entrypoint_id: DEFAULT_START_COMMAND_ENTRYPOINT_ID,
               command: "start",
-              short_description: "начать работу бота",
+              short_description: "запустить бот",
               next_block_id: null,
             },
           },
@@ -86,7 +86,7 @@
         blocks: [],
         node_display_coords: Object.fromEntries([
           [DEFAULT_START_COMMAND_ENTRYPOINT_ID, { x: 0, y: 0 }],
-          [BOT_INFO_NODE_ID, { x: 0, y: -100 }],
+          [BOT_INFO_NODE_ID, { x: 0, y: -150 }],
         ]),
       },
     };

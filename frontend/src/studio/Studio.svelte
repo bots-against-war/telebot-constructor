@@ -32,6 +32,7 @@
   import Navbar from "../components/Navbar.svelte";
   import EllipsisText from "../components/internal/EllipsisText.svelte";
   import AddNodeButton from "./components/AddNodeButton.svelte";
+  import { BOT_INFO_NODE_ID } from "../constants";
 
   export let botName: string;
   export let botConfig: BotConfig;
@@ -188,7 +189,7 @@
     fitView={botConfig.user_flow_config.blocks.length + botConfig.user_flow_config.entrypoints.length >= 1}
     edge={DeletableEdge}
   >
-    <BotInfoNode {botName} bind:position={botConfig.user_flow_config.node_display_coords["bot-info-block"]} />
+    <BotInfoNode {botName} bind:position={botConfig.user_flow_config.node_display_coords[BOT_INFO_NODE_ID]} />
     {#each botConfig.user_flow_config.entrypoints as entrypoint (getEntrypointId(entrypoint))}
       {#if entrypoint.command}
         <CommandEntryPointNode
