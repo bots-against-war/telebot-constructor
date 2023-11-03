@@ -21,6 +21,7 @@
 <Node id={config.entrypoint_id} bind:position {...DEFAULT_NODE_PROPS}>
   <NodeContent
     key={NodeTypeKey.command}
+    deletable={config.command !== "start"}
     bind:isValid
     on:delete
     on:edit={() =>

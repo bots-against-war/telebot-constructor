@@ -12,11 +12,11 @@
 
 <Text
   override={{
+    ...$$restProps.override,
     maxWidth,
     textWrap: "nowrap",
     textOverflow: "ellipsis",
-    overflow: "hidden",
-    ...$$restProps.override,
+    overflowX: "hidden",
   }}
   {...$$restProps}><slot /></Text
 >

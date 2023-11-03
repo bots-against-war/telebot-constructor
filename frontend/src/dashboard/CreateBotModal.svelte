@@ -4,7 +4,7 @@
   import { createBotTokenSecret, getError, getModalCloser, unwrap } from "../utils";
   import { slugify } from "transliteration";
   import { validateBotToken } from "../api/validation";
-  import type { BotInfo } from "../api/types";
+  import type { BotConfig, BotInfo } from "../api/types";
   import ErrorBadge from "../components/ErrorBadge.svelte";
   import { getBotInfo } from "../api/botInfo";
 
@@ -68,11 +68,20 @@
       return;
     }
 
-    const config = {
+    const config: BotConfig = {
       token_secret_name: unwrap(newTokenSecretRes),
       display_name: botDisplayName,
       user_flow_config: {
-        entrypoints: [],
+        entrypoints: [
+          {
+            command: {
+              entrypoint_id: `default-start-command`,
+              command: "start",
+              short_description: "начать работу бота",
+              next_block_id: null,
+            },
+          },
+        ],
         blocks: [],
         node_display_coords: {},
       },

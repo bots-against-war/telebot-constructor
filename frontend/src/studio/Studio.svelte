@@ -272,7 +272,7 @@
   div.navbar-container {
     position: absolute;
     top: 0;
-    z-index: 1000;
+    z-index: 100;
     width: 100%;
   }
 </style>

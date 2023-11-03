@@ -5,7 +5,7 @@
 
 <script lang="ts">
   import { createEventDispatcher } from "svelte";
-  import { ActionIcon, Divider, Flex, Group, Space } from "@svelteuidev/core";
+  import { ActionIcon, Divider, Group } from "@svelteuidev/core";
   import { PenOutline, TrashBinOutline } from "flowbite-svelte-icons";
   import { type LanguageConfig, languageConfigStore } from "../stores";
   import { getModalOpener, ok, type Result } from "../../utils";
@@ -17,6 +17,7 @@
   export let key: NodeTypeKey;
   export let config: any = null;
   export let isValid = true;
+  export let deletable = true;
   export let configValidator: (config: any, langConfig: LanguageConfig | null) => Result<null, ValidationError> = (
     _,
     __,
@@ -27,7 +28,8 @@
   const actionIconProps = {
     color: "dark",
     size: "xs",
-    variant: "hover",
+    // variant: "hover",
+    radius: "xs",
   };
 
   let configValidationResult: Result<null, ValidationError>;
@@ -77,10 +79,11 @@
       <ActionIcon {...actionIconProps} on:click={() => dispatch("edit")}>
         <PenOutline />
       </ActionIcon>
-      <Space w="xs" />
-      <ActionIcon {...actionIconProps} on:click={() => dispatch("delete")}>
-        <TrashBinOutline />
-      </ActionIcon>
+      {#if deletable}
+        <ActionIcon {...actionIconProps} on:click={() => dispatch("delete")}>
+          <TrashBinOutline />
+        </ActionIcon>
+      {/if}
     </Group>
   </Group>
   <Divider override={{ margin: 0 }} />
