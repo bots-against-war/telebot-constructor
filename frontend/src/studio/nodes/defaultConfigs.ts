@@ -37,8 +37,8 @@ export function defaultHumanOperatorBlockConfig(id: string): UserFlowBlockConfig
         anonimyze_users: true,
         max_messages_per_minute: 20,
         messages_to_user: {
-          forwarded_to_admin_ok: "Message accepted!",
-          throttling: "Please don't send more than {} messages in {}",
+          forwarded_to_admin_ok: "",
+          throttling: "",
         },
         messages_to_admin: {
           copied_to_user_ok: "Copied to user",

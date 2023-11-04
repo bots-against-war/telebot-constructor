@@ -84,11 +84,27 @@ export function validateHumanOperatorBlock(
   config: HumanOperatorBlock,
   langConfig: LanguageConfig | null,
 ): Result<null, ValidationError> {
+  const results: Result<null, ValidationError>[] = [];
+
   if (config.feedback_handler_config.admin_chat_id === PLACEHOLDER_GROUP_CHAT_ID) {
-    return err({ error: "Не выбран админ-чат" });
-  } else {
-    return ok(null);
+    results.push(err({ error: "Не выбран админ-чат" }));
   }
+  results.push(
+    validateLocalizableText(
+      config.feedback_handler_config.messages_to_user.forwarded_to_admin_ok,
+      "ответ на успешно принятое сообщение",
+      langConfig,
+    ),
+  );
+  results.push(
+    validateLocalizableText(
+      config.feedback_handler_config.messages_to_user.throttling,
+      "предупреждение, что сообщений слишком много",
+      langConfig,
+    ),
+  );
+
+  return mergeResults(results);
 }
 
 export function validateMenuBlock(config: MenuBlock, langConfig: LanguageConfig | null): Result<null, ValidationError> {
