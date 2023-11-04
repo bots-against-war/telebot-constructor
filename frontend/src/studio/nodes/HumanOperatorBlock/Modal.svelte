@@ -2,20 +2,9 @@
   import type { HumanOperatorBlock } from "../../../api/types";
   import NodeModalControls from "../../components/NodeModalControls.svelte";
   import GroupChatIdSelect from "../../components/GroupChatIdSelect.svelte";
+  import LocalizableTextInput from "../../components/LocalizableTextInput.svelte";
   import { NODE_TITLE } from "../display";
-  import {
-    ActionIcon,
-    Badge,
-    Button,
-    Group,
-    NumberInput,
-    Radio,
-    Stack,
-    Switch, Tabs,
-    TextInput,
-    Tooltip
-  } from "@svelteuidev/core";
-  import { Rocket } from "radix-icons-svelte";
+  import { Divider, NumberInput, Space, Stack, Switch, Tabs, Text, TextInput, Tooltip } from "@svelteuidev/core";
 
   export let botName: string; //required for admin chat id rendering, and context does not propagate here
   export let config: HumanOperatorBlock;
@@ -59,8 +48,8 @@
 </script>
 
 <div>
-  <h1>{NODE_TITLE.language_select}</h1>
-  <Tabs orientation="vertical">
+  <h3>{NODE_TITLE.human_operator}</h3>
+  <Tabs variant="outline">
     <Tabs.Tab label="Главные настройки">
       <Stack align="left">
         <div>
@@ -68,57 +57,45 @@
         </div>
         <Tooltip
           wrapLines
-          width={220}
+          width="60"
           withArrow
-          transitionDuration={200}
-          label="После превышения будет софтбан."
-        >
-          <NumberInput
-            bind:value={max_messages_per_minute}
-            label="Сколько сообщений в минуту может писать пользовательница."
-            min={1}
-            max={60}
-            step={1}
-            type="number"
-          />
-        </Tooltip>
-        <Tooltip
-          wrapLines
-          width="220"
-          withArrow
-          transitionDuration={200}
+          transitionDuration={10}
           label="присылать ли имя, юзернейм и id юзерки, или заменять его на эмоджи."
         >
-          <Switch size="md" onLabel="ON" offLabel="OFF" label="Анонимизировать юзеро_к"
-                  bind:checked={anonimyze_users} />
+          <Switch size="md" label="Анонимизировать юзеро_к" bind:checked={anonimyze_users} description="dsvs" />
         </Tooltip>
         <Tooltip
           wrapLines
-          width="220"
+          width="60"
           withArrow
           transitionDuration={200}
-          label="режим работы, где на каждую юзерку в админ-чате создается отдельная тема (позволяет выделить переписку с каждой юзеркой из общего потока)."
+          label="в админ-чате создается отдельная тема на каждую юзерку, в которой будут все сообщения от нее."
         >
-          <Switch size="md" onLabel="ON" offLabel="OFF" label="Отдельная тема на юзер_ку"
+          <Switch size="md" label="Отдельная тема на юзер_ку"
                   bind:checked={forum_topic_per_user} />
         </Tooltip>
       </Stack>
     </Tabs.Tab>
-    <Tabs.Tab label="Сообщения для юзерок">
+    <Tabs.Tab label="Сообщения">
+      <Space h="lg" />
+      <Text weight={'bold'} size="xl">Сообщения для юзерок</Text>
+      <Divider size="md"/>
       <Stack align="left">
-        <TextInput
-          placeholder="Спасибо, мы вам скоро ответим!"
+        <LocalizableTextInput
           label="Ответ на успешно принятое сообщение"
+          placeholder="Спасибо, мы вам скоро ответим!"
           bind:value={forwarded_to_admin_ok}
         />
-        <TextInput
+        <LocalizableTextInput
+          label="Предупреждение, что сообщений слишком много"
+          description="(см. Ограничение на кол-во сообщений в минуту)"
           placeholder="Не присылайте больше N сообщений в минуту!"
-          label="Предупреждение, что сообщений слишком много (см. Ограничение на кол-во сообщений в минуту)"
           bind:value={throttling}
         />
       </Stack>
-    </Tabs.Tab>
-    <Tabs.Tab label="Сообщения для админок">
+      <Space h="lg" />
+      <Text weight={'bold'} size="xl">Сообщения для админок</Text>
+      <Divider size="md"/>
       <Stack align="left">
         <TextInput
           placeholder="Сообщение переслано!"
@@ -139,9 +116,18 @@
     </Tabs.Tab>
     <Tabs.Tab label="Дополнительные настройки">
       <Stack align="left">
-        <Switch size="md" onLabel="ON" offLabel="OFF" label="По команде /log присылать лог сообщений в админ чат"
+        <NumberInput
+          bind:value={max_messages_per_minute}
+          label="Сколько сообщений в минуту может писать пользовательница."
+          description="После превышения будет софтбан."
+          min={1}
+          max={60}
+          step={1}
+          type="number"
+        />
+        <Switch size="md" label="По команде /log присылать лог сообщений в админ чат"
                 bind:checked={message_log_to_admin_chat} />
-        <Switch size="md" onLabel="ON" offLabel="OFF" label="Хештеги в админ-чате"
+        <Switch size="md" label="Хештеги в админ-чате"
                 bind:checked={hashtags_in_admin_chat} />
         {#if hashtags_in_admin_chat}
           <TextInput
