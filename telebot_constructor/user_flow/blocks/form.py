@@ -1,5 +1,4 @@
 import abc
-import dataclasses
 import logging
 import string
 from enum import Enum
@@ -61,13 +60,12 @@ class BaseFormFieldConfig(BaseModel, abc.ABC):
         else:
             result_formatting_opts = None
 
-        return dataclasses.asdict(
-            FormField(
-                name=self.id,
-                required=self.is_required,
-                query_message=self.prompt,
-                result_formatting_opts=result_formatting_opts,
-            )
+        # common kwargs in FormField
+        return dict(
+            name=self.id,
+            required=self.is_required,
+            query_message=self.prompt,
+            result_formatting_opts=result_formatting_opts,
         )
 
     @abc.abstractmethod
@@ -200,6 +198,14 @@ class FormBlock(UserFlowBlock):
         component_form_members: list[Union[FormField, FormBranch]] = [m.construct_member() for m in self.members]
         self._form = ComponentsForm.branching(component_form_members)
 
+        cancelling_because_of_error_eng = "Something went wrong, details: {}"
+        if context.language_store is not None:
+            cancelling_because_of_error: LocalizableText = {
+                lang: cancelling_because_of_error_eng for lang in context.language_store.languages
+            }
+        else:
+            cancelling_because_of_error = cancelling_because_of_error_eng
+
         #                                          VVV impossible to generate type anntation for
         #                                              form result type, so we use Any
         self._form_handler = ComponentsFormHandler[Any](
@@ -232,7 +238,7 @@ class FormBlock(UserFlowBlock):
                 unsupported_cmd_error_template=validate_localizable_text(
                     self.messages.unsupported_command, placeholder_count=1, title="unsupported command message"
                 ),
-                cancelling_because_of_error_template="Something went wrong (details: {})",
+                cancelling_because_of_error_template=cancelling_because_of_error,
             ),
             language_store=context.language_store,
         )
