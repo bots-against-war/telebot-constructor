@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Header, Group, Image, Menu, Text, Anchor, Stack } from "@svelteuidev/core";
-  import bawLogo from "../assets/baw.svg";
+  import logo from "../assets/logo.svg";
   import { loggedInUserStore } from "../globalStateStores";
   import { QuestionCircleOutline } from "flowbite-svelte-icons";
 </script>
@@ -13,7 +13,7 @@
   }}
 >
   <Group position="apart" noWrap>
-    <Image src={bawLogo} alt="BAW logo" class="logo" height={40} />
+    <Image src={logo} alt="Telebot constructor logo" height={40} />
     <!-- TODO: navigation will go there -->
     <!-- <div class="nav-buttons">
       <NavButton href="/">Управление</NavButton>
@@ -47,7 +47,8 @@
           <Anchor
             on:click={() => {
               // deleting the cookie by setting it to empty with expire date in the past
-              // TODO: test in real browser
+              // FIXME: seems like it's not working
+              //        maybe create a normal /logout endpoint that will call auth-specific method?
               document.cookie = `tc_access_token=;Expires=${new Date(2000).toUTCString()};Path=/`;
               window.location.reload();
             }}>Выйти</Anchor
