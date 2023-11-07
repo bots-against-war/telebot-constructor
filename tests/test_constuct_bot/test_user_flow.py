@@ -1016,20 +1016,16 @@ async def test_user_flow_with_form() -> None:
         [
             {
                 "chat_id": 161,
-                "text": (
-                    "<b>what is your name?</b>: John Doe\n"
-                    + "<b>do you like apples?</b>: Yes I do\n"
-                    + "<b>which apples do you like?</b>: granny smith"
-                ),
+                "text": ("<b>Name</b>: John Doe\n" + "<b>Apples</b>: Yes I do\n" + "<b>Which apples</b>: granny smith"),
                 "parse_mode": "HTML",
             },
             {
                 "chat_id": 111222,
                 "text": (
                     '<a href="tg://user?id=161">User</a>\n\n'
-                    + "<b>what is your name?</b>: John Doe\n"
-                    + "<b>do you like apples?</b>: Yes I do\n"
-                    + "<b>which apples do you like?</b>: granny smith"
+                    + "<b>Name</b>: John Doe\n"
+                    + "<b>Apples</b>: Yes I do\n"
+                    + "<b>Which apples</b>: granny smith"
                 ),
                 "parse_mode": "HTML",
             },
