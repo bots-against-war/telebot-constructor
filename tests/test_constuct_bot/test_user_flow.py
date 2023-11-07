@@ -971,10 +971,11 @@ async def test_user_flow_with_form() -> None:
         bot.method_calls["send_message"],
         [
             {"text": "hi i'm form bot", "chat_id": 161},
-            {"chat_id": 161, "text": "hi please fill out the form! /cancel - cancel filling.\n\nwhat is your name?"},
+            {"chat_id": 161, "text": "hi please fill out the form!\n\n/cancel - cancel filling"},
+            {"chat_id": 161, "text": "what is your name?"},
         ],
     )
-    assert_method_call_dictified_kwargs_include(bot.method_calls["send_message"], [{}, {}])
+    assert_method_call_dictified_kwargs_include(bot.method_calls["send_message"], [{}, {}, {}])
     bot.method_calls.clear()
 
     await bot.process_new_updates([tg_update_message_to_bot(161, first_name="User", text="John Doe")])
