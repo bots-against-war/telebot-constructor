@@ -9,6 +9,7 @@
   import type { FormErrorMessages } from "./prefill";
   import { flattenedFormFields } from "../../../api/typeUtils";
   import { NODE_TITLE } from "../display";
+  import { clone } from "../../utils";
 
   export let config: FormBlock;
   export let botName: string;
@@ -27,7 +28,7 @@
     onConfigUpdate(editedConfig);
   }
 
-  const editedConfig = JSON.parse(JSON.stringify(config));
+  const editedConfig = clone(config);
 
   let topLevelBranch: FormBranchConfig = { members: editedConfig.members };
 

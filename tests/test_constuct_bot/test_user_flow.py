@@ -971,10 +971,11 @@ async def test_user_flow_with_form() -> None:
         bot.method_calls["send_message"],
         [
             {"text": "hi i'm form bot", "chat_id": 161},
-            {"chat_id": 161, "text": "hi please fill out the form! /cancel - cancel filling.\n\nwhat is your name?"},
+            {"chat_id": 161, "text": "hi please fill out the form!\n\n/cancel - cancel filling"},
+            {"chat_id": 161, "text": "what is your name?"},
         ],
     )
-    assert_method_call_dictified_kwargs_include(bot.method_calls["send_message"], [{}, {}])
+    assert_method_call_dictified_kwargs_include(bot.method_calls["send_message"], [{}, {}, {}])
     bot.method_calls.clear()
 
     await bot.process_new_updates([tg_update_message_to_bot(161, first_name="User", text="John Doe")])
@@ -1016,20 +1017,16 @@ async def test_user_flow_with_form() -> None:
         [
             {
                 "chat_id": 161,
-                "text": (
-                    "<b>what is your name?</b>: John Doe\n"
-                    + "<b>do you like apples?</b>: Yes I do\n"
-                    + "<b>which apples do you like?</b>: granny smith"
-                ),
+                "text": ("<b>Name</b>: John Doe\n" + "<b>Apples</b>: Yes I do\n" + "<b>Which apples</b>: granny smith"),
                 "parse_mode": "HTML",
             },
             {
                 "chat_id": 111222,
                 "text": (
                     '<a href="tg://user?id=161">User</a>\n\n'
-                    + "<b>what is your name?</b>: John Doe\n"
-                    + "<b>do you like apples?</b>: Yes I do\n"
-                    + "<b>which apples do you like?</b>: granny smith"
+                    + "<b>Name</b>: John Doe\n"
+                    + "<b>Apples</b>: Yes I do\n"
+                    + "<b>Which apples</b>: granny smith"
                 ),
                 "parse_mode": "HTML",
             },

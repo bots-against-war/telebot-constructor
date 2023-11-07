@@ -36,6 +36,8 @@ class LanguageSelectBlock(UserFlowBlock):
     default_language: Language
     language_selected_next_block_id: Optional[UserFlowBlockId]
 
+    next_block_id: Optional[UserFlowBlockId] = None  # backwards compat.
+
     def possible_next_block_ids(self) -> list[str]:
         return without_nones([self.language_selected_next_block_id])
 
@@ -53,6 +55,8 @@ class LanguageSelectBlock(UserFlowBlock):
             await self.language_store.send_reply_keyboard_selector(bot=context.bot, user=context.user)
         else:
             await self.language_store.send_inline_selector(bot=context.bot, user=context.user)
+        if self.next_block_id is not None:
+            await context.enter_block(self.next_block_id, context)
 
     async def setup(self, context: UserFlowSetupContext) -> SetupResult:
         self._language_store = LanguageStore(

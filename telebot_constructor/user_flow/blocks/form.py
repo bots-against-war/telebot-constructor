@@ -1,6 +1,5 @@
 import abc
 import logging
-import string
 from enum import Enum
 from typing import Any, Literal, Optional, Sequence, Type, Union, cast
 
@@ -224,7 +223,7 @@ class FormBlock(UserFlowBlock):
                             self.messages.cancel_command_is, placeholder_count=1, title="cancel command message"
                         ),
                     ],
-                    sep=" ",
+                    sep="\n\n",
                 ),
                 can_skip_field_template=validate_localizable_text(
                     self.messages.field_is_skippable, placeholder_count=1, title="field is skippable message"
@@ -325,7 +324,12 @@ class FormBlock(UserFlowBlock):
         return SetupResult.empty()
 
     async def enter(self, context: UserFlowContext) -> None:
-        await self._form_handler.start(bot=context.bot, user=context.user, initial_form_result=None)
+        await self._form_handler.start(
+            bot=context.bot,
+            user=context.user,
+            initial_form_result=None,
+            separate_field_prompt_message=True,
+        )
 
 
 def validate_localizable_text(template: LocalizableText, placeholder_count: int, title: str) -> LocalizableText:
@@ -341,8 +345,6 @@ def validate_localizable_text(template: LocalizableText, placeholder_count: int,
             )
         if not template_str:
             raise ValueError(f"Empty {full_title!r}")
-        if template_str[-1] not in string.punctuation:
-            template_str += "."
         return template_str
 
     if isinstance(template, str):

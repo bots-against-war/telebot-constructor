@@ -38,7 +38,7 @@ export const NODE_TITLE: { [key in NodeTypeKey]: string } = {
   command: "Команда",
   content: "Контент",
   human_operator: "Оператор:ка",
-  language_select: "Выбор языка",
+  language_select: "Язык",
   menu: "Меню",
   form: "Форма",
   info: "Аккаунт бота",

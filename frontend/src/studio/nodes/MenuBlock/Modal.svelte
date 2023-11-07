@@ -5,6 +5,7 @@
   import LocalizableTextInput from "../../components/LocalizableTextInput.svelte";
   import SortableListInput from "../../components/SortableListInput.svelte";
   import { NODE_TITLE } from "../display";
+  import { clone } from "../../utils";
 
   export let config: MenuBlock;
   export let onConfigUpdate: (newConfig: MenuBlock) => any;
@@ -18,7 +19,7 @@
     onConfigUpdate(editedConfig);
   }
 
-  const editedConfig: MenuBlock = JSON.parse(JSON.stringify(config));
+  const editedConfig: MenuBlock = clone(config);
 
   function newMenuItem(): MenuItem {
     return {

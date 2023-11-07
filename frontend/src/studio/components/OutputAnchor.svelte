@@ -3,11 +3,13 @@
   import { svelvetNodeIdToBlockId } from "../utils";
   import DummyEdge from "./DummyEdge.svelte";
 
-  export let nextBlockId: string | null;
+  export let nextBlockId: string | null | undefined;
   export let anchorLabel: string | null = null;
   export let dummy: boolean = false;
 
-  let initialConnections: Connections = nextBlockId !== null ? [nextBlockId] : [];
+  nextBlockId = nextBlockId === undefined ? null : nextBlockId;
+
+  let initialConnections: Connections = nextBlockId ? [nextBlockId] : [];
 </script>
 
 <div class="anchor-and-label" class:dummy>
