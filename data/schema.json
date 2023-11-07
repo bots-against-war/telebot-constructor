@@ -842,6 +842,18 @@
             }
           ],
           "title": "Language Selected Next Block Id"
+        },
+        "next_block_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Next Block Id"
         }
       },
       "required": [

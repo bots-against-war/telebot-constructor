@@ -124,3 +124,7 @@ export function localizableTextToString(lc: LocalizableText, langConfig: Languag
   else if (langConfig !== null && typeof lc === "object") return lc[langConfig.defaultLanguageCode] || "";
   else return "";
 }
+
+export function clone<T>(jsonSerializable: T): T {
+  return JSON.parse(JSON.stringify(jsonSerializable));
+}

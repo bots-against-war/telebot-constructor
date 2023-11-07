@@ -43,7 +43,7 @@
     on:delete
     on:edit={openEditModal}
   >
-    <Group spacing="xs" override={{ maxWidth: "300px" }}>
+    <Group spacing="xs">
       {#each config.supported_languages as language (language)}
         <DataBadge>
           <Langauge {language} />
@@ -52,6 +52,7 @@
     </Group>
   </NodeContent>
   <OutputAnchorsBox>
-    <OutputAnchor bind:nextBlockId={config.language_selected_next_block_id} />
+    <OutputAnchor bind:nextBlockId={config.next_block_id} />
+    <OutputAnchor bind:nextBlockId={config.language_selected_next_block_id} anchorLabel="Выбран язык" />
   </OutputAnchorsBox>
 </Node>

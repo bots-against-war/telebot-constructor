@@ -163,6 +163,7 @@ export type IsBlocking = boolean;
 export type EmojiButtons = boolean;
 export type SupportedLanguages = string[];
 export type LanguageSelectedNextBlockId = string | null;
+export type NextBlockId5 = string | null;
 export type Blocks = UserFlowBlockConfig[];
 export type X = number;
 export type Y = number;
@@ -449,6 +450,7 @@ export interface LanguageSelectBlock {
   supported_languages: SupportedLanguages;
   default_language: string;
   language_selected_next_block_id: LanguageSelectedNextBlockId;
+  next_block_id?: NextBlockId5;
   [k: string]: unknown;
 }
 export interface LanguageSelectionMenuConfig {

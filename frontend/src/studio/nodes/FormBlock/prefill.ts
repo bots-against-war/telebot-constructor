@@ -1,6 +1,7 @@
 import { type FormMessages } from "../../../api/types";
 import type { LocalizableText } from "../../../types";
 import type { LanguageConfig } from "../../stores";
+import { clone } from "../../utils";
 import { validateLocalizableText } from "../nodeValidators";
 
 export type PrefillableFormErrorKey =
@@ -84,10 +85,12 @@ export function prefilledMessage(
 export function updateWithPrefilled<T>(messages: T, langConfig: LanguageConfig | null): [T, string[]] {
   // console.debug(`Prefilling ${JSON.stringify(messages)}`);
   const prefilledMessages = getPrefilledMessages();
-  const messagesCopy = JSON.parse(JSON.stringify(messages));
+  const messagesCopy = clone(messages);
   const prefilledKeys: string[] = [];
   for (const key of PREFILLABLE_KEYS) {
+    // @ts-expect-error
     if (key in messagesCopy && !validateLocalizableText(messagesCopy[key], "", langConfig).ok) {
+      // @ts-expect-error
       messagesCopy[key] = prefilledMessage(prefilledMessages, key, langConfig);
       prefilledKeys.push(key);
     }

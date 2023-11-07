@@ -7,6 +7,7 @@
 
   import { NODE_TITLE } from "../display";
   import SlashIcon from "./SlashIcon.svelte";
+  import { clone } from "../../utils";
 
   export let config: CommandEntryPoint;
   export let onConfigUpdate: (newConfig: CommandEntryPoint) => any;
@@ -15,7 +16,7 @@
     onConfigUpdate(editedConfig);
   }
 
-  let editedConfig: CommandEntryPoint = JSON.parse(JSON.stringify(config));
+  let editedConfig = clone(config);
   let isStartCmd = config.command === "start"; // non-reactive, on start only
 </script>
 
