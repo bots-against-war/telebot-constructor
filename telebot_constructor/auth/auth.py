@@ -33,6 +33,7 @@ class Auth(abc.ABC):
         """Optional setup hook for subclasses to override to add their login API routes"""
         ...
 
+    @abc.abstractmethod
     async def setup_bot(self) -> BotRunner:
         """Optional setup hook for subclasses to override to add their bot handlers"""
         ...
@@ -53,6 +54,9 @@ class NoAuth(Auth):
         )
 
     async def unauthenticated_client_response(self, request: web.Request, static_files_dir: Path) -> web.Response:
+        raise NotImplementedError()
+
+    async def setup_bot(self) -> BotRunner:
         raise NotImplementedError()
 
 

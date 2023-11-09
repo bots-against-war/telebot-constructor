@@ -14,33 +14,14 @@ from telebot_components.stores.generic import KeyValueStore
 from telebot_constructor.app_models import AuthType, LoggedInUser
 from telebot_constructor.auth.auth import Auth
 from telebot_constructor.static import static_file_content
+from telebot_constructor.utils.rate_limit_retry import rate_limit_retry
 
 
 class ChatBotAuth(Auth):
     """
     Telegram bot based auth. You need to have a bot.
-
-    - когда бот авторизации получает команду старт, он должен сгенерировать логин код и сохранить связи:
-    1. "старт параметр - аккаунт юзерки" (и детали типа юзернейма аватарки и тд);
-    2. "старт параметр - логин код";
-
-    И прислать логин код юзерке в чат
-
-
-    - юзерка должна ввести этот код в окошко на веб странице, класс авторизации верифицирует его через двойной лукап
-    (логин код -> старт параметр -> данные аккаунта юзерки),
-
-    генерирует access token, сохраняет финальную связь "аксесс токен - данные юзерки"
-    и возвращает токен в Set-Cookie хедере (аналогично group chat auth)
-
-
-
-    1. "старт параметр - chat.id"  start_param_store
-    2. "логин код - старт параметр"       access_code_store
-    3. "аксесс токен - аккаунт юзерки"     access_tokens_store
     """
 
-    CONST_KEY = "const"
     STORE_PREFIX = "bot-auth"
 
     def __init__(
@@ -74,12 +55,24 @@ class ChatBotAuth(Auth):
             expiration_time=access_token_lifetime,
         )
 
+    log_prefix = f"[admin][{STORE_PREFIX}] "
+
     async def get_auth_user(self) -> tg.User:
-        pass
+        raise NotImplementedError()
 
     async def get_bot_username(self) -> str:
         if self.bot_username is None:
-            self.bot_username = (await self.bot.get_me()).username
+            try:
+                async for attempt in rate_limit_retry():
+                    with attempt:
+                        bot_user = await self.bot.get_me()
+                self.logger.info(self.log_prefix + f"Bot user loaded: {bot_user.to_json()}")
+            except Exception:
+                self.logger.exception(self.log_prefix + "Error getting auth bot user, probably an invalid token")
+                raise ValueError("Failed to get auth bot user with getMe, the token is probably invalid")
+
+            self.bot_username = bot_user.username
+
         return self.bot_username
 
     ACCESS_TOKEN_COOKIE_NAME = "tc_access_token"
@@ -99,8 +92,8 @@ class ChatBotAuth(Auth):
         user_chat_id = await self.access_tokens_store.load(token)
 
         return LoggedInUser(
-            username="TG User",
-            name=f"TG User №{user_chat_id}",
+            username=f"TG_User_{user_chat_id}",
+            name=f"TG User",
             auth_type=AuthType.TELEGRAM_BOT_AUTH,
             userpic=None,
         )
@@ -125,6 +118,9 @@ class ChatBotAuth(Auth):
                 raise web.HTTPUnauthorized()
             start_param = await self.access_code_store.load(code)
             chat_id = await self.start_param_store.load(start_param)
+            if not chat_id:
+                self.logger.info("Invalid start param submitted")
+                raise web.HTTPUnauthorized()
             access_token = secrets.token_hex(nbytes=32)
             self.logger.info("Confirmation code OK, issuing access token")
             if not await self.access_tokens_store.save(access_token, chat_id):
@@ -149,26 +145,9 @@ class ChatBotAuth(Auth):
 
         app.router.add_post("/bot-auth/request-bot-auth-link", request_bot_auth_link)
 
-    async def setup_bot(self) -> BotRunner:
-        return await self.create_auth_bot(self.bot)
-
     async def create_auth_bot(self, bot: AsyncTeleBot) -> BotRunner:
         def extract_start_param(text):
             return text.split()[1] if len(text.split()) > 1 else None
-
-        def in_storage(unique_code):
-            # (pseudo-code) Should check if a unique code exists in storage
-            return True
-
-        def get_username_from_storage(unique_code):
-            # (pseudo-code) Does a query to the storage, retrieving the associated username
-            # Should be replaced by a real database-lookup.
-            return "ABC" if in_storage(unique_code) else None
-
-        def save_chat_id(chat_id, username):
-            # (pseudo-code) Save the chat_id->username to storage
-            # Should be replaced by a real database query.
-            pass
 
         @bot.message_handler(commands=["start"])
         async def send_welcome(message):
@@ -180,9 +159,16 @@ class ChatBotAuth(Auth):
                 reply_text = f"🔑🔑🔑" f"\n\n" f"Введите этот код на сайте:" f"\n\n" f"<pre>{access_code}</pre>"
 
                 await bot.reply_to(message, reply_text, parse_mode="HTML")
+            else:
+                await bot.reply_to(
+                    message, "Привет! " "\n\n " "Вам нужно зайти на сайт и нажать кнопку 'Получить код авторизации'"
+                )
 
         return BotRunner(
             bot_prefix="auth_bot",
             bot=bot,
             background_jobs=[],
         )
+
+    async def setup_bot(self) -> BotRunner:
+        return await self.create_auth_bot(self.bot)
