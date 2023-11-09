@@ -28,7 +28,7 @@ from telebot_constructor.app_models import (
     TgBotUser,
     TgBotUserUpdate,
 )
-from telebot_constructor.auth import Auth
+from telebot_constructor.auth.auth import Auth
 from telebot_constructor.bot_config import BotConfig
 from telebot_constructor.build_time_config import BASE_PATH
 from telebot_constructor.construct import BotFactory, construct_bot, make_raw_bot
@@ -823,6 +823,8 @@ class TelebotConstructorApp:
 
     async def setup(self) -> None:
         self.start_stored_bots_in_background()
+        bot_runner = await self.auth.setup_bot()
+        await self.runner.start(username="admin", bot_name="auth_bot", bot_runner=bot_runner)
         await self.telegram_files_downloader.setup()
 
     async def cleanup(self) -> None:

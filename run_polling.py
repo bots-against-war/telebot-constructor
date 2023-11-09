@@ -15,7 +15,8 @@ from telebot_components.utils.secrets import (
 )
 
 from telebot_constructor.app import TelebotConstructorApp
-from telebot_constructor.auth import Auth, GroupChatAuth, NoAuth
+from telebot_constructor.auth.auth import Auth, NoAuth
+from telebot_constructor.auth.chat_bot_auth import ChatBotAuth
 
 logging.basicConfig(level=logging.INFO if os.environ.get("IS_HEROKU") else logging.DEBUG)
 
@@ -44,10 +45,14 @@ async def main() -> None:
         )
 
     try:
-        auth: Auth = GroupChatAuth(
+        # auth: Auth = GroupChatAuth(
+        #     redis=redis,
+        #     bot=AsyncTeleBot(token=os.environ["AUTH_BOT_TOKEN"]),
+        #     auth_chat_id=int(os.environ["AUTH_CHAT_ID"]),
+        # )
+        auth: Auth = ChatBotAuth(
             redis=redis,
             bot=AsyncTeleBot(token=os.environ["AUTH_BOT_TOKEN"]),
-            auth_chat_id=int(os.environ["AUTH_CHAT_ID"]),
         )
     except Exception:
         logging.info("Error setting up group chat auth, running without auth")

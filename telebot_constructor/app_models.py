@@ -126,6 +126,7 @@ class TgBotUserUpdate(BaseModel):
 class AuthType(enum.Enum):
     NO_AUTH = "no_auth"
     TELEGRAM_GROUP_AUTH = "tg_group_auth"
+    TELEGRAM_BOT_AUTH = "tg_bot_auth"
 
 
 class LoggedInUser(BaseModel):

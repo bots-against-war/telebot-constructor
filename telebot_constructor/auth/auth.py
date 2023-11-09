@@ -8,6 +8,7 @@ from typing import Optional
 from aiohttp import hdrs, web
 from telebot import AsyncTeleBot
 from telebot import types as tg
+from telebot.runner import BotRunner
 from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.stores.generic import KeyValueStore
 
@@ -30,6 +31,10 @@ class Auth(abc.ABC):
 
     async def setup_routes(self, app: web.Application) -> None:
         """Optional setup hook for subclasses to override to add their login API routes"""
+        ...
+
+    async def setup_bot(self) -> BotRunner:
+        """Optional setup hook for subclasses to override to add their bot handlers"""
         ...
 
 

@@ -14,7 +14,7 @@ from telebot_components.stores.generic import GenericStore
 from telebot_components.utils.secrets import RedisSecretStore
 
 from telebot_constructor.app import TelebotConstructorApp
-from telebot_constructor.auth import NoAuth
+from telebot_constructor.auth.auth import NoAuth
 from telebot_constructor.runners import ConstructedBotRunner
 
 
