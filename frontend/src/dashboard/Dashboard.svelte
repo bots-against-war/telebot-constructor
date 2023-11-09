@@ -51,8 +51,7 @@
   {#if selectedBot === null}
     <Container>
       <Text override={{ fontSize: 30, textAlign: "center" }}>
-        Добро пожаловать в B.A.W., современный конструктор чат-ботов, который поможет вашей инициативе стать еще ближе к
-        пользователям
+        <strong>Telebot constructor</strong> &mdash; конструктор ботов для социальных и гражданских инициатив
       </Text>
     </Container>
   {:else}

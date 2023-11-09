@@ -55,7 +55,7 @@
         options = [...options, optionConstructor()];
       }}
     >
-      <PlusOutline />
+      <PlusOutline width={15} />
     </ActionIcon>
   </InputWrapper>
 </Stack>

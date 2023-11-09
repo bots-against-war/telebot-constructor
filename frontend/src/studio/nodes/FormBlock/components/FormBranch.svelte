@@ -112,7 +112,7 @@
                 });
               }}
             >
-              <PlusOutline slot="leftIcon" />
+              <PlusOutline slot="leftIcon" width={15} />
               Поле
             </Button>
             {#if currentSwitchFieldAt[idx] !== null}
@@ -131,7 +131,7 @@
                   });
                 }}
               >
-                <PlusOutline slot="leftIcon" />
+                <PlusOutline slot="leftIcon" width={15} />
                 <span>
                   Ветвь с условием на "{(currentSwitchFieldAt[idx] || { name: "" }).name}"
                 </span>
@@ -177,7 +177,7 @@
             ];
           }}
         >
-          <PlusOutline slot="leftIcon" />
+          <PlusOutline slot="leftIcon" width={15} />
           Поле
         </Button>
         {#if currentSwitchFieldAt[branch.members.length] !== null}
@@ -199,7 +199,7 @@
               ];
             }}
           >
-            <PlusOutline slot="leftIcon" />
+            <PlusOutline slot="leftIcon" width={15} />
             <span>
               Ветвь с условием на "{(currentSwitchFieldAt[branch.members.length] || { name: "" }).name}"
             </span>
