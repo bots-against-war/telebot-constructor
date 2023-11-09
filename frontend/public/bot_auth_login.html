@@ -9,10 +9,10 @@
   <body>
     <div class="container">
       <div class="content">
-        <input id="access-code" placeholder="Access code" />
+        <input id="access-code" placeholder="Введите код полученный от бота" />
         <div style="margin-top: 0.5em; width: 100%; display: flex; justify-content: center">
-          <button onclick="requestAccessCode()">Open auth bot</button>
-          <button onclick="login()">Submit</button>
+          <button onclick="requestAccessCode()">Получить код авторизации</button>
+          <button onclick="login()">Войти</button>
         </div>
       </div>
     </div>
@@ -59,13 +59,10 @@
     console.log(`Base path = ${BASE_PATH}`);
 
     async function requestAccessCode() {
-      const response = await fetch(BASE_PATH + "/bot-auth/request-confirmation-code", { method: "POST" });
+      const response = await fetch(BASE_PATH + "/bot-auth/request-bot-auth-link", { method: "POST" });
       console.log(response);
       const authLink = await response.text();
-      window.open(
-        authLink,
-        '_blank'
-      );
+      window.open(authLink, "_blank");
     }
 
     async function login() {

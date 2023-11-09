@@ -45,11 +45,6 @@ async def main() -> None:
         )
 
     try:
-        # auth: Auth = GroupChatAuth(
-        #     redis=redis,
-        #     bot=AsyncTeleBot(token=os.environ["AUTH_BOT_TOKEN"]),
-        #     auth_chat_id=int(os.environ["AUTH_CHAT_ID"]),
-        # )
         auth: Auth = ChatBotAuth(
             redis=redis,
             bot=AsyncTeleBot(token=os.environ["AUTH_BOT_TOKEN"]),

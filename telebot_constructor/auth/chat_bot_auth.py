@@ -19,6 +19,25 @@ from telebot_constructor.static import static_file_content
 class ChatBotAuth(Auth):
     """
     Telegram bot based auth. You need to have a bot.
+
+    - когда бот авторизации получает команду старт, он должен сгенерировать логин код и сохранить связи:
+    1. "старт параметр - аккаунт юзерки" (и детали типа юзернейма аватарки и тд);
+    2. "старт параметр - логин код";
+
+    И прислать логин код юзерке в чат
+
+
+    - юзерка должна ввести этот код в окошко на веб странице, класс авторизации верифицирует его через двойной лукап
+    (логин код -> старт параметр -> данные аккаунта юзерки),
+
+    генерирует access token, сохраняет финальную связь "аксесс токен - данные юзерки"
+    и возвращает токен в Set-Cookie хедере (аналогично group chat auth)
+
+
+
+    1. "старт параметр - chat.id"  start_param_store
+    2. "логин код - старт параметр"       access_code_store
+    3. "аксесс токен - аккаунт юзерки"     access_tokens_store
     """
 
     CONST_KEY = "const"
@@ -42,13 +61,17 @@ class ChatBotAuth(Auth):
             dumper=lambda x: x,
             loader=lambda x: x,
         )
-        self.access_tokens_store = KeyValueStore[None](
+        self.access_tokens_store = KeyValueStore[int](
             name="access-tokens",
             prefix=self.STORE_PREFIX,
             redis=redis,
             expiration_time=access_token_lifetime,
-            dumper=lambda x: "null",
-            loader=lambda x: None,
+        )
+        self.start_param_store = KeyValueStore[int](
+            name="start-param",
+            prefix=self.STORE_PREFIX,
+            redis=redis,
+            expiration_time=access_token_lifetime,
         )
 
     async def get_auth_user(self) -> tg.User:
@@ -70,12 +93,14 @@ class ChatBotAuth(Auth):
             self.logger.info("Invalid auth cookie in request")
             return None
         self.logger.info("Auth OK")
-        # ##########################################
-        auth_user = await self.get_auth_user()
-        # ##########################################
+        # TODO we need to implement get_auth_user
+        # auth_user = await self.get_auth_user()
+
+        user_chat_id = await self.access_tokens_store.load(token)
+
         return LoggedInUser(
-            username="admin",
-            name=f"Anonymous admin (member of {auth_user.first_name or '<unnamed chat>'!r})",
+            username="TG User",
+            name=f"TG User №{user_chat_id}",
             auth_type=AuthType.TELEGRAM_BOT_AUTH,
             userpic=None,
         )
@@ -95,13 +120,14 @@ class ChatBotAuth(Auth):
                 raise web.HTTPBadRequest(reason="Required `code` field not present in request body")
             except Exception:
                 raise web.HTTPBadRequest(reason="Request body must be a valid JSON object")
-            correct_code = await self.access_code_store.load(self.CONST_KEY)
-            if correct_code != code:
+            if not await self.access_code_store.exists(code):
                 self.logger.info("Invalid confirmation code submitted")
                 raise web.HTTPUnauthorized()
+            start_param = await self.access_code_store.load(code)
+            chat_id = await self.start_param_store.load(start_param)
             access_token = secrets.token_hex(nbytes=32)
             self.logger.info("Confirmation code OK, issuing access token")
-            if not await self.access_tokens_store.save(access_token, None):
+            if not await self.access_tokens_store.save(access_token, chat_id):
                 raise web.HTTPInternalServerError()
             return web.Response(
                 text="OK", headers={hdrs.SET_COOKIE: f"{self.ACCESS_TOKEN_COOKIE_NAME}={access_token}; Path=/"}
@@ -109,60 +135,54 @@ class ChatBotAuth(Auth):
 
         app.router.add_post("/bot-auth/login", login)
 
-        async def request_confirmation_code(request: web.Request) -> web.Response:
+        async def request_bot_auth_link(request: web.Request) -> web.Response:
             """
-            This method is called when user clicks on "Send code" button on login page.
-            Firstly redirect user to telegram bot with unique start param.
-            Example link: t.me/<bot_username>?start=<parameter>
+            This method is called when user clicks on _____"Send code"_____ button on login page.
+            That redirect user to telegram bot with unique start param.
+            Example link: https://t.me/<bot_username>?start=<parameter>
             """
             start_param = secrets.token_hex(16)
-            # await self.access_code_store.save(self.CONST_KEY, start_param)
             bot_username = await self.get_bot_username()
             link_to_bot = f"https://t.me/{bot_username}?start={start_param}"
 
             return web.Response(text=link_to_bot)
 
-        app.router.add_post("/bot-auth/request-confirmation-code", request_confirmation_code)
+        app.router.add_post("/bot-auth/request-bot-auth-link", request_bot_auth_link)
 
     async def setup_bot(self) -> BotRunner:
-        return await create_auth_bot(self.bot)
+        return await self.create_auth_bot(self.bot)
 
+    async def create_auth_bot(self, bot: AsyncTeleBot) -> BotRunner:
+        def extract_start_param(text):
+            return text.split()[1] if len(text.split()) > 1 else None
 
-async def create_auth_bot(bot: AsyncTeleBot) -> BotRunner:
-    def extract_unique_code(text):
-        # Extracts the unique_code from the sent /start command.
-        return text.split()[1] if len(text.split()) > 1 else None
+        def in_storage(unique_code):
+            # (pseudo-code) Should check if a unique code exists in storage
+            return True
 
-    def in_storage(unique_code):
-        # (pseudo-code) Should check if a unique code exists in storage
-        return True
+        def get_username_from_storage(unique_code):
+            # (pseudo-code) Does a query to the storage, retrieving the associated username
+            # Should be replaced by a real database-lookup.
+            return "ABC" if in_storage(unique_code) else None
 
-    def get_username_from_storage(unique_code):
-        # (pseudo-code) Does a query to the storage, retrieving the associated username
-        # Should be replaced by a real database-lookup.
-        return "ABC" if in_storage(unique_code) else None
+        def save_chat_id(chat_id, username):
+            # (pseudo-code) Save the chat_id->username to storage
+            # Should be replaced by a real database query.
+            pass
 
-    def save_chat_id(chat_id, username):
-        # (pseudo-code) Save the chat_id->username to storage
-        # Should be replaced by a real database query.
-        pass
+        @bot.message_handler(commands=["start"])
+        async def send_welcome(message):
+            start_param = extract_start_param(message.text)
+            if start_param:
+                await self.start_param_store.save(start_param, message.chat.id)
+                access_code = secrets.token_hex(16)
+                await self.access_code_store.save(access_code, start_param)
+                reply_text = f"🔑🔑🔑" f"\n\n" f"Введите этот код на сайте:" f"\n\n" f"<pre>{access_code}</pre>"
 
-    @bot.message_handler(commands=["start"])
-    async def send_welcome(message):
-        unique_code = extract_unique_code(message.text)
-        if unique_code:  # if the '/start' command contains a unique_code
-            username = get_username_from_storage(unique_code)
-            if username:  # if the username exists in our database
-                save_chat_id(message.chat.id, username)
-                reply = "Hello {0}, how are you?".format(username)
-            else:
-                reply = "I have no clue who you are..."
-        else:
-            reply = "Please visit me via a provided URL from the website."
-        await bot.reply_to(message, reply)
+                await bot.reply_to(message, reply_text, parse_mode="HTML")
 
-    return BotRunner(
-        bot_prefix="auth_bot",
-        bot=bot,
-        background_jobs=[],
-    )
+        return BotRunner(
+            bot_prefix="auth_bot",
+            bot=bot,
+            background_jobs=[],
+        )
