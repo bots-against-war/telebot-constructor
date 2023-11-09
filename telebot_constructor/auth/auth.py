@@ -34,7 +34,7 @@ class Auth(abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def setup_bot(self) -> BotRunner:
+    async def setup_bot(self) -> Optional[BotRunner]:
         """Optional setup hook for subclasses to override to add their bot handlers"""
         ...
 

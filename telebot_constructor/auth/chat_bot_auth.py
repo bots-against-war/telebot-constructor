@@ -170,5 +170,5 @@ class ChatBotAuth(Auth):
             background_jobs=[],
         )
 
-    async def setup_bot(self) -> BotRunner:
+    async def setup_bot(self) -> Optional[BotRunner]:
         return await self.create_auth_bot(self.bot)
