@@ -118,7 +118,12 @@
     error={userClickedCreate && !botTokenInput}
     label="Токен"
     placeholder="123456789:ABCDEFGHIJKLMOPQRSTUVWXYZabcdefghij"
-    description="Можно изменить позже TBD"
+    description="Для создания бота: 
+зайдите в Телеграм и через поиск найдите @BotFather;
+введите команду /newbot;
+дайте боту имя и @username;
+скопируйте токен вашего бота из сообщения BotFather
+    "
   />
   {#if error !== null}
     <ErrorBadge title={errorTitle || "Ошибка"} text={error} />
