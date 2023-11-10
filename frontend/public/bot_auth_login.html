@@ -9,9 +9,12 @@
   <body>
     <div class="container">
       <div class="content">
-        <input id="access-code" placeholder="Введите код полученный от бота" />
-        <div style="margin-top: 0.5em; width: 100%; display: flex; justify-content: center">
+        <div style="margin-bottom: 30px; width: 100%; display: flex; justify-content: center">
           <button onclick="requestAccessCode()">Получить код авторизации</button>
+        </div>
+        <label for="access-code">Введите код из бота @TelebotConstructorServiceBot:</label>
+        <input id="access-code" placeholder="a12a0ff1e3891dd6d22d05ccb729d807" />
+        <div style="margin-top: 30px; width: 100%; display: flex; justify-content: center">
           <button onclick="login()">Войти</button>
         </div>
       </div>
