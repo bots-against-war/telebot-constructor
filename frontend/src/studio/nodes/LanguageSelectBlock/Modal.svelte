@@ -43,6 +43,7 @@
           return (
             ld.code.toLowerCase().includes(filterText) ||
             ld.name.toLowerCase().includes(filterText) ||
+            (ld.local_name && ld.local_name.toLowerCase().includes(filterText)) ||
             (ld.emoji && filterText.includes(ld.emoji))
           );
         }

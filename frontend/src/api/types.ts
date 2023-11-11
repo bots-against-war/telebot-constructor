@@ -190,6 +190,7 @@ export type Description3 = string;
 export type ShortDescription2 = string;
 export type Code = string;
 export type Name4 = string;
+export type LocalName = string | null;
 export type Emoji = string | null;
 export type Id5 = string;
 export type Name5 = string;
@@ -512,6 +513,7 @@ export interface TgBotUserUpdate {
 export interface LanguageData {
   code: Code;
   name: Name4;
+  local_name?: LocalName;
   emoji?: Emoji;
   [k: string]: unknown;
 }

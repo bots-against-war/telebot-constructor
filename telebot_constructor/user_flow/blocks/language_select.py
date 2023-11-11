@@ -2,6 +2,7 @@ from typing import Any, Optional
 
 from pydantic import BaseModel
 from telebot_components.language import LanguageChangeContext
+from telebot_components.stores.language import LanguageLabelPart
 from telebot_components.stores.language import (
     LanguageSelectionMenuConfig as ComponentsLanguageSelectionMenuConfig,
 )
@@ -65,7 +66,7 @@ class LanguageSelectBlock(UserFlowBlock):
             supported_languages=self.supported_languages,
             default_language=self.default_language,
             menu_config=ComponentsLanguageSelectionMenuConfig(
-                emojj_buttons=self.menu_config.emoji_buttons,
+                language_label_template=[LanguageLabelPart.EMOJI, " ", LanguageLabelPart.NAME_LOCAL],
                 select_with_checkmark=True,
                 prompt=self.menu_config.propmt,
                 is_prompt_html=True,
