@@ -1782,13 +1782,13 @@ ujson = ">=5.3.0,<6.0.0"
 
 [[package]]
 name = "telebot-components"
-version = "0.10.8"
+version = "0.10.9"
 description = "Framework/toolkit for building Telegram bots with telebot and redis"
 optional = false
 python-versions = ">=3.10,<4.0"
 files = [
-    {file = "telebot_components-0.10.8-py3-none-any.whl", hash = "sha256:732650b733638bfa4b70bb1a29598805ebc519aabbaaecb4faaabfd586d55e51"},
-    {file = "telebot_components-0.10.8.tar.gz", hash = "sha256:e08418a0a2839672f5536b8b17ec8ca6a532e77a04a93c6007842ad01199d4bb"},
+    {file = "telebot_components-0.10.9-py3-none-any.whl", hash = "sha256:c47eae5439442a7c3fb1d1df137e0e3272390f8af30da9bc5c6c6d89ad87eae6"},
+    {file = "telebot_components-0.10.9.tar.gz", hash = "sha256:d306afe47896bfaddf33fbe2a65352c065e9fc63cab74ca236907ab1fd9bcf7a"},
 ]
 
 [package.dependencies]
@@ -2051,4 +2051,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "d45bac0c0ab1427ab857cbc30d763debb66acf118a1ae5bf2c704c4ebe28cd8e"
+content-hash = "06696d104fa536be6f54e7482972b504c626d66290f5edddf98cb824c77b1ccd"

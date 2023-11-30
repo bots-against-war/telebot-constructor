@@ -79,7 +79,7 @@ class HumanOperatorBlock(UserFlowBlock):
         return self.catch_all
 
     async def setup(self, context: UserFlowSetupContext) -> SetupResult:
-        log_prefix = f"[{context.bot_prefix}]"
+        log_prefix = f"[{context.bot_prefix}] "
         logger.info(log_prefix + "Setting up feedback handler")
 
         async def custom_user_message_filter(message: tg.Message) -> bool:
@@ -109,8 +109,9 @@ class HumanOperatorBlock(UserFlowBlock):
                 custom_user_message_filter=custom_user_message_filter,
             ),
             anti_spam=AntiSpam(
-                context.redis,
-                context.bot_prefix,
+                redis=context.redis,
+                bot_prefix=context.bot_prefix,
+                name=str(self.feedback_handler_config.admin_chat_id),
                 config=AntiSpamConfig(
                     throttle_after_messages=int(5 * self.feedback_handler_config.max_messages_per_minute),
                     throttle_duration=datetime.timedelta(minutes=5),
