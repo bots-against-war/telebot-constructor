@@ -820,13 +820,13 @@ async def test_multilang_user_flow() -> None:
     assert len(bot.method_calls) == 1
     assert_method_call_kwargs_include(bot.method_calls["send_message"], [{"chat_id": 161, "text": "choose language"}])
     assert bot.method_calls["send_message"][0].full_kwargs["reply_markup"].to_dict() == {
-        "keyboard": [[{"text": "🇬🇧"}], [{"text": "🇷🇺"}]],
+        "keyboard": [[{"text": "🇬🇧 English"}], [{"text": "🇷🇺 Русский"}]],
         "one_time_keyboard": True,
         "resize_keyboard": True,
     }
     bot.method_calls.clear()
 
-    await bot.process_new_updates([tg_update_message_to_bot(161, first_name="User", text="🇷🇺")])
+    await bot.process_new_updates([tg_update_message_to_bot(161, first_name="User", text="🇷🇺 Русский")])
     assert len(bot.method_calls) == 1
     assert_method_call_kwargs_include(
         bot.method_calls["send_message"], [{"chat_id": 161, "text": "спасибо что выбрали русский язык"}]
