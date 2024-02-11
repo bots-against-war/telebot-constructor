@@ -1,11 +1,13 @@
 <script lang="ts">
-  import { Button, Flex, PasswordInput, TextInput } from "@svelteuidev/core";
+  import { Button, Li, List, Spinner } from "flowbite-svelte";
   import { slugify } from "transliteration";
   import { saveBotConfig } from "../api/botConfig";
   import { getBotInfo } from "../api/botInfo";
   import type { BotConfig, BotInfo } from "../api/types";
   import { validateBotToken } from "../api/validation";
   import ErrorBadge from "../components/ErrorBadge.svelte";
+  import PasswordInput from "../components/inputs/PasswordInput.svelte";
+  import TextInput from "../components/inputs/TextInput.svelte";
   import { BOT_INFO_NODE_ID, DEFAULT_START_COMMAND_ENTRYPOINT_ID } from "../constants";
   import { createBotTokenSecret, getError, getModalCloser, unwrap } from "../utils";
 
@@ -25,14 +27,10 @@
     let botToken = botTokenInput.trim();
     let botDisplayName = botDisplayNameInput.trim();
     if (!botDisplayName) {
-      errorTitle = "Не хватает данных";
-      error = `Имя не может быть пустым`;
       return;
     }
 
     if (!botToken) {
-      errorTitle = "Не хватает данных";
-      error = `Токен не может быть пустым`;
       return;
     }
 
@@ -78,7 +76,7 @@
             command: {
               entrypoint_id: DEFAULT_START_COMMAND_ENTRYPOINT_ID,
               command: "start",
-              short_description: "запустить бот",
+              short_description: "начало работы",
               next_block_id: null,
             },
           },
@@ -105,30 +103,39 @@
   }
 </script>
 
-<Flex direction="column" gap="md">
+<div class="flex flex-col gap-4">
   <TextInput
     bind:value={botDisplayNameInput}
-    error={userClickedCreate && !botDisplayNameInput}
+    error={userClickedCreate && !botDisplayNameInput ? "Имя бота не может быть пустым" : null}
     label="Имя"
     description="Это название бота в конструкторе. Его не увидят пользователь:ницы и его можно изменять."
     placeholder="Бот-волонтер"
   />
   <PasswordInput
     bind:value={botTokenInput}
-    error={userClickedCreate && !botTokenInput}
+    error={userClickedCreate && !botTokenInput ? "Токен не может быть пустым" : null}
     label="Токен"
     placeholder="123456789:ABCDEFGHIJKLMOPQRSTUVWXYZabcdefghij"
-    description="Для создания бота: 
-зайдите в Телеграм и через поиск найдите @BotFather;
-введите команду /newbot;
-дайте боту имя и @username;
-скопируйте токен вашего бота из сообщения BotFather
-    "
-  />
+  >
+    <svelte:fragment slot="description">
+      <p>Для создания бота:</p>
+      <List class="mb-2 marker:text-gray-600">
+        <Li>зайдите в Телеграм и через поиск найдите @BotFather</Li>
+        <Li>введите команду /newbot</Li>
+        <Li>дайте боту имя и @username</Li>
+        <Li>скопируйте токен вашего бота из сообщения BotFather</Li>
+      </List>
+    </svelte:fragment>
+  </PasswordInput>
   {#if error !== null}
     <ErrorBadge title={errorTitle || "Ошибка"} text={error} />
   {/if}
   <div class="save-button">
-    <Button on:click={createNewBot} loading={isCreating}>Создать</Button>
+    <Button on:click={createNewBot}>
+      {#if isCreating}
+        <Spinner class="me-3" size="4" color="white" />
+      {/if}
+      Создать
+    </Button>
   </div>
-</Flex>
+</div>
