@@ -20,6 +20,7 @@
   <Dropdown bind:open={dropdownOpen} triggeredBy="#openLanguageMenu-{langMenuId}" placement="right">
     {#each $languageConfigStore.supportedLanguageCodes as language (language)}
       <DropdownItem
+        class="text-nowrap p-2"
         on:click={() => {
           selectedLang = language;
           dropdownOpen = false;

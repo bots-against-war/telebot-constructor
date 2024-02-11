@@ -1,17 +1,16 @@
 <script lang="ts">
   import { Node } from "svelvet";
-  import Modal from "./Modal.svelte";
-  import NodeContent from "../../components/NodeContent.svelte";
-  import OutputAnchorsBox from "../../components/OutputAnchorsBox.svelte";
-  import OutputAnchor from "../../components/OutputAnchor.svelte";
-
   import type { CommandEntryPoint } from "../../../api/types";
   import type { SvelvetPosition } from "../../../types";
-
   import { getModalOpener } from "../../../utils";
-  import { DEFAULT_NODE_PROPS } from "../nodeProps";
-  import { NodeTypeKey } from "../display";
   import InputAnchor from "../../components/InputAnchor.svelte";
+  import NodeContent from "../../components/NodeContent.svelte";
+  import OutputAnchor from "../../components/OutputAnchor.svelte";
+  import OutputAnchorsBox from "../../components/OutputAnchorsBox.svelte";
+  import { NodeTypeKey } from "../display";
+  import { DEFAULT_NODE_PROPS } from "../nodeProps";
+  import Modal from "./Modal.svelte";
+
   const openModal = getModalOpener<Modal>();
 
   export let config: CommandEntryPoint;
@@ -38,7 +37,7 @@
         },
       })}
   >
-    <span>/{config.command}</span>
+    <span class="font-mono font-bold">/{config.command}</span>
   </NodeContent>
   <OutputAnchorsBox>
     <OutputAnchor bind:nextBlockId={config.next_block_id} />

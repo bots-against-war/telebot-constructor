@@ -8,8 +8,18 @@
   export let placeholder: string = "";
   export let description: string | null = null;
   export let error: string | boolean | null = null;
+  export let disabled: boolean = false;
 </script>
 
 <InputWrapper {label} {description} {error} {required}>
-  <Input {label} id={label} name={label} {required} {placeholder} bind:value color={error ? "red" : undefined} />
+  <Input
+    {label}
+    id={label}
+    name={label}
+    {required}
+    {placeholder}
+    bind:value
+    color={error ? "red" : undefined}
+    {disabled}
+  />
 </InputWrapper>

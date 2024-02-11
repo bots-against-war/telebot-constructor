@@ -20,7 +20,7 @@
       {fullName ? languageLookupResult.data.code : languageLookupResult.data.name}
     </Tooltip>
   {/if}
-  <div id={language}>
+  <div>
     <LanguageDataComponent languageData={languageLookupResult.data} {fullName} />
   </div>
 {:else}

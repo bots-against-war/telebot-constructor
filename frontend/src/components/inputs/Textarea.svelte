@@ -10,6 +10,6 @@
   export let error: string | boolean | null = null;
 </script>
 
-<InputWrapper {label} {description} {error}>
+<InputWrapper {label} {description} {error} {required}>
   <Textarea id="message" name="message" label="Your message" rows="4" {placeholder} {required} bind:value />
 </InputWrapper>
