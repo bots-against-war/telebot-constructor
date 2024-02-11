@@ -3,16 +3,12 @@
     Caches stuff in localStorage for fewer backend calls.
 -->
 <script lang="ts">
-  import { Group, Image } from "@svelteuidev/core";
-
+  import { Avatar } from "flowbite-svelte";
   import { getGroupChatData } from "../api/groupChats";
   import type { TgGroupChat } from "../api/types";
-  import { ok, type Result } from "../utils";
-  import { QuestionCircleOutline } from "flowbite-svelte-icons";
-
   import ErrorBadge from "../components/ErrorBadge.svelte";
+  import { ok, type Result } from "../utils";
   import DataBadge from "./internal/DataBadge.svelte";
-  import EllipsisText from "./internal/EllipsisText.svelte";
   import DataBadgeLoader from "./internal/DataBadgeLoader.svelte";
 
   export let botName: string;
@@ -59,34 +55,27 @@
 </script>
 
 <DataBadge>
-  <Group override={{ gap: "6px", maxWidth: "300px" }} noWrap>
+  <div class="flex flex-row gap-2 mr-1 max-w-60">
     {#await renderedChatDataPromise}
       <DataBadgeLoader />
     {:then loadChatResult}
       {#if loadChatResult.ok}
         <!-- TODO: render icons, chat type, link to chat, etc -->
-        <Image
-          src={loadChatResult.data.photo !== null ? `data:image/png;base64,${loadChatResult.data.photo}` : null}
-          width={25}
-          height={25}
-          radius={1000}
-          usePlaceholder
-        >
-          <svelte:fragment slot="placeholder">
-            <QuestionCircleOutline />
-          </svelte:fragment>
-        </Image>
-        <Group override={{ gap: "6px" }}>
-          <EllipsisText maxWidth="250px">{loadChatResult.data.title}</EllipsisText>
+        <Avatar
+          src={loadChatResult.data.photo ? `data:image/png;base64,${loadChatResult.data.photo}` : undefined}
+          class="w-6 h-6"
+        />
+        <div>
+          <span>{loadChatResult.data.title}</span>
           {#if loadChatResult.data.username}
-            <EllipsisText color="dimmed" maxWidth="250px">
+            <span class=" text-gray-500">
               @{loadChatResult.data.username}
-            </EllipsisText>
+            </span>
           {/if}
-        </Group>
+        </div>
       {:else}
         <ErrorBadge title="Ошибка загрузки данных чата" text={loadChatResult.error} />
       {/if}
     {/await}
-  </Group>
+  </div>
 </DataBadge>

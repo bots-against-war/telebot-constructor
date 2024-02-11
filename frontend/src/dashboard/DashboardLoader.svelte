@@ -1,9 +1,9 @@
 <script lang="ts">
+  import { listBotInfos } from "../api/botInfo";
   import FatalError from "../components/FatalError.svelte";
   import LoadingScreen from "../components/LoadingScreen.svelte";
   import { unwrap } from "../utils.js";
   import Dashboard from "./Dashboard.svelte";
-  import { listBotInfos } from "../api/botInfo";
 
   const loadBotInfo = async () => unwrap(await listBotInfos());
 </script>
