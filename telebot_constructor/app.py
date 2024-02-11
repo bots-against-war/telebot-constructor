@@ -583,6 +583,8 @@ class TelebotConstructorApp:
             username = await self.authenticate(request)
             bot_name = self.parse_bot_name(request)
             bot_user_update = await self.parse_pydantic_model(request, TgBotUserUpdate)
+            if not bot_user_update.name:
+                raise web.HTTPBadRequest(reason="Bot name can't be empty")
             bot = await self._make_raw_bot(username, bot_name)
             try:
                 await bot_user_update.save(bot, telegram_files_downloader=self.telegram_files_downloader)

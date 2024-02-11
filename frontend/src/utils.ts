@@ -97,3 +97,5 @@ export function withConfirmation(text: string, onConfirm: () => Promise<any>, co
     });
   };
 }
+
+export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));

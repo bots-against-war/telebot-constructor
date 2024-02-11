@@ -1,7 +1,10 @@
 <script lang="ts">
-  import { ActionIcon, CloseButton, Group, InputWrapper, Space, Stack } from "@svelteuidev/core";
   import { SortableList } from "@jhubbardsf/svelte-sortablejs";
-  import { BarsOutline, PlusOutline } from "flowbite-svelte-icons";
+  // import { ActionIcon, CloseButton, Group, InputWrapper, Space, Stack } from "@svelteuidev/core";
+
+  import InputWrapper from "../../components/inputs/InputWrapper.svelte";
+  import ActionIcon from "../../components/ActionIcon.svelte";
+  import { BarsOutline, PlusOutline, CloseOutline } from "flowbite-svelte-icons";
 
   import LocalizableTextInput from "./LocalizableTextInput.svelte";
 
@@ -18,7 +21,7 @@
   let optionsListResortedCount: number = 0;
 </script>
 
-<Stack>
+<div>
   <InputWrapper {label}>
     {#key optionsListResortedCount}
       <SortableList
@@ -35,30 +38,29 @@
         }}
       >
         {#each options as option, idx}
-          <Group override={{ padding: "5px 0" }}>
+          <div class="flex flex-row py-1 gap-1 items-baseline">
             <LocalizableTextInput bind:value={option.label} isLongText={false} />
             <div class="grip-handle">
-              <Space w="md" />
               <BarsOutline />
             </div>
-            <CloseButton
+            <ActionIcon
+              icon={CloseOutline}
               on:click={() => {
                 options = options.toSpliced(idx);
               }}
             />
-          </Group>
+          </div>
         {/each}
       </SortableList>
     {/key}
     <ActionIcon
+      icon={PlusOutline}
       on:click={() => {
         options = [...options, optionConstructor()];
       }}
-    >
-      <PlusOutline width={15} />
-    </ActionIcon>
+    />
   </InputWrapper>
-</Stack>
+</div>
 
 <style>
   .grip-handle {

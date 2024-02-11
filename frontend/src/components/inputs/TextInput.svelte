@@ -3,13 +3,13 @@
   import InputWrapper from "./InputWrapper.svelte";
 
   export let value: string;
-  export let label: string;
+  export let label: string | undefined;
   export let required: boolean = true;
   export let placeholder: string = "";
   export let description: string | null = null;
   export let error: string | boolean | null = null;
 </script>
 
-<InputWrapper {label} {description} {error}>
+<InputWrapper {label} {description} {error} {required}>
   <Input {label} id={label} name={label} {required} {placeholder} bind:value color={error ? "red" : undefined} />
 </InputWrapper>

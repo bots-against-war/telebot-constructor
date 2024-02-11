@@ -21,7 +21,7 @@ logging.basicConfig(level=logging.INFO if os.environ.get("IS_HEROKU") else loggi
 
 
 async def main() -> None:
-    if bool(os.environ.get("TELEBOT_CONSTRUCTOR_SECRETS_USE_REDIS_EMULATION")):
+    if bool(os.environ.get("TELEBOT_CONSTRUCTOR_USE_REDIS_EMULATION")):
         redis: RedisInterface = PersistentRedisEmulation()  # type: ignore
     else:
         redis_url = urlparse(os.environ["REDIS_URL"])
@@ -50,7 +50,7 @@ async def main() -> None:
             auth_chat_id=int(os.environ["AUTH_CHAT_ID"]),
         )
     except Exception:
-        logging.exception("Error setting up group chat auth, running without auth")
+        logging.info("Error setting up group chat auth, running without auth")
         auth = NoAuth()
 
     app = TelebotConstructorApp(

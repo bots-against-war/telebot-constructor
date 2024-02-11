@@ -1,41 +1,28 @@
 # telebot-constructor
 
-Free & open-source Telegram bot constructor with no-code web UI, using as backend [telebot-components](https://github.com/bots-against-war/telebot-components).
+Free & open-source Telegram bot constructor with no-code web UI, using
+[telebot-components](https://github.com/bots-against-war/telebot-components) as backend .
 
 ## Development
 
-### Dev setup
+### Basic dev setup
 
-1. The project uses Poerty 1.5.1 (see [installation instruction](https://python-poetry.org/docs/master#installing-with-the-official-installer)). Using it,
-   install Python package with the backend API code:
+1. [Install](https://python-poetry.org/docs/master#installing-with-the-official-installer) Poetry 1.5.1, then run 
 
 ```bash
 poetry install
 ```
 
-<details>
-  <summary>
-    Poetry details
-  </summary>
-  <ul>
-    <li>
-      You might need to manually install dynamic versioning plugin (without it local build will
-      always have version <code>0.0.0</code>): <code>poetry self add poetry-dynamic-versioning-plugin</code>
-    </li>
-    <li>
-      To create virtualenv inside the project’s root directory, use: <code>poetry config virtualenvs.in-project false --local</code>
-    </li>
-  </ul>
-</details>
-
-2. Start backend/API application
+2. Start backend/API (no dependencies required)
 
 ```sh
-export TELEBOT_CONSTRUCTOR_DEBUG=1
+poetry shell
+export TELEBOT_CONSTRUCTOR_USE_REDIS_EMULATION=1
+export SECRETS_ENCRYPTION_KEY=if-wLoSw7gEbQgY1xLHrEgI4E357PRUAeGfZudnaYu0=  # dummy value
 python run_polling.py
 ```
 
-3. Frontend uses `npm` v16+, use it to install the dependencies and run the dev server for frontend
+3. With `npm` v18+ install frontend and start dev server
 
 ```bash
 npm install
@@ -49,5 +36,13 @@ npm run dev
 Run from project root
 
 ```bash
-python scripts/models/pydantic2jsonschema.py && node scripts/models/jsonschema2ts.mjs 
+npm run pydantic:to:ts
 ```
+
+### Frontend
+
+We use:
+- Tailwind CSS
+- `flowbite` component library, see [docs](https://flowbite-svelte.com/docs/pages/introduction)
+- `svelvet` (nodes/connections engine), see [docs](https://svelvet.mintlify.app/introduction)
+- `flowbite-icons-svelte` for icons, see [catalog](https://flowbite-svelte-icons.vercel.app/solid)

@@ -32,6 +32,7 @@
         updateRunningStatus();
       } else {
         runningStatus = `Ошибка: ${resp.error}`;
+        botInfo.is_running = false;
       }
     } else {
       runningStatus = "Останавливаем...";
@@ -41,6 +42,7 @@
         updateRunningStatus();
       } else {
         runningStatus = `Ошибка: ${resp.error}`;
+        botInfo.is_running = true;
       }
     }
   }

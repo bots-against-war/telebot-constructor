@@ -61,8 +61,5 @@
 <style>
   div.node-content-container {
     width: 250px;
-    /* max-height: 200px; */
-    /* overflow-y: hidden; */
-    /* position: relative; */
   }
 </style>
