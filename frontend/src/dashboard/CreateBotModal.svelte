@@ -1,13 +1,13 @@
 <script lang="ts">
-  import { saveBotConfig } from "../api/botConfig";
   import { Button, Flex, PasswordInput, TextInput } from "@svelteuidev/core";
-  import { createBotTokenSecret, getError, getModalCloser, unwrap } from "../utils";
   import { slugify } from "transliteration";
-  import { validateBotToken } from "../api/validation";
-  import type { BotConfig, BotInfo } from "../api/types";
-  import ErrorBadge from "../components/ErrorBadge.svelte";
+  import { saveBotConfig } from "../api/botConfig";
   import { getBotInfo } from "../api/botInfo";
+  import type { BotConfig, BotInfo } from "../api/types";
+  import { validateBotToken } from "../api/validation";
+  import ErrorBadge from "../components/ErrorBadge.svelte";
   import { BOT_INFO_NODE_ID, DEFAULT_START_COMMAND_ENTRYPOINT_ID } from "../constants";
+  import { createBotTokenSecret, getError, getModalCloser, unwrap } from "../utils";
 
   export let newBotCallback: (botName: string, info: BotInfo) => void;
 
