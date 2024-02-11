@@ -1,38 +1,34 @@
 <script lang="ts">
-  import { Button, Group, Divider } from "@svelteuidev/core";
-  import { Svelvet } from "svelvet";
+  import { Button, Heading, Spinner } from "flowbite-svelte";
   import { navigate } from "svelte-routing";
-
-  import BotInfoNode from "./nodes/BotInfo/Node.svelte";
-  import CommandEntryPointNode from "./nodes/CommandEntryPoint/Node.svelte";
-  import ContentBlockNode from "./nodes/ContentBlock/Node.svelte";
-  import HumanOperatorNode from "./nodes/HumanOperatorBlock/Node.svelte";
-  import LanguageSelectNode from "./nodes/LanguageSelectBlock/Node.svelte";
-  import MenuNode from "./nodes/MenuBlock/Node.svelte";
-  import FormNode from "./nodes/FormBlock/Node.svelte";
-  import StudioSidePandel from "./components/StudioSidePanel.svelte";
-  import DeletableEdge from "./components/DeletableEdge.svelte";
-
+  import { Svelvet } from "svelvet";
   import { saveBotConfig } from "../api/botConfig";
   import { getBlockId, getEntrypointId } from "../api/typeUtils";
   import type { BotConfig, UserFlowBlockConfig, UserFlowEntryPointConfig, UserFlowNodePosition } from "../api/types";
-
+  import Navbar from "../components/Navbar.svelte";
+  import { BOT_INFO_NODE_ID } from "../constants";
   import { getError, withConfirmation } from "../utils";
-  import { findNewNodePositionDown, findNewNodePositionRight } from "./utils";
+  import AddNodeButton from "./components/AddNodeButton.svelte";
+  import DeletableEdge from "./components/DeletableEdge.svelte";
+  import StudioSidePandel from "./components/StudioSidePanel.svelte";
+  import BotInfoNode from "./nodes/BotInfo/Node.svelte";
+  import CommandEntryPointNode from "./nodes/CommandEntryPoint/Node.svelte";
+  import ContentBlockNode from "./nodes/ContentBlock/Node.svelte";
+  import FormNode from "./nodes/FormBlock/Node.svelte";
+  import HumanOperatorNode from "./nodes/HumanOperatorBlock/Node.svelte";
+  import LanguageSelectNode from "./nodes/LanguageSelectBlock/Node.svelte";
+  import MenuNode from "./nodes/MenuBlock/Node.svelte";
   import {
     defaultCommandEntrypoint,
     defaultContentBlockConfig,
+    defaultFormBlockConfig,
     defaultHumanOperatorBlockConfig,
     defaultLanguageSelectBlockConfig,
     defaultMenuBlockConfig,
-    defaultFormBlockConfig,
   } from "./nodes/defaultConfigs";
   import { NodeTypeKey } from "./nodes/display";
   import { languageConfigStore, type LanguageConfig } from "./stores";
-  import Navbar from "../components/Navbar.svelte";
-  import EllipsisText from "../components/internal/EllipsisText.svelte";
-  import AddNodeButton from "./components/AddNodeButton.svelte";
-  import { BOT_INFO_NODE_ID } from "../constants";
+  import { findNewNodePositionDown, findNewNodePositionRight } from "./utils";
 
   export let botName: string;
   export let botConfig: BotConfig;
@@ -167,20 +163,18 @@
 <div class="svelvet-container">
   <div class="navbar-container">
     <Navbar>
-      <Group noWrap override={{ flexGrow: "100" }} position="right">
-        <EllipsisText maxWidth="300px" size={24}>
+      <div class=" flex gap-2">
+        <Heading tag="h2" class="mr-2 max-w-96 text-ellipsis">
           {botConfig.display_name}
-        </EllipsisText>
-        <Button
-          variant="filled"
-          disabled={!isConfigValid || !isConfigModified}
-          loading={isSavingBotConfig}
-          on:click={saveCurrentBotConfig}
-        >
+        </Heading>
+        <Button disabled={!isConfigValid || !isConfigModified || isSavingBotConfig} on:click={saveCurrentBotConfig}>
+          {#if isSavingBotConfig}
+            <Spinner class="me-3" size="4" color="white" />
+          {/if}
           Сохранить
         </Button>
-        <Button variant="outline" on:click={isConfigModified ? exitStudioWithConfirmation : exitStudio}>Выйти</Button>
-      </Group>
+        <Button outline on:click={isConfigModified ? exitStudioWithConfirmation : exitStudio}>Выйти</Button>
+      </div>
     </Navbar>
   </div>
   <Svelvet
@@ -244,12 +238,11 @@
     {/each}
   </Svelvet>
   <StudioSidePandel>
-    <Group direction="column" spacing="xs">
+    <div class="flex flex-col gap-3">
       <AddNodeButton
         key={NodeTypeKey.command}
         on:click={getEntrypointConstructor("command", defaultCommandEntrypoint)}
       />
-      <Divider override={{ width: "100%", margin: 0 }} />
       <AddNodeButton key={NodeTypeKey.content} on:click={getBlockConstructor("content", defaultContentBlockConfig)} />
       <AddNodeButton
         key={NodeTypeKey.human_operator}
@@ -260,8 +253,9 @@
         on:click={getBlockConstructor("language-select", defaultLanguageSelectBlockConfig)}
       />
       <AddNodeButton key={NodeTypeKey.menu} on:click={getBlockConstructor("menu", defaultMenuBlockConfig)} />
+
       <AddNodeButton key={NodeTypeKey.form} on:click={getBlockConstructor("form", defaultFormBlockConfig)} />
-    </Group>
+    </div>
   </StudioSidePandel>
 </div>
 

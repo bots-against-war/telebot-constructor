@@ -1,24 +1,22 @@
 <script lang="ts">
+  import { Avatar } from "flowbite-svelte";
+  import { ArrowUpRightFromSquareOutline } from "flowbite-svelte-icons";
   import { Node } from "svelvet";
-  import Modal from "./Modal.svelte";
-  import NodeContent from "../../components/NodeContent.svelte";
-  import OutputAnchorsBox from "../../components/OutputAnchorsBox.svelte";
-  import OutputAnchor from "../../components/OutputAnchor.svelte";
-  import { ActionIcon, Group, Image } from "@svelteuidev/core";
-  import { ArrowUpRightFromSquareOutline, QuestionCircleOutline } from "flowbite-svelte-icons";
-
+  import { getBotUser } from "../../../api/botUser";
+  import type { TgBotUser } from "../../../api/types";
+  import ActionIcon from "../../../components/ActionIcon.svelte";
   import ErrorBadge from "../../../components/ErrorBadge.svelte";
   import DataBadge from "../../../components/internal/DataBadge.svelte";
-  import EllipsisText from "../../../components/internal/EllipsisText.svelte";
   import DataBadgeLoader from "../../../components/internal/DataBadgeLoader.svelte";
-
-  import { DEFAULT_NODE_PROPS } from "../nodeProps";
-  import { NodeTypeKey } from "../display";
-  import { getBotUser } from "../../../api/botUser";
-  import { getModalOpener, ok } from "../../../utils";
-  import type { SvelvetPosition } from "../../../types";
-  import type { TgBotUser } from "../../../api/types";
   import { DEFAULT_START_COMMAND_ENTRYPOINT_ID } from "../../../constants";
+  import type { SvelvetPosition } from "../../../types";
+  import { getModalOpener, ok } from "../../../utils";
+  import NodeContent from "../../components/NodeContent.svelte";
+  import OutputAnchor from "../../components/OutputAnchor.svelte";
+  import OutputAnchorsBox from "../../components/OutputAnchorsBox.svelte";
+  import { NodeTypeKey } from "../display";
+  import { DEFAULT_NODE_PROPS } from "../nodeProps";
+  import Modal from "./Modal.svelte";
 
   const openModal = getModalOpener<Modal>();
 
@@ -59,30 +57,21 @@
         <DataBadgeLoader />
       {:then botUserResult}
         {#if botUserResult.ok}
-          <Group noWrap position="apart" spacing="xs">
-            <Group override={{ gap: "6px" }}>
-              <Image
-                src={botUserResult.data.userpic !== null ? `data:image/png;base64,${botUserResult.data.userpic}` : null}
-                width={25}
-                height={25}
-                radius={1000}
-                usePlaceholder
-              >
-                <svelte:fragment slot="placeholder">
-                  <QuestionCircleOutline />
-                </svelte:fragment>
-              </Image>
-              <EllipsisText size="sm" weight="bold" maxWidth="160px">
+          <div class="flex flex-row gap-2 justify-between items-center">
+            <div class="flex flex-row gap-1 items-center">
+              <Avatar
+                src={botUserResult.data.userpic ? `data:image/png;base64,${botUserResult.data.userpic}` : undefined}
+                class="w-6 h-6"
+              />
+              <span>
                 {botUserResult.data.name}
-              </EllipsisText>
-              <!-- <EllipsisText size="sm" color="dimmed" maxWidth="100px"> -->
-              <!-- @{botUserResult.data.username} -->
-              <!-- </EllipsisText> -->
-            </Group>
-            <ActionIcon size={15} root="a" href={`https://t.me/${botUserResult.data.username}`} external>
-              <ArrowUpRightFromSquareOutline />
-            </ActionIcon>
-          </Group>
+                <span class="text-gray-500">
+                  @{botUserResult.data.username}
+                </span>
+              </span>
+            </div>
+            <ActionIcon href={`https://t.me/${botUserResult.data.username}`} icon={ArrowUpRightFromSquareOutline} />
+          </div>
         {:else}
           <ErrorBadge title="Ошибка загрузки данных о боте" text={botUserResult.error} />
         {/if}

@@ -1,11 +1,10 @@
 <script lang="ts">
-  import { Group, Image, Input, Stack, Text, Textarea, Title } from "@svelteuidev/core";
-  import { QuestionCircleOutline } from "flowbite-svelte-icons";
-
-  import type { TgBotUser } from "../../../api/types";
-  import { base64Image } from "../../../studio/utils";
+  import { Avatar, Input } from "flowbite-svelte";
   import { updateBotUser } from "../../../api/botUser";
+  import type { TgBotUser } from "../../../api/types";
   import ErrorBadge from "../../../components/ErrorBadge.svelte";
+  import Textarea from "../../../components/inputs/Textarea.svelte";
+  import { base64Image } from "../../../studio/utils";
   import { getModalCloser } from "../../../utils";
   import NodeModalControls from "../../components/NodeModalControls.svelte";
 
@@ -35,42 +34,23 @@
   }
 </script>
 
-<Stack spacing="lg">
-  <Group>
-    <Image
-      src={botUser.userpic !== null ? base64Image(botUser.userpic) : null}
-      radius={1000}
-      width={100}
-      height={100}
-      usePlaceholder
-    >
-      <svelte:fragment slot="placeholder">
-        <QuestionCircleOutline />
-      </svelte:fragment>
-    </Image>
-    <Stack>
-      <Title>
-        <Input bind:value={botUser.name} />
-      </Title>
-      <Text color="dimmed">@{botUser.username}</Text>
-    </Stack>
-  </Group>
-  <Textarea
-    label="О себе"
-    description="Текст в профиле бота"
-    required={false}
-    resize="vertical"
-    bind:value={botUser.short_description}
-  />
+<div class="flex flex-col gap-4">
+  <div class="flex flex-row gap-2 items-center">
+    <Avatar src={botUser.userpic ? base64Image(botUser.userpic) : undefined} class="w-20 h-20" />
+    <div class="h-full w-full flex flex-col gap-1">
+      <Input class="text-2xl" bind:value={botUser.name} />
+      <p class=" text-gray-500">@{botUser.username}</p>
+    </div>
+  </div>
+  <Textarea label="О себе" description="Текст в профиле бота" required={false} bind:value={botUser.short_description} />
   <Textarea
     label="Что может делать этот бот?"
     description="Текст для новых пользовательниц, перед командой /start"
     required={false}
-    resize="vertical"
     bind:value={botUser.description}
   />
   {#if updateError !== null}
     <ErrorBadge title="Ошибка сохранения деталей бота" text={updateError} />
   {/if}
-  <NodeModalControls on:save={saveBotUser} />
-</Stack>
+  <NodeModalControls on:save={saveBotUser} autoClose={false} />
+</div>

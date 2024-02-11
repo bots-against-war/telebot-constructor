@@ -4,5 +4,5 @@
 </script>
 
 <div class="w-full h-4 my-1 flex flex-row justify-center items-center">
-  <Spinner />
+  <Spinner size="6" />
 </div>

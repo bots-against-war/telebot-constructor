@@ -1,8 +1,8 @@
 <script lang="ts">
-  import LocalizableTextInputInternal from "./LocalizableTextInputInternal.svelte";
+  import type { ComponentProps } from "svelte";
   import { type LocalizableText } from "../../types";
   import { languageConfigStore } from "../stores";
-  import type { ComponentProps } from "svelte";
+  import LocalizableTextInputInternal from "./LocalizableTextInputInternal.svelte";
 
   type $$Props = Omit<ComponentProps<LocalizableTextInputInternal>, "langConfig">;
 

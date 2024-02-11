@@ -1,8 +1,8 @@
 <script lang="ts">
   import { ActionIcon, Menu } from "@svelteuidev/core";
   import { GlobeSolid } from "flowbite-svelte-icons";
-  import { languageConfigStore } from "../stores";
   import Language from "../../components/Language.svelte";
+  import { languageConfigStore } from "../stores";
 
   export let selectedLang: string | null = null;
 </script>

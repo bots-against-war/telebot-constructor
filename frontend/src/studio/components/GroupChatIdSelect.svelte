@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { onDestroy } from "svelte";
   import {
     ActionIcon,
     Button,
@@ -13,14 +12,13 @@
     Text,
   } from "@svelteuidev/core";
   import { PenOutline, TrashBinOutline } from "flowbite-svelte-icons";
-
-  import GroupChatBadge from "../../components/GroupChatBadge.svelte";
-
-  import { PLACEHOLDER_GROUP_CHAT_ID } from "../nodes/defaultConfigs";
-  import type { TgGroupChat } from "../../api/types";
-  import { ok, type Result } from "../../utils";
+  import { onDestroy } from "svelte";
   import { getAvailableGroupChats, startGroupChatDiscovery, stopGroupChatDiscovery } from "../../api/groupChats";
+  import type { TgGroupChat } from "../../api/types";
   import ErrorBadge from "../../components/ErrorBadge.svelte";
+  import GroupChatBadge from "../../components/GroupChatBadge.svelte";
+  import { ok, type Result } from "../../utils";
+  import { PLACEHOLDER_GROUP_CHAT_ID } from "../nodes/defaultConfigs";
 
   export let label: string;
   export let botName: string;

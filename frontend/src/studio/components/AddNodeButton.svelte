@@ -1,11 +1,5 @@
 <script lang="ts">
-  import {
-    NODE_HUE as NODE_HUE,
-    NODE_ICON as NODE_ICON,
-    NodeTypeKey,
-    NODE_TITLE as NODE_TITLE,
-    headerColor,
-  } from "../nodes/display";
+  import { NODE_HUE, NODE_ICON, NODE_TITLE, NodeTypeKey, headerColor } from "../nodes/display";
 
   export let key: NodeTypeKey;
 
@@ -14,38 +8,11 @@
   $: icon = NODE_ICON[key];
 </script>
 
-<button on:click class="add-node-button">
-  <div class="icon-container" style={`background-color: ${headerColor(hue)}`}>
-    <svelte:component this={icon} />
+<button on:click class="border border-gray-500 flex flex-row items-center justify-start p-0 rounded-lg w-auto">
+  <div class="w-10 h-10 flex justify-center items-center rounded-s-lg" style={`background-color: ${headerColor(hue)}`}>
+    <svelte:component this={icon} class="w-7 h-7" />
   </div>
-  <span class="title">
+  <span class="font-bold px-3">
     {title}
   </span>
 </button>
-
-<style>
-  button.add-node-button {
-    background-color: initial;
-    border: 1px solid rgb(6, 89, 122);
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    width: 100%;
-    padding: 0;
-    cursor: pointer;
-  }
-  div.icon-container {
-    width: 20px;
-    height: 20px;
-    display: flex;
-    justify-items: center;
-    align-items: center;
-    padding: 6px;
-    border-radius: 9px 0 0 9px;
-    border-right: 1px solid rgb(6, 89, 122);
-  }
-  span.title {
-    padding: 6px;
-    font-size: large;
-  }
-</style>

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { InputWrapper, Tabs, Textarea, TextInput, Group } from "@svelteuidev/core";
+  import { Group, InputWrapper, Tabs, TextInput, Textarea } from "@svelteuidev/core";
   import { ExclamationCircleOutline } from "flowbite-svelte-icons";
   import Language from "../../components/Language.svelte";
   import type { LocalizableText } from "../../types";

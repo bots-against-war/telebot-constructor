@@ -1,14 +1,13 @@
 <script>
+  import { CloseSolid } from "flowbite-svelte-icons";
   import { Edge } from "svelvet";
-
-  import { CloseIcon } from "@svelteuidev/core";
 </script>
 
 <Edge let:path>
   <path d={path} />
-  <button class="close-button" slot="label" let:destroy on:click={destroy}
-    ><CloseIcon size="xs" color="white" style="stoke: white;" /></button
-  >
+  <button class="close-button" slot="label" let:destroy on:click={destroy}>
+    <CloseSolid size="sm" color="white" class="p-1" />
+  </button>
 </Edge>
 
 <style>

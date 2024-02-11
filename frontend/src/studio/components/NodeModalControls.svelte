@@ -7,6 +7,7 @@
   import { sleep } from "@svelteuidev/composables";
 
   export let saveable: boolean = true;
+  export let autoClose: boolean = true;
 
   const close = getModalCloser();
 
@@ -36,8 +37,12 @@
         // or just using synchronous "saveConfig" callback instead of events
         isSaving = true;
         dispatch("save");
-        await sleep(100);
-        close();
+        if (autoClose) {
+          await sleep(100);
+          close();
+        } else {
+          isSaving = false;
+        }
       }}
     >
       Сохранить

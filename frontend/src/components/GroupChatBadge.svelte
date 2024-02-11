@@ -60,7 +60,7 @@
       <DataBadgeLoader />
     {:then loadChatResult}
       {#if loadChatResult.ok}
-        <!-- TODO: render icons, chat type, link to chat, etc -->
+        <!-- TODO: indicate chat type and add link to chat -->
         <Avatar
           src={loadChatResult.data.photo ? `data:image/png;base64,${loadChatResult.data.photo}` : undefined}
           class="w-6 h-6"
@@ -68,7 +68,7 @@
         <div>
           <span>{loadChatResult.data.title}</span>
           {#if loadChatResult.data.username}
-            <span class=" text-gray-500">
+            <span class="text-gray-500">
               @{loadChatResult.data.username}
             </span>
           {/if}
