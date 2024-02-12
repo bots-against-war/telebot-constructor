@@ -1,14 +1,13 @@
 <script lang="ts">
-  import { Stack, InputWrapper } from "@svelteuidev/core";
   import Select from "svelte-select";
-
-  import LanguageDataComponent from "../../../components/LanguageData.svelte";
-  import LocalizableTextInput from "../../components/LocalizableTextInputInternal.svelte";
-  import NodeModalControls from "../../components/NodeModalControls.svelte";
-
   import type { LanguageData, LanguageSelectBlock } from "../../../api/types";
+  import LanguageDataComponent from "../../../components/LanguageData.svelte";
+  import InputWrapper from "../../../components/inputs/InputWrapper.svelte";
   import { availableLanguagesStore, lookupLanguage } from "../../../globalStateStores";
   import { unwrap } from "../../../utils";
+  import LocalizableTextInput from "../../components/LocalizableTextInputInternal.svelte";
+  import NodeModalBody from "../../components/NodeModalBody.svelte";
+  import NodeModalControls from "../../components/NodeModalControls.svelte";
   import { languageConfigStore } from "../../stores";
   import { NODE_TITLE } from "../display";
 
@@ -83,62 +82,54 @@
   }
 </script>
 
-<div>
-  <h3>{NODE_TITLE.language_select}</h3>
-  <Stack>
-    <InputWrapper
-      label="Поддерживаемые языки"
-      description="Начните вводить код или название языка по-английски"
-      override={{ width: "100%" }}
+<NodeModalBody title={NODE_TITLE.language_select}>
+  <InputWrapper label="Поддерживаемые языки" description="Начните вводить код или название языка по-английски">
+    <Select
+      itemId="code"
+      placeholder=""
+      bind:value={supportedLanguageDataList}
+      loadOptions={loadMatchingLanguages}
+      on:change={handleSupportedLanguageListUpdate}
+      on:clear={handleSupportedLanguageListUpdate}
+      multiple
     >
-      <Select
-        itemId="code"
-        placeholder=""
-        bind:value={supportedLanguageDataList}
-        loadOptions={loadMatchingLanguages}
-        on:change={handleSupportedLanguageListUpdate}
-        on:clear={handleSupportedLanguageListUpdate}
-        multiple
-      >
+      <div slot="item" let:item class="select-internal-container">
+        <LanguageDataComponent languageData={item} fullName />
+      </div>
+      <div slot="selection" let:selection class="select-internal-container">
+        <LanguageDataComponent languageData={selection} />
+      </div>
+    </Select>
+  </InputWrapper>
+
+  {#key supportedLanguageDataListUpdatedCounter}
+    <InputWrapper
+      label="Язык по умолчанию"
+      description="Будет использоваться, если не подходит язык интерфейса Telegram"
+    >
+      <Select itemId="code" placeholder="" bind:value={defaultLanguage} items={supportedLanguageDataList}>
         <div slot="item" let:item class="select-internal-container">
           <LanguageDataComponent languageData={item} fullName />
         </div>
         <div slot="selection" let:selection class="select-internal-container">
-          <LanguageDataComponent languageData={selection} />
+          <LanguageDataComponent languageData={selection} fullName />
         </div>
       </Select>
     </InputWrapper>
-
-    {#key supportedLanguageDataListUpdatedCounter}
-      <InputWrapper
-        label="Язык по умолчанию"
-        description="Будет использоваться, если не подходит язык интерфейса Telegram"
-        override={{ width: "100%" }}
-      >
-        <Select itemId="code" placeholder="" bind:value={defaultLanguage} items={supportedLanguageDataList}>
-          <div slot="item" let:item class="select-internal-container">
-            <LanguageDataComponent languageData={item} fullName />
-          </div>
-          <div slot="selection" let:selection class="select-internal-container">
-            <LanguageDataComponent languageData={selection} fullName />
-          </div>
-        </Select>
-      </InputWrapper>
-      {#if supportedLanguageDataList && defaultLanguage}
-        <LocalizableTextInput
-          label="Сообщение"
-          description="Для меню выбора языка"
-          bind:value={prompt}
-          langConfig={{
-            supportedLanguageCodes: supportedLanguageDataList.map((ld) => ld.code),
-            defaultLanguageCode: defaultLanguage.code,
-          }}
-        />
-      {/if}
-    {/key}
-  </Stack>
+    {#if supportedLanguageDataList && defaultLanguage}
+      <LocalizableTextInput
+        label="Сообщение"
+        description="Для меню выбора языка"
+        bind:value={prompt}
+        langConfig={{
+          supportedLanguageCodes: supportedLanguageDataList.map((ld) => ld.code),
+          defaultLanguageCode: defaultLanguage.code,
+        }}
+      />
+    {/if}
+  {/key}
   <NodeModalControls saveable={isConfigValid} on:save={updateConfig} />
-</div>
+</NodeModalBody>
 
 <style>
   div.select-internal-container {

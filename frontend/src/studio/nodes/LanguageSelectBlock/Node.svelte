@@ -1,21 +1,18 @@
 <script lang="ts">
-  import { Group } from "@svelteuidev/core";
   import { Node } from "svelvet";
-  import OutputAnchorsBox from "../../components/OutputAnchorsBox.svelte";
-  import Modal from "./Modal.svelte";
-  import NodeContent from "../../components/NodeContent.svelte";
-  import InputAnchor from "../../components/InputAnchor.svelte";
-  import OutputAnchor from "../../components/OutputAnchor.svelte";
+  import type { LanguageSelectBlock } from "../../../api/types";
   import Langauge from "../../../components/Language.svelte";
   import DataBadge from "../../../components/internal/DataBadge.svelte";
-
   import type { SvelvetPosition } from "../../../types";
-  import type { LanguageSelectBlock } from "../../../api/types";
-
-  import { DEFAULT_NODE_PROPS } from "../nodeProps";
-  import { NodeTypeKey } from "../display";
-  import { validateLanguageSelectBlock } from "../nodeValidators";
   import { getModalOpener } from "../../../utils";
+  import InputAnchor from "../../components/InputAnchor.svelte";
+  import NodeContent from "../../components/NodeContent.svelte";
+  import OutputAnchor from "../../components/OutputAnchor.svelte";
+  import OutputAnchorsBox from "../../components/OutputAnchorsBox.svelte";
+  import { NodeTypeKey } from "../display";
+  import { DEFAULT_NODE_PROPS } from "../nodeProps";
+  import { validateLanguageSelectBlock } from "../nodeValidators";
+  import Modal from "./Modal.svelte";
 
   const openModal = getModalOpener();
 
@@ -43,13 +40,13 @@
     on:delete
     on:edit={openEditModal}
   >
-    <Group spacing="xs">
+    <div class="flex flex-row gap-2">
       {#each config.supported_languages as language (language)}
         <DataBadge>
           <Langauge {language} />
         </DataBadge>
       {/each}
-    </Group>
+    </div>
   </NodeContent>
   <OutputAnchorsBox>
     <OutputAnchor bind:nextBlockId={config.next_block_id} />

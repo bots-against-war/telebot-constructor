@@ -11,5 +11,5 @@
 </script>
 
 <InputWrapper {label} {description} {error} {required}>
-  <Textarea id="message" name="message" label="Your message" rows="4" {placeholder} {required} bind:value />
+  <Textarea id="message" name="message" label="Your message" rows="2" {placeholder} {required} bind:value />
 </InputWrapper>

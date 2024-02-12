@@ -79,7 +79,7 @@
                 {/if}
                 <Language {language} fullName tooltip={false} />
               </div>
-              <Textarea label={undefined} bind:value={value[language]} />
+              <Textarea label={undefined} {placeholder} bind:value={value[language]} />
             </TabItem>
           {/each}
         </Tabs>

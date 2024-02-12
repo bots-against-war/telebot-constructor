@@ -1,19 +1,15 @@
 <script lang="ts">
-  import { getContext } from "svelte";
-
   import { Node } from "svelvet";
-
-  import type { SvelvetPosition } from "../../../types";
   import type { HumanOperatorBlock } from "../../../api/types";
-  import { getModalOpener } from "../../../utils";
-
-  import Modal from "./Modal.svelte";
   import GroupChatBadge from "../../../components/GroupChatBadge.svelte";
-  import NodeContent from "../../components/NodeContent.svelte";
+  import type { SvelvetPosition } from "../../../types";
+  import { getModalOpener } from "../../../utils";
   import InputAnchor from "../../components/InputAnchor.svelte";
-  import { DEFAULT_NODE_PROPS } from "../nodeProps";
+  import NodeContent from "../../components/NodeContent.svelte";
   import { NodeTypeKey } from "../display";
+  import { DEFAULT_NODE_PROPS } from "../nodeProps";
   import { validateHumanOperatorBlock } from "../nodeValidators";
+  import Modal from "./Modal.svelte";
 
   const openModal = getModalOpener();
 

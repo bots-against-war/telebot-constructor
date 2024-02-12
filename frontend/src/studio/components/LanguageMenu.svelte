@@ -1,7 +1,6 @@
 <script lang="ts">
-  // import { ActionIcon, Menu } from "@svelteuidev/core";
+  import { Dropdown, DropdownItem } from "flowbite-svelte";
   import ActionIcon from "../../components/ActionIcon.svelte";
-  import { Dropdown, DropdownItem, DropdownDivider, DropdownHeader } from "flowbite-svelte";
 
   import { GlobeSolid } from "flowbite-svelte-icons";
   import Language from "../../components/Language.svelte";
