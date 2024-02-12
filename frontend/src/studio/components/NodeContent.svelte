@@ -8,7 +8,6 @@
   import { createEventDispatcher } from "svelte";
   import ActionIcon from "../../components/ActionIcon.svelte";
   import ErrorBadge from "../../components/ErrorBadge.svelte";
-  import EllipsisText from "../../components/internal/EllipsisText.svelte";
   import { ok, type Result } from "../../utils";
   import { NODE_HUE, NODE_ICON, NODE_TITLE, headerColor, type NodeTypeKey } from "../nodes/display";
   import type { ValidationError } from "../nodes/nodeValidators";
@@ -40,7 +39,7 @@
   >
     <div class="flex items-center gap-2">
       <svelte:component this={NODE_ICON[key]} class="w-4 h-4" />
-      <EllipsisText override={{ fontWeight: "bold" }} maxWidth="200px">{NODE_TITLE[key]}</EllipsisText>
+      <span class=" font-bold text-lg">{NODE_TITLE[key]}</span>
     </div>
     <div class="flex items-center gap-0">
       <ActionIcon icon={PenOutline} on:click={() => dispatch("edit")} />
@@ -61,5 +60,9 @@
 <style>
   div.node-content-container {
     width: 250px;
+    /* this is quick and dirty, better solution for overflowing blocks needed */
+    max-height: 250px;
+    text-overflow: ellipsis;
+    overflow-y: hidden;
   }
 </style>

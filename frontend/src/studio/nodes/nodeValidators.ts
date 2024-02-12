@@ -5,8 +5,8 @@ import type {
   FormBranchConfig,
   HumanOperatorBlock,
   LanguageSelectBlock,
-  SingleSelectFormFieldConfig,
   MenuBlock,
+  SingleSelectFormFieldConfig,
 } from "../../api/types";
 import type { LocalizableText } from "../../types";
 import { err, ok, type Result } from "../../utils";
@@ -46,7 +46,7 @@ export function validateLocalizableText(
     }
     if (missingLanguages.length > 0) {
       return err({
-        error: `${capitalize(textName)}: отсутствует локализация на языки ${missingLanguages.join(", ")}`,
+        error: `${capitalize(textName)}: отсутствует локализация на язык(и): ${missingLanguages.join(", ")}`,
       });
     } else {
       return ok(null);
@@ -157,8 +157,15 @@ export function validateFormBlock(config: FormBlock, langConfig: LanguageConfig 
         fieldBaseConfig.name.length > 0 ? ok(null) : err({ error: `Не указано название поля #${idx}` }),
       );
       resultfForField.push(validateLocalizableText(fieldBaseConfig.prompt, `вопрос в поле #${idx}`, langConfig));
-      if (field.single_select && field.single_select.options.length === 0) {
-        resultfForField.push(err({ error: `Не указано ни одного варианта выбора в поле #${idx}` }));
+      if (field.single_select) {
+        if (field.single_select.options.length === 0) {
+          resultfForField.push(err({ error: `Не указано ни одного варианта выбора в поле #${idx}` }));
+        }
+        resultfForField.push(
+          ...field.single_select.options.map(
+            (eo, optionIdx) => validateLocalizableText(eo.label, `текст варианта #${optionIdx + 1} в поле #${idx}`, langConfig)
+          )
+        );
       }
       return mergeResults(resultfForField);
     }),

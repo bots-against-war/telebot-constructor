@@ -1,21 +1,10 @@
 <script lang="ts">
+  import { Accordion, Divider, NumberInput, Space, Stack, Switch, Text, TextInput } from "@svelteuidev/core";
   import type { HumanOperatorBlock } from "../../../api/types";
-  import NodeModalControls from "../../components/NodeModalControls.svelte";
   import GroupChatIdSelect from "../../components/GroupChatIdSelect.svelte";
   import LocalizableTextInput from "../../components/LocalizableTextInput.svelte";
+  import NodeModalControls from "../../components/NodeModalControls.svelte";
   import { NODE_TITLE } from "../display";
-  import {
-    Accordion,
-    Divider,
-    NumberInput,
-    Space,
-    Stack,
-    Switch,
-    Tabs,
-    Text,
-    TextInput,
-    Tooltip,
-  } from "@svelteuidev/core";
 
   export let botName: string; //required for admin chat id rendering, and context does not propagate here
   export let config: HumanOperatorBlock;

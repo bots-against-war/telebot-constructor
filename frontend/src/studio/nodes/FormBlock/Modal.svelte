@@ -1,15 +1,16 @@
 <script lang="ts">
-  import { Tabs } from "@svelteuidev/core";
+  import { TabItem, Tabs } from "flowbite-svelte";
+  import { flattenedFormFields } from "../../../api/typeUtils";
   import type { FormBlock, FormBranchConfig } from "../../../api/types";
+  import NodeModalBody from "../../components/NodeModalBody.svelte";
   import NodeModalControls from "../../components/NodeModalControls.svelte";
-
+  import { languageConfigStore } from "../../stores";
+  import { clone } from "../../utils";
+  import { NODE_TITLE } from "../display";
   import FormBranch from "./components/FormBranch.svelte";
   import FormMessages from "./components/FormMessages.svelte";
   import FormResultExportOptions from "./components/FormResultExportOptions.svelte";
-  import type { FormErrorMessages } from "./prefill";
-  import { flattenedFormFields } from "../../../api/typeUtils";
-  import { NODE_TITLE } from "../display";
-  import { clone } from "../../utils";
+  import { updateWithPrefilled, type FormErrorMessages } from "./prefill";
 
   export let config: FormBlock;
   export let botName: string;
@@ -18,6 +19,9 @@
   function updateConfig() {
     editedConfig.members = topLevelBranch.members;
     // inserting global error values back into form fields
+
+    console.log(editedConfig);
+    console.log(formErrorMessages);
     for (const fieldConfig of flattenedFormFields(editedConfig.members)) {
       if (fieldConfig.plain_text) {
         fieldConfig.plain_text.empty_text_error_msg = formErrorMessages.empty_text_error_msg || "";
@@ -32,6 +36,9 @@
 
   let topLevelBranch: FormBranchConfig = { members: editedConfig.members };
 
+  // form error messages are reactive w.r.t. active fields
+  // e.g. if no single-select field is present, single-select-specific errors are not needed
+  // so, here we respond to changes in fields by changing error messages
   let formErrorMessages: FormErrorMessages = {};
   $: {
     // extracting field-specific errors from individual fields to a global errors
@@ -52,25 +59,31 @@
       }
     }
     // setting new keys on form error messages from fields
-    formErrorMessages = { ...newErrorMessagesFromFields, ...formErrorMessages };
+    // also, prefilling it with default values for new keys
+    [formErrorMessages] = updateWithPrefilled(
+      { ...newErrorMessagesFromFields, ...formErrorMessages },
+      $languageConfigStore,
+    );
   }
 </script>
 
-<div>
-  <h3>{NODE_TITLE.form}</h3>
-  <Tabs>
-    <Tabs.Tab label={`Поля (${flattenedFormFields(topLevelBranch.members).length})`}>
-      <FormBranch bind:branch={topLevelBranch} />
-    </Tabs.Tab>
-    <Tabs.Tab label="Сообщения">
-      <FormMessages bind:messages={editedConfig.messages} bind:errors={formErrorMessages} />
-    </Tabs.Tab>
-    <Tabs.Tab label="Обработка результатов">
-      <FormResultExportOptions bind:config={editedConfig.results_export} {botName} />
-    </Tabs.Tab>
-  </Tabs>
+<NodeModalBody title={NODE_TITLE.form}>
+  <!-- NOTE: additional div is needed because Tabs have no to-level container -->
+  <div>
+    <Tabs style="underline" contentClass="mt-3">
+      <TabItem open title={`Поля (${flattenedFormFields(topLevelBranch.members).length})`}>
+        <FormBranch bind:branch={topLevelBranch} />
+      </TabItem>
+      <TabItem title="Сообщения">
+        <FormMessages bind:messages={editedConfig.messages} bind:errors={formErrorMessages} />
+      </TabItem>
+      <TabItem title="Обработка результатов">
+        <FormResultExportOptions bind:config={editedConfig.results_export} {botName} />
+      </TabItem>
+    </Tabs>
+  </div>
   <NodeModalControls on:save={updateConfig} />
-</div>
+</NodeModalBody>
 
 <style>
 </style>

@@ -1,19 +1,18 @@
 <script lang="ts">
   import { Node } from "svelvet";
-  import Modal from "./Modal.svelte";
-  import NodeContent from "../../components/NodeContent.svelte";
-  import OutputAnchor from "../../components/OutputAnchor.svelte";
-  import InputAnchor from "../../components/InputAnchor.svelte";
-  import OutputAnchorsBox from "../../components/OutputAnchorsBox.svelte";
-
   import type { ContentBlock } from "../../../api/types";
   import type { SvelvetPosition } from "../../../types";
-
   import { getModalOpener } from "../../../utils";
-  import { DEFAULT_NODE_PROPS } from "../nodeProps";
-  import { NodeTypeKey } from "../display";
-  import { validateContentBlock } from "../nodeValidators";
+  import InputAnchor from "../../components/InputAnchor.svelte";
   import LocalizableText from "../../components/LocalizableText.svelte";
+  import NodeContent from "../../components/NodeContent.svelte";
+  import OutputAnchor from "../../components/OutputAnchor.svelte";
+  import OutputAnchorsBox from "../../components/OutputAnchorsBox.svelte";
+  import { NodeTypeKey } from "../display";
+  import { DEFAULT_NODE_PROPS } from "../nodeProps";
+  import { validateContentBlock } from "../nodeValidators";
+  import Modal from "./Modal.svelte";
+
   const openModal = getModalOpener();
 
   export let config: ContentBlock;

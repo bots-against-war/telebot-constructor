@@ -3,6 +3,7 @@
   import type { CommandEntryPoint } from "../../../api/types";
   import InputWrapper from "../../../components/inputs/InputWrapper.svelte";
   import TextInput from "../../../components/inputs/TextInput.svelte";
+  import NodeModalBody from "../../components/NodeModalBody.svelte";
   import NodeModalControls from "../../components/NodeModalControls.svelte";
   import { NODE_TITLE } from "../display";
   import SlashIcon from "./SlashIcon.svelte";
@@ -30,8 +31,7 @@
   }
 </script>
 
-<div class="flex flex-col gap-4">
-  <h3>{NODE_TITLE.command}</h3>
+<NodeModalBody title={NODE_TITLE.command}>
   <InputWrapper label={undefined} error={commandError}>
     <ButtonGroup class="w-full" size="sm">
       <InputAddon>
@@ -47,4 +47,4 @@
     bind:value={descr}
   />
   <NodeModalControls saveable={commandError === undefined} on:save={updateConfig} />
-</div>
+</NodeModalBody>

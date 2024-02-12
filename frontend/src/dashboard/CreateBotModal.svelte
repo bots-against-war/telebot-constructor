@@ -10,6 +10,7 @@
   import TextInput from "../components/inputs/TextInput.svelte";
   import { BOT_INFO_NODE_ID, DEFAULT_START_COMMAND_ENTRYPOINT_ID } from "../constants";
   import { createBotTokenSecret, getError, getModalCloser, unwrap } from "../utils";
+  import ButtonLoadingSpinner from "../components/ButtonLoadingSpinner.svelte";
 
   export let newBotCallback: (botName: string, info: BotInfo) => void;
 
@@ -132,9 +133,7 @@
   {/if}
   <div class="save-button">
     <Button on:click={createNewBot}>
-      {#if isCreating}
-        <Spinner class="me-3" size="4" color="white" />
-      {/if}
+      <ButtonLoadingSpinner loading={isCreating} />
       Создать
     </Button>
   </div>

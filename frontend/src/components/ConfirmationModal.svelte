@@ -1,6 +1,7 @@
 <script lang="ts">
-  import { Stack, Group, Button, Text } from "@svelteuidev/core";
+  import { Button } from "flowbite-svelte";
   import { getModalCloser } from "../utils";
+  import ButtonLoadingSpinner from "./ButtonLoadingSpinner.svelte";
 
   const closeModal = getModalCloser();
 
@@ -17,10 +18,13 @@
   }
 </script>
 
-<Stack>
-  <Text>{text}</Text>
-  <Group>
+<div class="flex flex-col gap-4">
+  <p>{text}</p>
+  <div>
     <Button on:click={closeModal}>Отмена</Button>
-    <Button color="red" variant="outline" loading={isConfirming} on:click={confirm}>{confirmButtonLabel}</Button>
-  </Group>
-</Stack>
+    <Button color="red" outline on:click={confirm}>
+      <ButtonLoadingSpinner loading={isConfirming} />
+      {confirmButtonLabel}
+    </Button>
+  </div>
+</div>

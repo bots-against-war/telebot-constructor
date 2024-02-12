@@ -6,6 +6,7 @@
   import Textarea from "../../../components/inputs/Textarea.svelte";
   import { base64Image } from "../../../studio/utils";
   import { getModalCloser } from "../../../utils";
+  import NodeModalBody from "../../components/NodeModalBody.svelte";
   import NodeModalControls from "../../components/NodeModalControls.svelte";
 
   const closeModal = getModalCloser();
@@ -34,7 +35,7 @@
   }
 </script>
 
-<div class="flex flex-col gap-4">
+<NodeModalBody>
   <div class="flex flex-row gap-2 items-center">
     <Avatar src={botUser.userpic ? base64Image(botUser.userpic) : undefined} class="w-20 h-20" />
     <div class="h-full w-full flex flex-col gap-1">
@@ -53,4 +54,4 @@
     <ErrorBadge title="Ошибка сохранения деталей бота" text={updateError} />
   {/if}
   <NodeModalControls on:save={saveBotUser} autoClose={false} />
-</div>
+</NodeModalBody>

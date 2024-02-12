@@ -67,7 +67,7 @@
     {#if isLongText}
       <div>
         <Tabs style="underline" contentClass="mt-1">
-          {#each langConfig.supportedLanguageCodes as language, idx}
+          {#each langConfig.supportedLanguageCodes as language, idx (language)}
             <TabItem
               open={idx === 0}
               activeClasses="p-2 text-primary-600 border-b-2 border-primary-600"

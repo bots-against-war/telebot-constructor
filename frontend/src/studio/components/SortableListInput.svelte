@@ -1,14 +1,10 @@
 <script lang="ts">
   import { SortableList } from "@jhubbardsf/svelte-sortablejs";
-  // import { ActionIcon, CloseButton, Group, InputWrapper, Space, Stack } from "@svelteuidev/core";
-
-  import InputWrapper from "../../components/inputs/InputWrapper.svelte";
+  import { BarsOutline, CloseOutline, PlusOutline } from "flowbite-svelte-icons";
   import ActionIcon from "../../components/ActionIcon.svelte";
-  import { BarsOutline, PlusOutline, CloseOutline } from "flowbite-svelte-icons";
-
-  import LocalizableTextInput from "./LocalizableTextInput.svelte";
-
+  import InputWrapper from "../../components/inputs/InputWrapper.svelte";
   import { type LocalizableText } from "../../types";
+  import LocalizableTextInput from "./LocalizableTextInput.svelte";
 
   interface SortableListItem {
     label: LocalizableText;
@@ -21,46 +17,44 @@
   let optionsListResortedCount: number = 0;
 </script>
 
-<div>
-  <InputWrapper {label}>
-    {#key optionsListResortedCount}
-      <SortableList
-        class="sortable-class-unused"
-        handle=".grip-handle"
-        onSort={(e) => {
-          const optionsCopy = [...options];
-          console.debug(`Moving option, before: ${JSON.stringify(optionsCopy)}`);
-          const moved = optionsCopy.splice(e.oldIndex, 1)[0];
-          optionsCopy.splice(e.newIndex, 0, moved);
-          console.debug(`... after: ${JSON.stringify(optionsCopy)}`);
-          options = optionsCopy;
-          optionsListResortedCount += 1;
-        }}
-      >
-        {#each options as option, idx}
-          <div class="flex flex-row py-1 gap-1 items-baseline">
-            <LocalizableTextInput bind:value={option.label} isLongText={false} />
-            <div class="grip-handle">
-              <BarsOutline />
-            </div>
-            <ActionIcon
-              icon={CloseOutline}
-              on:click={() => {
-                options = options.toSpliced(idx);
-              }}
-            />
-          </div>
-        {/each}
-      </SortableList>
-    {/key}
-    <ActionIcon
-      icon={PlusOutline}
-      on:click={() => {
-        options = [...options, optionConstructor()];
+<InputWrapper {label}>
+  {#key optionsListResortedCount}
+    <SortableList
+      class="sortable-class-unused"
+      handle=".grip-handle"
+      onSort={(e) => {
+        const optionsCopy = [...options];
+        console.debug(`Moving option, before: ${JSON.stringify(optionsCopy)}`);
+        const moved = optionsCopy.splice(e.oldIndex, 1)[0];
+        optionsCopy.splice(e.newIndex, 0, moved);
+        console.debug(`... after: ${JSON.stringify(optionsCopy)}`);
+        options = optionsCopy;
+        optionsListResortedCount += 1;
       }}
-    />
-  </InputWrapper>
-</div>
+    >
+      {#each options as option, idx}
+        <div class="flex flex-row gap-1 items-baseline">
+          <LocalizableTextInput bind:value={option.label} isLongText={false} />
+          <div class="grip-handle">
+            <BarsOutline />
+          </div>
+          <ActionIcon
+            icon={CloseOutline}
+            on:click={() => {
+              options = options.toSpliced(idx);
+            }}
+          />
+        </div>
+      {/each}
+    </SortableList>
+  {/key}
+  <ActionIcon
+    icon={PlusOutline}
+    on:click={() => {
+      options = [...options, optionConstructor()];
+    }}
+  />
+</InputWrapper>
 
 <style>
   .grip-handle {
