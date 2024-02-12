@@ -132,7 +132,6 @@ class ContentBlock(UserFlowBlock):
                             await self._file_id_by_hash_store.save(md5_hash(attachment.image), file_id)
             else:
                 # TODO: use send_media_group, but validate constraints and reuse file_id caching logic from above
-                context.bot.send_media_group
                 raise RuntimeError("Multiple attachments per message TBD")
 
         if self.next_block_id is not None:

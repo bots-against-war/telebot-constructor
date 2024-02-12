@@ -250,7 +250,7 @@ class TelebotConstructorApp:
         routes = web.RouteTableDef()
 
         ##################################################################################
-        # secrets C_UD
+        # secrets
 
         @routes.post("/api/secrets/{secret_name}")
         async def upsert_secret(request: web.Request) -> web.Response:

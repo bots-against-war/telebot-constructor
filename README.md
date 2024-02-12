@@ -33,11 +33,25 @@ npm run dev
 
 ### Generate TS interfaces for backend data model
 
-Run from project root
+On any update to Pydantic data types on backend, run
 
 ```bash
 npm run pydantic:to:ts
 ```
+
+Check that [JSON schema](data/schema.json) and
+[Typescript types](frontend/src/api/types.ts) are updated accordingly.
+
+### Backend
+
+#### Running tests with coverage check
+
+```bash
+coverage run -m pytest tests -vv
+coverage html
+```
+
+Then you can review `htmlcov/index.html` in browser.
 
 ### Frontend
 
