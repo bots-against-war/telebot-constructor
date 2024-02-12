@@ -1,7 +1,7 @@
-import { defineConfig } from "vite";
-import { svelte } from "@sveltejs/vite-plugin-svelte";
-import replace from "@rollup/plugin-replace";
 import resolve from "@rollup/plugin-node-resolve";
+import replace from "@rollup/plugin-replace";
+import { svelte } from "@sveltejs/vite-plugin-svelte";
+import { defineConfig } from "vite";
 
 const optionalReplacements: { [key: string]: string } = {};
 
@@ -29,8 +29,8 @@ export default defineConfig({
     }),
     replace({
       values: {
-        __buildTimeReplacedVersion: JSON.stringify(version),
-        __buildTimeReplacedDatetime: () => JSON.stringify(new Date()),
+        __buildTimeReplacedVersion: version,
+        __buildTimeReplacedDatetime: () => new Date().toISOString(),
         ...optionalReplacements,
       },
       preventAssignment: true,

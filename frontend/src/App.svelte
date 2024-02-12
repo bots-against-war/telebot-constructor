@@ -1,13 +1,11 @@
 <script lang="ts">
   import { links, Route, Router } from "svelte-routing";
-  import Modal from "svelte-simple-modal";
-
-  import DashboardLoader from "./dashboard/DashboardLoader.svelte";
-  import StudioLoader from "./studio/StudioLoader.svelte";
-  import Navbar from "./components/Navbar.svelte";
-  import GlobalStateProvider from "./GlobalStateProvider.svelte";
-
   import { setContext } from "svelte";
+  // @ts-expect-error
+  import Modal from "svelte-simple-modal";
+  import DashboardLoader from "./dashboard/DashboardLoader.svelte";
+  import GlobalStateProvider from "./GlobalStateProvider.svelte";
+  import StudioLoader from "./studio/StudioLoader.svelte";
 
   // Global icon settings for flowbite-icons
   const iconCtx = {
