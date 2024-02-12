@@ -18,8 +18,6 @@
     "@rollup/plugin-node-resolve": "^15.2.1",
     "@rollup/plugin-replace": "^5.0.2",
     "@sveltejs/vite-plugin-svelte": "^3.0.1",
-    "@svelteuidev/composables": "^0.15.3",
-    "@svelteuidev/core": "^0.15.3",
     "@tsconfig/svelte": "^5.0.0",
     "autoprefixer": "^10.4.16",
     "flowbite": "^2.2.1",
