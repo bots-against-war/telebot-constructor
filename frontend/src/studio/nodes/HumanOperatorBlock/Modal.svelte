@@ -50,7 +50,7 @@
     </div>
 
     <Accordion>
-      <AccordionItem value="advanced-settings" paddingDefault="p-3">
+      <AccordionItem paddingDefault="p-3">
         <span slot="header">Дополнительно</span>
         <div class={blockSeqClass}>
           <div class={blockClass}>
