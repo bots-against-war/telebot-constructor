@@ -1,14 +1,14 @@
-import { SvelteComponent } from "svelte";
-import type { Newable } from "ts-essentials";
 import {
+  ClipboardSolid,
+  CodeForkSolid,
   CodeSolid,
   GlobeSolid,
-  UserHeadsetSolid,
-  CodeForkSolid,
-  NewspaperSolid,
-  ClipboardSolid,
   InfoCircleSolid,
+  NewspaperSolid,
+  UserHeadsetSolid,
 } from "flowbite-svelte-icons";
+import { SvelteComponent } from "svelte";
+import type { Newable } from "ts-essentials";
 
 export enum NodeTypeKey {
   command = "command",

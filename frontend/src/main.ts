@@ -1,5 +1,5 @@
 import App from "./App.svelte";
-import "./app.css";
+import "./app.pcss";
 
 const app = new App({
   // @ts-ignore

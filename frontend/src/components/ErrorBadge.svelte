@@ -1,26 +1,20 @@
 <script lang="ts">
-  import { Alert } from "@svelteuidev/core";
+  import { Alert, Li, List } from "flowbite-svelte";
   import { ExclamationCircleOutline } from "flowbite-svelte-icons";
 
   export let title: string | undefined = undefined;
   export let text: string | string[];
 </script>
 
-<Alert color="red" {title} icon={ExclamationCircleOutline}>
+<Alert color="red" {title}>
+  <ExclamationCircleOutline slot="icon" class="w-4 h-4 self-start p-0" />
   {#if typeof text === "string"}
     {text}
   {:else}
-    <ul class="condensed-list">
+    <List>
       {#each text as textItem}
-        <li>{textItem}</li>
+        <Li>{textItem}</Li>
       {/each}
-    </ul>
+    </List>
   {/if}
 </Alert>
-
-<style>
-  ul.condensed-list {
-    padding-inline-start: 13px;
-    margin: 0;
-  }
-</style>

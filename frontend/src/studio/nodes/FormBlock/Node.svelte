@@ -1,18 +1,17 @@
 <script lang="ts">
   import { Node } from "svelvet";
-  import Modal from "./Modal.svelte";
-  import NodeContent from "../../components/NodeContent.svelte";
-  import InputAnchor from "../../components/InputAnchor.svelte";
-  import OutputAnchor from "../../components/OutputAnchor.svelte";
-  import OutputAnchorsBox from "../../components/OutputAnchorsBox.svelte";
-
-  import { DEFAULT_NODE_PROPS } from "../nodeProps";
-  import { NodeTypeKey } from "../display";
+  import { flattenedFormFields } from "../../../api/typeUtils";
   import { type FormBlock } from "../../../api/types";
   import type { SvelvetPosition } from "../../../types";
   import { getModalOpener } from "../../../utils";
+  import InputAnchor from "../../components/InputAnchor.svelte";
+  import NodeContent from "../../components/NodeContent.svelte";
+  import OutputAnchor from "../../components/OutputAnchor.svelte";
+  import OutputAnchorsBox from "../../components/OutputAnchorsBox.svelte";
+  import { NodeTypeKey } from "../display";
+  import { DEFAULT_NODE_PROPS } from "../nodeProps";
   import { validateFormBlock } from "../nodeValidators";
-  import { flattenedFormFields } from "../../../api/typeUtils";
+  import Modal from "./Modal.svelte";
 
   const openModal = getModalOpener();
 

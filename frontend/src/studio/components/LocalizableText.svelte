@@ -1,17 +1,11 @@
 <script lang="ts">
-  import { Text, Group, type TextProps } from "@svelteuidev/core";
+  import { onDestroy } from "svelte";
+  import ErrorBadge from "../../components/ErrorBadge.svelte";
   import type { LocalizableText } from "../../types";
   import { languageConfigStore } from "../stores";
   import LanguageMenu from "./LanguageMenu.svelte";
-  import ErrorBadge from "../../components/ErrorBadge.svelte";
-  import { onDestroy } from "svelte";
 
   export let text: LocalizableText;
-
-  interface LocalizableTextProps extends TextProps {
-    text: LocalizableText;
-  }
-  type $$Props = LocalizableTextProps;
 
   let selectedLang = $languageConfigStore === null ? null : $languageConfigStore.defaultLanguageCode;
 
@@ -28,12 +22,12 @@
 </script>
 
 {#if $languageConfigStore === null && typeof text === "string"}
-  <Text>{text}</Text>
+  <p>{text}</p>
 {:else if $languageConfigStore !== null && typeof text === "object"}
-  <Group noWrap spacing="sm" position="apart" align="start">
-    <Text>{text[selectedLang || ""] || ""}</Text>
+  <div class="flex flex-row items-start justify-between gap-1">
+    <p>{text[selectedLang || ""] || ""}</p>
     <LanguageMenu bind:selectedLang />
-  </Group>
+  </div>
 {:else}
   <ErrorBadge text="Internal error: invalid text and lang config combination" />
 {/if}

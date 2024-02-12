@@ -1,5 +1,4 @@
 import { md5 } from "js-md5";
-
 import { range } from "../../utils";
 
 export function generateHue(seed: string, index: number): number {
@@ -30,7 +29,7 @@ export function generateHue(seed: string, index: number): number {
 }
 
 export function borderColor(hue: number): string {
-  return `hsl(${hue}, 60%, 70%)`;
+  return `hsl(${hue}, 60%, 80%)`;
 }
 
 export function backgroundColor(hue: number): string {

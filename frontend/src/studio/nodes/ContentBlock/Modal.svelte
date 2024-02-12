@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { Stack } from "@svelteuidev/core";
   import type { ContentBlock } from "../../../api/types";
-  import NodeModalControls from "../../components/NodeModalControls.svelte";
   import LocalizableTextInput from "../../components/LocalizableTextInput.svelte";
+  import NodeModalBody from "../../components/NodeModalBody.svelte";
+  import NodeModalControls from "../../components/NodeModalControls.svelte";
   import { NODE_TITLE } from "../display";
 
   export let config: ContentBlock;
@@ -16,13 +16,10 @@
   let editedMessageText = config.contents[0].text?.text || "";
 </script>
 
-<div>
-  <h3>{NODE_TITLE.content}</h3>
-  <Stack>
-    <LocalizableTextInput label="Текст сообщения" bind:value={editedMessageText} />
-  </Stack>
+<NodeModalBody title={NODE_TITLE.content}>
+  <LocalizableTextInput label="Текст сообщения" bind:value={editedMessageText} />
   <NodeModalControls on:save={updateConfig} />
-</div>
+</NodeModalBody>
 
 <style>
 </style>

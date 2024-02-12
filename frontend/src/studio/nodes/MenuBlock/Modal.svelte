@@ -1,11 +1,12 @@
 <script lang="ts">
-  import { Stack, Switch } from "@svelteuidev/core";
+  import { Toggle } from "flowbite-svelte";
   import type { MenuBlock, MenuItem } from "../../../api/types";
-  import NodeModalControls from "../../components/NodeModalControls.svelte";
   import LocalizableTextInput from "../../components/LocalizableTextInput.svelte";
+  import NodeModalBody from "../../components/NodeModalBody.svelte";
+  import NodeModalControls from "../../components/NodeModalControls.svelte";
   import SortableListInput from "../../components/SortableListInput.svelte";
-  import { NODE_TITLE } from "../display";
   import { clone } from "../../utils";
+  import { NODE_TITLE } from "../display";
 
   export let config: MenuBlock;
   export let onConfigUpdate: (newConfig: MenuBlock) => any;
@@ -32,15 +33,12 @@
   let backButtonLabel = config.menu.config.back_label || "";
 </script>
 
-<div>
-  <h3>{NODE_TITLE.menu}</h3>
-  <Stack>
-    <LocalizableTextInput label="Текст" bind:value={editedConfig.menu.text} />
-    <SortableListInput label="Кнопки" bind:options={editedConfig.menu.items} optionConstructor={newMenuItem} />
-    <Switch label="Возможность выйти на предыдущий уровень" bind:checked={addBackButton} />
-    {#if addBackButton}
-      <LocalizableTextInput label={'Кнопка "назад"'} bind:value={backButtonLabel} />
-    {/if}
-  </Stack>
+<NodeModalBody title={NODE_TITLE.menu}>
+  <LocalizableTextInput label="Текст" bind:value={editedConfig.menu.text} />
+  <SortableListInput label="Кнопки" bind:options={editedConfig.menu.items} optionConstructor={newMenuItem} />
+  <Toggle bind:checked={addBackButton}>Возможность выйти на предыдущий уровень</Toggle>
+  {#if addBackButton}
+    <LocalizableTextInput label={'Кнопка "назад"'} bind:value={backButtonLabel} />
+  {/if}
   <NodeModalControls on:save={saveConfig} />
-</div>
+</NodeModalBody>

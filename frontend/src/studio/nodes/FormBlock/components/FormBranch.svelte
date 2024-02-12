@@ -1,15 +1,15 @@
 <script lang="ts">
-  import { Stack, Button, Group, NativeSelect, CloseButton } from "@svelteuidev/core";
+  import { Button, Select } from "flowbite-svelte";
+  import { type ButtonProps } from "flowbite-svelte/Button.svelte";
+  import { CloseOutline, PlusOutline } from "flowbite-svelte-icons";
   import { createEventDispatcher } from "svelte";
-  import { PlusOutline } from "flowbite-svelte-icons";
-
-  import FormField from "./FormField.svelte";
-
   import type { FormBranchConfig, SingleSelectFormFieldConfig } from "../../../../api/types";
-  import { getDefaultBaseFormFieldConfig, getDefaultFormFieldConfig } from "../utils";
-  import { localizableTextToString } from "../../../utils";
+  import ActionIcon from "../../../../components/ActionIcon.svelte";
   import { languageConfigStore } from "../../../stores";
+  import { localizableTextToString } from "../../../utils";
   import { backgroundColor, borderColor, generateHue } from "../colors";
+  import { getDefaultBaseFormFieldConfig, getDefaultFormFieldConfig } from "../utils";
+  import FormField from "./FormField.svelte";
 
   export let branch: FormBranchConfig;
   export let switchField: SingleSelectFormFieldConfig | null = null;
@@ -69,6 +69,12 @@
     currentSwitchFieldAt.push(currSwitch);
     currentSwitchFieldIdxAt.push(currSwitchIdx);
   }
+
+  const buttonProps: ButtonProps = {
+    color: "light",
+    size: "sm",
+    outline: true,
+  };
 </script>
 
 <div
@@ -77,49 +83,43 @@
 >
   {#if switchField}
     <div class="conditional-branch-header" style={branchHue ? `background-color: ${backgroundColor(branchHue)};` : ""}>
-      <Group position="apart">
+      <div class="flex flex-row justify-between">
         <div class="conditional-branch-condition">
           Если <strong>{switchField.name}</strong> =
-          <NativeSelect
-            override={{ display: "inline", flexGrow: "10" }}
-            data={switchField.options.map((o) => {
+          <Select
+            items={switchField.options.map((o) => {
               return {
-                label: localizableTextToString(o.label, $languageConfigStore),
+                name: localizableTextToString(o.label, $languageConfigStore),
                 value: o.id,
               };
             })}
             bind:value={branch.condition_match_value}
           />
         </div>
-        <CloseButton on:click={() => dispatch("delete")} />
-      </Group>
+        <ActionIcon icon={CloseOutline} on:click={() => dispatch("delete")} />
+      </div>
     </div>
   {/if}
   <div class:conditional-branch-body={switchField !== null}>
-    <Stack>
+    <div class="flex flex-col gap-2">
       <!-- each block is keyed so that it is correctly modified on inserting new members -->
       {#each branch.members as member, idx (member.field ? member.field : member.branch)}
-        <!-- buttons add stuff BEFORE the current member -->
+        <!-- buttons that add stuff before the current member -->
         {#if member.field}
-          <Group position="center">
+          <div class="flex flex-row justify-center gap-2">
             <Button
-              variant="outline"
-              compact
-              color="gray"
               on:click={() => {
                 branch.members = branch.members.toSpliced(idx, 0, {
                   field: getDefaultFormFieldConfig(getDefaultBaseFormFieldConfig(), "plain_text"),
                 });
               }}
+              {...buttonProps}
             >
-              <PlusOutline slot="leftIcon" width={15} />
+              <PlusOutline size="sm" class="mr-2" />
               Поле
             </Button>
             {#if currentSwitchFieldAt[idx] !== null}
               <Button
-                variant="outline"
-                compact
-                color="gray"
                 on:click={() => {
                   branch.members = branch.members.toSpliced(idx, 0, {
                     branch: {
@@ -130,16 +130,18 @@
                     },
                   });
                 }}
+                {...buttonProps}
               >
-                <PlusOutline slot="leftIcon" width={15} />
+                <PlusOutline size="sm" class="mr-2" />
                 <span>
                   Ветвь с условием на "{(currentSwitchFieldAt[idx] || { name: "" }).name}"
                 </span>
               </Button>
             {/if}
-          </Group>
+          </div>
         {/if}
 
+        <!-- actual branch member -->
         {#if member.field}
           <FormField
             bind:fieldConfig={member.field}
@@ -162,12 +164,9 @@
         {/if}
       {/each}
 
-      <!-- additional buttons to add stuff AFTER everything (e.g. "before" one-past-last element) -->
-      <Group position="center">
+      <!-- at the end, buttons to add stuff after everything -->
+      <div class="flex flex-row justify-center gap-2">
         <Button
-          variant="outline"
-          compact
-          color="gray"
           on:click={() => {
             branch.members = [
               ...branch.members,
@@ -176,15 +175,13 @@
               },
             ];
           }}
+          {...buttonProps}
         >
-          <PlusOutline slot="leftIcon" width={15} />
+          <PlusOutline size="sm" class="mr-2" />
           Поле
         </Button>
         {#if currentSwitchFieldAt[branch.members.length] !== null}
           <Button
-            variant="outline"
-            compact
-            color="gray"
             on:click={() => {
               const idx = branch.members.length;
               branch.members = [
@@ -198,21 +195,24 @@
                 },
               ];
             }}
+            {...buttonProps}
           >
-            <PlusOutline slot="leftIcon" width={15} />
+            <PlusOutline size="sm" class="mr-2" />
             <span>
               Ветвь с условием на "{(currentSwitchFieldAt[branch.members.length] || { name: "" }).name}"
             </span>
           </Button>
         {/if}
-      </Group>
-    </Stack>
+      </div>
+    </div>
   </div>
 </div>
 
+<!-- TODO: move at least some of the styles to tailwind classes -->
 <style>
   div.conditional-branch-container {
-    border-left: 3px rgb(206, 212, 218) solid;
+    border-left: 2px white solid;
+    border-bottom: 2px white solid;
   }
 
   div.conditional-branch-header {

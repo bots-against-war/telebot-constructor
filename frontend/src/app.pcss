@@ -1,4 +1,12 @@
-:root {
+/* Write your global styles here, in PostCSS syntax */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+
   font-family:
     Roboto,
     -apple-system,
@@ -11,7 +19,7 @@
     Apple Color Emoji,
     Segoe UI Emoji;
   font-weight: 400;
-  background-color: #f5f5f5;
+  background-color: white;
   color: #1c1c1c;
   line-height: 1.5;
 
@@ -20,8 +28,4 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
-}
-
-body {
-  margin: 0;
 }

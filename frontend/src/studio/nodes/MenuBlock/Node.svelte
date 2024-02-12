@@ -1,20 +1,20 @@
 <script lang="ts">
   import { Node } from "svelvet";
   import type { MenuBlock } from "../../../api/types";
+  import type { SvelvetPosition } from "../../../types";
+  import { getModalOpener } from "../../../utils";
+  import InputAnchor from "../../components/InputAnchor.svelte";
+  import LocalizableText from "../../components/LocalizableText.svelte";
   import NodeContent from "../../components/NodeContent.svelte";
   import OutputAnchor from "../../components/OutputAnchor.svelte";
-  import InputAnchor from "../../components/InputAnchor.svelte";
-  import type { SvelvetPosition } from "../../../types";
-
-  import Modal from "./Modal.svelte";
-  import { getModalOpener } from "../../../utils";
-  import { DEFAULT_NODE_PROPS } from "../nodeProps";
-  import { NodeTypeKey } from "../display";
-  import { validateMenuBlock } from "../nodeValidators";
   import OutputAnchorsBox from "../../components/OutputAnchorsBox.svelte";
-  import { localizableTextToString } from "../../utils";
   import { languageConfigStore } from "../../stores";
-  import LocalizableText from "../../components/LocalizableText.svelte";
+  import { localizableTextToString } from "../../utils";
+  import { NodeTypeKey } from "../display";
+  import { DEFAULT_NODE_PROPS } from "../nodeProps";
+  import { validateMenuBlock } from "../nodeValidators";
+  import Modal from "./Modal.svelte";
+
   const openModal = getModalOpener();
 
   export let config: MenuBlock;
