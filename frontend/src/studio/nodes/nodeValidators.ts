@@ -162,9 +162,9 @@ export function validateFormBlock(config: FormBlock, langConfig: LanguageConfig 
           resultfForField.push(err({ error: `Не указано ни одного варианта выбора в поле #${idx}` }));
         }
         resultfForField.push(
-          ...field.single_select.options.map(
-            (eo, optionIdx) => validateLocalizableText(eo.label, `текст варианта #${optionIdx + 1} в поле #${idx}`, langConfig)
-          )
+          ...field.single_select.options.map((eo, optionIdx) =>
+            validateLocalizableText(eo.label, `текст варианта #${optionIdx + 1} в поле #${idx}`, langConfig),
+          ),
         );
       }
       return mergeResults(resultfForField);
