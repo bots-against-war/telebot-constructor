@@ -14,6 +14,7 @@ from telebot_components.stores.generic import KeyValueStore
 
 from telebot_constructor.app_models import AuthType, LoggedInUser
 from telebot_constructor.static import static_file_content
+from telebot_constructor.telegram_files_downloader import TelegramFilesDownloader
 
 
 class Auth(abc.ABC):
@@ -33,9 +34,8 @@ class Auth(abc.ABC):
         """Optional setup hook for subclasses to override to add their login API routes"""
         ...
 
-    @abc.abstractmethod
-    async def setup_bot(self) -> Optional[BotRunner]:
-        """Optional setup hook for subclasses to override to add their bot handlers"""
+    async def setup_bot(self) -> BotRunner | None:
+        """Optional setup hook for subclasses to create a service auth bot that will be run with the app"""
         ...
 
 
@@ -56,9 +56,6 @@ class NoAuth(Auth):
     async def unauthenticated_client_response(self, request: web.Request, static_files_dir: Path) -> web.Response:
         raise NotImplementedError()
 
-    async def setup_bot(self) -> BotRunner:
-        raise NotImplementedError()
-
 
 class GroupChatAuth(Auth):
     """
@@ -74,6 +71,7 @@ class GroupChatAuth(Auth):
         redis: RedisInterface,
         bot: AsyncTeleBot,
         auth_chat_id: int,
+        telegram_files_downloader: TelegramFilesDownloader,
         confirmation_code_lifetime: datetime.timedelta = datetime.timedelta(minutes=10),
         access_token_lifetime: datetime.timedelta = datetime.timedelta(days=1),
     ):
@@ -81,6 +79,7 @@ class GroupChatAuth(Auth):
         self.auth_chat_id = auth_chat_id
         self._auth_chat: Optional[tg.Chat] = None  # fetched lazily
         self.logger = logging.getLogger(__name__ + f"[{self.__class__.__name__}]")
+        self.telegram_files_downloader = telegram_files_downloader
 
         self.access_code_store = KeyValueStore[str](
             name="access-code",
@@ -119,9 +118,13 @@ class GroupChatAuth(Auth):
         auth_chat = await self.get_auth_chat()
         return LoggedInUser(
             username="admin",
-            name=f"Anonymous admin (member of {auth_chat.title or '<unnamed chat>'!r})",
+            name=f"Anonymous auth chat member (via {auth_chat.title or 'chat id ' + str(auth_chat.id)})",
             auth_type=AuthType.TELEGRAM_GROUP_AUTH,
-            userpic=None,
+            userpic=(
+                None
+                if auth_chat.photo is None
+                else (await self.telegram_files_downloader.get_base64_file(self.bot, auth_chat.photo.small_file_id))
+            ),
         )
 
     async def unauthenticated_client_response(self, request: web.Request, static_files_dir: Path) -> web.Response:

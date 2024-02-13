@@ -825,7 +825,8 @@ class TelebotConstructorApp:
         self.start_stored_bots_in_background()
         auth_bot_runner = await self.auth.setup_bot()
         if auth_bot_runner is not None:
-            await self.runner.start(username="admin", bot_name="auth_bot", bot_runner=auth_bot_runner)
+            logger.info("Starting auth bot")
+            await self.runner.start(username="internal", bot_name="auth-bot", bot_runner=auth_bot_runner)
         await self.telegram_files_downloader.setup()
 
     async def cleanup(self) -> None:

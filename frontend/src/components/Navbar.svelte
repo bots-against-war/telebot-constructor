@@ -15,10 +15,12 @@
     />
     <Popover trigger="click" class="w-80" triggeredBy="#avatar-menu">
       <div class="flex flex-col gap-4">
-        <p>
+        <p class="font-bold text-lg text-gray-800">
           {$loggedInUserStore.name}
-          <br />
-          <span class="font-light text-sm">{$loggedInUserStore.username}</span>
+          {#if $loggedInUserStore.display_username !== null}
+            <br />
+            <span class="font-light text-sm">@{$loggedInUserStore.display_username}</span>
+          {/if}
         </p>
         <Button
           color="red"

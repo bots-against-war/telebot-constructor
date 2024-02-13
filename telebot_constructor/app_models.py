@@ -1,4 +1,5 @@
 """Pydantic models for various app endpoints"""
+
 import enum
 from datetime import datetime
 from typing import Optional
@@ -126,14 +127,15 @@ class TgBotUserUpdate(BaseModel):
 class AuthType(enum.Enum):
     NO_AUTH = "no_auth"
     TELEGRAM_GROUP_AUTH = "tg_group_auth"
-    TELEGRAM_BOT_AUTH = "tg_bot_auth"
+    TELEGRAM_AUTH = "tg_auth"
 
 
 class LoggedInUser(BaseModel):
     auth_type: AuthType
-    username: str
+    username: str  # internal username, not user-visible
     name: str
-    userpic: Optional[str]
+    display_username: Optional[str] = None
+    userpic: Optional[str] = None
 
 
 class BotInfo(BaseModel):
