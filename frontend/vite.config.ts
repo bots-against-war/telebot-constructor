@@ -5,11 +5,12 @@ import { defineConfig } from "vite";
 
 const optionalReplacements: { [key: string]: string } = {};
 
-// TODO set this env var when packaging frontend for PyPI
-let version = process.env.GIT_COMMIT_ID;
-if (!version) {
-  console.warn("No GIT_COMMIT_ID environment variable found, using 'development'");
-  version = "development";
+let version = "development";
+const versionEnvVars = ["GIT_COMMIT_ID", "HEROKU_SLUG_COMMIT"];
+const versions = versionEnvVars.map((ev) => process.env[ev]).filter((v) => v);
+if (versions.length > 0) {
+  console.warn("Found version in env var");
+  version = versions[0];
 }
 console.log(`Building with version "${version}"`);
 
