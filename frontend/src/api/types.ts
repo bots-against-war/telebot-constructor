@@ -201,9 +201,10 @@ export type Prompt2 =
     };
 export type IsRequired2 = boolean;
 export type ResultFormatting2 = FormFieldResultFormattingOpts | "auto" | null;
-export type AuthType = "no_auth" | "tg_group_auth";
+export type AuthType = "no_auth" | "tg_group_auth" | "tg_auth";
 export type Username2 = string;
 export type Name6 = string;
+export type DisplayUsername = string | null;
 export type Userpic1 = string | null;
 export type DisplayName1 = string;
 export type CreatedAt = string;
@@ -529,7 +530,8 @@ export interface LoggedInUser {
   auth_type: AuthType;
   username: Username2;
   name: Name6;
-  userpic: Userpic1;
+  display_username?: DisplayUsername;
+  userpic?: Userpic1;
   [k: string]: unknown;
 }
 export interface BotInfo {

@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login | Telebot constructor</title>
+  </head>
+
+  <body onload="getAuthLink()">
+    <div class="container">
+      <div class="content">
+        <div style="display: flex; justify-content: center">
+          <a id="auth-link" style="padding-right: 0.75em" target="_blank"></a>
+          <span id="caption">Загрузка...</span>
+        </div>
+      </div>
+    </div>
+  </body>
+  <style>
+    body {
+      margin: 0 auto;
+      font-family: "Courier New", Courier, monospace;
+    }
+
+    p {
+      margin: 0.2em;
+    }
+
+    .container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100vh;
+    }
+
+    .content {
+      width: min(95vw, 800px);
+      height: auto;
+      font-size: x-large;
+    }
+
+    button {
+      font-size: large;
+      font-family: inherit;
+      font-weight: bold;
+      margin: 0 1em;
+    }
+
+    input {
+      width: 100%;
+      font-size: inherit;
+    }
+  </style>
+
+  <script>
+    const BASE_PATH = ""; // TODO: make configurable with Vite build step / custom replacement script
+    console.log(`Base path = ${BASE_PATH}`);
+
+    async function getAuthLink() {
+      const captionEl = document.getElementById("caption");
+
+      const response = await fetch(BASE_PATH + "/telegram-auth/make-auth-link", { method: "POST" });
+      const responseText = await response.text();
+      console.log(response);
+      if (!response.ok) {
+        captionEl.innerText = `Ошибка: ${response.status} ${response.statusText} ${responseText}`;
+        return;
+      }
+
+      const authLink = responseText;
+      const startParam = authLink.match(/\w*=(.*)$/)[1];
+      console.log("start param: ", startParam);
+
+      const authLinkEl = document.getElementById("auth-link");
+      authLinkEl.innerText = "Ссылка";
+      authLinkEl.setAttribute("href", authLink);
+      captionEl.innerText = "для авторизации";
+
+      setTimeout(() => {
+        // polling backend each 3 sec
+        const pollingInterval = setInterval(() => tryLogin(startParam), 3000);
+        // stop polling automatically in 30 min
+        setTimeout(() => clearInterval(pollingInterval), 30 * 60 * 1000);
+      }, 3000);
+    }
+
+    async function tryLogin(startParam) {
+      const resp = await fetch(BASE_PATH + "/telegram-auth/try-login", {
+        method: "POST",
+        body: JSON.stringify({ bot_start_param: startParam }),
+      });
+      console.log(resp);
+      if (resp.ok) {
+        window.location.reload();
+      }
+    }
+  </script>
+</html>

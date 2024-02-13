@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Navbar, NavBrand, Avatar, Popover, Button } from "flowbite-svelte";
+  import { Avatar, Button, NavBrand, Navbar, Popover } from "flowbite-svelte";
   import logo from "../assets/logo.svg";
   import { loggedInUserStore } from "../globalStateStores";
 </script>
@@ -15,19 +15,19 @@
     />
     <Popover trigger="click" class="w-80" triggeredBy="#avatar-menu">
       <div class="flex flex-col gap-4">
-        <p>
+        <p class="font-bold text-lg text-gray-800">
           {$loggedInUserStore.name}
-          <br />
-          <span class="font-light text-sm">{$loggedInUserStore.username}</span>
+          {#if $loggedInUserStore.display_username !== null}
+            <br />
+            <span class="font-light text-sm">@{$loggedInUserStore.display_username}</span>
+          {/if}
         </p>
         <Button
           color="red"
           outline
           on:click={() => {
-            // deleting the cookie by setting it to empty with expire date in the past
-            // FIXME: seems like it's not working
-            //        maybe create a normal /logout endpoint that will call auth-specific method?
-            document.cookie = `tc_access_token=;Expires=${new Date(2000).toUTCString()};Path=/`;
+            // HACK: hardcoded cookie name, probaby better to call /logout endpoint and let it handle
+            document.cookie = "tc_access_token=invalidated; expires=Thu, 01 Jan 1970 00:00:01 GMT; Path=/";
             window.location.reload();
           }}
         >

@@ -50,6 +50,7 @@ class RedisCacheTelegramFilesDownloader(TelegramFilesDownloader):
             redis=redis,
             expiration_time=datetime.timedelta(days=60),
         )
+        self._task: asyncio.Task[None] | None = None
 
     async def get_base64_file(self, bot: AsyncTeleBot, file_id: str) -> str | None:
         cached_b64 = await self.cached_files_storage.load(file_id)
@@ -114,12 +115,16 @@ class RedisCacheTelegramFilesDownloader(TelegramFilesDownloader):
                 logger.exception("Unexpected error evicting extra cached files, will try next time")
 
     async def setup(self) -> None:
+        if self._task is not None:
+            return
         self._task = asyncio.create_task(
             self._evict_extra_cached_in_background(),
             name="Evicting extra files from telegram-downloaded files cache",
         )
 
     async def cleanup(self) -> None:
+        if self._task is None:
+            return
         self._task.cancel()
         try:
             await self._task

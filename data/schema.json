@@ -3,7 +3,8 @@
     "AuthType": {
       "enum": [
         "no_auth",
-        "tg_group_auth"
+        "tg_group_auth",
+        "tg_auth"
       ],
       "title": "AuthType",
       "type": "string"
@@ -917,6 +918,18 @@
           "title": "Name",
           "type": "string"
         },
+        "display_username": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Display Username"
+        },
         "userpic": {
           "anyOf": [
             {
@@ -926,14 +939,14 @@
               "type": "null"
             }
           ],
+          "default": null,
           "title": "Userpic"
         }
       },
       "required": [
         "auth_type",
         "username",
-        "name",
-        "userpic"
+        "name"
       ],
       "title": "LoggedInUser",
       "type": "object"
