@@ -8,7 +8,7 @@ export function defaultCommandEntrypoint(id: string): UserFlowEntryPointConfig {
       entrypoint_id: id,
       command: "command",
       scope: "private",
-      short_description: "Some command",
+      short_description: null,
       next_block_id: null,
     },
   };

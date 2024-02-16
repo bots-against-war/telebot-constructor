@@ -55,20 +55,19 @@ export function mean(data: number[]): number {
   return data.reduce((prev, current) => prev + current) / data.length;
 }
 
-// returns typed version of svelte-simple-modals open func
+// typed version of svelte-simple-modals open func
 export function getModalOpener<C extends SvelteComponent>(): (
-  // wtf? https://github.com/sveltejs/language-tools/issues/486#issuecomment-1101614455
   modalCompClass: Newable<C>,
   props?: ComponentProps<C>,
 ) => void {
-  // @ts-ignore
+  // @ts-expect-error
   const { open } = getContext("simple-modal");
   return open;
 }
 
-// returns typed version of svelte-simple-modals open func
+// typed version of svelte-simple-modals close func
 export function getModalCloser(): () => void {
-  // @ts-ignore
+  // @ts-expect-error
   const { close } = getContext("simple-modal");
   return close;
 }
