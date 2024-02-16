@@ -13,7 +13,7 @@ Free & open-source Telegram bot constructor with no-code web UI, using
 poetry install
 ```
 
-2. Start backend/API (no dependencies required)
+2. Start backend/API
 
 ```sh
 poetry shell
