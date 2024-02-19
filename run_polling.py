@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 from urllib.parse import urlparse
 
-from redis.asyncio import Redis  # type: ignore
+from redis.asyncio import Redis
 from telebot import AsyncTeleBot
 from telebot_components.redis_utils.emulation import PersistentRedisEmulation
 from telebot_components.redis_utils.interface import RedisInterface
@@ -30,9 +30,9 @@ async def main() -> None:
     else:
         logging.info("Using real redis")
         redis_url = urlparse(os.environ["REDIS_URL"])
-        redis = Redis(
-            host=redis_url.hostname,
-            port=redis_url.port,
+        redis = Redis(  # type: ignore
+            host=redis_url.hostname or "",
+            port=redis_url.port or 0,
             username=redis_url.username,
             password=redis_url.password,
         )
