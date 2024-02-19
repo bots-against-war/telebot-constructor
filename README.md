@@ -7,7 +7,7 @@ Free & open-source Telegram bot constructor with no-code web UI, using
 
 ### Basic dev setup
 
-1. [Install](https://python-poetry.org/docs/) Poetry. Tested with versions 1.5 - 1.7. Then install
+1. [Install](https://python-poetry.org/docs/) Poetry (tested with versions 1.5 - 1.7). Then, install
    backend dependencies with
 
 ```bash
