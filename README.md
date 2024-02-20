@@ -14,6 +14,17 @@ Free & open-source Telegram bot constructor with no-code web UI, using
 poetry install
 ```
 
+If you have problems with `poetry`, you can manually create everything and install dependencies using `pip`
+from `requirements.txt` generated from poetry dependencies:
+
+```bash
+# example of virtual env creation for unix systems
+python3.10 -m venv venv
+source venv/bin/activate
+
+pip install -r requirements.txt
+```
+
 2. Start backend/API
 
 ```sh
