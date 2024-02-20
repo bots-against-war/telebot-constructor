@@ -131,6 +131,33 @@ class ContentBlock(UserFlowBlock):
                             file_id = msg.photo[0].file_id
                             await self._file_id_by_hash_store.save(md5_hash(attachment.image), file_id)
             else:
+                common_kwargs = common_kwargs.copy()
+                if content.text is not None:
+                    common_kwargs["caption"] = any_text_to_str(content.text.text, language)
+                attachments = content.attachments
+                media_group = []
+                flag_content = None
+                for attachment in attachments:
+                    # TODO: generalize on other attachment types
+                    if attachment.image is not None:
+                        file_id = await self._file_id_by_hash_store.load(md5_hash(attachment.image))
+                        if file_id is not None:
+                            media_group.append(
+                                file_id,
+                                **common_kwargs if flag_content == None else None, # type: ignore
+                            )
+                            flag_content = "not send"
+                        else:
+                            photo_bytes = base64.b64decode(attachment.image)
+                            media_group.append(
+                                photo_bytes,
+                                **common_kwargs if flag_content == None else None, # type: ignore
+                            )
+                            flag_content = "not send"
+                            # TODO: isn't caching without file_id
+                await context.bot.send_media_group(
+                    media_group
+                )
                 # TODO: use send_media_group, but validate constraints and reuse file_id caching logic from above
                 raise RuntimeError("Multiple attachments per message TBD")
 
