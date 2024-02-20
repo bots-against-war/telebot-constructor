@@ -7,18 +7,35 @@ Free & open-source Telegram bot constructor with no-code web UI, using
 
 ### Basic dev setup
 
-1. [Install](https://python-poetry.org/docs/master#installing-with-the-official-installer) Poetry 1.5.1, then run 
+1. [Install](https://python-poetry.org/docs/) Poetry (tested with versions 1.5 - 1.7). Then, install
+   backend dependencies with
 
 ```bash
 poetry install
+
+# start new shell with poetry-created virtual env activated
+poetry shell
+```
+
+If you have problems with `poetry`, you can manually create everything and install dependencies using `pip`
+from `requirements.txt` generated from poetry dependencies:
+
+```bash
+# example of virtual env creation and activation for unix systems
+python3.10 -m venv venv
+source venv/bin/activate
+
+pip install -r requirements.txt
 ```
 
 2. Start backend/API
 
 ```sh
-poetry shell
+# set environment variables (example for unix-like systems)
 export TELEBOT_CONSTRUCTOR_USE_REDIS_EMULATION=1
 export SECRETS_ENCRYPTION_KEY=if-wLoSw7gEbQgY1xLHrEgI4E357PRUAeGfZudnaYu0=  # dummy value
+
+# run the web app
 python run_polling.py
 ```
 
