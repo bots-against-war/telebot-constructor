@@ -44,8 +44,10 @@ jobs:
         run: poetry run python scripts/models/pydantic2jsonschema.py --check
       - name: Validate that requirements.txt are up to date
         run: |
-          poetry export -f requirements.txt --output requirements-latest.txt
-          cmp requirements.txt requirements-latest.txt
+          poetry export -f requirements.txt --output latest-requirements.txt
+          cmp requirements.txt latest-requirements.txt
+          poetry export --only dev -f requirements.txt --output latest-requirements.dev.txt
+          cmp requirements.dev.txt latest-requirements.dev.txt
 
       # frontend checks
       - name: Check Prettier formatting
