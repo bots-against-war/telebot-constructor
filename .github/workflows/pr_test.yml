@@ -20,7 +20,7 @@ jobs:
       - name: Setup Poetry
         uses: abatilo/actions-poetry@v2.0.0
         with:
-          poetry-version: 1.5.1
+          poetry-version: 1.7.1
       - name: Install backend dependencies
         run: poetry install
       - name: Setup NodeJS v18
@@ -42,6 +42,10 @@ jobs:
           poetry run coverage report
       - name: Validate that JSON schema is up-to-date
         run: poetry run python scripts/models/pydantic2jsonschema.py --check
+      - name: Validate that requirements.txt are up to date
+        run: |
+          poetry export -f requirements.txt --output requirements-latest.txt
+          cmp requirements.txt requirements-latest.txt
 
       # frontend checks
       - name: Check Prettier formatting
