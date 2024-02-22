@@ -59,7 +59,7 @@ async def constructor_app() -> AsyncGenerator[tuple[TelebotConstructorApp, aioht
                 secret_max_len=1024,
                 scope_secrets_to_user=True,
             ),
-            static_files_dir_override=Path(tempdir),
+            static_files_dir=Path(tempdir),
         )
         telebot_constructor_app._runner = MockBotRunner()
         telebot_constructor_app._bot_factory = mocked_async_telebot_factory

@@ -4,8 +4,6 @@ import json
 import logging
 import mimetypes
 import re
-import time
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional, Type, TypeVar
 
@@ -18,11 +16,9 @@ from telebot.runner import BotRunner
 from telebot.util import create_error_logging_task, log_error
 from telebot.webhook import WebhookApp
 from telebot_components.redis_utils.interface import RedisInterface
-from telebot_components.stores.generic import KeyDictStore
 from telebot_components.utils.secrets import SecretStore
 
 from telebot_constructor.app_models import (
-    BotActionsHistory,
     BotInfo,
     BotTokenPayload,
     LoggedInUser,
@@ -46,6 +42,11 @@ from telebot_constructor.store import (
     BotConfigVersionMetadata,
     BotVersion,
     TelebotConstructorStore,
+)
+from telebot_constructor.store.bot_events import (
+    BotDeletedEvent,
+    BotEditedEvent,
+    BotStartedEvent,
 )
 from telebot_constructor.telegram_files_downloader import (
     InmemoryCacheTelegramFilesDownloader,
@@ -71,36 +72,23 @@ class TelebotConstructorApp:
         redis: RedisInterface,
         auth: Auth,
         secret_store: SecretStore,
-        static_files_dir_override: Optional[Path] = None,
+        static_files_dir: Path = Path(__file__).parent / "static",
         telegram_files_downloader: Optional[TelegramFilesDownloader] = None,
     ) -> None:
         self.auth = auth
         self.secret_store = secret_store
-        self.static_files_dir = static_files_dir_override or Path(__file__).parent / "static"
+        self.static_files_dir = static_files_dir
         logger.info(f"Will serve static frontend files from {self.static_files_dir.absolute()}")
-
         self.redis = redis
+
         self.telegram_files_downloader = telegram_files_downloader or InmemoryCacheTelegramFilesDownloader()
         self.store = TelebotConstructorStore(redis)
+        self.group_chat_discovery_handler = GroupChatDiscoveryHandler(
+            redis=redis, telegram_files_downloader=self.telegram_files_downloader
+        )
 
         # set during on of the setup/run methods to a concrete subclass
         self._runner: Optional[ConstructedBotRunner] = None
-
-        # username -> names of bots and their actions history
-        self.bot_history_store = KeyDictStore[BotActionsHistory](
-            name="bot-history",
-            prefix=self.STORE_PREFIX,
-            redis=redis,
-            expiration_time=None,
-            dumper=BotActionsHistory.model_dump_json,
-            loader=BotActionsHistory.model_validate_json,
-        )
-
-        self.group_chat_discovery_handler = GroupChatDiscoveryHandler(
-            redis=redis,
-            telegram_files_downloader=self.telegram_files_downloader,
-        )
-
         self._bot_factory: BotFactory = AsyncTeleBot  # for overriding during tests
 
     @property
@@ -158,22 +146,6 @@ class TelebotConstructorApp:
         if config is None:
             raise web.HTTPNotFound(reason=f"No config found for bot name {bot_name!r}")
         return config
-
-    async def load_bot_info(self, username: str, bot_name: str) -> BotInfo:
-        bot_config = await self.store.load_bot_config(username, bot_name)
-        bot_history = await self.bot_history_store.get_subkey(username, bot_name)
-        if bot_config is None or bot_history is None:
-            raise web.HTTPNotFound(reason=f"Not found info about bot name {bot_name!r}")
-        else:
-            bot_is_running = await self.store.is_bot_running(username, bot_name)
-            bot_info = BotInfo(
-                display_name=bot_config.display_name,
-                created_at=bot_history.created_at,
-                last_updated_at=bot_history.last_updated_at,
-                last_run_at=bot_history.last_run_at,
-                is_running=bot_is_running,
-            )
-            return bot_info
 
     async def _make_raw_bot(self, username: str, bot_name: str) -> AsyncTeleBot:
         return await make_raw_bot(
@@ -309,36 +281,43 @@ class TelebotConstructorApp:
             username = await self.authenticate(request)
             bot_name = self.parse_bot_name(request)
             existing_bot_config = await self.store.load_bot_config(username, bot_name)
-            bot_config = await self.parse_pydantic_model(request, BotConfig)
+            new_bot_config = await self.parse_pydantic_model(request, BotConfig)
             await self.store.save_bot_config(
                 username,
                 bot_name,
-                config=bot_config,
-                meta=BotConfigVersionMetadata(
-                    timestamp=time.time(),
-                    message=None,  # TODO: add a way to pass version message
+                config=new_bot_config,
+                # TODO: add a way to pass version message
+                meta=BotConfigVersionMetadata(message=None),
+            )
+
+            new_bot_version_count = await self.store.bot_config_version_count(username, bot_name)
+            new_version = new_bot_version_count - 1
+            await self.store.save_event(
+                username,
+                bot_name,
+                event=BotEditedEvent(
+                    username=username,
+                    event="edited",
+                    new_version=new_version,
                 ),
             )
+
             if await self.store.is_bot_running(username, bot_name):
                 logger.info(f"Updated bot {bot_name} is running, restarting it")
-                await self.start_bot(username, bot_name, version=-1)
+                await self.start_bot(username, bot_name, version=new_version)
+                await self.store.save_event(
+                    username,
+                    bot_name,
+                    event=BotStartedEvent(
+                        username=username,
+                        event="started",
+                        version=new_version,
+                    ),
+                )
 
             if existing_bot_config is None:
-                new_bot_history = BotActionsHistory(
-                    created_at=datetime.now(timezone.utc),
-                    last_updated_at=datetime.now(timezone.utc),
-                    last_run_at=None,
-                    deleted_at=None,
-                )
-                await self.bot_history_store.set_subkey(key=username, subkey=bot_name, value=new_bot_history)
-
-                return web.json_response(text=bot_config.model_dump_json(), status=201)
+                return web.json_response(text=new_bot_config.model_dump_json(), status=201)
             else:
-                existing_bot_history = await self.bot_history_store.get_subkey(username, bot_name)
-                if existing_bot_history:
-                    existing_bot_history.last_updated_at = datetime.now(timezone.utc)
-                    await self.bot_history_store.set_subkey(key=username, subkey=bot_name, value=existing_bot_history)
-
                 return web.json_response(text=existing_bot_config.model_dump_json())
 
         @routes.get("/api/config/{bot_name}")
@@ -377,11 +356,11 @@ class TelebotConstructorApp:
             await self.store.set_bot_not_running(username, bot_name)
             await self.store.remove_bot_config(username, bot_name)
             await self.secret_store.remove_secret(config.token_secret_name, owner_id=username)
-            existing_bot_history = await self.bot_history_store.get_subkey(username, bot_name)
-            if existing_bot_history:
-                existing_bot_history.deleted_at = datetime.now(timezone.utc)
-                await self.bot_history_store.set_subkey(key=username, subkey=bot_name, value=existing_bot_history)
-
+            await self.store.save_event(
+                username,
+                bot_name,
+                BotDeletedEvent(username=username, event="deleted"),
+            )
             return web.json_response(text=config.model_dump_json())
 
         ##################################################################################
@@ -444,8 +423,18 @@ class TelebotConstructorApp:
             """
             username = await self.authenticate(request)
             bot_name = self.parse_bot_name(request)
-            bot_info = await self.load_bot_info(username, bot_name)
-            return web.json_response(text=bot_info.model_dump_json())
+            timestamps = await self.store.load_timestamps(username, bot_name)
+            if timestamps is None:
+                raise web.HTTPNotFound(reason=f"Not found info about bot name {bot_name!r}")
+            else:
+                bot_config = await self.load_bot_config(username, bot_name, version=-1)
+                bot_is_running = await self.store.is_bot_running(username, bot_name)
+                bot_info = BotInfo(
+                    display_name=bot_config.display_name,
+                    timestamps=timestamps,
+                    is_running=bot_is_running,
+                )
+                return web.json_response(text=bot_info.model_dump_json())
 
         @routes.get("/api/info")
         async def list_bot_infos(request: web.Request) -> web.Response:
@@ -459,20 +448,22 @@ class TelebotConstructorApp:
                     description: List of all bots name and their statuses
             """
             username = await self.authenticate(request)
-            bot_histories = await self.bot_history_store.load(username)
+            bot_ids = await self.store.list_bot_ids(username)
+            logger.info(f"Bots owned by {username}: {bot_ids}")
             bot_infos: dict[str, BotInfo] = {}
-
-            for name, bot_info in bot_histories.items():
-                bot_config = await self.store.load_bot_config(username, name)
-                if bot_config is not None:
-                    is_running = await self.store.is_bot_running(username, name)
-                    bot_infos[name] = BotInfo(
-                        display_name=bot_config.display_name,
-                        created_at=bot_info.created_at,
-                        last_updated_at=bot_info.last_updated_at,
-                        last_run_at=bot_info.last_run_at,
-                        is_running=is_running,
-                    )
+            for bot_id in bot_ids:
+                bot_config = await self.store.load_bot_config(username, bot_id)
+                if bot_config is None:
+                    continue
+                timestamps = await self.store.load_timestamps(username, bot_id)
+                if timestamps is None:
+                    continue
+                is_running = await self.store.is_bot_running(username, bot_id)
+                bot_infos[bot_id] = BotInfo(
+                    display_name=bot_config.display_name,
+                    is_running=is_running,
+                    timestamps=timestamps,
+                )
 
             return web.json_response(
                 data={name: bot_info.model_dump(mode="json") for name, bot_info in bot_infos.items()}

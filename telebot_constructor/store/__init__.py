@@ -1,17 +1,33 @@
-from typing import AsyncGenerator, Literal, TypedDict
+import datetime
+import logging
+import time
+from typing import AsyncGenerator, Literal, NotRequired, TypedDict
 
 from telebot_components.redis_utils.interface import RedisInterface
-from telebot_components.stores.generic import KeyDictStore, KeyVersionedValueStore
+from telebot_components.stores.generic import (
+    KeyDictStore,
+    KeyListStore,
+    KeyVersionedValueStore,
+)
 
+from telebot_constructor.app_models import BotTimestamps
 from telebot_constructor.bot_config import BotConfig
+from telebot_constructor.store.bot_events import BotEvent
+
+logger = logging.getLogger(__name__)
 
 
 class BotConfigVersionMetadata(TypedDict):
-    timestamp: float
+    timestamp: NotRequired[float]
     message: str | None
 
 
 BotVersion = int | Literal["stub"]
+
+
+def set_current_timestamp(data: BotConfigVersionMetadata | BotEvent):
+    if "timestamp" not in data:
+        data["timestamp"] = time.time()
 
 
 class TelebotConstructorStore:
@@ -20,7 +36,7 @@ class TelebotConstructorStore:
     STORE_PREFIX = "telebot-constructor"
 
     def __init__(self, redis: RedisInterface) -> None:
-        # username+name composite key -> versioned bot config
+        # username + bot id composite key -> versioned bot config
         self._config_store = KeyVersionedValueStore[BotConfig, BotConfigVersionMetadata](
             name="config",
             prefix=self.STORE_PREFIX,
@@ -28,7 +44,8 @@ class TelebotConstructorStore:
             snapshot_dumper=BotConfig.model_dump,
             snapshot_loader=BotConfig.model_validate,
         )
-        # username -> name -> currently running version
+
+        # username -> bot id -> currently running version
         # the version here is either:
         # - a number corresponding to a bot config version
         # - "stub" for a stub bot (e.g. for chat discovery)
@@ -38,6 +55,15 @@ class TelebotConstructorStore:
             redis=redis,
             expiration_time=None,
         )
+
+        # username + bot id composite key -> list of events that happened to bot
+        self._bot_events_store = KeyListStore[BotEvent](
+            name="bot-events",
+            prefix=self.STORE_PREFIX,
+            redis=redis,
+        )
+
+    # bot config store CRUD
 
     def _composite_key(self, username: str, bot_id: str) -> str:
         return f"{username}/{bot_id}"
@@ -63,10 +89,19 @@ class TelebotConstructorStore:
         config: BotConfig,
         meta: BotConfigVersionMetadata,
     ) -> bool:
+        set_current_timestamp(meta)
         return await self._config_store.save(self._composite_key(username, bot_id), config, meta)
 
     async def remove_bot_config(self, username: str, bot_id: str) -> bool:
         return await self._config_store.drop(self._composite_key(username, bot_id))
+
+    async def bot_config_version_count(self, username: str, bot_id: str) -> int:
+        return await self._config_store.count_versions(self._composite_key(username, bot_id))
+
+    async def list_bot_ids(self, username: str) -> list[str]:
+        keys = await self._config_store.find_keys(pattern=self._composite_key(username, "*"))
+        prefix = self._composite_key(username, "")
+        return [k.removeprefix(prefix) for k in keys]
 
     # running status methods
 
@@ -88,3 +123,29 @@ class TelebotConstructorStore:
             bot_versions = await self._running_version_store.load(username)
             for bot_id, version in bot_versions.items():
                 yield username, bot_id, version
+
+    # bot event log methods
+
+    async def save_event(self, username: str, bot_id: str, event: BotEvent) -> bool:
+        set_current_timestamp(event)
+        return await self._bot_events_store.push(self._composite_key(username, bot_id), event) == 1
+
+    async def load_timestamps(self, username: str, bot_id: str) -> BotTimestamps | None:
+        events = await self._bot_events_store.all(self._composite_key(username, bot_id))
+        if not events:
+            return None
+        try:
+            edited_events = [e for e in events if e["event"] == "edited"]
+            started_events = [e for e in events if e["event"] == "started"]
+            deleted_events = [e for e in events if e["event"] == "deleted"]
+            return BotTimestamps(
+                created_at=datetime.datetime.fromtimestamp(events[0]["timestamp"]),
+                last_updated_at=datetime.datetime.fromtimestamp(edited_events[-1]["timestamp"]),
+                last_run_at=(
+                    datetime.datetime.fromtimestamp(started_events[-1]["timestamp"]) if started_events else None
+                ),
+                deleted_at=datetime.datetime.fromtimestamp(deleted_events[-1]["timestamp"]) if deleted_events else None,
+            )
+        except Exception:
+            logger.exception("Error constructing bot timestamps object from event log, ignoring")
+            return None
