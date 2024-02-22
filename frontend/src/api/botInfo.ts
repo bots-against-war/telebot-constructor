@@ -4,7 +4,6 @@ import { apiUrl } from "./config";
 
 export async function getBotInfo(botName: string): Promise<Result<BotInfo>> {
   const resp = await fetch(apiUrl(`/info/${encodeURIComponent(botName)}`));
-  console.log(resp);
   return await toDataResult(resp);
 }
 
