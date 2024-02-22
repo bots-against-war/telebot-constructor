@@ -1,4 +1,4 @@
 isort .
 black .
-pflake8
+flake8
 mypy 

@@ -4,6 +4,7 @@ import json
 import logging
 import mimetypes
 import re
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional, Type, TypeVar
@@ -41,6 +42,7 @@ from telebot_constructor.runners import (
     WebhookAppConstructedBotRunner,
 )
 from telebot_constructor.static import static_file_content
+from telebot_constructor.store import BotConfigVersionMetadata, TelebotConstructorStore
 from telebot_constructor.telegram_files_downloader import (
     InmemoryCacheTelegramFilesDownloader,
     TelegramFilesDownloader,
@@ -80,7 +82,7 @@ class TelebotConstructorApp:
         self._runner: Optional[ConstructedBotRunner] = None
 
         # username -> {bot name -> bot config}
-        self.bot_config_store = KeyDictStore[BotConfig](
+        self._legacy_bot_config_store = KeyDictStore[BotConfig](
             name="bot-configs",
             prefix=self.STORE_PREFIX,
             redis=redis,
@@ -89,12 +91,15 @@ class TelebotConstructorApp:
             loader=BotConfig.model_validate_json,
         )
         # username -> names of bots running at the moment
-        self.running_bots_store = KeySetStore[str](
+        self._legacy_running_bots_store = KeySetStore[str](
             name="bot-running",
             prefix=self.STORE_PREFIX,
             redis=redis,
             expiration_time=None,
         )
+
+        self.store = TelebotConstructorStore(redis)
+
         # username -> names of bots running temporary configs at the moment
         self.temporary_running_bots_store = KeySetStore[str](
             name="temporary-bots-running",
@@ -170,18 +175,18 @@ class TelebotConstructorApp:
         return name
 
     async def load_bot_config(self, username: str, bot_name: str) -> BotConfig:
-        config = await self.bot_config_store.get_subkey(username, bot_name)
+        config = await self.store.load_bot_config(username, bot_name)
         if config is None:
             raise web.HTTPNotFound(reason=f"No config found for bot name {bot_name!r}")
         return config
 
     async def load_bot_info(self, username: str, bot_name: str) -> BotInfo:
-        bot_config = await self.bot_config_store.get_subkey(username, bot_name)
+        bot_config = await self.store.load_bot_config(username, bot_name)
         bot_history = await self.bot_history_store.get_subkey(username, bot_name)
         if bot_config is None or bot_history is None:
             raise web.HTTPNotFound(reason=f"Not found info about bot name {bot_name!r}")
         else:
-            bot_is_running = await self.running_bots_store.includes(username, bot_name)
+            bot_is_running = await self.store.is_bot_running(username, bot_name)
             bot_info = BotInfo(
                 display_name=bot_config.display_name,
                 created_at=bot_history.created_at,
@@ -220,7 +225,7 @@ class TelebotConstructorApp:
         log_prefix = f"[{username}][{bot_name}]"
         logger.info(f"{log_prefix} (Re)starting bot")
         is_stopped = await self.runner.stop(username, bot_name)
-        logger.info(f"{log_prefix} Stopped bot {is_stopped = }")
+        logger.info(f"{log_prefix} Stopped bot {is_stopped=}")
         try:
             bot_runner = await self._construct_bot(
                 username=username,
@@ -236,9 +241,10 @@ class TelebotConstructorApp:
         logger.info(f"{log_prefix} Bot started OK!")
         if is_temporary:
             await self.temporary_running_bots_store.add(username, bot_name)
-            await self.running_bots_store.remove(username, bot_name)
+            await self.store.set_bot_not_running(username, bot_name)
         else:
-            await self.running_bots_store.add(username, bot_name)
+            # NOTE: temporarily using -1 version for "last"
+            await self.store.set_bot_running_version(username, bot_name, version=-1)
             await self.temporary_running_bots_store.remove(username, bot_name)
             existing_bot_history = await self.bot_history_store.get_subkey(username, bot_name)
             if existing_bot_history:
@@ -326,10 +332,18 @@ class TelebotConstructorApp:
             """
             username = await self.authenticate(request)
             bot_name = self.parse_bot_name(request)
-            existing_bot_config = await self.bot_config_store.get_subkey(username, bot_name)
+            existing_bot_config = await self.store.load_bot_config(username, bot_name)
             bot_config = await self.parse_pydantic_model(request, BotConfig)
-            await self.bot_config_store.set_subkey(username, bot_name, bot_config)
-            if bot_name in await self.running_bots_store.all(username):
+            await self.store.save_bot_config(
+                username,
+                bot_name,
+                config=bot_config,
+                meta=BotConfigVersionMetadata(
+                    timestamp=time.time(),
+                    # message="..."
+                ),
+            )
+            if await self.store.is_bot_running(username, bot_name):
                 logger.info(f"Updated bot {bot_name} is running, restarting it")
                 await self.re_start_bot(username, bot_name, bot_config)
 
@@ -384,8 +398,8 @@ class TelebotConstructorApp:
             bot_name = self.parse_bot_name(request)
             config = await self.load_bot_config(username, bot_name)
             await self.runner.stop(username, bot_name)
-            await self.running_bots_store.remove(username, bot_name)
-            await self.bot_config_store.remove_subkey(username, bot_name)
+            await self.store.set_bot_not_running(username, bot_name)
+            await self.store.remove_bot_config(username, bot_name)
             await self.secret_store.remove_secret(config.token_secret_name, owner_id=username)
             existing_bot_history = await self.bot_history_store.get_subkey(username, bot_name)
             if existing_bot_history:
@@ -393,23 +407,6 @@ class TelebotConstructorApp:
                 await self.bot_history_store.set_subkey(key=username, subkey=bot_name, value=existing_bot_history)
 
             return web.json_response(text=config.model_dump_json())
-
-        @routes.get("/api/config")
-        async def list_bot_configs(request: web.Request) -> web.Response:
-            """
-            ---
-            description: List all bot configs
-            produces:
-            - application/json
-            responses:
-                "200":
-                    description: Bot name -> bot config mapping
-            """
-            username = await self.authenticate(request)
-            bot_configs = await self.bot_config_store.load(username)
-            return web.json_response(
-                data={name: config.model_dump(mode="json") for name, config in bot_configs.items()}
-            )
 
         ##################################################################################
         # bot lifecycle control: start, stop, list running
@@ -450,29 +447,14 @@ class TelebotConstructorApp:
             username = await self.authenticate(request)
             bot_name = self.parse_bot_name(request)
             if await self.runner.stop(username=username, bot_name=bot_name):
-                await self.running_bots_store.remove(username, bot_name)
+                await self.store.set_bot_not_running(username, bot_name)
                 return web.Response(text="Bot stopped")
             else:
                 return web.Response(text="Bot was not running")
 
-        @routes.get("/api/running")
-        async def list_running_bots(request: web.Request) -> web.Response:
-            """
-            ---
-            description: List running bots
-            produces:
-            - application/json
-            responses:
-                "200":
-                    description: List of running bots' names
-            """
-            username = await self.authenticate(request)
-            running_bots = await self.running_bots_store.all(username)
-            return web.json_response(data=sorted(running_bots))
-
         ##################################################################################
-        # bot info: all stat, is_running, last_run_at, etc
-        @routes.get("/api/bots/info/{bot_name}")
+        # bot info methods: name, running status, history, etc
+        @routes.get("/api/info/{bot_name}")
         async def get_bot_info(request: web.Request) -> web.Response:
             """
             ---
@@ -488,10 +470,9 @@ class TelebotConstructorApp:
             username = await self.authenticate(request)
             bot_name = self.parse_bot_name(request)
             bot_info = await self.load_bot_info(username, bot_name)
-
             return web.json_response(text=bot_info.model_dump_json())
 
-        @routes.get("/api/bots/info")
+        @routes.get("/api/info")
         async def list_bot_infos(request: web.Request) -> web.Response:
             """
             ---
@@ -507,15 +488,15 @@ class TelebotConstructorApp:
             bot_infos: dict[str, BotInfo] = {}
 
             for name, bot_info in bot_histories.items():
-                bot_config = await self.bot_config_store.get_subkey(username, name)
+                bot_config = await self.store.load_bot_config(username, name)
                 if bot_config is not None:
-                    bot_is_running = await self.running_bots_store.includes(username, name)
+                    is_running = await self.store.is_bot_running(username, name)
                     bot_infos[name] = BotInfo(
                         display_name=bot_config.display_name,
                         created_at=bot_info.created_at,
                         last_updated_at=bot_info.last_updated_at,
                         last_run_at=bot_info.last_run_at,
-                        is_running=bot_is_running,
+                        is_running=is_running,
                     )
 
             return web.json_response(
@@ -608,8 +589,8 @@ class TelebotConstructorApp:
             """
             username = await self.authenticate(request)
             bot_name = self.parse_bot_name(request)
-            if not await self.running_bots_store.includes(username, bot_name):
-                logger.info("Group discovery mode requested but bot is not running, starting a temporary one instead")
+            if not await self.store.is_bot_running(username, bot_name):
+                logger.info("Group discovery mode requested but bot is not running, starting a temporary one")
                 await self.re_start_bot(
                     username,
                     bot_name,
@@ -779,11 +760,12 @@ class TelebotConstructorApp:
         """Run all bots that are stored as running; used on startup"""
 
         async def _start_stored_bots() -> None:
+            # FIXME: rewrite after temporary bot store is moved to store
             logger.info("Starting stored bots")
-            usernames = await self.running_bots_store.list_keys()
+            usernames = await self.store._running_version_store.list_keys()
             logger.info("Found %s usernames with bot running flags", len(usernames))
             for username in usernames:
-                running_bots = await self.running_bots_store.all(username)
+                running_bots = await self.store._running_version_store.list_subkeys(username)
                 logger.info(f"{username!r} has {len(running_bots)} running bots: {sorted(running_bots)}")
                 temp_running_bots = await self.temporary_running_bots_store.all(username)
                 if temp_running_bots:
@@ -803,15 +785,16 @@ class TelebotConstructorApp:
 
                 all_bot_names = [(name, False) for name in running_bots] + [(name, True) for name in temp_running_bots]
                 for bot_name, is_temporary in all_bot_names:
-                    bot_name_full = f"{bot_name!r} (owned by {username!r}, {is_temporary = })"
+                    bot_name_full = f"{bot_name!r} (owned by {username!r}, {is_temporary=})"
                     with log_error(marker=f"Starting stored bot {bot_name_full}", logger_=logger):
                         logger.info(f"Loading bot config for {bot_name_full})")
-                        bot_config = await self.bot_config_store.get_subkey(username, bot_name)
+                        bot_config = await self.store.load_bot_config(username, bot_name)
                         if bot_config is None:
                             logger.error(f"Bot {bot_name_full} is marked as running, but has no config")
-                            await (
-                                self.running_bots_store if not is_temporary else self.temporary_running_bots_store
-                            ).remove(username, bot_name)
+                            if is_temporary:
+                                await self.temporary_running_bots_store.remove(username, bot_name)
+                            else:
+                                await self.store._running_version_store.remove_subkey(username, bot_name)
                             continue
                         if is_temporary:
                             bot_config = bot_config.for_temporary_bot()
