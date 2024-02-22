@@ -74,7 +74,7 @@
         <TableBodyRow>
           <TableBodyCell>Создан</TableBodyCell>
           <TableBodyCell>
-            <Timestamp isoString={botInfo.created_at} />
+            <Timestamp isoString={botInfo.timestamps.created_at} />
           </TableBodyCell>
         </TableBodyRow>
       {/if}
@@ -82,7 +82,7 @@
         <TableBodyRow>
           <TableBodyCell>Отредактирован</TableBodyCell>
           <TableBodyCell>
-            <Timestamp isoString={botInfo.last_updated_at} />
+            <Timestamp isoString={botInfo.timestamps.last_updated_at} />
           </TableBodyCell>
         </TableBodyRow>
       {/if}
@@ -90,7 +90,7 @@
         <TableBodyRow>
           <TableBodyCell>Запущен</TableBodyCell>
           <TableBodyCell>
-            <Timestamp isoString={botInfo.last_run_at} />
+            <Timestamp isoString={botInfo.timestamps.last_run_at} />
           </TableBodyCell>
         </TableBodyRow>
       {/if}
