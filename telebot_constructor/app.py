@@ -340,7 +340,7 @@ class TelebotConstructorApp:
                 config=bot_config,
                 meta=BotConfigVersionMetadata(
                     timestamp=time.time(),
-                    # message="..."
+                    message=None,  # TODO: add a way to pass version message
                 ),
             )
             if await self.store.is_bot_running(username, bot_name):

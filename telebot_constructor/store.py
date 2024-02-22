@@ -1,4 +1,4 @@
-from typing import NotRequired, TypedDict
+from typing import TypedDict
 
 from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.stores.generic import KeyDictStore, KeyVersionedValueStore
@@ -8,7 +8,7 @@ from telebot_constructor.bot_config import BotConfig
 
 class BotConfigVersionMetadata(TypedDict):
     timestamp: float
-    message: NotRequired[str]
+    message: str | None
 
 
 class TelebotConstructorStore:
