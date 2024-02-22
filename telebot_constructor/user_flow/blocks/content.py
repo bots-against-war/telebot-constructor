@@ -148,9 +148,6 @@ class ContentBlock(UserFlowBlock):
         )
 
         self._language_store = context.language_store
-
-        # the store can be shared between content blocks, so they can reuse cached file_id's
-        GenericStore.allow_duplicate_stores(prefix=self._file_id_by_hash_store._full_prefix)
         return SetupResult.empty()
 
 

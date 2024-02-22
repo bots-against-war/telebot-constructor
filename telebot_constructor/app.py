@@ -81,23 +81,6 @@ class TelebotConstructorApp:
         # set during on of the setup/run methods to a concrete subclass
         self._runner: Optional[ConstructedBotRunner] = None
 
-        # username -> {bot name -> bot config}
-        self._legacy_bot_config_store = KeyDictStore[BotConfig](
-            name="bot-configs",
-            prefix=self.STORE_PREFIX,
-            redis=redis,
-            expiration_time=None,
-            dumper=BotConfig.model_dump_json,
-            loader=BotConfig.model_validate_json,
-        )
-        # username -> names of bots running at the moment
-        self._legacy_running_bots_store = KeySetStore[str](
-            name="bot-running",
-            prefix=self.STORE_PREFIX,
-            redis=redis,
-            expiration_time=None,
-        )
-
         self.store = TelebotConstructorStore(redis)
 
         # username -> names of bots running temporary configs at the moment

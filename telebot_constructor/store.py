@@ -19,7 +19,7 @@ class TelebotConstructorStore:
     def __init__(self, redis: RedisInterface) -> None:
         # username+name composite key -> versioned bot config
         self._config_store = KeyVersionedValueStore[BotConfig, BotConfigVersionMetadata](
-            name="bot-configs-ver",
+            name="config",
             prefix=self.STORE_PREFIX,
             redis=redis,
             snapshot_dumper=BotConfig.model_dump,
@@ -27,7 +27,7 @@ class TelebotConstructorStore:
         )
         # username -> name -> currently running version
         self._running_version_store = KeyDictStore[int](
-            name="bot-running",
+            name="running-version",
             prefix=self.STORE_PREFIX,
             redis=redis,
             expiration_time=None,
