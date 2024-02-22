@@ -2,6 +2,8 @@ from typing import Literal, TypedDict
 
 from typing_extensions import NotRequired
 
+BotVersion = int | Literal["stub"]
+
 
 class BotEventBase(TypedDict):
     timestamp: NotRequired[float]
@@ -18,7 +20,7 @@ class BotDeletedEvent(BotEventBase):
 
 class BotStartedEvent(BotEventBase):
     event: Literal["started"]
-    version: int
+    version: BotVersion
 
 
 class BotEditedEvent(BotEventBase):

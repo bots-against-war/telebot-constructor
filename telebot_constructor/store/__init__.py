@@ -1,7 +1,7 @@
 import datetime
 import logging
 import time
-from typing import AsyncGenerator, Literal, NotRequired, TypedDict
+from typing import AsyncGenerator, NotRequired, TypedDict
 
 from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.stores.generic import (
@@ -12,7 +12,7 @@ from telebot_components.stores.generic import (
 
 from telebot_constructor.app_models import BotTimestamps
 from telebot_constructor.bot_config import BotConfig
-from telebot_constructor.store.bot_events import BotEvent
+from telebot_constructor.store.types import BotEvent, BotVersion
 
 logger = logging.getLogger(__name__)
 
@@ -20,9 +20,6 @@ logger = logging.getLogger(__name__)
 class BotConfigVersionMetadata(TypedDict):
     timestamp: NotRequired[float]
     message: str | None
-
-
-BotVersion = int | Literal["stub"]
 
 
 def set_current_timestamp(data: BotConfigVersionMetadata | BotEvent):

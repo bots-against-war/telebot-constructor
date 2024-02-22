@@ -15,6 +15,7 @@ from telebot import AsyncTeleBot
 from telebot.runner import BotRunner
 from telebot.util import create_error_logging_task, log_error
 from telebot.webhook import WebhookApp
+from telebot_components.language import LanguageData
 from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.utils.secrets import SecretStore
 
@@ -43,7 +44,7 @@ from telebot_constructor.store import (
     BotVersion,
     TelebotConstructorStore,
 )
-from telebot_constructor.store.bot_events import (
+from telebot_constructor.store.types import (
     BotDeletedEvent,
     BotEditedEvent,
     BotStartedEvent,
@@ -53,7 +54,6 @@ from telebot_constructor.telegram_files_downloader import (
     InmemoryCacheTelegramFilesDownloader,
     TelegramFilesDownloader,
 )
-from telebot_constructor.utils.pydantic import Language
 
 logger = logging.getLogger(__name__)
 
@@ -179,6 +179,8 @@ class TelebotConstructorApp:
         logger.info(f"{log_prefix} (Re)starting bot")
         is_stopped = await self.runner.stop(username, bot_name)
         logger.info(f"{log_prefix} Stopped bot {is_stopped=}")
+        if is_stopped:
+            await self.store.save_event(username, bot_name, event=BotStoppedEvent(username=username, event="stopped"))
         try:
             bot_runner = await self._construct_bot(
                 username=username,
@@ -193,12 +195,15 @@ class TelebotConstructorApp:
             raise web.HTTPInternalServerError(reason="Failed to start bot")
         logger.info(f"{log_prefix} Bot started OK!")
         await self.store.set_bot_running_version(username, bot_name, version=version)
-
-        # TODO: update bot history
-        # existing_bot_history = await self.bot_history_store.get_subkey(username, bot_name)
-        # if existing_bot_history:
-        #     existing_bot_history.last_run_at = datetime.now(timezone.utc)
-        #     await self.bot_history_store.set_subkey(key=username, subkey=bot_name, value=existing_bot_history)
+        await self.store.save_event(
+            username,
+            bot_name,
+            event=BotStartedEvent(
+                username=username,
+                event="started",
+                version=version,
+            ),
+        )
 
     async def create_constructor_web_app(self) -> web.Application:
         app = web.Application()
@@ -287,12 +292,12 @@ class TelebotConstructorApp:
                 username,
                 bot_name,
                 config=new_bot_config,
-                # TODO: add a way to pass version message
+                # TODO: add a way to specify version message / other metadata
                 meta=BotConfigVersionMetadata(message=None),
             )
 
             new_bot_version_count = await self.store.bot_config_version_count(username, bot_name)
-            new_version = new_bot_version_count - 1
+            new_version = new_bot_version_count - 1  # i.e. the last one
             await self.store.save_event(
                 username,
                 bot_name,
@@ -306,15 +311,6 @@ class TelebotConstructorApp:
             if await self.store.is_bot_running(username, bot_name):
                 logger.info(f"Updated bot {bot_name} is running, restarting it")
                 await self.start_bot(username, bot_name, version=new_version)
-                await self.store.save_event(
-                    username,
-                    bot_name,
-                    event=BotStartedEvent(
-                        username=username,
-                        event="started",
-                        version=new_version,
-                    ),
-                )
 
             if existing_bot_config is None:
                 return web.json_response(text=new_bot_config.model_dump_json(), status=201)
@@ -353,7 +349,10 @@ class TelebotConstructorApp:
             username = await self.authenticate(request)
             bot_name = self.parse_bot_name(request)
             config = await self.load_bot_config(username, bot_name, version=-1)
-            await self.runner.stop(username, bot_name)
+            if await self.runner.stop(username, bot_name):
+                await self.store.save_event(
+                    username, bot_name, event=BotStoppedEvent(username=username, event="stopped")
+                )
             await self.store.set_bot_not_running(username, bot_name)
             await self.store.remove_bot_config(username, bot_name)
             await self.secret_store.remove_secret(config.token_secret_name, owner_id=username)
@@ -383,15 +382,6 @@ class TelebotConstructorApp:
             username = await self.authenticate(request)
             bot_name = self.parse_bot_name(request)
             await self.start_bot(username, bot_name, version=-1)
-            await self.store.save_event(
-                username,
-                bot_name,
-                event=BotStartedEvent(
-                    username=username,
-                    event="started",
-                    version=(await self.store.bot_config_version_count(username, bot_name)) - 1,
-                ),
-            )
             return web.Response(text="OK", status=201)
 
         @routes.post("/api/stop/{bot_name}")
@@ -657,7 +647,14 @@ class TelebotConstructorApp:
             """
             await self.authenticate(request)
             return web.json_response(
-                data=[{"code": lang.code, "name": lang.name, "emoji": lang.emoji} for lang in Language.all().values()]
+                data=[
+                    {
+                        "code": lang.code,
+                        "name": lang.name,
+                        "emoji": lang.emoji,
+                    }
+                    for lang in LanguageData.all().values()
+                ]
             )
 
         @routes.get("/api/prefilled-messages")
