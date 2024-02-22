@@ -18,7 +18,7 @@ from telebot.runner import BotRunner
 from telebot.util import create_error_logging_task, log_error
 from telebot.webhook import WebhookApp
 from telebot_components.redis_utils.interface import RedisInterface
-from telebot_components.stores.generic import KeyDictStore, KeySetStore
+from telebot_components.stores.generic import KeyDictStore
 from telebot_components.utils.secrets import SecretStore
 
 from telebot_constructor.app_models import (
@@ -42,7 +42,11 @@ from telebot_constructor.runners import (
     WebhookAppConstructedBotRunner,
 )
 from telebot_constructor.static import static_file_content
-from telebot_constructor.store import BotConfigVersionMetadata, TelebotConstructorStore
+from telebot_constructor.store import (
+    BotConfigVersionMetadata,
+    BotVersion,
+    TelebotConstructorStore,
+)
 from telebot_constructor.telegram_files_downloader import (
     InmemoryCacheTelegramFilesDownloader,
     TelegramFilesDownloader,
@@ -77,19 +81,11 @@ class TelebotConstructorApp:
 
         self.redis = redis
         self.telegram_files_downloader = telegram_files_downloader or InmemoryCacheTelegramFilesDownloader()
+        self.store = TelebotConstructorStore(redis)
 
         # set during on of the setup/run methods to a concrete subclass
         self._runner: Optional[ConstructedBotRunner] = None
 
-        self.store = TelebotConstructorStore(redis)
-
-        # username -> names of bots running temporary configs at the moment
-        self.temporary_running_bots_store = KeySetStore[str](
-            name="temporary-bots-running",
-            prefix=self.STORE_PREFIX,
-            redis=redis,
-            expiration_time=None,
-        )
         # username -> names of bots and their actions history
         self.bot_history_store = KeyDictStore[BotActionsHistory](
             name="bot-history",
@@ -157,8 +153,8 @@ class TelebotConstructorApp:
         self._validate_name(name)
         return name
 
-    async def load_bot_config(self, username: str, bot_name: str) -> BotConfig:
-        config = await self.store.load_bot_config(username, bot_name)
+    async def load_bot_config(self, username: str, bot_name: str, version: BotVersion) -> BotConfig:
+        config = await self.store.load_bot_config(username, bot_name, version)
         if config is None:
             raise web.HTTPNotFound(reason=f"No config found for bot name {bot_name!r}")
         return config
@@ -182,7 +178,7 @@ class TelebotConstructorApp:
     async def _make_raw_bot(self, username: str, bot_name: str) -> AsyncTeleBot:
         return await make_raw_bot(
             username,
-            bot_config=await self.load_bot_config(username, bot_name),
+            bot_config=await self.load_bot_config(username, bot_name, version=-1),
             secret_store=self.secret_store,
             _bot_factory=self._bot_factory,
         )
@@ -198,13 +194,14 @@ class TelebotConstructorApp:
             _bot_factory=self._bot_factory,
         )
 
-    async def re_start_bot(
+    async def start_bot(
         self,
         username: str,
         bot_name: str,
-        bot_config: BotConfig,
-        is_temporary: bool = False,
+        version: BotVersion,
     ) -> None:
+        """Start a specific version of the bot; this method should be initiated by user"""
+        bot_config = await self.load_bot_config(username, bot_name, version)
         log_prefix = f"[{username}][{bot_name}]"
         logger.info(f"{log_prefix} (Re)starting bot")
         is_stopped = await self.runner.stop(username, bot_name)
@@ -222,17 +219,13 @@ class TelebotConstructorApp:
             logger.info(f"{log_prefix} Bot failed to start")
             raise web.HTTPInternalServerError(reason="Failed to start bot")
         logger.info(f"{log_prefix} Bot started OK!")
-        if is_temporary:
-            await self.temporary_running_bots_store.add(username, bot_name)
-            await self.store.set_bot_not_running(username, bot_name)
-        else:
-            # NOTE: temporarily using -1 version for "last"
-            await self.store.set_bot_running_version(username, bot_name, version=-1)
-            await self.temporary_running_bots_store.remove(username, bot_name)
-            existing_bot_history = await self.bot_history_store.get_subkey(username, bot_name)
-            if existing_bot_history:
-                existing_bot_history.last_run_at = datetime.now(timezone.utc)
-                await self.bot_history_store.set_subkey(key=username, subkey=bot_name, value=existing_bot_history)
+        await self.store.set_bot_running_version(username, bot_name, version=version)
+
+        # TODO: update bot history
+        # existing_bot_history = await self.bot_history_store.get_subkey(username, bot_name)
+        # if existing_bot_history:
+        #     existing_bot_history.last_run_at = datetime.now(timezone.utc)
+        #     await self.bot_history_store.set_subkey(key=username, subkey=bot_name, value=existing_bot_history)
 
     async def create_constructor_web_app(self) -> web.Application:
         app = web.Application()
@@ -328,7 +321,7 @@ class TelebotConstructorApp:
             )
             if await self.store.is_bot_running(username, bot_name):
                 logger.info(f"Updated bot {bot_name} is running, restarting it")
-                await self.re_start_bot(username, bot_name, bot_config)
+                await self.start_bot(username, bot_name, version=-1)
 
             if existing_bot_config is None:
                 new_bot_history = BotActionsHistory(
@@ -363,7 +356,7 @@ class TelebotConstructorApp:
             """
             username = await self.authenticate(request)
             bot_name = self.parse_bot_name(request)
-            config = await self.load_bot_config(username, bot_name)
+            config = await self.load_bot_config(username, bot_name, version=-1)
             return web.json_response(text=config.model_dump_json())
 
         @routes.delete("/api/config/{bot_name}")
@@ -379,7 +372,7 @@ class TelebotConstructorApp:
             """
             username = await self.authenticate(request)
             bot_name = self.parse_bot_name(request)
-            config = await self.load_bot_config(username, bot_name)
+            config = await self.load_bot_config(username, bot_name, version=-1)
             await self.runner.stop(username, bot_name)
             await self.store.set_bot_not_running(username, bot_name)
             await self.store.remove_bot_config(username, bot_name)
@@ -409,8 +402,7 @@ class TelebotConstructorApp:
             """
             username = await self.authenticate(request)
             bot_name = self.parse_bot_name(request)
-            bot_config = await self.load_bot_config(username, bot_name)
-            await self.re_start_bot(username, bot_name, bot_config)
+            await self.start_bot(username, bot_name, version=-1)
 
             return web.Response(text="OK", status=201)
 
@@ -563,7 +555,7 @@ class TelebotConstructorApp:
             ---
             description: |
                 Start "group discovery" mode. For running bot it means just adding a few handlers,
-                otherwise a temporary bot is constructed.
+                otherwise a stub bot is run.
             produces:
             - application/json
             responses:
@@ -573,13 +565,8 @@ class TelebotConstructorApp:
             username = await self.authenticate(request)
             bot_name = self.parse_bot_name(request)
             if not await self.store.is_bot_running(username, bot_name):
-                logger.info("Group discovery mode requested but bot is not running, starting a temporary one")
-                await self.re_start_bot(
-                    username,
-                    bot_name,
-                    bot_config=(await self.load_bot_config(username, bot_name)).for_temporary_bot(),
-                    is_temporary=True,
-                )
+                logger.info("Group discovery mode requested but bot is not running, starting stub bot")
+                await self.start_bot(username, bot_name, version="stub")
             await self.group_chat_discovery_handler.start_discovery(username, bot_name)
             return web.Response(text="Group discovery started")
 
@@ -587,7 +574,7 @@ class TelebotConstructorApp:
         async def stop_discovering_group_chats(request: web.Request) -> web.Response:
             """
             ---
-            description: Stop "group discovery" mode. If a temporary bot was constructed it is stopped.
+            description: Stop "group discovery" mode. If a stub bot was used it is stopped.
             produces:
             - application/json
             responses:
@@ -597,9 +584,10 @@ class TelebotConstructorApp:
             username = await self.authenticate(request)
             bot_name = self.parse_bot_name(request)
             await self.group_chat_discovery_handler.stop_discovery(username, bot_name)
-            if await self.temporary_running_bots_store.includes(username, bot_name):
+            if await self.store.get_bot_running_version(username, bot_name) == "stub":
+                logger.info("Group discovery mode stopped and bot stub was running, stopping it")
                 await self.runner.stop(username, bot_name)
-                await self.temporary_running_bots_store.remove(username, bot_name)
+                await self.store.set_bot_not_running(username, bot_name)
             return web.Response(text="Group discovery stopped")
 
         @routes.get("/api/available-group-chats/{bot_name}")
@@ -743,49 +731,21 @@ class TelebotConstructorApp:
         """Run all bots that are stored as running; used on startup"""
 
         async def _start_stored_bots() -> None:
-            # FIXME: rewrite after temporary bot store is moved to store
             logger.info("Starting stored bots")
-            usernames = await self.store._running_version_store.list_keys()
-            logger.info("Found %s usernames with bot running flags", len(usernames))
-            for username in usernames:
-                running_bots = await self.store._running_version_store.list_subkeys(username)
-                logger.info(f"{username!r} has {len(running_bots)} running bots: {sorted(running_bots)}")
-                temp_running_bots = await self.temporary_running_bots_store.all(username)
-                if temp_running_bots:
-                    logger.info(
-                        f"{username!r} also has {len(temp_running_bots)} "
-                        + f"temporary running bots: {sorted(temp_running_bots)}"
-                    )
-                    intersection = temp_running_bots.intersection(running_bots)
-                    if intersection:
-                        logger.error(
-                            f"{username!r} has {len(intersection)} bots marked as both "
-                            + "running and temporary, removing temporary flag"
-                        )
-                    for bot_name in intersection:
-                        temp_running_bots.remove(bot_name)
-                        await self.temporary_running_bots_store.remove(username, bot_name)
+            async for username, bot_name, version in self.store.iter_running_bot_versions():
+                bot_name_full = f"{bot_name!r} (owned by {username!r}, ver {version})"
+                logger.debug(f"Starting {bot_name_full}")
+                with log_error(marker=f"Starting stored bot {bot_name_full}", logger_=logger):
+                    bot_config = await self.store.load_bot_config(username, bot_name, version)
+                    if bot_config is None:
+                        logger.error(f"{bot_name_full} is running but has no config")
+                        await self.store.set_bot_not_running(username, bot_name)
+                        continue
+                    bot_runner = await self._construct_bot(username, bot_name, bot_config)
+                    if not await self.runner.start(username=username, bot_name=bot_name, bot_runner=bot_runner):
+                        logger.error(f"{bot_name_full} failed to start")
 
-                all_bot_names = [(name, False) for name in running_bots] + [(name, True) for name in temp_running_bots]
-                for bot_name, is_temporary in all_bot_names:
-                    bot_name_full = f"{bot_name!r} (owned by {username!r}, {is_temporary=})"
-                    with log_error(marker=f"Starting stored bot {bot_name_full}", logger_=logger):
-                        logger.info(f"Loading bot config for {bot_name_full})")
-                        bot_config = await self.store.load_bot_config(username, bot_name)
-                        if bot_config is None:
-                            logger.error(f"Bot {bot_name_full} is marked as running, but has no config")
-                            if is_temporary:
-                                await self.temporary_running_bots_store.remove(username, bot_name)
-                            else:
-                                await self.store._running_version_store.remove_subkey(username, bot_name)
-                            continue
-                        if is_temporary:
-                            bot_config = bot_config.for_temporary_bot()
-                        bot_runner = await self._construct_bot(username, bot_name, bot_config)
-                        await self.runner.start(username=username, bot_name=bot_name, bot_runner=bot_runner)
-                        logger.info(f"Started {bot_name_full}")
-
-        self._start_stored_bots_task = create_error_logging_task(_start_stored_bots(), name="start stored bots")
+        self._start_stored_bots_task = create_error_logging_task(_start_stored_bots(), name="Start stored bots")
 
     async def setup(self) -> None:
         self.start_stored_bots_in_background()
