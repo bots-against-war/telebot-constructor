@@ -40,7 +40,7 @@ async def test_bot_config(
     bot_info = resp_body[bot_name]
     assert bot_info["display_name"] == "my bot"
     assert bot_info["is_running"] is False
-    assert bot_info["last_run_at"] is None
+    assert bot_info["timestamps"]["last_run_at"] is None
 
     resp = await client.post(f"/api/start/{bot_name}")
     assert resp.status == 201
