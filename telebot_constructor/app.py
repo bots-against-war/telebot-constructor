@@ -167,6 +167,16 @@ class TelebotConstructorApp:
             _bot_factory=self._bot_factory,
         )
 
+    async def stop_bot(self, username: str, bot_name: str) -> bool:
+        if await self.runner.stop(username, bot_name):
+            logger.info(f"[{username}][{bot_name}] Stopped bot")
+            await self.store.set_bot_not_running(username, bot_name)
+            await self.store.save_event(username, bot_name, event=BotStoppedEvent(username=username, event="stopped"))
+            return True
+        else:
+            logger.info(f"[{username}][{bot_name}] Attempted to stop a bot but it was not running")
+            return False
+
     async def start_bot(
         self,
         username: str,
@@ -177,10 +187,7 @@ class TelebotConstructorApp:
         bot_config = await self.load_bot_config(username, bot_name, version)
         log_prefix = f"[{username}][{bot_name}]"
         logger.info(f"{log_prefix} (Re)starting bot")
-        is_stopped = await self.runner.stop(username, bot_name)
-        logger.info(f"{log_prefix} Stopped bot {is_stopped=}")
-        if is_stopped:
-            await self.store.save_event(username, bot_name, event=BotStoppedEvent(username=username, event="stopped"))
+        await self.stop_bot(username, bot_name)
         try:
             bot_runner = await self._construct_bot(
                 username=username,
@@ -349,11 +356,7 @@ class TelebotConstructorApp:
             username = await self.authenticate(request)
             bot_name = self.parse_bot_name(request)
             config = await self.load_bot_config(username, bot_name, version=-1)
-            if await self.runner.stop(username, bot_name):
-                await self.store.save_event(
-                    username, bot_name, event=BotStoppedEvent(username=username, event="stopped")
-                )
-            await self.store.set_bot_not_running(username, bot_name)
+            await self.stop_bot(username, bot_name)
             await self.store.remove_bot_config(username, bot_name)
             await self.secret_store.remove_secret(config.token_secret_name, owner_id=username)
             await self.store.save_event(
@@ -399,11 +402,7 @@ class TelebotConstructorApp:
             """
             username = await self.authenticate(request)
             bot_name = self.parse_bot_name(request)
-            if await self.runner.stop(username=username, bot_name=bot_name):
-                await self.store.set_bot_not_running(username, bot_name)
-                await self.store.save_event(
-                    username, bot_name, event=BotStoppedEvent(username=username, event="stopped")
-                )
+            if await self.stop_bot(username, bot_name):
                 return web.Response(text="Bot stopped")
             else:
                 return web.Response(text="Bot was not running")
@@ -579,8 +578,7 @@ class TelebotConstructorApp:
             await self.group_chat_discovery_handler.stop_discovery(username, bot_name)
             if await self.store.get_bot_running_version(username, bot_name) == "stub":
                 logger.info("Group discovery mode stopped and bot stub was running, stopping it")
-                await self.runner.stop(username, bot_name)
-                await self.store.set_bot_not_running(username, bot_name)
+                await self.stop_bot(username, bot_name)
             return web.Response(text="Group discovery stopped")
 
         @routes.get("/api/available-group-chats/{bot_name}")

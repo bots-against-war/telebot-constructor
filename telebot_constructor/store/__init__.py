@@ -132,7 +132,6 @@ class TelebotConstructorStore:
         if not events:
             return None
         try:
-            print(events)
             edited_events = [e for e in events if e["event"] == "edited"]
             started_events = [e for e in events if e["event"] == "started"]
             deleted_events = [e for e in events if e["event"] == "deleted"]
