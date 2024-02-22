@@ -41,7 +41,7 @@ class TelebotConstructorStore:
             name="config",
             prefix=self.STORE_PREFIX,
             redis=redis,
-            snapshot_dumper=BotConfig.model_dump,
+            snapshot_dumper=lambda config: config.model_dump(mode="json"),
             snapshot_loader=BotConfig.model_validate,
         )
 
@@ -135,16 +135,23 @@ class TelebotConstructorStore:
         if not events:
             return None
         try:
+            print(events)
             edited_events = [e for e in events if e["event"] == "edited"]
             started_events = [e for e in events if e["event"] == "started"]
             deleted_events = [e for e in events if e["event"] == "deleted"]
             return BotTimestamps(
-                created_at=datetime.datetime.fromtimestamp(events[0]["timestamp"]),
-                last_updated_at=datetime.datetime.fromtimestamp(edited_events[-1]["timestamp"]),
+                created_at=datetime.datetime.fromtimestamp(events[0]["timestamp"], datetime.timezone.utc),
+                last_updated_at=datetime.datetime.fromtimestamp(edited_events[-1]["timestamp"], datetime.timezone.utc),
                 last_run_at=(
-                    datetime.datetime.fromtimestamp(started_events[-1]["timestamp"]) if started_events else None
+                    datetime.datetime.fromtimestamp(started_events[-1]["timestamp"], datetime.timezone.utc)
+                    if started_events
+                    else None
                 ),
-                deleted_at=datetime.datetime.fromtimestamp(deleted_events[-1]["timestamp"]) if deleted_events else None,
+                deleted_at=(
+                    datetime.datetime.fromtimestamp(deleted_events[-1]["timestamp"], datetime.timezone.utc)
+                    if deleted_events
+                    else None
+                ),
             )
         except Exception:
             logger.exception("Error constructing bot timestamps object from event log, ignoring")

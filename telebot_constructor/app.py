@@ -47,6 +47,7 @@ from telebot_constructor.store.bot_events import (
     BotDeletedEvent,
     BotEditedEvent,
     BotStartedEvent,
+    BotStoppedEvent,
 )
 from telebot_constructor.telegram_files_downloader import (
     InmemoryCacheTelegramFilesDownloader,
@@ -382,7 +383,15 @@ class TelebotConstructorApp:
             username = await self.authenticate(request)
             bot_name = self.parse_bot_name(request)
             await self.start_bot(username, bot_name, version=-1)
-
+            await self.store.save_event(
+                username,
+                bot_name,
+                event=BotStartedEvent(
+                    username=username,
+                    event="started",
+                    version=(await self.store.bot_config_version_count(username, bot_name)) - 1,
+                ),
+            )
             return web.Response(text="OK", status=201)
 
         @routes.post("/api/stop/{bot_name}")
@@ -402,6 +411,9 @@ class TelebotConstructorApp:
             bot_name = self.parse_bot_name(request)
             if await self.runner.stop(username=username, bot_name=bot_name):
                 await self.store.set_bot_not_running(username, bot_name)
+                await self.store.save_event(
+                    username, bot_name, event=BotStoppedEvent(username=username, event="stopped")
+                )
                 return web.Response(text="Bot stopped")
             else:
                 return web.Response(text="Bot was not running")

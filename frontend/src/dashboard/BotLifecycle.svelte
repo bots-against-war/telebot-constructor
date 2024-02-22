@@ -28,7 +28,7 @@
       const resp = await startBot(botName);
       if (resp.ok) {
         botInfo.is_running = true;
-        botInfo.last_run_at = new Date().toISOString();
+        botInfo.timestamps.last_run_at = new Date().toISOString();
         updateRunningStatus();
       } else {
         runningStatus = `Ошибка: ${resp.error}`;
@@ -70,7 +70,7 @@
   </div>
   <Table class="w-auto">
     <TableBody>
-      {#if botInfo.created_at}
+      {#if botInfo.timestamps.created_at}
         <TableBodyRow>
           <TableBodyCell>Создан</TableBodyCell>
           <TableBodyCell>
@@ -78,7 +78,7 @@
           </TableBodyCell>
         </TableBodyRow>
       {/if}
-      {#if botInfo.last_updated_at}
+      {#if botInfo.timestamps.last_updated_at}
         <TableBodyRow>
           <TableBodyCell>Отредактирован</TableBodyCell>
           <TableBodyCell>
@@ -86,7 +86,7 @@
           </TableBodyCell>
         </TableBodyRow>
       {/if}
-      {#if botInfo.last_run_at}
+      {#if botInfo.timestamps.last_run_at}
         <TableBodyRow>
           <TableBodyCell>Запущен</TableBodyCell>
           <TableBodyCell>

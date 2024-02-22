@@ -57,7 +57,7 @@
         <DataBadgeLoader />
       {:then botUserResult}
         {#if botUserResult.ok}
-          <div class="flex flex-row gap-2 justify-between items-center">
+          <div class="flex flex-row gap-1 items-start justify-between w-full">
             <div class="flex flex-row gap-1 items-center">
               <Avatar
                 src={botUserResult.data.userpic ? `data:image/png;base64,${botUserResult.data.userpic}` : undefined}
@@ -65,7 +65,8 @@
               />
               <span>
                 {botUserResult.data.name}
-                <span class="text-gray-500">
+                <br/>
+                <span class="text-gray-500 break-all">
                   @{botUserResult.data.username}
                 </span>
               </span>
