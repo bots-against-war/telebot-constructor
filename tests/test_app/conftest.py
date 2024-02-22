@@ -10,7 +10,6 @@ from telebot import AsyncTeleBot
 from telebot.runner import BotRunner
 from telebot.test_util import MockedAsyncTeleBot
 from telebot_components.redis_utils.emulation import RedisEmulation
-from telebot_components.stores.generic import PrefixedStore
 from telebot_components.utils.secrets import RedisSecretStore
 
 from telebot_constructor.app import TelebotConstructorApp

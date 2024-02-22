@@ -6,7 +6,6 @@ from telebot import AsyncTeleBot
 from telebot.runner import AuxBotEndpoint, BotRunner
 from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.stores.banned_users import BannedUsersStore
-from telebot_components.stores.generic import GenericStore
 from telebot_components.utils.secrets import SecretStore
 
 from telebot_constructor.bot_config import BotConfig

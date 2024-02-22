@@ -7,7 +7,7 @@ from typing import Optional
 from pydantic import BaseModel
 from telebot import types as tg
 from telebot_components.language import any_text_to_str
-from telebot_components.stores.generic import GenericStore, KeyValueStore
+from telebot_components.stores.generic import KeyValueStore
 
 from telebot_constructor.user_flow.blocks.base import UserFlowBlock
 from telebot_constructor.user_flow.types import (
