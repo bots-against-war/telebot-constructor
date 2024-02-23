@@ -1,7 +1,8 @@
 import datetime
 import logging
 import time
-from typing import AsyncGenerator, NotRequired, TypedDict
+from typing import AsyncGenerator, TypedDict
+from typing_extensions import NotRequired
 
 from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.stores.generic import (
