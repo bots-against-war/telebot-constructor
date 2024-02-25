@@ -210,6 +210,7 @@ export type DisplayName1 = string;
 export type CreatedAt = string;
 export type LastUpdatedAt = string;
 export type LastRunAt = string | null;
+export type DeletedAt = string | null;
 export type IsRunning = boolean;
 
 /**
@@ -536,9 +537,14 @@ export interface LoggedInUser {
 }
 export interface BotInfo {
   display_name: DisplayName1;
+  timestamps: BotTimestamps;
+  is_running: IsRunning;
+  [k: string]: unknown;
+}
+export interface BotTimestamps {
   created_at: CreatedAt;
   last_updated_at: LastUpdatedAt;
   last_run_at: LastRunAt;
-  is_running: IsRunning;
+  deleted_at: DeletedAt;
   [k: string]: unknown;
 }

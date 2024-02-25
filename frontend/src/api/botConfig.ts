@@ -19,8 +19,3 @@ export async function deleteBotConfig(botName: string): Promise<Result<BotConfig
   const resp = await fetch(apiUrl(`/config/${encodeURIComponent(botName)}`), { method: "DELETE" });
   return await toDataResult(resp);
 }
-
-export async function listBotConfigs(): Promise<Result<{ [key: string]: BotConfig }>> {
-  const resp = await fetch(apiUrl(`/config`));
-  return await toDataResult(resp);
-}

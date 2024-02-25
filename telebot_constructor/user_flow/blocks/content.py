@@ -7,7 +7,7 @@ from typing import Optional
 from pydantic import BaseModel
 from telebot import types as tg
 from telebot_components.language import any_text_to_str
-from telebot_components.stores.generic import GenericStore, KeyValueStore
+from telebot_components.stores.generic import KeyValueStore
 
 from telebot_constructor.user_flow.blocks.base import UserFlowBlock
 from telebot_constructor.user_flow.types import (
@@ -148,9 +148,6 @@ class ContentBlock(UserFlowBlock):
         )
 
         self._language_store = context.language_store
-
-        # the store can be shared between content blocks, so they can reuse cached file_id's
-        GenericStore.allow_duplicate_stores(prefix=self._file_id_by_hash_store._full_prefix)
         return SetupResult.empty()
 
 

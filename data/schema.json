@@ -90,6 +90,24 @@
           "title": "Display Name",
           "type": "string"
         },
+        "timestamps": {
+          "$ref": "#/$defs/BotTimestamps"
+        },
+        "is_running": {
+          "title": "Is Running",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "display_name",
+        "timestamps",
+        "is_running"
+      ],
+      "title": "BotInfo",
+      "type": "object"
+    },
+    "BotTimestamps": {
+      "properties": {
         "created_at": {
           "format": "date-time",
           "title": "Created At",
@@ -112,19 +130,26 @@
           ],
           "title": "Last Run At"
         },
-        "is_running": {
-          "title": "Is Running",
-          "type": "boolean"
+        "deleted_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Deleted At"
         }
       },
       "required": [
-        "display_name",
         "created_at",
         "last_updated_at",
         "last_run_at",
-        "is_running"
+        "deleted_at"
       ],
-      "title": "BotInfo",
+      "title": "BotTimestamps",
       "type": "object"
     },
     "BranchingFormMemberConfig": {

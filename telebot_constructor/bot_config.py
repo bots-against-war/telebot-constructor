@@ -71,8 +71,8 @@ class BotConfig(BaseModel):
     token_secret_name: str  # must correspond to a valid secret in secret store
     user_flow_config: UserFlowConfig
 
-    def for_temporary_bot(self) -> "BotConfig":
-        """Temporary bots are run with a barebones config; it is not saved to DB and is never shown to the user"""
+    def stub(self) -> "BotConfig":
+        """Stub bots are run with a barebones config; it is not saved to DB and is never shown to the user"""
         return BotConfig(
             display_name="unused",
             token_secret_name=self.token_secret_name,

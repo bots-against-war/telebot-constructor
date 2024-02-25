@@ -107,7 +107,7 @@ def assert_dict_includes(actual: dict, included: dict) -> None:
 def assert_dicts_include(actual_dicts: list[dict], required_subdicts: list[dict]) -> None:
     assert len(actual_dicts) == len(required_subdicts), (
         f"actual dicts list has mismatching size: {len(actual_dicts)} != {len(required_subdicts)}: "
-        + f"{actual_dicts = }, {required_subdicts = }"
+        + f"{actual_dicts=}, {required_subdicts=}"
     )
     for actual, required in zip(actual_dicts, required_subdicts):
         assert_dict_includes(actual, required)
