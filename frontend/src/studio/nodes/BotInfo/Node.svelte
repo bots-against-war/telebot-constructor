@@ -65,7 +65,7 @@
               />
               <span>
                 {botUserResult.data.name}
-                <br/>
+                <br />
                 <span class="text-gray-500 break-all">
                   @{botUserResult.data.username}
                 </span>
