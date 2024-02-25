@@ -2,7 +2,6 @@ import datetime
 import logging
 import time
 from typing import AsyncGenerator, TypedDict
-from typing_extensions import NotRequired
 
 from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.stores.generic import (
@@ -10,6 +9,7 @@ from telebot_components.stores.generic import (
     KeyListStore,
     KeyVersionedValueStore,
 )
+from typing_extensions import NotRequired
 
 from telebot_constructor.app_models import BotTimestamps
 from telebot_constructor.bot_config import BotConfig
