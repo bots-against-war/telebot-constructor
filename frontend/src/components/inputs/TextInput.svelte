@@ -3,6 +3,7 @@
   import InputWrapper from "./InputWrapper.svelte";
 
   export let value: string;
+  export let styleClass: string = "";
   export let label: string | undefined = undefined;
   export let required: boolean = true;
   export let placeholder: string = "";
@@ -23,6 +24,7 @@
 <InputWrapper {label} {description} {error} {required}>
   <Input
     {label}
+    class={styleClass}
     id={label}
     name={label}
     {required}
