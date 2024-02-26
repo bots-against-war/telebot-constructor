@@ -8,6 +8,15 @@
   export let placeholder: string = "";
   export let description: string | null = null;
   export let error: string | boolean | null = null;
+  export let maxLength: number = 0;
+
+  $: {
+    if (maxLength !== 0 && value.length > maxLength) {
+      error = `Текст должен быть короче ${maxLength} символов`;
+    } else {
+      error = null;
+    }
+  }
 </script>
 
 <InputWrapper {label} {description} {error} {required}>
