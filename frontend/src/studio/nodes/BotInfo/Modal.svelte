@@ -4,6 +4,7 @@
   import type { TgBotUser } from "../../../api/types";
   import ErrorBadge from "../../../components/ErrorBadge.svelte";
   import Textarea from "../../../components/inputs/Textarea.svelte";
+  import TextInput from "../../../components/inputs/TextInput.svelte";
   import { base64Image } from "../../../studio/utils";
   import { getModalCloser } from "../../../utils";
   import NodeModalBody from "../../components/NodeModalBody.svelte";
@@ -42,10 +43,7 @@
   <div class="flex flex-row gap-2 items-center">
     <Avatar src={botUser.userpic ? base64Image(botUser.userpic) : undefined} class="w-20 h-20" />
     <div class="h-full w-full flex flex-col gap-1">
-      <Input class="text-2xl" bind:value={botUser.name} />
-      {#if botUser.name.length > MAX_BOT_NAME_LEN}
-        <p class="text-red-600">Имя должно быть короче {MAX_BOT_NAME_LEN} символов</p>
-      {/if}
+      <TextInput styleClass="text-2xl" bind:value={botUser.name} maxLength={MAX_BOT_NAME_LEN} />
       <p class="text-gray-500">@{botUser.username}</p>
     </div>
   </div>
