@@ -23,7 +23,7 @@ class ConstructedBotRunner(abc.ABC):
 
 
 class PollingConstructedBotRunner(ConstructedBotRunner):
-    """For standalone deployment without wrapping WebhookApp"""
+    """Runner for standalone deployment without wrapping into WebhookApp"""
 
     def __init__(self) -> None:
         self.running_bot_tasks: dict[str, dict[str, asyncio.Task[None]]] = collections.defaultdict(dict)
@@ -82,4 +82,5 @@ class WebhookAppConstructedBotRunner(ConstructedBotRunner):
             return await self.webhook_app.remove_bot_runner(bot_runner)
 
     async def cleanup(self) -> None:
+        """All bots are cleaned up by the webhook app itweslf, no need to do anything"""
         pass

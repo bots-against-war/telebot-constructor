@@ -462,7 +462,7 @@ async def test_flow_with_nexted_menu() -> None:
 
     redis = RedisEmulation()
     secret_store = dummy_secret_store(redis)
-    username = "user123"
+    username = "user12345"
     await secret_store.save_secret(secret_name="token", secret_value="mock-token", owner_id=username)
     bot_runner = await construct_bot(
         username=username,

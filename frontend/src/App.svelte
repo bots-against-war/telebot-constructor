@@ -1,7 +1,6 @@
 <script lang="ts">
   import { links, Route, Router } from "svelte-routing";
   import { setContext } from "svelte";
-  // @ts-expect-error
   import Modal from "svelte-simple-modal";
   import DashboardLoader from "./dashboard/DashboardLoader.svelte";
   import GlobalStateProvider from "./GlobalStateProvider.svelte";

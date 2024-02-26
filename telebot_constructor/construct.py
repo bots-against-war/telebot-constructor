@@ -6,7 +6,6 @@ from telebot import AsyncTeleBot
 from telebot.runner import AuxBotEndpoint, BotRunner
 from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.stores.banned_users import BannedUsersStore
-from telebot_components.stores.generic import GenericStore
 from telebot_components.utils.secrets import SecretStore
 
 from telebot_constructor.bot_config import BotConfig
@@ -48,10 +47,6 @@ async def construct_bot(
     bot = await make_raw_bot(
         username=username, bot_config=bot_config, secret_store=secret_store, _bot_factory=_bot_factory
     )
-
-    # HACK: this allows creating multiple bots with the same prefix, which is needed for hot reloading;
-    # but this removes a failsafe mechanism and can cause problems with multiple competing bot instances
-    GenericStore.allow_duplicate_stores(prefix=bot_prefix)
 
     background_jobs: list[Coroutine[None, None, None]] = []
     aux_endpoints: list[AuxBotEndpoint] = []

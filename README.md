@@ -48,7 +48,7 @@ npm run dev
 
 4. Visit `http://localhost:8081` in the browser.
 
-### Generate TS interfaces for backend data model
+### Generate TS interfaces from backend data model
 
 On any update to Pydantic data types on backend, run
 
@@ -66,6 +66,31 @@ Check that [JSON schema](data/schema.json) and
 ```bash
 coverage run -m pytest tests -vv
 coverage html
+```
+
+#### Running linters and code checks
+
+```bash
+black .
+isort .
+flake8
+mypy
+```
+
+#### Adding/updating backend dependencies
+
+We keep two versions of the same dependency list:
+- `poetry` format (`pyproject.toml` + `poetry.lock`)
+- regular `pip`'s `requirements.txt`
+
+To modify dependency list, use
+[`poetry add depdendency@contraint`](https://python-poetry.org/docs/cli/#add).
+
+Then, re-generate `requirements.txt` with (there is a github action to check it)
+
+```shell
+poetry export -f requirements.txt --output requirements.txt 
+poetry export --only dev -f requirements.txt --output requirements.dev.txt 
 ```
 
 Then you can review `htmlcov/index.html` in browser.

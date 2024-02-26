@@ -10,7 +10,6 @@ from telebot import AsyncTeleBot
 from telebot.runner import BotRunner
 from telebot.test_util import MockedAsyncTeleBot
 from telebot_components.redis_utils.emulation import RedisEmulation
-from telebot_components.stores.generic import GenericStore
 from telebot_components.utils.secrets import RedisSecretStore
 
 from telebot_constructor.app import TelebotConstructorApp
@@ -60,14 +59,12 @@ async def constructor_app() -> AsyncGenerator[tuple[TelebotConstructorApp, aioht
                 secret_max_len=1024,
                 scope_secrets_to_user=True,
             ),
-            static_files_dir_override=Path(tempdir),
+            static_files_dir=Path(tempdir),
         )
         telebot_constructor_app._runner = MockBotRunner()
         telebot_constructor_app._bot_factory = mocked_async_telebot_factory
         await telebot_constructor_app.setup()
         aiohttp_app = await telebot_constructor_app.create_constructor_web_app()
-        GenericStore.allow_duplicate_stores("global")
-        GenericStore.allow_duplicate_stores("telebot-constructor")
         try:
             yield (telebot_constructor_app, aiohttp_app)
         finally:

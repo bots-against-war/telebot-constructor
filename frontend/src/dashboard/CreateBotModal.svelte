@@ -27,11 +27,7 @@
     userClickedCreate = true;
     let botToken = botTokenInput.trim();
     let botDisplayName = botDisplayNameInput.trim();
-    if (!botDisplayName) {
-      return;
-    }
-
-    if (!botToken) {
+    if (!botDisplayName || !botToken) {
       return;
     }
 
