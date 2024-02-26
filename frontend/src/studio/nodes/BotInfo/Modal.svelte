@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Avatar, Input } from "flowbite-svelte";
+  import { Avatar } from "flowbite-svelte";
   import { updateBotUser } from "../../../api/botUser";
   import type { TgBotUser } from "../../../api/types";
   import ErrorBadge from "../../../components/ErrorBadge.svelte";
