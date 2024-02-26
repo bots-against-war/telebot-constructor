@@ -17,6 +17,9 @@
 
   let isUpdating = false;
   let updateError: string | null = null;
+  const MAX_BOT_NAME_LEN: number = 64;
+  const MAX_BOT_SHORT_DESCRIPTION_LEN: number = 120;
+  const MAX_BOT_DESCRIPTION_LEN: number = 512;
 
   async function saveBotUser() {
     isUpdating = true;
@@ -40,15 +43,19 @@
     <Avatar src={botUser.userpic ? base64Image(botUser.userpic) : undefined} class="w-20 h-20" />
     <div class="h-full w-full flex flex-col gap-1">
       <Input class="text-2xl" bind:value={botUser.name} />
-      <p class=" text-gray-500">@{botUser.username}</p>
+      {#if botUser.name.length > MAX_BOT_NAME_LEN}
+        <p class="text-red-600">Имя должно быть короче {MAX_BOT_NAME_LEN} символов</p>
+      {/if}
+      <p class="text-gray-500">@{botUser.username}</p>
     </div>
   </div>
-  <Textarea label="О себе" description="Текст в профиле бота" required={false} bind:value={botUser.short_description} />
+  <Textarea label="О себе" description="Текст в профиле бота" required={false} bind:value={botUser.short_description} maxLength={MAX_BOT_SHORT_DESCRIPTION_LEN} />
   <Textarea
     label="Что может делать этот бот?"
     description="Текст для новых пользовательниц, перед командой /start"
     required={false}
     bind:value={botUser.description}
+    maxLength={MAX_BOT_DESCRIPTION_LEN}
   />
   {#if updateError !== null}
     <ErrorBadge title="Ошибка сохранения деталей бота" text={updateError} />
