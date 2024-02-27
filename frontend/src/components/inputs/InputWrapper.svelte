@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Label } from "flowbite-svelte";
 
-  export let label: string | undefined;
+  export let label: string | null;
   export let description: string | null = null;
   export let error: string | boolean | null = null;
   export let required: boolean = true;

@@ -3,7 +3,7 @@
   import InputWrapper from "./InputWrapper.svelte";
 
   export let value: string;
-  export let label: string | undefined = undefined;
+  export let label: string | null = null;
   export let required: boolean = true;
   export let placeholder: string = "";
   export let description: string | null = null;
