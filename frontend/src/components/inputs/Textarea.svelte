@@ -8,11 +8,11 @@
   export let placeholder: string = "";
   export let description: string | null = null;
   export let error: string | boolean | null = null;
-  export let maxLength: number = 0;
+  export let maxLength: number | null = null;
 
   $: {
-    if (maxLength !== 0 && value.length > maxLength) {
-      error = `Текст должен быть короче ${maxLength} символов`;
+    if (maxLength && value.length > maxLength) {
+      error = `Текст должен быть короче ${maxLength} символов`; // TODO add dynamic error description for '..1 симвОЛ'
     } else {
       error = null;
     }
