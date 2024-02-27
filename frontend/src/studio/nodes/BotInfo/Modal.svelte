@@ -18,9 +18,9 @@
 
   let isUpdating = false;
   let updateError: string | null = null;
-  const MAX_BOT_NAME_LEN: number = 64;
-  const MAX_BOT_SHORT_DESCRIPTION_LEN: number = 120;
-  const MAX_BOT_DESCRIPTION_LEN: number = 512;
+  const MAX_BOT_NAME_LEN = 64;
+  const MAX_BOT_SHORT_DESCRIPTION_LEN = 120;
+  const MAX_BOT_DESCRIPTION_LEN = 512;
 
   async function saveBotUser() {
     isUpdating = true;
@@ -47,7 +47,13 @@
       <p class="text-gray-500">@{botUser.username}</p>
     </div>
   </div>
-  <Textarea label="О себе" description="Текст в профиле бота" required={false} bind:value={botUser.short_description} maxLength={MAX_BOT_SHORT_DESCRIPTION_LEN} />
+  <Textarea
+    label="О себе"
+    description="Текст в профиле бота"
+    required={false}
+    bind:value={botUser.short_description}
+    maxLength={MAX_BOT_SHORT_DESCRIPTION_LEN}
+  />
   <Textarea
     label="Что может делать этот бот?"
     description="Текст для новых пользовательниц, перед командой /start"
