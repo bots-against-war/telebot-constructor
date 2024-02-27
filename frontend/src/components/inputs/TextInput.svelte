@@ -36,16 +36,9 @@
     return makeUnique("implicit-input");
   }
 
-  $: {
-    // TODO move to utils
-    if (maxLength && value.length > maxLength) {
-      error = `Текст должен быть короче ${maxLength} символов`; // TODO add dynamic error description for '..1 симвОЛ'
-    } else {
-      error = null;
-    }
-  }
+  $: localError = maxLength && value.length > maxLength ? `Текст должен быть короче ${maxLength} символов` : null; // TODO move to utils, prevent code repetition
 </script>
 
-<InputWrapper {label} {description} {error} {required}>
+<InputWrapper {label} {description} error={localError || error} {required}>
   <Input class={styleClass} {name} {required} {placeholder} bind:value color={error ? "red" : undefined} {disabled} />
 </InputWrapper>
