@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Label } from "flowbite-svelte";
 
-  export let label: string | undefined;
+  export let label: string | null;
   export let description: string | null = null;
   export let error: string | boolean | null = null;
   export let required: boolean = true;
@@ -14,7 +14,7 @@
       <span class="ml-1 text-red-700 font-bold">*</span>
     {/if}
   {/if}
-  <div class=" text-gray-600">
+  <div class="text-gray-600">
     <slot name="description">
       {#if description !== null}
         <p>
@@ -25,6 +25,6 @@
   </div>
   <slot />
   {#if typeof error == "string"}
-    <p class=" text-red-600">{error}</p>
+    <p class="text-red-600">{error}</p>
   {/if}
 </Label>
