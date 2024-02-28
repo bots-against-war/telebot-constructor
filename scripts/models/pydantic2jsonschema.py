@@ -1,4 +1,5 @@
 """Convert backend's pydantic types to JSON schema or validate that the existing JSON schema is up-to-date"""
+
 import argparse
 import json
 import sys

@@ -8,6 +8,8 @@ from pydantic import BaseModel
 from telebot import types as tg
 from telebot_components.language import any_text_to_str
 from telebot_components.stores.generic import KeyValueStore
+from telebot.types import InputMediaPhoto
+
 
 from telebot_constructor.user_flow.blocks.base import UserFlowBlock
 from telebot_constructor.user_flow.types import (
@@ -143,23 +145,26 @@ class ContentBlock(UserFlowBlock):
                         file_id = await self._file_id_by_hash_store.load(md5_hash(attachment.image))
                         if file_id is not None:
                             media_group.append(
-                                file_id,
-                                **common_kwargs if flag_content == None else None, # type: ignore
+                                InputMediaPhoto(file_id),
+                                **common_kwargs if flag_content == None else None,  # type: ignore
                             )
                             flag_content = "not send"
                         else:
-                            photo_bytes = base64.b64decode(attachment.image)
-                            media_group.append(
-                                photo_bytes,
-                                **common_kwargs if flag_content == None else None, # type: ignore
-                            )
-                            flag_content = "not send"
-                            # TODO: isn't caching without file_id
-                await context.bot.send_media_group(
-                    media_group
-                )
-                # TODO: use send_media_group, but validate constraints and reuse file_id caching logic from above
-                raise RuntimeError("Multiple attachments per message TBD")
+                            media_group = []  # clear media group, becouse one if file dosn't in cash
+                            flag_content = None
+                            for attachment in attachments:
+                                media_group.append(
+                                    InputMediaPhoto(attachment),
+                                    **common_kwargs if flag_content == None else None,  # type: ignore
+                                )
+                                flag_content = "not send"
+                            msg_group = await context.bot.send_media_group(media_group)
+                            for attachment, msg in zip(attachments, msg_group):
+                                file_id = msg.photo[0].file_id
+                                await self._file_id_by_hash_store.save(md5_hash(attachment.image), file_id)
+                            break
+
+                await context.bot.send_media_group(media_group)
 
         if self.next_block_id is not None:
             await context.enter_block(self.next_block_id, context)
