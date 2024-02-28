@@ -162,9 +162,10 @@ class ContentBlock(UserFlowBlock):
                             for attachment, msg in zip(attachments, msg_group):
                                 file_id = msg.photo[0].file_id
                                 await self._file_id_by_hash_store.save(md5_hash(attachment.image), file_id)
+                            flag_stop = True
                             break
-
-                await context.bot.send_media_group(media_group)
+                if flag_stop != True:
+                    await context.bot.send_media_group(media_group)
 
         if self.next_block_id is not None:
             await context.enter_block(self.next_block_id, context)
