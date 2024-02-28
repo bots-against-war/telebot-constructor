@@ -17,7 +17,6 @@ function getLengthError(max: number | null, length: number): string | null {
 }
 
 function defineName(label: string | null): string {
-  // TODO move to utils
   function makeUnique(value: string): string {
     const serializedValue = value.toLocaleLowerCase().replaceAll(" ", "-");
     return addCode(serializedValue);

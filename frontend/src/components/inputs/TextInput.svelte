@@ -18,5 +18,5 @@
 </script>
 
 <InputWrapper {label} {description} error={localError || error} {required}>
-  <Input class={styleClass} {name} {required} {placeholder} bind:value color={error ? "red" : undefined} {disabled} />
+  <Input class={styleClass} {name} {required} {placeholder} bind:value color={localError || error ? "red" : undefined} {disabled} />
 </InputWrapper>
