@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from telebot import AsyncTeleBot
 from telebot import types as tg
 
+from telebot_constructor.bot_config import BotConfig
 from telebot_constructor.telegram_files_downloader import TelegramFilesDownloader
 from telebot_constructor.utils.rate_limit_retry import rate_limit_retry
 
@@ -149,3 +150,13 @@ class BotInfo(BaseModel):
     display_name: str
     timestamps: BotTimestamps
     is_running: bool
+
+
+class SaveBotConfigVersionPayload(BaseModel):
+    config: BotConfig
+    version_message: Optional[str]
+    restart: bool
+
+
+class StartBotPayload(BaseModel):
+    version: int  # passed directly to versioned store, i.e. values like -1 are supported

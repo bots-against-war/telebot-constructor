@@ -23,6 +23,8 @@ from telebot_constructor.app_models import (
     BotInfo,
     BotTokenPayload,
     LoggedInUser,
+    SaveBotConfigVersionPayload,
+    StartBotPayload,
     TgBotUser,
     TgBotUserUpdate,
 )
@@ -116,7 +118,7 @@ class TelebotConstructorApp:
 
     def _validate_name(self, name: str) -> None:
         if not self.VALID_NAME_RE.match(name):
-            raise web.HTTPBadRequest(reason="Name must consist of 3-32 alphanumeric characters, hyphens and dashes")
+            raise web.HTTPBadRequest(reason="Name must consist of 3-64 alphanumeric characters, hyphens and dashes")
 
     def parse_bot_name(self, request: web.Request) -> str:
         name = request.match_info.get("bot_name")
@@ -183,7 +185,7 @@ class TelebotConstructorApp:
         bot_name: str,
         version: BotVersion,
     ) -> None:
-        """Start a specific version of the bot; this method should be initiated by user"""
+        """Start a specific version of the bot; this method should be initiated by a user"""
         bot_config = await self.load_bot_config(username, bot_name, version)
         log_prefix = f"[{username}][{bot_name}]"
         logger.info(f"{log_prefix} (Re)starting bot")
@@ -279,7 +281,7 @@ class TelebotConstructorApp:
         # bot configs CRUD
 
         @routes.post("/api/config/{bot_name}")
-        async def upsert_bot_config(request: web.Request) -> web.Response:
+        async def save_new_bot_config_version(request: web.Request) -> web.Response:
             """
             ---
             description: Create or update bot configuration
@@ -294,13 +296,12 @@ class TelebotConstructorApp:
             username = await self.authenticate(request)
             bot_name = self.parse_bot_name(request)
             existing_bot_config = await self.store.load_bot_config(username, bot_name)
-            new_bot_config = await self.parse_pydantic_model(request, BotConfig)
+            payload = await self.parse_pydantic_model(request, SaveBotConfigVersionPayload)
             await self.store.save_bot_config(
                 username,
                 bot_name,
-                config=new_bot_config,
-                # TODO: add a way to specify version message / other metadata
-                meta=BotConfigVersionMetadata(message=None),
+                config=payload.config,
+                meta=BotConfigVersionMetadata(message=payload.version_message),
             )
 
             new_bot_version_count = await self.store.bot_config_version_count(username, bot_name)
@@ -315,12 +316,11 @@ class TelebotConstructorApp:
                 ),
             )
 
-            if await self.store.is_bot_running(username, bot_name):
-                logger.info(f"Updated bot {bot_name} is running, restarting it")
+            if payload.restart:
                 await self.start_bot(username, bot_name, version=new_version)
 
             if existing_bot_config is None:
-                return web.json_response(text=new_bot_config.model_dump_json(), status=201)
+                return web.json_response(text=payload.config.model_dump_json(), status=201)
             else:
                 return web.json_response(text=existing_bot_config.model_dump_json())
 
@@ -367,7 +367,7 @@ class TelebotConstructorApp:
             return web.json_response(text=config.model_dump_json())
 
         ##################################################################################
-        # bot lifecycle control: start, stop, list running
+        # bot lifecycle control: start, stop
 
         @routes.post("/api/start/{bot_name}")
         async def start_bot(request: web.Request) -> web.Response:
@@ -384,7 +384,8 @@ class TelebotConstructorApp:
             """
             username = await self.authenticate(request)
             bot_name = self.parse_bot_name(request)
-            await self.start_bot(username, bot_name, version=-1)
+            payload = await self.parse_pydantic_model(request, StartBotPayload)
+            await self.start_bot(username, bot_name, version=payload.version)
             return web.Response(text="OK", status=201)
 
         @routes.post("/api/stop/{bot_name}")
@@ -409,6 +410,7 @@ class TelebotConstructorApp:
 
         ##################################################################################
         # bot info methods: name, running status, history, etc
+
         @routes.get("/api/info/{bot_name}")
         async def get_bot_info(request: web.Request) -> web.Response:
             """
@@ -496,6 +498,7 @@ class TelebotConstructorApp:
 
         ##################################################################################
         # endpoints for syncing constructor state with telegram
+
         @routes.get("/api/bot-user/{bot_name}")
         async def get_bot_user(request: web.Request) -> web.Response:
             """
@@ -599,9 +602,8 @@ class TelebotConstructorApp:
                 bot_name,
                 bot=await self._make_raw_bot(username, bot_name),
             )
-            chats.sort(
-                key=lambda c: c.id
-            )  # this is probably not chronological or anything, but at least it's consistent...
+            # this is probably not chronological or anything, but at least it's consistent...
+            chats.sort(key=lambda c: c.id)
             return web.json_response(data=[chat.model_dump(mode="json") for chat in chats])
 
         @routes.get("/api/group-chat/{bot_name}")
@@ -631,7 +633,8 @@ class TelebotConstructorApp:
                 return web.json_response(data=chat.model_dump(mode="json"))
 
         ##################################################################################
-        # static file routes
+        # static content routes
+
         @routes.get("/api/all-languages")
         async def all_languages(request: web.Request) -> web.Response:
             """
@@ -726,8 +729,6 @@ class TelebotConstructorApp:
         return app
 
     def start_stored_bots_in_background(self) -> None:
-        """Run all bots that are stored as running; used on startup"""
-
         async def _start_stored_bots() -> None:
             logger.info("Starting stored bots")
             async for username, bot_name, version in self.store.iter_running_bot_versions():
@@ -763,7 +764,7 @@ class TelebotConstructorApp:
     # public methods to run constructor in different scenarios
 
     async def run_polling(self, port: int) -> None:
-        """For standalone run"""
+        """Standalone run, polling is used to get updates from Telegram API"""
         logger.info("Running telebot constructor w/ polling")
         self._runner = PollingConstructedBotRunner()
         await self.setup()
@@ -781,6 +782,7 @@ class TelebotConstructorApp:
             await self.cleanup()
 
     async def setup_on_webhook_app(self, webhook_app: WebhookApp) -> None:
+        """Run constructor app as part of larger application, represented by a WebhookApp instance"""
         logger.info(f"Setting up telebot constructor web app on webhook app with base URL {webhook_app.base_url!r}")
         self._runner = WebhookAppConstructedBotRunner(webhook_app)
         await self.setup()
