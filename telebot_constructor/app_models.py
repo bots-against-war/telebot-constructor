@@ -155,7 +155,7 @@ class BotInfo(BaseModel):
 class SaveBotConfigVersionPayload(BaseModel):
     config: BotConfig
     version_message: Optional[str]
-    restart: bool
+    start: bool
 
 
 class StartBotPayload(BaseModel):

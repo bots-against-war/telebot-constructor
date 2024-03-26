@@ -25,7 +25,8 @@
   async function toggleBotRunning() {
     if (!botInfo.is_running) {
       runningStatus = "Запускаем...";
-      const resp = await startBot(botName);
+      // TODO: version selection here
+      const resp = await startBot(botName, { version: -1 });
       if (resp.ok) {
         botInfo.is_running = true;
         botInfo.timestamps.last_run_at = new Date().toISOString();

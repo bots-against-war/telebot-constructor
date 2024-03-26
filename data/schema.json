@@ -1311,15 +1311,15 @@
           ],
           "title": "Version Message"
         },
-        "restart": {
-          "title": "Restart",
+        "start": {
+          "title": "Start",
           "type": "boolean"
         }
       },
       "required": [
         "config",
         "version_message",
-        "restart"
+        "start"
       ],
       "title": "SaveBotConfigVersionPayload",
       "type": "object"

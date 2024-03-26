@@ -213,7 +213,7 @@ export type LastRunAt = string | null;
 export type DeletedAt = string | null;
 export type IsRunning = boolean;
 export type VersionMessage = string | null;
-export type Restart = boolean;
+export type Start = boolean;
 export type Version = number;
 
 /**
@@ -556,7 +556,7 @@ export interface BotTimestamps {
 export interface SaveBotConfigVersionPayload {
   config: BotConfig;
   version_message: VersionMessage;
-  restart: Restart;
+  start: Start;
   [k: string]: unknown;
 }
 export interface StartBotPayload {

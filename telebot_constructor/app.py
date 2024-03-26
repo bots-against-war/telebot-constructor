@@ -316,7 +316,7 @@ class TelebotConstructorApp:
                 ),
             )
 
-            if payload.restart:
+            if payload.start:
                 await self.start_bot(username, bot_name, version=new_version)
 
             if existing_bot_config is None:

@@ -85,7 +85,7 @@
         ]),
       },
     };
-    const res1 = await saveBotConfig(botName, config);
+    const res1 = await saveBotConfig(botName, { config, start: false, version_message: null });
     isCreating = false;
 
     if (res1.ok) {

@@ -1,9 +1,11 @@
-import { toDataResult, type Result, toTrivialResult } from "../utils";
+import { type Result, toTrivialResult } from "../utils";
 import { apiUrl } from "./config";
+import type { StartBotPayload } from "./types";
 
-export async function startBot(botName: string): Promise<Result<null>> {
+export async function startBot(botName: string, payload: StartBotPayload): Promise<Result<null>> {
   const resp = await fetch(apiUrl(`/start/${encodeURIComponent(botName)}`), {
     method: "POST",
+    body: JSON.stringify(payload),
   });
   return await toTrivialResult(resp);
 }
