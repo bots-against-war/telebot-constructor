@@ -212,6 +212,9 @@ export type LastUpdatedAt = string;
 export type LastRunAt = string | null;
 export type DeletedAt = string | null;
 export type IsRunning = boolean;
+export type VersionMessage = string | null;
+export type Restart = boolean;
+export type Version = number;
 
 /**
  * Temporary class to pack several models into one schema; not used directly by frontend code
@@ -225,6 +228,8 @@ export interface BackendDataModels {
   base_form_field_config: BaseFormFieldConfig;
   logged_in_user: LoggedInUser;
   bot_info: BotInfo;
+  save_bot_config_version_payload: SaveBotConfigVersionPayload;
+  start_bot_payload: StartBotPayload;
   [k: string]: unknown;
 }
 export interface BotConfig {
@@ -546,5 +551,15 @@ export interface BotTimestamps {
   last_updated_at: LastUpdatedAt;
   last_run_at: LastRunAt;
   deleted_at: DeletedAt;
+  [k: string]: unknown;
+}
+export interface SaveBotConfigVersionPayload {
+  config: BotConfig;
+  version_message: VersionMessage;
+  restart: Restart;
+  [k: string]: unknown;
+}
+export interface StartBotPayload {
+  version: Version;
   [k: string]: unknown;
 }

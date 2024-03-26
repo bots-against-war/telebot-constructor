@@ -1295,6 +1295,35 @@
       "title": "RegexMatchEntryPoint",
       "type": "object"
     },
+    "SaveBotConfigVersionPayload": {
+      "properties": {
+        "config": {
+          "$ref": "#/$defs/BotConfig"
+        },
+        "version_message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Version Message"
+        },
+        "restart": {
+          "title": "Restart",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "config",
+        "version_message",
+        "restart"
+      ],
+      "title": "SaveBotConfigVersionPayload",
+      "type": "object"
+    },
     "SingleSelectFormFieldConfig": {
       "properties": {
         "id": {
@@ -1369,6 +1398,19 @@
         "invalid_enum_error_msg"
       ],
       "title": "SingleSelectFormFieldConfig",
+      "type": "object"
+    },
+    "StartBotPayload": {
+      "properties": {
+        "version": {
+          "title": "Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "version"
+      ],
+      "title": "StartBotPayload",
       "type": "object"
     },
     "TgBotCommand": {
@@ -1732,6 +1774,12 @@
     },
     "bot_info": {
       "$ref": "#/$defs/BotInfo"
+    },
+    "save_bot_config_version_payload": {
+      "$ref": "#/$defs/SaveBotConfigVersionPayload"
+    },
+    "start_bot_payload": {
+      "$ref": "#/$defs/StartBotPayload"
     }
   },
   "required": [
@@ -1742,7 +1790,9 @@
     "language_data",
     "base_form_field_config",
     "logged_in_user",
-    "bot_info"
+    "bot_info",
+    "save_bot_config_version_payload",
+    "start_bot_payload"
   ],
   "title": "BackendDataModels",
   "type": "object"
