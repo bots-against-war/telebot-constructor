@@ -99,6 +99,8 @@ class ContentBlock(UserFlowBlock):
 
             contents_validated.append(c)
 
+        self.contents = contents_validated
+
     # TODO:
     # - validation on input (text length and markup validity, content base64 encoding, etc)
     # - splitting long text content into smaller content chunks to respect telegram's restrictions
