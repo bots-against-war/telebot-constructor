@@ -2,11 +2,11 @@ import base64
 import datetime
 import enum
 import hashlib
+import logging
 from typing import Optional
 
 from pydantic import BaseModel
 from telebot import types as tg
-from telebot.types import InputMediaPhoto
 from telebot_components.language import any_text_to_str
 from telebot_components.stores.generic import KeyValueStore
 
@@ -22,6 +22,8 @@ from telebot_constructor.utils.pydantic import (
     ExactlyOneNonNullFieldModel,
     LocalizableText,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class ContentTextMarkup(enum.Enum):
@@ -46,6 +48,10 @@ class ContentText(BaseModel):
 
 class ContentBlockContentAttachment(ExactlyOneNonNullFieldModel):
     image: Optional[str]  # base64-encoded
+
+    def content(self) -> str:
+        # runtime guarantee that at least one (now it's always image) option is non-None
+        return self.image  # type: ignore
 
 
 class Content(BaseModel):
@@ -93,78 +99,84 @@ class ContentBlock(UserFlowBlock):
         language = (
             await self._language_store.get_user_language(context.user) if self._language_store is not None else None
         )
-        # TODO: deal with errors?
         for content in self.contents:
-            common_kwargs = {
-                "chat_id": chat_id,
-                "reply_markup": tg.ReplyKeyboardRemove(),
-                "parse_mode": content.text.markup.as_parse_mode() if content.text is not None else None,
-            }
+            parse_mode = content.text.markup.as_parse_mode() if content.text is not None else None
             if not content.attachments:
                 if content.text is not None:
                     await context.bot.send_message(
+                        chat_id=chat_id,
                         text=any_text_to_str(content.text.text, language),
-                        **common_kwargs,  # type: ignore
+                        parse_mode=parse_mode,
+                        reply_markup=tg.ReplyKeyboardRemove(),
                     )
                 else:
-                    # TODO: empty block (no text, no attachments) should be a validation error
-                    pass
+                    logger.error("Empty content block: no text and no attachments!")
             elif len(content.attachments) == 1:
-                common_kwargs = common_kwargs.copy()
-                if content.text is not None:
-                    common_kwargs["caption"] = any_text_to_str(content.text.text, language)
                 attachment = content.attachments[0]
-                # TODO: generalize on other attachment types
                 if attachment.image is not None:
                     file_id = await self._file_id_by_hash_store.load(md5_hash(attachment.image))
-                    if file_id is not None:
-                        await context.bot.send_photo(
-                            photo=file_id,
-                            **common_kwargs,  # type: ignore
-                        )
-                    else:
-                        photo_bytes = base64.b64decode(attachment.image)
-                        msg = await context.bot.send_photo(
-                            photo=photo_bytes,
-                            **common_kwargs,  # type: ignore
-                        )
-                        if msg.photo is not None:
-                            file_id = msg.photo[0].file_id
+                    message = await context.bot.send_photo(
+                        chat_id=chat_id,
+                        photo=file_id if file_id is not None else base64.b64decode(attachment.image),
+                        caption=any_text_to_str(content.text.text, language) if content.text is not None else None,
+                        parse_mode=parse_mode if content.text is not None else None,
+                        reply_markup=tg.ReplyKeyboardRemove(),
+                    )
+                    if file_id is None:
+                        if message.photo is not None:
+                            file_id = message.photo[0].file_id
                             await self._file_id_by_hash_store.save(md5_hash(attachment.image), file_id)
-            else:
-                common_kwargs = common_kwargs.copy()
-                if content.text is not None:
-                    common_kwargs["caption"] = any_text_to_str(content.text.text, language)
-                attachments = content.attachments
-                media_group = []
-                flag_content = None
-                for attachment in attachments:
-                    # TODO: generalize on other attachment types
-                    if attachment.image is not None:
-                        file_id = await self._file_id_by_hash_store.load(md5_hash(attachment.image))
-                        if file_id is not None:
-                            media_group.append(
-                                InputMediaPhoto(file_id),
-                                **common_kwargs if flag_content == None else None,  # type: ignore
-                            )
-                            flag_content = "not send"
                         else:
-                            media_group = []  # clear media group, becouse one if file dosn't in cash
-                            flag_content = None
-                            for attachment in attachments:
-                                media_group.append(
-                                    InputMediaPhoto(attachment),
-                                    **common_kwargs if flag_content == None else None,  # type: ignore
-                                )
-                                flag_content = "not send"
-                            msg_group = await context.bot.send_media_group(media_group)
-                            for attachment, msg in zip(attachments, msg_group):
-                                file_id = msg.photo[0].file_id
-                                await self._file_id_by_hash_store.save(md5_hash(attachment.image), file_id)
-                            flag_stop = True
-                            break
-                if flag_stop != True:
-                    await context.bot.send_media_group(media_group)
+                            logger.error(
+                                "Telegram unexpectedly returned message without photo on send_photo, "
+                                + "unable to fill the cache"
+                            )
+                else:
+                    logger.error("Unexpected attachment type; only images are supported for now")
+            else:  # multiple attachments case
+                logger.debug("Sending message with multiple attachments")
+                attachment_md5_hashes = [md5_hash(att.content()) for att in content.attachments]
+                cached_file_ids = [await self._file_id_by_hash_store.load(att_md5) for att_md5 in attachment_md5_hashes]
+                logger.debug(f"Found file ids in cache (None = cache miss): {cached_file_ids}")
+
+                media = [
+                    (
+                        tg.InputMediaPhoto(maybe_file_id)  # type: ignore
+                        if maybe_file_id is not None
+                        else tg.InputMediaPhoto(base64.b64decode(attachment.image))  # type: ignore
+                    )
+                    for maybe_file_id, attachment in zip(cached_file_ids, content.attachments)
+                ]
+                # for media groups, text content is put to first media's caption
+                if content.text is not None:
+                    media[0].caption = any_text_to_str(content.text.text, language)
+                    media[0].parse_mode = parse_mode
+                    # NOTE: reply markup is not available for media groups, so we don't send it
+
+                messages = await context.bot.send_media_group(
+                    chat_id=chat_id,
+                    media=list(media),  # <- hack to get over bad upstream lib typing
+                )
+                logger.debug(f"Sent media group, received messages: {messages}")
+
+                if len(messages) != len(content.attachments):
+                    logger.error(
+                        "send_media_group returned unexpected number of messages "
+                        + f"({len(messages) = }, {len(content.attachments) = })"
+                    )
+                for message, cached_file_id, attachment_md5 in zip(messages, cached_file_ids, attachment_md5_hashes):
+                    if cached_file_id is not None:
+                        continue
+                    if message.photo is None:
+                        logger.error(
+                            "Telegram unexpectedly returned message without photo on send_photo, "
+                            + "unable to fill the cache, ignoring it"
+                        )
+                        continue
+
+                    file_id = message.photo[0].file_id
+                    logger.debug(f"Saving attachment file id to cache: {attachment_md5} -> {file_id}")
+                    await self._file_id_by_hash_store.save(attachment_md5, file_id)
 
         if self.next_block_id is not None:
             await context.enter_block(self.next_block_id, context)
