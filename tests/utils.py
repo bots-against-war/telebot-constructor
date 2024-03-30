@@ -31,12 +31,14 @@ def tg_update_message_to_bot(
             message_id=1,
             from_user=tg.User(id=user_id, is_bot=False, first_name=first_name),
             date=int(time.time()),
-            chat=tg.Chat(id=user_id, type="private", first_name=first_name)
-            if group_chat_id is None
-            else tg.Chat(
-                id=group_chat_id,
-                title="group chat",
-                type="supergroup",
+            chat=(
+                tg.Chat(id=user_id, type="private", first_name=first_name)
+                if group_chat_id is None
+                else tg.Chat(
+                    id=group_chat_id,
+                    title="group chat",
+                    type="supergroup",
+                )
             ),
             content_type="text",
             options={"text": text},

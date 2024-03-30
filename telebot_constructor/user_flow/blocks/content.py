@@ -2,11 +2,12 @@ import base64
 import datetime
 import enum
 import hashlib
-from typing import Optional
+import logging
+from typing import Any, Optional
 
 from pydantic import BaseModel
 from telebot import types as tg
-from telebot_components.language import any_text_to_str
+from telebot_components.language import any_text_to_str, vaildate_singlelang_text
 from telebot_components.stores.generic import KeyValueStore
 
 from telebot_constructor.user_flow.blocks.base import UserFlowBlock
@@ -16,11 +17,13 @@ from telebot_constructor.user_flow.types import (
     UserFlowContext,
     UserFlowSetupContext,
 )
-from telebot_constructor.utils import without_nones
+from telebot_constructor.utils import iter_batches, without_nones
 from telebot_constructor.utils.pydantic import (
     ExactlyOneNonNullFieldModel,
     LocalizableText,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class ContentTextMarkup(enum.Enum):
@@ -46,6 +49,10 @@ class ContentText(BaseModel):
 class ContentBlockContentAttachment(ExactlyOneNonNullFieldModel):
     image: Optional[str]  # base64-encoded
 
+    def content(self) -> str:
+        # runtime guarantee that at least one (now it's always image) option is non-None
+        return self.image  # type: ignore
+
 
 class Content(BaseModel):
     text: Optional[ContentText]
@@ -64,9 +71,35 @@ class ContentBlock(UserFlowBlock):
     def possible_next_block_ids(self) -> list[str]:
         return without_nones([self.next_block_id])
 
-    # TODO:
-    # - validation on input (text length and markup validity, content base64 encoding, etc)
-    # - splitting long text content into smaller content chunks to respect telegram's restrictions
+    def model_post_init(self, __context: Any) -> None:
+        if not self.contents:
+            raise ValueError("Block must contain at least one content unit")
+        empty_contents = [c for c in self.contents if c.text is None and not c.attachments]
+        if empty_contents:
+            raise ValueError(f"Block contains empty content unit(s): {len(empty_contents)}")
+        contents_validated: list[Content] = []
+        for c in self.contents:
+            # checking for too long captions (too long texts are split automatically by telebot library)
+            # limit is 1024 symbols, see docs: https://core.telegram.org/bots/api#inputmediaphoto
+            # note that we are here conservative as we includes e.g. HTML markup in the symbol bugdet
+            if c.attachments and c.text is not None and len(c.text.text) > 1024:
+                # splitting long text and attachments into separate units
+                contents_validated.append(Content(text=c.text, attachments=[]))
+                c = Content(text=None, attachments=c.attachments)
+
+            # checking for too many attachments
+            if len(c.attachments) > 10:
+                batches = list(iter_batches(c.attachments, size=10))
+                contents_validated.append(Content(text=c.text, attachments=batches[0]))
+                contents_validated.extend(Content(text=None, attachments=batch) for batch in batches[1:-1])
+                c = Content(text=None, attachments=batches[-1])
+
+            # when we support multiple attachment types, we should also check attachment compatibility
+            # (e.g. photo + audio is disallowed)
+
+            contents_validated.append(c)
+
+        self.contents = contents_validated
 
     @classmethod
     def simple_text(
@@ -92,47 +125,84 @@ class ContentBlock(UserFlowBlock):
         language = (
             await self._language_store.get_user_language(context.user) if self._language_store is not None else None
         )
-        # TODO: deal with errors?
         for content in self.contents:
-            common_kwargs = {
-                "chat_id": chat_id,
-                "reply_markup": tg.ReplyKeyboardRemove(),
-                "parse_mode": content.text.markup.as_parse_mode() if content.text is not None else None,
-            }
+            parse_mode = content.text.markup.as_parse_mode() if content.text is not None else None
             if not content.attachments:
                 if content.text is not None:
                     await context.bot.send_message(
+                        chat_id=chat_id,
                         text=any_text_to_str(content.text.text, language),
-                        **common_kwargs,  # type: ignore
+                        parse_mode=parse_mode,
+                        reply_markup=tg.ReplyKeyboardRemove(),
                     )
                 else:
-                    # TODO: empty block (no text, no attachments) should be a validation error
-                    pass
+                    logger.error("Empty content block: no text and no attachments!")
             elif len(content.attachments) == 1:
-                common_kwargs = common_kwargs.copy()
-                if content.text is not None:
-                    common_kwargs["caption"] = any_text_to_str(content.text.text, language)
                 attachment = content.attachments[0]
-                # TODO: generalize on other attachment types
                 if attachment.image is not None:
                     file_id = await self._file_id_by_hash_store.load(md5_hash(attachment.image))
-                    if file_id is not None:
-                        await context.bot.send_photo(
-                            photo=file_id,
-                            **common_kwargs,  # type: ignore
-                        )
-                    else:
-                        photo_bytes = base64.b64decode(attachment.image)
-                        msg = await context.bot.send_photo(
-                            photo=photo_bytes,
-                            **common_kwargs,  # type: ignore
-                        )
-                        if msg.photo is not None:
-                            file_id = msg.photo[0].file_id
+                    message = await context.bot.send_photo(
+                        chat_id=chat_id,
+                        photo=file_id if file_id is not None else base64.b64decode(attachment.image),
+                        caption=any_text_to_str(content.text.text, language) if content.text is not None else None,
+                        parse_mode=parse_mode if content.text is not None else None,
+                        reply_markup=tg.ReplyKeyboardRemove(),
+                    )
+                    if file_id is None:
+                        if message.photo is not None:
+                            file_id = message.photo[0].file_id
                             await self._file_id_by_hash_store.save(md5_hash(attachment.image), file_id)
-            else:
-                # TODO: use send_media_group, but validate constraints and reuse file_id caching logic from above
-                raise RuntimeError("Multiple attachments per message TBD")
+                        else:
+                            logger.error(
+                                "Telegram unexpectedly returned message without photo on send_photo, "
+                                + "unable to fill the cache"
+                            )
+                else:
+                    logger.error("Unexpected attachment type; only images are supported for now")
+            else:  # multiple attachments case
+                logger.debug("Sending message with multiple attachments")
+                attachment_md5_hashes = [md5_hash(att.content()) for att in content.attachments]
+                cached_file_ids = [await self._file_id_by_hash_store.load(att_md5) for att_md5 in attachment_md5_hashes]
+                logger.debug(f"Found file ids in cache (None = cache miss): {cached_file_ids}")
+
+                media = [
+                    (
+                        tg.InputMediaPhoto(maybe_file_id)  # type: ignore
+                        if maybe_file_id is not None
+                        else tg.InputMediaPhoto(base64.b64decode(attachment.image))  # type: ignore
+                    )
+                    for maybe_file_id, attachment in zip(cached_file_ids, content.attachments)
+                ]
+                # for media groups, text content is put to first media's caption
+                if content.text is not None:
+                    media[0].caption = any_text_to_str(content.text.text, language)
+                    media[0].parse_mode = parse_mode
+                    # NOTE: reply markup is not available for media groups, so we don't send it
+
+                messages = await context.bot.send_media_group(
+                    chat_id=chat_id,
+                    media=list(media),  # <- hack to get over bad upstream lib typing
+                )
+                logger.debug(f"Sent media group, received messages: {messages}")
+
+                if len(messages) != len(content.attachments):
+                    logger.error(
+                        "send_media_group returned unexpected number of messages "
+                        + f"({len(messages) = }, {len(content.attachments) = })"
+                    )
+                for message, cached_file_id, attachment_md5 in zip(messages, cached_file_ids, attachment_md5_hashes):
+                    if cached_file_id is not None:
+                        continue
+                    if message.photo is None:
+                        logger.error(
+                            "Telegram unexpectedly returned message without photo on send_photo, "
+                            + "unable to fill the cache, ignoring it"
+                        )
+                        continue
+
+                    file_id = message.photo[0].file_id
+                    logger.debug(f"Saving attachment file id to cache: {attachment_md5} -> {file_id}")
+                    await self._file_id_by_hash_store.save(attachment_md5, file_id)
 
         if self.next_block_id is not None:
             await context.enter_block(self.next_block_id, context)
@@ -148,6 +218,15 @@ class ContentBlock(UserFlowBlock):
         )
 
         self._language_store = context.language_store
+        # validating texts against language store
+        for c in self.contents:
+            if c.text is None:
+                continue
+            if self._language_store is not None:
+                self._language_store.validate_multilang(c.text.text)
+            else:
+                vaildate_singlelang_text(c.text.text)
+
         return SetupResult.empty()
 
 
