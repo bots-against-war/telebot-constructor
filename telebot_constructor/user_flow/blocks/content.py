@@ -101,10 +101,6 @@ class ContentBlock(UserFlowBlock):
 
         self.contents = contents_validated
 
-    # TODO:
-    # - validation on input (text length and markup validity, content base64 encoding, etc)
-    # - splitting long text content into smaller content chunks to respect telegram's restrictions
-
     @classmethod
     def simple_text(
         cls, block_id: str, message_text: LocalizableText, next_block_id: Optional[UserFlowBlockId]
