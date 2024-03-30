@@ -3,11 +3,11 @@ import datetime
 import enum
 import hashlib
 import logging
-from typing import Optional
+from typing import Any, Optional
 
 from pydantic import BaseModel
 from telebot import types as tg
-from telebot_components.language import any_text_to_str
+from telebot_components.language import any_text_to_str, vaildate_singlelang_text
 from telebot_components.stores.generic import KeyValueStore
 
 from telebot_constructor.user_flow.blocks.base import UserFlowBlock
@@ -17,7 +17,7 @@ from telebot_constructor.user_flow.types import (
     UserFlowContext,
     UserFlowSetupContext,
 )
-from telebot_constructor.utils import without_nones
+from telebot_constructor.utils import iter_batches, without_nones
 from telebot_constructor.utils.pydantic import (
     ExactlyOneNonNullFieldModel,
     LocalizableText,
@@ -70,6 +70,34 @@ class ContentBlock(UserFlowBlock):
 
     def possible_next_block_ids(self) -> list[str]:
         return without_nones([self.next_block_id])
+
+    def model_post_init(self, __context: Any) -> None:
+        if not self.contents:
+            raise ValueError("Block must contain at least one content unit")
+        empty_contents = [c for c in self.contents if c.text is None and not c.attachments]
+        if empty_contents:
+            raise ValueError(f"Block contains empty content unit(s): {len(empty_contents)}")
+        contents_validated: list[Content] = []
+        for c in self.contents:
+            # checking for too long captions (too long texts are split automatically by telebot library)
+            # limit is 1024 symbols, see docs: https://core.telegram.org/bots/api#inputmediaphoto
+            # note that we are here conservative as we includes e.g. HTML markup in the symbol bugdet
+            if c.attachments and c.text is not None and len(c.text.text) > 1024:
+                # splitting long text and attachments into separate units
+                contents_validated.append(Content(text=c.text, attachments=[]))
+                c = Content(text=None, attachments=c.attachments)
+
+            # checking for too many attachments
+            if len(c.attachments) > 10:
+                batches = list(iter_batches(c.attachments, size=10))
+                contents_validated.append(Content(text=c.text, attachments=batches[0]))
+                contents_validated.extend(Content(text=None, attachments=batch) for batch in batches[1:-1])
+                c = Content(text=None, attachments=batches[-1])
+
+            # when we support multiple attachment types, we should also check attachment compatibility
+            # (e.g. photo + audio is disallowed)
+
+            contents_validated.append(c)
 
     # TODO:
     # - validation on input (text length and markup validity, content base64 encoding, etc)
@@ -192,6 +220,15 @@ class ContentBlock(UserFlowBlock):
         )
 
         self._language_store = context.language_store
+        # validating texts against language store
+        for c in self.contents:
+            if c.text is None:
+                continue
+            if self._language_store is not None:
+                self._language_store.validate_multilang(c.text.text)
+            else:
+                vaildate_singlelang_text(c.text.text)
+
         return SetupResult.empty()
 
 
