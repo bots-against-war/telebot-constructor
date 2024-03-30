@@ -301,3 +301,60 @@ async def test_multiple_photos() -> None:
     assert media_group_kwargs["media"][1].media == "file-id-2"
     assert media_group_kwargs["media"][2].media == "new-file-id"
     bot_2.method_calls.clear()
+
+
+def test_content_block_separates_too_long_caption() -> None:
+    block = ContentBlock(
+        block_id="content",
+        contents=[
+            Content(
+                text=ContentText(
+                    text="this caption is too long " * 100,
+                    markup=ContentTextMarkup.HTML,
+                ),
+                attachments=[
+                    ContentBlockContentAttachment(image=base64.b64encode(b"stuff").decode()),
+                ],
+            )
+        ],
+        next_block_id=None,
+    )
+
+    assert len(block.contents) == 2
+    text_content = block.contents[0]
+    assert not text_content.attachments
+    assert text_content.text is not None
+    assert text_content.text.text == "this caption is too long " * 100
+    img_content = block.contents[1]
+    assert img_content.text is None
+    assert len(img_content.attachments) == 1
+
+
+def test_content_block_splits_too_many_attachments() -> None:
+    block = ContentBlock(
+        block_id="content",
+        contents=[
+            Content(
+                text=ContentText(
+                    text="this caption is too long " * 100,
+                    markup=ContentTextMarkup.HTML,
+                ),
+                attachments=[ContentBlockContentAttachment(image=f"stuff-{idx}") for idx in range(15)],
+            )
+        ],
+        next_block_id=None,
+    )
+
+    assert len(block.contents) == 3
+    text_content = block.contents[0]
+    assert not text_content.attachments
+    assert text_content.text is not None
+    assert text_content.text.text == "this caption is too long " * 100
+
+    img_content_1 = block.contents[1]
+    assert img_content_1.text is None
+    assert len(img_content_1.attachments) == 10
+
+    img_content_2 = block.contents[2]
+    assert img_content_2.text is None
+    assert len(img_content_2.attachments) == 5
