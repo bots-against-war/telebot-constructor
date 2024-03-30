@@ -68,7 +68,8 @@ class BaseFormFieldConfig(BaseModel, abc.ABC):
         )
 
     @abc.abstractmethod
-    def construct_field(self) -> FormField: ...
+    def construct_field(self) -> FormField:
+        ...
 
 
 class PlainTextFormFieldConfig(BaseFormFieldConfig):

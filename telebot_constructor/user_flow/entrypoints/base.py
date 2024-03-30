@@ -14,10 +14,12 @@ class UserFlowEntryPoint(BaseModel, abc.ABC):
         return f'Entrypoint "{self.entrypoint_id}" ({self.__class__.__name__})'
 
     @abc.abstractmethod
-    async def setup(self, context: UserFlowSetupContext) -> SetupResult: ...
+    async def setup(self, context: UserFlowSetupContext) -> SetupResult:
+        ...
 
     def is_catch_all(self) -> bool:
         return False
 
     @abc.abstractmethod
-    def possible_next_block_ids(self) -> list[str]: ...
+    def possible_next_block_ids(self) -> list[str]:
+        ...
