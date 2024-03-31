@@ -20,13 +20,13 @@ from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.utils.secrets import SecretStore
 
 from telebot_constructor.app_models import (
-    BotInfo,
     BotTokenPayload,
     LoggedInUser,
     SaveBotConfigVersionPayload,
     StartBotPayload,
     TgBotUser,
     TgBotUserUpdate,
+    UpdateBotDisplayNamePayload,
 )
 from telebot_constructor.auth.auth import Auth
 from telebot_constructor.bot_config import BotConfig
@@ -319,6 +319,9 @@ class TelebotConstructorApp:
                 ),
             )
 
+            if payload.display_name is not None:
+                await self.store.save_bot_display_name(username, bot_name, payload.display_name)
+
             if payload.start:
                 await self.start_bot(username, bot_name, version=new_version)
 
@@ -414,6 +417,29 @@ class TelebotConstructorApp:
         ##################################################################################
         # bot info methods: name, running status, history, etc
 
+        @routes.put("/api/display-name/{bot_name}")
+        async def update_bot_display_name(request: web.Request) -> web.Response:
+            """
+            ---
+            description: Update bot's display name, i.e. the one used in constructor web UI.
+            produces:
+            - application/json
+            responses:
+                "200":
+                    description: Name changed OK
+                "404":
+                    description: Bot name does not exist
+            """
+            username = await self.authenticate(request)
+            bot_name = self.parse_bot_name(request)
+            payload = await self.parse_pydantic_model(request, UpdateBotDisplayNamePayload)
+            if not await self.store.is_bot_exists(username, bot_name):
+                raise web.HTTPNotFound(reason="Bot id not found")
+            if await self.store.save_bot_display_name(username, bot_name, payload.new_display_name):
+                return web.Response()
+            else:
+                raise web.HTTPInternalServerError(reason="Failed to save bot display name")
+
         @routes.get("/api/info/{bot_name}")
         async def get_bot_info(request: web.Request) -> web.Response:
             """
@@ -429,18 +455,11 @@ class TelebotConstructorApp:
             """
             username = await self.authenticate(request)
             bot_name = self.parse_bot_name(request)
-            timestamps = await self.store.load_timestamps(username, bot_name)
-            if timestamps is None:
-                raise web.HTTPNotFound(reason=f"Not found info about bot name {bot_name!r}")
+            info = await self.store.load_bot_info(username, bot_name)
+            if info is None:
+                raise web.HTTPNotFound(reason="Bot id not found")
             else:
-                bot_config = await self.load_bot_config(username, bot_name, version=-1)
-                bot_is_running = await self.store.is_bot_running(username, bot_name)
-                bot_info = BotInfo(
-                    display_name=bot_config.display_name,
-                    timestamps=timestamps,
-                    is_running=bot_is_running,
-                )
-                return web.json_response(text=bot_info.model_dump_json())
+                return web.json_response(text=info.model_dump_json())
 
         @routes.get("/api/info")
         async def list_bot_infos(request: web.Request) -> web.Response:
@@ -456,21 +475,14 @@ class TelebotConstructorApp:
             username = await self.authenticate(request)
             bot_ids = await self.store.list_bot_ids(username)
             logger.info(f"Bots owned by {username}: {bot_ids}")
-            bot_infos: dict[str, BotInfo] = {}
-            for bot_id in bot_ids:
-                bot_config = await self.store.load_bot_config(username, bot_id)
-                if bot_config is None:
-                    continue
-                timestamps = await self.store.load_timestamps(username, bot_id)
-                if timestamps is None:
-                    continue
-                is_running = await self.store.is_bot_running(username, bot_id)
-                bot_infos[bot_id] = BotInfo(
-                    display_name=bot_config.display_name,
-                    is_running=is_running,
-                    timestamps=timestamps,
+            maybe_bot_infos = {bot_id: await self.store.load_bot_info(username, bot_id) for bot_id in bot_ids}
+            bot_infos = {bot_id: info for bot_id, info in maybe_bot_infos.items() if info is not None}
+            if len(maybe_bot_infos) != len(bot_infos):
+                missing_info_bot_ids = set(maybe_bot_infos.keys()).difference(bot_infos.keys())
+                logger.error(
+                    "Failed to construct bot infos for some of the user's bots, will ignore them: "
+                    + f"{missing_info_bot_ids}"
                 )
-
             return web.json_response(
                 data={name: bot_info.model_dump(mode="json") for name, bot_info in bot_infos.items()}
             )

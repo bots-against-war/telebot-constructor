@@ -1,7 +1,7 @@
 import copy
 from typing import Optional
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 from telebot_constructor.user_flow import UserFlow
 from telebot_constructor.user_flow.blocks.base import UserFlowBlock
@@ -67,14 +67,15 @@ class UserFlowConfig(BaseModel):
 
 
 class BotConfig(BaseModel):
-    display_name: str  # for constructor UI
     token_secret_name: str  # must correspond to a valid secret in secret store
     user_flow_config: UserFlowConfig
+
+    # only for backwards compatibility with older config, to be removed
+    display_name: Optional[str] = Field(default=None, exclude=True)
 
     def stub(self) -> "BotConfig":
         """Stub bots are run with a barebones config; it is not saved to DB and is never shown to the user"""
         return BotConfig(
-            display_name="unused",
             token_secret_name=self.token_secret_name,
             user_flow_config=UserFlowConfig(entrypoints=[], blocks=[], node_display_coords={}),
         )

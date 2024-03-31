@@ -2,6 +2,12 @@ from typing import Literal, TypedDict
 
 from typing_extensions import NotRequired
 
+
+class BotConfigVersionMetadata(TypedDict):
+    timestamp: NotRequired[float]
+    message: str | None
+
+
 BotVersion = int | Literal["stub"]
 
 
