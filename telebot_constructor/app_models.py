@@ -140,7 +140,7 @@ class LoggedInUser(BaseModel):
 
 
 class UpdateBotDisplayNamePayload(BaseModel):
-    new_display_name: str = Field(max_length=512)
+    display_name: str = Field(max_length=512)
 
 
 class BotInfo(BaseModel):

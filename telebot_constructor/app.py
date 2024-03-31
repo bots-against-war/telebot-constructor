@@ -449,7 +449,7 @@ class TelebotConstructorApp:
             payload = await self.parse_pydantic_model(request, UpdateBotDisplayNamePayload)
             if not await self.store.is_bot_exists(username, bot_name):
                 raise web.HTTPNotFound(reason="Bot id not found")
-            if await self.store.save_bot_display_name(username, bot_name, payload.new_display_name):
+            if await self.store.save_bot_display_name(username, bot_name, payload.display_name):
                 return web.Response()
             else:
                 raise web.HTTPInternalServerError(reason="Failed to save bot display name")
