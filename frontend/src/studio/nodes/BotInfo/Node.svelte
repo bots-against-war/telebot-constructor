@@ -17,6 +17,7 @@
   import { NodeTypeKey } from "../display";
   import { DEFAULT_NODE_PROPS } from "../nodeProps";
   import Modal from "./Modal.svelte";
+  import BotUserBadge from "../../../components/BotUserBadge.svelte";
 
   const openModal = getModalOpener<Modal>();
 
@@ -57,22 +58,7 @@
         <DataBadgeLoader />
       {:then botUserResult}
         {#if botUserResult.ok}
-          <div class="flex flex-row gap-1 items-start justify-between">
-            <div class="flex flex-row gap-1 items-center">
-              <Avatar
-                src={botUserResult.data.userpic ? `data:image/png;base64,${botUserResult.data.userpic}` : undefined}
-                class="w-6 h-6"
-              />
-              <span>
-                {botUserResult.data.name}
-                <br />
-                <span class="text-gray-500 break-all">
-                  @{botUserResult.data.username}
-                </span>
-              </span>
-            </div>
-            <ActionIcon href={`https://t.me/${botUserResult.data.username}`} icon={ArrowUpRightFromSquareOutline} />
-          </div>
+          <BotUserBadge botUser={botUserResult.data} />
         {:else}
           <ErrorBadge title="Ошибка загрузки данных о боте" text={botUserResult.error} />
         {/if}

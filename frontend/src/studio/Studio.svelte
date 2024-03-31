@@ -33,6 +33,7 @@
 
   export let botName: string;
   export let botConfig: BotConfig;
+  export let isSaveable: boolean;
 
   const open = getModalOpener();
 
@@ -171,7 +172,7 @@
           {botConfig.display_name}
         </Heading>
         <Button
-          disabled={!isConfigValid || !isConfigModified || isSavingBotConfig}
+          disabled={!isSaveable || !isConfigValid || !isConfigModified || isSavingBotConfig}
           on:click={() => open(SaveConfigModal, { callback: saveCurrentBotConfig })}
         >
           {#if isSavingBotConfig}

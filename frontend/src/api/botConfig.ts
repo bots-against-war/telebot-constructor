@@ -10,8 +10,12 @@ export async function saveBotConfig(botName: string, payload: SaveBotConfigVersi
   return await toDataResult(resp);
 }
 
-export async function loadBotConfig(botName: string): Promise<Result<BotConfig>> {
-  const resp = await fetch(apiUrl(`/config/${encodeURIComponent(botName)}`));
+export async function loadBotConfig(botName: string, version: number | null): Promise<Result<BotConfig>> {
+  let path = `/config/${encodeURIComponent(botName)}?with_display_name=1`;
+  if (version !== null) {
+    path = path + `&version=${encodeURIComponent(version)}`;
+  }
+  const resp = await fetch(apiUrl(path));
   return await toDataResult(resp);
 }
 

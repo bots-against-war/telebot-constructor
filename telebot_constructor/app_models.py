@@ -143,13 +143,16 @@ class UpdateBotDisplayNamePayload(BaseModel):
     display_name: str = Field(max_length=512)
 
 
+class BotVersionInfo(BaseModel):
+    version: int
+    metadata: BotConfigVersionMetadata
+
+
 class BotInfo(BaseModel):
     bot_name: str  # internal constructor bot name / id
     display_name: str  # user-facing name
     running_version: Optional[int]  # None = bot not running
-    last_versions: list[
-        tuple[int, BotConfigVersionMetadata]
-    ]  # versions, including last and running (if present) versions
+    last_versions: list[BotVersionInfo]  # versions, including last and running (if present) versions
     last_events: list[BotEvent]
 
 

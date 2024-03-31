@@ -14,7 +14,7 @@
 
   export let newBotCallback: (botName: string, info: BotInfo) => void;
 
-  const closePopup = getModalCloser();
+  const closeModal = getModalCloser();
 
   let botDisplayNameInput = "";
   let botTokenInput = "";
@@ -66,7 +66,6 @@
 
     const config: BotConfig = {
       token_secret_name: unwrap(newTokenSecretRes),
-      display_name: botDisplayName,
       user_flow_config: {
         entrypoints: [
           {
@@ -85,15 +84,21 @@
         ]),
       },
     };
-    const res1 = await saveBotConfig(botName, { config, start: false, version_message: null });
-    isCreating = false;
+    const res1 = await saveBotConfig(botName, {
+      config,
+      start: false,
+      version_message: null,
+      display_name: botDisplayName,
+    });
 
     if (res1.ok) {
       error = null;
       const botInfo = unwrap(await getBotInfo(botName));
+      isCreating = false;
       newBotCallback(botName, botInfo);
-      closePopup();
+      closeModal();
     } else if (!res1.ok) {
+      isCreating = false;
       errorTitle = "Ошибка сохранения";
       error = getError(res1);
     }

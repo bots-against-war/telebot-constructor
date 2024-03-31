@@ -9,7 +9,7 @@ from telebot_components.stores.generic import (
     KeyVersionedValueStore,
 )
 
-from telebot_constructor.app_models import BotInfo
+from telebot_constructor.app_models import BotInfo, BotVersionInfo
 from telebot_constructor.bot_config import BotConfig
 from telebot_constructor.store.types import (
     BotConfigVersionMetadata,
@@ -188,6 +188,12 @@ class TelebotConstructorStore:
             bot_name=bot_id,
             display_name=display_name,
             running_version=running_version,
-            last_versions=list(zip(range(first_shown_version, next_to_last_version), version_metadata)),
+            last_versions=[
+                BotVersionInfo(
+                    version=version,
+                    metadata=metadata,
+                )
+                for version, metadata in zip(range(first_shown_version, next_to_last_version), version_metadata)
+            ],
             last_events=last_events,
         )

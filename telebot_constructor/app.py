@@ -159,7 +159,7 @@ class TelebotConstructorApp:
     async def load_bot_config(self, username: str, bot_name: str, version: BotVersion) -> BotConfig:
         config = await self.store.load_bot_config(username, bot_name, version)
         if config is None:
-            raise web.HTTPNotFound(reason=f"No config found for bot name {bot_name!r}")
+            raise web.HTTPNotFound(reason=f"Bot not found: {bot_name!r}")
         return config
 
     async def _make_raw_bot(self, username: str, bot_name: str) -> AsyncTeleBot:
@@ -360,6 +360,11 @@ class TelebotConstructorApp:
                 bot_name,
                 version=version if version is not None else -1,
             )
+
+            # HACK: on query apram flag - emulate legacy behaviour where display name was stored inside bot config
+            # to be removed
+            if "with_display_name" in request.query:
+                config.display_name = await self.store.load_bot_display_name(username, bot_name)
             return web.json_response(text=config.model_dump_json())
 
         @routes.delete("/api/config/{bot_name}")

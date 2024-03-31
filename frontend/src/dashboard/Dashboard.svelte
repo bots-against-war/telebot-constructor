@@ -6,7 +6,7 @@
   import Navbar from "../components/Navbar.svelte";
   import { type BotInfoList } from "../types";
   import { getModalOpener } from "../utils";
-  import BotLifecycle from "./BotLifecycle.svelte";
+  import BotInfoScreen from "./BotInfoScreen.svelte";
   import CreateBotModal from "./CreateBotModal.svelte";
 
   const open = getModalOpener();
@@ -66,7 +66,7 @@
           <strong>Telebot constructor</strong> &mdash; конструктор ботов для социальных и гражданских инициатив
         </span>
       {:else}
-        <BotLifecycle
+        <BotInfoScreen
           botName={selectedBot}
           bind:botInfo={botInfos[selectedBot]}
           on:botDeleted={() => {

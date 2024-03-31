@@ -40,6 +40,7 @@ async def test_bot_config(
     bot_config_1 = {
         "token_secret_name": "test-1312-token",
         "user_flow_config": {"entrypoints": [], "blocks": [], "node_display_coords": {}},
+        "display_name": None,
     }
     resp = await client.post(
         f"/api/config/{bot_name}",
@@ -67,10 +68,10 @@ async def test_bot_config(
     assert bot_info["running_version"] is None
     versions = bot_info["last_versions"]
     assert len(versions) == 1
-    version_index, version_meta = versions[0]
-    assert version_index == 0
-    assert time.time() - version_meta["timestamp"] < 1
-    assert version_meta["message"] == "init message"
+    version_info = versions[0]
+    assert version_info["version"] == 0
+    assert time.time() - version_info["metadata"]["timestamp"] < 1
+    assert version_info["metadata"]["message"] == "init message"
     assert len(bot_info["last_events"]) == 1
     bot_created_event = bot_info["last_events"][0]
     assert time.time() - bot_created_event["timestamp"] < 1
@@ -134,6 +135,7 @@ async def test_bot_config(
             "blocks": [],
             "node_display_coords": {},
         },
+        "display_name": None,
     }
     resp = await client.post(
         f"/api/config/{bot_name}",
