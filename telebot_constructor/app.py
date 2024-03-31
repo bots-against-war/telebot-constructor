@@ -41,7 +41,7 @@ from telebot_constructor.runners import (
     WebhookAppConstructedBotRunner,
 )
 from telebot_constructor.static import static_file_content
-from telebot_constructor.store import (
+from telebot_constructor.store.store import (
     BotConfigVersionMetadata,
     BotVersion,
     TelebotConstructorStore,
@@ -126,6 +126,15 @@ class TelebotConstructorApp:
             raise web.HTTPNotFound()
         self._validate_name(name)
         return name
+
+    def parse_version_query_param(self, request: web.Request) -> Optional[int]:
+        version_str = request.query.get("version")
+        if version_str is None:
+            return None
+        try:
+            return int(version_str)
+        except Exception:
+            raise web.HTTPBadRequest(reason="version query argument must be a valid integer")
 
     async def parse_pydantic_model(self, request: web.Request, Model: Type[PydanticModelT]) -> PydanticModelT:
         try:
@@ -345,7 +354,12 @@ class TelebotConstructorApp:
             """
             username = await self.authenticate(request)
             bot_name = self.parse_bot_name(request)
-            config = await self.load_bot_config(username, bot_name, version=-1)
+            version = self.parse_version_query_param(request)
+            config = await self.load_bot_config(
+                username,
+                bot_name,
+                version=version if version is not None else -1,
+            )
             return web.json_response(text=config.model_dump_json())
 
         @routes.delete("/api/config/{bot_name}")

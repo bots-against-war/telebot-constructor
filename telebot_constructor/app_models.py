@@ -150,7 +150,7 @@ class BotInfo(BaseModel):
     last_versions: list[
         tuple[int, BotConfigVersionMetadata]
     ]  # versions, including last and running (if present) versions
-    last_bot_events: list[BotEvent]
+    last_events: list[BotEvent]
 
 
 class SaveBotConfigVersionPayload(BaseModel):
