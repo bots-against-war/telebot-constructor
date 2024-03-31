@@ -36,9 +36,13 @@ async def test_bot_config(
     resp = await client.post(
         f"/api/config/{bot_name}",
         json={
-            "display_name": "my bot",
-            "token_secret_name": "test-1312-token",
-            "user_flow_config": {"entrypoints": [], "blocks": [], "node_display_coords": {}},
+            "config": {
+                "display_name": "my bot",
+                "token_secret_name": "test-1312-token",
+                "user_flow_config": {"entrypoints": [], "blocks": [], "node_display_coords": {}},
+            },
+            "start": False,
+            "version_message": None,
         },
     )
     assert resp.status == 201
@@ -60,7 +64,7 @@ async def test_bot_config(
     assert bot_info["is_running"] is False
     assert bot_info["timestamps"]["last_run_at"] is None
 
-    resp = await client.post(f"/api/start/{bot_name}")
+    resp = await client.post(f"/api/start/{bot_name}", json={"version": -1})
     assert resp.status == 201
 
     resp = await client.get("/api/info")

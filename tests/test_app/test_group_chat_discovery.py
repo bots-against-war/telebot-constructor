@@ -27,15 +27,20 @@ async def test_group_chat_discovery(
     resp = await client.post(
         "/api/config/my-test-bot",
         json={
-            "display_name": "my bot",
-            "token_secret_name": "my-test-bot-token",
-            "user_flow_config": {
-                "entrypoints": [],
-                "blocks": [],
-                "node_display_coords": {},
+            "config": {
+                "display_name": "my bot",
+                "token_secret_name": "my-test-bot-token",
+                "user_flow_config": {
+                    "entrypoints": [],
+                    "blocks": [],
+                    "node_display_coords": {},
+                },
             },
+            "start": False,
+            "version_message": None,
         },
     )
+    print(await resp.json())
     assert resp.status == 201
 
     resp = await client.post("/api/start-group-chat-discovery/my-test-bot")

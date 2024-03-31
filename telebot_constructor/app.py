@@ -133,7 +133,10 @@ class TelebotConstructorApp:
         except json.JSONDecodeError:
             raise web.HTTPBadRequest(reason="Request body must be valid JSON")
         except pydantic.ValidationError as e:
-            raise web.HTTPBadRequest(text=e.json(include_context=False, include_url=False))
+            raise web.HTTPBadRequest(
+                text=e.json(include_context=False, include_url=False),
+                content_type="application/json",
+            )
         except Exception as e:
             raise web.HTTPBadRequest(reason=str(e))
 
