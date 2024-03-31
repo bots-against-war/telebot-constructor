@@ -163,4 +163,3 @@ async def test_bot_config(
     assert bot_info["last_events"][2]["event"] == "edited"
     assert bot_info["last_events"][3]["event"] == "stopped"
     assert bot_info["last_events"][4]["event"] == "started"
-
