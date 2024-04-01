@@ -1,13 +1,14 @@
 """Pydantic models for various app endpoints"""
 
 import enum
-from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from telebot import AsyncTeleBot
 from telebot import types as tg
 
+from telebot_constructor.bot_config import BotConfig
+from telebot_constructor.store.types import BotConfigVersionMetadata, BotEvent
 from telebot_constructor.telegram_files_downloader import TelegramFilesDownloader
 from telebot_constructor.utils.rate_limit_retry import rate_limit_retry
 
@@ -138,14 +139,29 @@ class LoggedInUser(BaseModel):
     userpic: Optional[str] = None
 
 
-class BotTimestamps(BaseModel):
-    created_at: datetime
-    last_updated_at: datetime
-    last_run_at: Optional[datetime]
-    deleted_at: Optional[datetime]
+class UpdateBotDisplayNamePayload(BaseModel):
+    display_name: str = Field(max_length=512)
+
+
+class BotVersionInfo(BaseModel):
+    version: int
+    metadata: BotConfigVersionMetadata
 
 
 class BotInfo(BaseModel):
-    display_name: str
-    timestamps: BotTimestamps
-    is_running: bool
+    bot_name: str  # internal constructor bot name / id
+    display_name: str  # user-facing name
+    running_version: Optional[int]  # None = bot not running
+    last_versions: list[BotVersionInfo]  # versions, including last and running (if present) versions
+    last_events: list[BotEvent]
+
+
+class SaveBotConfigVersionPayload(BaseModel):
+    config: BotConfig
+    version_message: Optional[str]
+    start: bool
+    display_name: Optional[str] = None  # to update display name together with config
+
+
+class StartBotPayload(BaseModel):
+    version: int  # passed directly to versioned store, i.e. values like -1 are supported

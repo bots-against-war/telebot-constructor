@@ -7,7 +7,7 @@
   import type { BotConfig, UserFlowBlockConfig, UserFlowEntryPointConfig, UserFlowNodePosition } from "../api/types";
   import Navbar from "../components/Navbar.svelte";
   import { BOT_INFO_NODE_ID } from "../constants";
-  import { getError, withConfirmation } from "../utils";
+  import { getError, getModalOpener, withConfirmation } from "../utils";
   import AddNodeButton from "./components/AddNodeButton.svelte";
   import DeletableEdge from "./components/DeletableEdge.svelte";
   import StudioSidePandel from "./components/StudioSidePanel.svelte";
@@ -29,9 +29,13 @@
   import { NodeTypeKey } from "./nodes/display";
   import { languageConfigStore, type LanguageConfig } from "./stores";
   import { findNewNodePositionDown, findNewNodePositionRight } from "./utils";
+  import SaveConfigModal from "./SaveConfigModal.svelte";
 
   export let botName: string;
   export let botConfig: BotConfig;
+  export let isSaveable: boolean;
+
+  const open = getModalOpener();
 
   let configReactivityTriggeredCount = 0;
   $: {
@@ -140,11 +144,11 @@
 
   let isSavingBotConfig = false;
 
-  async function saveCurrentBotConfig() {
+  async function saveCurrentBotConfig(versionMessage: string | null, start: boolean) {
     if (!isConfigValid) return;
     isSavingBotConfig = true;
     console.log(`Saving bot config for ${botName}`, botConfig);
-    const res = await saveBotConfig(botName, botConfig);
+    const res = await saveBotConfig(botName, { config: botConfig, version_message: versionMessage, start });
     isSavingBotConfig = false;
     if (getError(res) !== null) {
       window.alert(`Error saving bot config: ${getError(res)}`);
@@ -167,7 +171,10 @@
         <Heading tag="h2" class="mr-2 max-w-96 text-ellipsis">
           {botConfig.display_name}
         </Heading>
-        <Button disabled={!isConfigValid || !isConfigModified || isSavingBotConfig} on:click={saveCurrentBotConfig}>
+        <Button
+          disabled={!isSaveable || !isConfigValid || !isConfigModified || isSavingBotConfig}
+          on:click={() => open(SaveConfigModal, { callback: saveCurrentBotConfig })}
+        >
           {#if isSavingBotConfig}
             <Spinner class="me-3" size="4" color="white" />
           {/if}

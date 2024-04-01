@@ -5,7 +5,6 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
-export type DisplayName = string;
 export type TokenSecretName = string;
 export type EntrypointId = string;
 export type Command = string;
@@ -167,6 +166,7 @@ export type NextBlockId5 = string | null;
 export type Blocks = UserFlowBlockConfig[];
 export type X = number;
 export type Y = number;
+export type DisplayName = string | null;
 export type Id3 = number;
 export type TgGroupChatType = "group" | "supergroup" | "channel";
 export type Title = string;
@@ -206,12 +206,32 @@ export type Username2 = string;
 export type Name6 = string;
 export type DisplayUsername = string | null;
 export type Userpic1 = string | null;
+export type BotName = string;
 export type DisplayName1 = string;
-export type CreatedAt = string;
-export type LastUpdatedAt = string;
-export type LastRunAt = string | null;
-export type DeletedAt = string | null;
-export type IsRunning = boolean;
+export type RunningVersion = number | null;
+export type Version = number;
+export type Timestamp = number;
+export type Message = string | null;
+export type LastVersions = BotVersionInfo[];
+export type Timestamp1 = number;
+export type Username3 = string;
+export type Event = "stopped";
+export type Timestamp2 = number;
+export type Username4 = string;
+export type Event1 = "deleted";
+export type Timestamp3 = number;
+export type Username5 = string;
+export type Event2 = "started";
+export type Version1 = number | "stub";
+export type Timestamp4 = number;
+export type Username6 = string;
+export type Event3 = "edited";
+export type NewVersion = number;
+export type LastEvents = (BotStoppedEvent | BotDeletedEvent | BotStartedEvent | BotEditedEvent)[];
+export type VersionMessage = string | null;
+export type Start = boolean;
+export type DisplayName2 = string | null;
+export type Version2 = number;
 
 /**
  * Temporary class to pack several models into one schema; not used directly by frontend code
@@ -225,12 +245,14 @@ export interface BackendDataModels {
   base_form_field_config: BaseFormFieldConfig;
   logged_in_user: LoggedInUser;
   bot_info: BotInfo;
+  save_bot_config_version_payload: SaveBotConfigVersionPayload;
+  start_bot_payload: StartBotPayload;
   [k: string]: unknown;
 }
 export interface BotConfig {
-  display_name: DisplayName;
   token_secret_name: TokenSecretName;
   user_flow_config: UserFlowConfig;
+  display_name?: DisplayName;
   [k: string]: unknown;
 }
 export interface UserFlowConfig {
@@ -536,15 +558,57 @@ export interface LoggedInUser {
   [k: string]: unknown;
 }
 export interface BotInfo {
+  bot_name: BotName;
   display_name: DisplayName1;
-  timestamps: BotTimestamps;
-  is_running: IsRunning;
+  running_version: RunningVersion;
+  last_versions: LastVersions;
+  last_events: LastEvents;
   [k: string]: unknown;
 }
-export interface BotTimestamps {
-  created_at: CreatedAt;
-  last_updated_at: LastUpdatedAt;
-  last_run_at: LastRunAt;
-  deleted_at: DeletedAt;
+export interface BotVersionInfo {
+  version: Version;
+  metadata: BotConfigVersionMetadata;
+  [k: string]: unknown;
+}
+export interface BotConfigVersionMetadata {
+  timestamp?: Timestamp;
+  message: Message;
+  [k: string]: unknown;
+}
+export interface BotStoppedEvent {
+  timestamp?: Timestamp1;
+  username: Username3;
+  event: Event;
+  [k: string]: unknown;
+}
+export interface BotDeletedEvent {
+  timestamp?: Timestamp2;
+  username: Username4;
+  event: Event1;
+  [k: string]: unknown;
+}
+export interface BotStartedEvent {
+  timestamp?: Timestamp3;
+  username: Username5;
+  event: Event2;
+  version: Version1;
+  [k: string]: unknown;
+}
+export interface BotEditedEvent {
+  timestamp?: Timestamp4;
+  username: Username6;
+  event: Event3;
+  new_version: NewVersion;
+  [k: string]: unknown;
+}
+export interface SaveBotConfigVersionPayload {
+  config: BotConfig;
+  version_message: VersionMessage;
+  start: Start;
+  display_name?: DisplayName2;
+  [k: string]: unknown;
+}
+export interface StartBotPayload {
+  version: Version2;
   [k: string]: unknown;
 }

@@ -20,16 +20,13 @@ class TelegramFilesDownloader(abc.ABC):
     """Thin wrapper around AsyncTeleBot methods to lookup and download file; handles caching and base64-encoding"""
 
     @abc.abstractmethod
-    async def get_base64_file(self, bot: AsyncTeleBot, file_id: str) -> Optional[str]:
-        ...
+    async def get_base64_file(self, bot: AsyncTeleBot, file_id: str) -> Optional[str]: ...
 
     @abc.abstractmethod
-    async def setup(self) -> None:
-        ...
+    async def setup(self) -> None: ...
 
     @abc.abstractmethod
-    async def cleanup(self) -> None:
-        ...
+    async def cleanup(self) -> None: ...
 
 
 class RedisCacheTelegramFilesDownloader(TelegramFilesDownloader):

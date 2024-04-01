@@ -32,7 +32,7 @@
 </script>
 
 <NodeModalBody title={NODE_TITLE.command}>
-  <InputWrapper label={undefined} error={commandError}>
+  <InputWrapper label={null} error={commandError}>
     <ButtonGroup class="w-full" size="sm">
       <InputAddon>
         <SlashIcon size="xl" />

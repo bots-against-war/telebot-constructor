@@ -8,8 +8,19 @@
 
   export let botName: string;
 
+  const urlParams = new URLSearchParams(window.location.search);
+
+  const versionString = urlParams.get("version");
+  let version = versionString ? parseInt(versionString) : null;
+  // convert NaN -> null
+  version = typeof version === "number" && isNaN(version) ? null : version;
+
+  const isSaveable = urlParams.get("saveable") === "true";
+
+  console.log(`Loadig studio for bot id = ${botName}, version = ${version}, is saveable = ${isSaveable}`);
+
   async function getBotConfig(botName: string): Promise<BotConfig> {
-    const loadBotConfigResult = await loadBotConfig(botName);
+    const loadBotConfigResult = await loadBotConfig(botName, version);
     return unwrap(loadBotConfigResult);
   }
 
@@ -19,7 +30,7 @@
 {#await getBotConfigPromise}
   <LoadingScreen />
 {:then botConfig}
-  <Studio {botName} {botConfig} />
+  <Studio {botName} {botConfig} {isSaveable} />
 {:catch error}
   <FatalError {error} />
 {/await}
