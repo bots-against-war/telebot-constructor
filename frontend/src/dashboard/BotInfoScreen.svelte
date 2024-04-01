@@ -1,12 +1,10 @@
 <script lang="ts">
   import { Alert, Button } from "flowbite-svelte";
-  import { PenOutline } from "flowbite-svelte-icons";
   import { createEventDispatcher } from "svelte";
   import { deleteBotConfig } from "../api/botConfig";
   import { getBotUser } from "../api/botUser";
   import { startBot, stopBot } from "../api/lifecycle";
   import type { BotInfo } from "../api/types";
-  import ActionIcon from "../components/ActionIcon.svelte";
   import BotUserBadge from "../components/BotUserBadge.svelte";
   import ErrorBadge from "../components/ErrorBadge.svelte";
   import Timestamp from "../components/Timestamp.svelte";
@@ -150,9 +148,9 @@
             {#if event.event}
               <span>
                 {#if event.event === "started"}
-                  опубликована v{event.version}
+                  опубликована {typeof event.version === "number" ? `v${event.version + 1}` : "версия-заглушка"}
                 {:else if event.event === "edited"}
-                  создана v{event.new_version}
+                  создана v{event.new_version + 1}
                 {:else if event.event === "stopped"}
                   бот остановлен
                 {/if}
