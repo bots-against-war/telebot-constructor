@@ -27,7 +27,7 @@ export const NODE_HUE: { [key in NodeTypeKey]: number } = {
   language_select: 220,
   menu: 120,
   form: 67,
-  info: 0, // white is used
+  info: 0, // = white
 };
 
 export function headerColor(hue: number): string {
