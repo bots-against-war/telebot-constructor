@@ -24,9 +24,7 @@
 
     if (files.length === 0) return attachments;
 
-    // TODO Replace string for multiple files once backend is ready
-    // for (let i = 0; i < files.length; ++i) {
-    for (let i = 0; i < 1; ++i) {
+    for (let i = 0; i < files.length; ++i) {
       const file = files[i];
 
       try {
