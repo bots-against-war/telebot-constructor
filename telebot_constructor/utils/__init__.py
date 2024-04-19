@@ -1,7 +1,17 @@
 import collections
 import functools
 import logging
-from typing import Any, Awaitable, Callable, Iterable, Optional, TypeVar, Union, cast
+from typing import (
+    Any,
+    Awaitable,
+    Callable,
+    Generator,
+    Iterable,
+    Optional,
+    TypeVar,
+    Union,
+    cast,
+)
 
 from telebot import types as tg
 from telebot.types.service import HandlerFunction, HandlerResult
@@ -77,3 +87,45 @@ ItemT = TypeVar("ItemT")
 
 def without_nones(it: Iterable[Optional[ItemT]]) -> list[ItemT]:
     return [i for i in it if i is not None]
+
+
+SizeT = Union[int, float]
+
+
+def iter_batches(
+    seq: Iterable[ItemT],
+    size: SizeT,
+    *,
+    size_func: Callable[[ItemT], SizeT] = lambda _: 1,
+) -> Generator[list[ItemT], None, None]:
+    """
+    Iterate a sequence in batches of specified size. Size can be any additive quantity (i.e.
+    batch size is the sum of item sizes). The default is a regular count-based batching.
+
+    Please note that for custom size_func the batch can exceed the target size if it contains larger
+    elements. If this is undesirable, filter the iterable in advance.
+
+    Basic use:
+    >>> list(iter_batches(['A', 'B', 'C', 'D', 'E'], size=2))
+    [['A', 'B'], ['C', 'D'], ['E']]
+
+    With customized size func:
+    >>> list(iter_batches(['hello world', 'foo', 'bar', 'foobar', 'baz'], size=8, size_func=len))
+    [['hello world'], ['foo', 'bar'], ['foobar'], ['baz']]
+    >>> list(iter_batches([1, 2, 3, 6, 1, 1, 1], size=3, size_func=lambda x: x))
+    [[1, 2], [3], [6], [1, 1, 1]]
+    """
+    batch: list[ItemT] = []
+    current_size: SizeT = 0
+    for item in seq:
+        item_size = size_func(item)
+        if current_size + item_size > size:
+            if batch:
+                yield batch
+            batch = []
+            current_size = 0
+        batch.append(item)
+        current_size += item_size
+
+    if batch:
+        yield batch

@@ -10,16 +10,13 @@ from telebot.webhook import WebhookApp
 
 class ConstructedBotRunner(abc.ABC):
     @abc.abstractmethod
-    async def start(self, username: str, bot_name: str, bot_runner: BotRunner) -> bool:
-        ...
+    async def start(self, username: str, bot_name: str, bot_runner: BotRunner) -> bool: ...
 
     @abc.abstractmethod
-    async def stop(self, username: str, bot_name: str) -> bool:
-        ...
+    async def stop(self, username: str, bot_name: str) -> bool: ...
 
     @abc.abstractmethod
-    async def cleanup(self) -> None:
-        ...
+    async def cleanup(self) -> None: ...
 
 
 class PollingConstructedBotRunner(ConstructedBotRunner):

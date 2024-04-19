@@ -68,8 +68,7 @@ class BaseFormFieldConfig(BaseModel, abc.ABC):
         )
 
     @abc.abstractmethod
-    def construct_field(self) -> FormField:
-        ...
+    def construct_field(self) -> FormField: ...
 
 
 class PlainTextFormFieldConfig(BaseFormFieldConfig):
@@ -216,25 +215,25 @@ class FormBlock(UserFlowBlock):
                 echo_filled_field=False,
                 form_starting_template=join_localizable_texts(
                     [
-                        validate_localizable_text(
+                        validate_template_text(
                             self.messages.form_start, placeholder_count=0, title="form start message"
                         ),
-                        validate_localizable_text(
+                        validate_template_text(
                             self.messages.cancel_command_is, placeholder_count=1, title="cancel command message"
                         ),
                     ],
                     sep="\n\n",
                 ),
-                can_skip_field_template=validate_localizable_text(
+                can_skip_field_template=validate_template_text(
                     self.messages.field_is_skippable, placeholder_count=1, title="field is skippable message"
                 ),
-                cant_skip_field_msg=validate_localizable_text(
+                cant_skip_field_msg=validate_template_text(
                     self.messages.field_is_not_skippable, placeholder_count=0, title="field is not skippable message"
                 ),
-                retry_field_msg=validate_localizable_text(
+                retry_field_msg=validate_template_text(
                     self.messages.please_enter_correct_value, placeholder_count=0, title="enter correct value msg"
                 ),
-                unsupported_cmd_error_template=validate_localizable_text(
+                unsupported_cmd_error_template=validate_template_text(
                     self.messages.unsupported_command, placeholder_count=1, title="unsupported command message"
                 ),
                 cancelling_because_of_error_template=cancelling_because_of_error,
@@ -332,7 +331,13 @@ class FormBlock(UserFlowBlock):
         )
 
 
-def validate_localizable_text(template: LocalizableText, placeholder_count: int, title: str) -> LocalizableText:
+def validate_template_text(template: LocalizableText, placeholder_count: int, title: str) -> LocalizableText:
+    """
+    Validate that the template has required number of placeholders for dynamic data interpolation inside form handler.
+    This function DOES NOT actually validate that the text is localized into all languages etc, but this is taken care
+    of by form handler internally.
+    """
+
     def _validate_string(template_str: str, subtitle: Optional[str]) -> str:
         full_title = title
         if subtitle:

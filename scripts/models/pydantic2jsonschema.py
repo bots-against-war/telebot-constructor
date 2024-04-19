@@ -1,4 +1,5 @@
 """Convert backend's pydantic types to JSON schema or validate that the existing JSON schema is up-to-date"""
+
 import argparse
 import json
 import sys
@@ -12,6 +13,8 @@ from pydantic.json_schema import GenerateJsonSchema, JsonSchemaValue
 from telebot_constructor.app_models import (
     BotInfo,
     LoggedInUser,
+    SaveBotConfigVersionPayload,
+    StartBotPayload,
     TgBotUser,
     TgBotUserUpdate,
     TgGroupChat,
@@ -46,6 +49,8 @@ if __name__ == "__main__":
         base_form_field_config: BaseFormFieldConfig
         logged_in_user: LoggedInUser
         bot_info: BotInfo
+        save_bot_config_version_payload: SaveBotConfigVersionPayload
+        start_bot_payload: StartBotPayload
 
     current_schema = BackendDataModels.model_json_schema(
         mode="serialization",

@@ -6,7 +6,7 @@
   import Navbar from "../components/Navbar.svelte";
   import { type BotInfoList } from "../types";
   import { getModalOpener } from "../utils";
-  import BotLifecycle from "./BotLifecycle.svelte";
+  import BotInfoScreen from "./BotInfoScreen.svelte";
   import CreateBotModal from "./CreateBotModal.svelte";
 
   const open = getModalOpener();
@@ -60,13 +60,13 @@
         </Listgroup>
       {/if}
     </aside>
-    <div class="min-h-full flex flex-col justify-center align-middle">
+    <div class="min-h-full flex flex-row justify-center align-middle">
       {#if selectedBot === null}
-        <span class="text-3xl">
-          <strong>Telebot constructor</strong> &mdash; конструктор ботов для социальных и гражданских инициатив
-        </span>
+        <div class="flex flex-col justify-center align-middle text-3xl text-gray-300">
+          <strong>Telebot constructor</strong>
+        </div>
       {:else}
-        <BotLifecycle
+        <BotInfoScreen
           botName={selectedBot}
           bind:botInfo={botInfos[selectedBot]}
           on:botDeleted={() => {

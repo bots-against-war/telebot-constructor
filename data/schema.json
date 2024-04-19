@@ -64,92 +64,236 @@
     },
     "BotConfig": {
       "properties": {
-        "display_name": {
-          "title": "Display Name",
-          "type": "string"
-        },
         "token_secret_name": {
           "title": "Token Secret Name",
           "type": "string"
         },
         "user_flow_config": {
           "$ref": "#/$defs/UserFlowConfig"
+        },
+        "display_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Display Name"
         }
       },
       "required": [
-        "display_name",
         "token_secret_name",
         "user_flow_config"
       ],
       "title": "BotConfig",
       "type": "object"
     },
+    "BotConfigVersionMetadata": {
+      "properties": {
+        "timestamp": {
+          "title": "Timestamp",
+          "type": "number"
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Message"
+        }
+      },
+      "required": [
+        "message"
+      ],
+      "title": "BotConfigVersionMetadata",
+      "type": "object"
+    },
+    "BotDeletedEvent": {
+      "properties": {
+        "timestamp": {
+          "title": "Timestamp",
+          "type": "number"
+        },
+        "username": {
+          "title": "Username",
+          "type": "string"
+        },
+        "event": {
+          "const": "deleted",
+          "title": "Event"
+        }
+      },
+      "required": [
+        "username",
+        "event"
+      ],
+      "title": "BotDeletedEvent",
+      "type": "object"
+    },
+    "BotEditedEvent": {
+      "properties": {
+        "timestamp": {
+          "title": "Timestamp",
+          "type": "number"
+        },
+        "username": {
+          "title": "Username",
+          "type": "string"
+        },
+        "event": {
+          "const": "edited",
+          "title": "Event"
+        },
+        "new_version": {
+          "title": "New Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "username",
+        "event",
+        "new_version"
+      ],
+      "title": "BotEditedEvent",
+      "type": "object"
+    },
     "BotInfo": {
       "properties": {
+        "bot_name": {
+          "title": "Bot Name",
+          "type": "string"
+        },
         "display_name": {
           "title": "Display Name",
           "type": "string"
         },
-        "timestamps": {
-          "$ref": "#/$defs/BotTimestamps"
+        "running_version": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Running Version"
         },
-        "is_running": {
-          "title": "Is Running",
-          "type": "boolean"
+        "last_versions": {
+          "items": {
+            "$ref": "#/$defs/BotVersionInfo"
+          },
+          "title": "Last Versions",
+          "type": "array"
+        },
+        "last_events": {
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/BotStoppedEvent"
+              },
+              {
+                "$ref": "#/$defs/BotDeletedEvent"
+              },
+              {
+                "$ref": "#/$defs/BotStartedEvent"
+              },
+              {
+                "$ref": "#/$defs/BotEditedEvent"
+              }
+            ]
+          },
+          "title": "Last Events",
+          "type": "array"
         }
       },
       "required": [
+        "bot_name",
         "display_name",
-        "timestamps",
-        "is_running"
+        "running_version",
+        "last_versions",
+        "last_events"
       ],
       "title": "BotInfo",
       "type": "object"
     },
-    "BotTimestamps": {
+    "BotStartedEvent": {
       "properties": {
-        "created_at": {
-          "format": "date-time",
-          "title": "Created At",
+        "timestamp": {
+          "title": "Timestamp",
+          "type": "number"
+        },
+        "username": {
+          "title": "Username",
           "type": "string"
         },
-        "last_updated_at": {
-          "format": "date-time",
-          "title": "Last Updated At",
-          "type": "string"
+        "event": {
+          "const": "started",
+          "title": "Event"
         },
-        "last_run_at": {
+        "version": {
           "anyOf": [
             {
-              "format": "date-time",
-              "type": "string"
+              "type": "integer"
             },
             {
-              "type": "null"
+              "const": "stub"
             }
           ],
-          "title": "Last Run At"
-        },
-        "deleted_at": {
-          "anyOf": [
-            {
-              "format": "date-time",
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Deleted At"
+          "title": "Version"
         }
       },
       "required": [
-        "created_at",
-        "last_updated_at",
-        "last_run_at",
-        "deleted_at"
+        "username",
+        "event",
+        "version"
       ],
-      "title": "BotTimestamps",
+      "title": "BotStartedEvent",
+      "type": "object"
+    },
+    "BotStoppedEvent": {
+      "properties": {
+        "timestamp": {
+          "title": "Timestamp",
+          "type": "number"
+        },
+        "username": {
+          "title": "Username",
+          "type": "string"
+        },
+        "event": {
+          "const": "stopped",
+          "title": "Event"
+        }
+      },
+      "required": [
+        "username",
+        "event"
+      ],
+      "title": "BotStoppedEvent",
+      "type": "object"
+    },
+    "BotVersionInfo": {
+      "properties": {
+        "version": {
+          "title": "Version",
+          "type": "integer"
+        },
+        "metadata": {
+          "$ref": "#/$defs/BotConfigVersionMetadata"
+        }
+      },
+      "required": [
+        "version",
+        "metadata"
+      ],
+      "title": "BotVersionInfo",
       "type": "object"
     },
     "BranchingFormMemberConfig": {
@@ -1295,6 +1439,47 @@
       "title": "RegexMatchEntryPoint",
       "type": "object"
     },
+    "SaveBotConfigVersionPayload": {
+      "properties": {
+        "config": {
+          "$ref": "#/$defs/BotConfig"
+        },
+        "version_message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Version Message"
+        },
+        "start": {
+          "title": "Start",
+          "type": "boolean"
+        },
+        "display_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Display Name"
+        }
+      },
+      "required": [
+        "config",
+        "version_message",
+        "start"
+      ],
+      "title": "SaveBotConfigVersionPayload",
+      "type": "object"
+    },
     "SingleSelectFormFieldConfig": {
       "properties": {
         "id": {
@@ -1369,6 +1554,19 @@
         "invalid_enum_error_msg"
       ],
       "title": "SingleSelectFormFieldConfig",
+      "type": "object"
+    },
+    "StartBotPayload": {
+      "properties": {
+        "version": {
+          "title": "Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "version"
+      ],
+      "title": "StartBotPayload",
       "type": "object"
     },
     "TgBotCommand": {
@@ -1732,6 +1930,12 @@
     },
     "bot_info": {
       "$ref": "#/$defs/BotInfo"
+    },
+    "save_bot_config_version_payload": {
+      "$ref": "#/$defs/SaveBotConfigVersionPayload"
+    },
+    "start_bot_payload": {
+      "$ref": "#/$defs/StartBotPayload"
     }
   },
   "required": [
@@ -1742,7 +1946,9 @@
     "language_data",
     "base_form_field_config",
     "logged_in_user",
-    "bot_info"
+    "bot_info",
+    "save_bot_config_version_payload",
+    "start_bot_payload"
   ],
   "title": "BackendDataModels",
   "type": "object"
