@@ -325,7 +325,7 @@ export interface ContentText {
 }
 export interface ContentBlockContentAttachment {
   image: Image;
-  name: string,
+  name: string;
   [k: string]: unknown;
 }
 /**
