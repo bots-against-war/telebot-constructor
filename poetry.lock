@@ -1828,13 +1828,13 @@ ujson = ">=5.3.0,<6.0.0"
 
 [[package]]
 name = "telebot-components"
-version = "0.11.6"
+version = "0.11.9"
 description = "Framework/toolkit for building Telegram bots with telebot and redis"
 optional = false
-python-versions = ">=3.10,<4.0"
+python-versions = "<4.0,>=3.10"
 files = [
-    {file = "telebot_components-0.11.6-py3-none-any.whl", hash = "sha256:7d6d37def8ba9bacc89a38428b642a60a0905b7dc00d332ec265a7f80943a1ff"},
-    {file = "telebot_components-0.11.6.tar.gz", hash = "sha256:c9623e92ff9c4583fea39ec27627489e7bb1d151ebb9ba1665d1630f1e311b1e"},
+    {file = "telebot_components-0.11.9-py3-none-any.whl", hash = "sha256:3f72feb6eb51b29e360e0fa4ffe3195b03b749bd695042dcd50cd73dc72b8108"},
+    {file = "telebot_components-0.11.9.tar.gz", hash = "sha256:7e2943cfee01b536d8cfa5e690747af71d75af92537f945cbd5fd716f0f72496"},
 ]
 
 [package.dependencies]
@@ -1850,7 +1850,7 @@ pyairtable = ">=1.5.0,<2.0.0"
 pytest-mock = ">=3.7.0,<4.0.0"
 redis = ">=5.0.1,<6.0.0"
 "ruamel.yaml" = ">=0.17.21,<0.18.0"
-telebot-against-war = ">=0.6.11,<0.7.0"
+telebot-against-war = ">=0.6.13,<0.7.0"
 tenacity = ">=8.1.0,<9.0.0"
 toml = ">=0.10.2,<0.11.0"
 urllib3 = ">=1.26.18,<2.0.0"
@@ -2118,4 +2118,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "b5ca9947cbb65f0b10d35712b285466c566384c7eaeb0ada2e7eae6a0bfc4939"
+content-hash = "552f127b334b1dac011a6ca9e5c81afd2b34594b6e4fa453436d95ab7a1d657e"
