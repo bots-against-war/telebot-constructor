@@ -48,6 +48,7 @@ class ContentText(BaseModel):
 
 class ContentBlockContentAttachment(ExactlyOneNonNullFieldModel):
     image: Optional[str]  # base64-encoded
+    filename: Optional[str]
 
     def content(self) -> str:
         # runtime guarantee that at least one (now it's always image) option is non-None
