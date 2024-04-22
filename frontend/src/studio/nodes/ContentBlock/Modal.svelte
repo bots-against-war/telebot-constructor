@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
   import type { Attachments, ContentBlock, ContentBlockContentAttachment, Image } from "../../../api/types";
   import LocalizableTextInput from "../../components/LocalizableTextInput.svelte";
-  import { Fileupload, Label, Listgroup, ListgroupItem } from "flowbite-svelte";
+  import { Fileupload, Label, Helper, Listgroup, ListgroupItem } from "flowbite-svelte";
   import NodeModalBody from "../../components/NodeModalBody.svelte";
   import NodeModalControls from "../../components/NodeModalControls.svelte";
   import { NODE_TITLE } from "../display";
@@ -22,24 +22,17 @@
   async function serializeAttachments(): Promise<Attachments> {
     const attachments: Attachments = [];
 
-    if (files.length === 0) return attachments;
-
-    for (let i = 0; i < files.length; ++i) {
-      const file = files[i];
-
-      try {
-        const image = await readFile(file);
-        const name = file.name;
-        attachments.push({ image, name });
-      } catch (err) {
-        console.error(err);
-      }
+    for (let file of files) {
+      //NOTE future improvement, add try catch block, err monitoring presence is required
+      const image = await base64EncodeFileContent(file);
+      const filename = file.name;
+      attachments.push({ image, filename });
     }
 
     return attachments;
   }
 
-  async function readFile(file: File): Promise<any> {
+  async function base64EncodeFileContent(file: File): Promise<string> {
     return new Promise<any>((resolve, reject) => {
       let reader = new FileReader();
       reader.onload = () => resolve(reader.result);
@@ -49,7 +42,7 @@
     });
   }
 
-  function decodeBase64(base64: string, name: string) {
+  function decodeBase64(base64: string, filename: string) {
     const [type, data] = base64.split(";base64,");
     const binary = atob(data);
     const uint8 = new Uint8Array(binary.length);
@@ -57,7 +50,7 @@
       uint8[i] = binary.charCodeAt(i);
     }
 
-    const file = new File([uint8], name, { type });
+    const file = new File([uint8], filename, { type });
     return file;
   }
 
@@ -67,11 +60,11 @@
 
     const dataTransfer = new DataTransfer();
     attachments.forEach((obj) => {
-      let { image, name } = obj;
+      let { image, filename } = obj;
 
-      if (typeof image !== "string") return;
+      if (typeof image !== "string" || typeof filename !== "string") return;
 
-      const file = decodeBase64(image, name);
+      const file = decodeBase64(image, filename);
       dataTransfer.items.add(file);
     });
     files = dataTransfer.files;
@@ -81,15 +74,18 @@
 <NodeModalBody title={NODE_TITLE.content}>
   <LocalizableTextInput label="Текст сообщения" bind:value={editedMessageText} />
 
-  <Label class="pb-2" for="multiple_files">Upload multiple files</Label>
-  <Fileupload id="multiple_files" multiple bind:files />
-  <Listgroup items={files} let:item class="mt-2">
-    {#if item}
-      {item.name}
-    {:else}
-      <ListgroupItem>No files</ListgroupItem>
-    {/if}
-  </Listgroup>
+  <div>
+    <Label class="pb-2" for="multiple_files">Добавьте одно или несколько изображений</Label>
+    <Fileupload id="multiple_files" class="mb-2" multiple bind:files accept="image/*" />
+    <Helper>PNG, JPG, SVG, WEBP or GIF.</Helper>
+    <Listgroup items={files} let:item class="mt-2">
+      {#if item}
+        {item.name}
+      {:else}
+        <ListgroupItem>No files</ListgroupItem>
+      {/if}
+    </Listgroup>
+  </div>
 
   <NodeModalControls on:save={updateConfig} />
 </NodeModalBody>
