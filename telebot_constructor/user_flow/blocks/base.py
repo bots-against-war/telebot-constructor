@@ -42,5 +42,4 @@ class UserFlowBlock(BaseModel, abc.ABC):
         return False
 
     @abc.abstractmethod
-    def possible_next_block_ids(self) -> list[str]:
-        ...
+    def possible_next_block_ids(self) -> list[str]: ...
