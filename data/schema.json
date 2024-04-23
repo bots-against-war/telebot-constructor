@@ -483,6 +483,11 @@
             }
           ],
           "title": "Image"
+        },
+        "filename": {
+          "default": "",
+          "title": "Filename",
+          "type": "string"
         }
       },
       "required": [

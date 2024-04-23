@@ -25,6 +25,7 @@ export type Text =
     };
 export type ContentTextMarkup = "none" | "html" | "markdown";
 export type Image = string | null;
+export type Filename = string;
 export type Attachments = ContentBlockContentAttachment[];
 export type Contents = Content[];
 export type NextBlockId3 = string | null;
@@ -325,6 +326,7 @@ export interface ContentText {
 }
 export interface ContentBlockContentAttachment {
   image: Image;
+  filename?: Filename;
   [k: string]: unknown;
 }
 /**
