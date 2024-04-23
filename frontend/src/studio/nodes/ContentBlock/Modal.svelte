@@ -1,7 +1,7 @@
 <script lang="ts">
-  import type { Attachments, ContentBlock, ContentBlockContentAttachment, Image } from "../../../api/types";
+  import { Fileupload, Helper, Label, Listgroup, ListgroupItem } from "flowbite-svelte";
+  import type { Attachments, ContentBlock, ContentBlockContentAttachment } from "../../../api/types";
   import LocalizableTextInput from "../../components/LocalizableTextInput.svelte";
-  import { Fileupload, Label, Helper, Listgroup, ListgroupItem } from "flowbite-svelte";
   import NodeModalBody from "../../components/NodeModalBody.svelte";
   import NodeModalControls from "../../components/NodeModalControls.svelte";
   import { NODE_TITLE } from "../display";
@@ -55,7 +55,7 @@
     return file;
   }
 
-  function initFiles(attachments: Array<any>): FileList | undefined {
+  function initFiles(attachments: Array<ContentBlockContentAttachment>): FileList | undefined {
     if (!attachments.length) return undefined;
 
     // NOTE DataTransfer is a hack, used to create a File List, which is required for a UI component

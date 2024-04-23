@@ -485,20 +485,13 @@
           "title": "Image"
         },
         "filename": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Filename"
+          "default": "",
+          "title": "Filename",
+          "type": "string"
         }
       },
       "required": [
-        "image",
-        "filename"
+        "image"
       ],
       "title": "ContentBlockContentAttachment",
       "type": "object"
