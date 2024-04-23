@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { onMount } from "svelte";
   import type { Attachments, ContentBlock, ContentBlockContentAttachment, Image } from "../../../api/types";
   import LocalizableTextInput from "../../components/LocalizableTextInput.svelte";
   import { Fileupload, Label, Helper, Listgroup, ListgroupItem } from "flowbite-svelte";
@@ -11,7 +10,7 @@
   export let onConfigUpdate: (newConfig: ContentBlock) => any;
 
   let editedMessageText = config.contents[0].text?.text || "";
-  let files: FileList;
+  let files = initFiles(config.contents[0].attachments);
 
   async function updateConfig(): Promise<void> {
     const attachments = await serializeAttachments();
@@ -22,8 +21,10 @@
   async function serializeAttachments(): Promise<Attachments> {
     const attachments: Attachments = [];
 
+    if (!files) return attachments;
+
     for (let file of files) {
-      //NOTE future improvement, add try catch block, err monitoring presence is required
+      // NOTE future improvement, add try catch block, err monitoring presence is required
       const image = await base64EncodeFileContent(file);
       const filename = file.name;
       attachments.push({ image, filename });
@@ -54,10 +55,10 @@
     return file;
   }
 
-  onMount(() => {
-    const attachments = config.contents[0].attachments;
-    if (!attachments.length) return;
+  function initFiles(attachments: Array<any>): FileList | undefined {
+    if (!attachments.length) return undefined;
 
+    // NOTE DataTransfer is a hack, used to create a File List, which is required for a UI component
     const dataTransfer = new DataTransfer();
     attachments.forEach((obj) => {
       let { image, filename } = obj;
@@ -67,8 +68,9 @@
       const file = decodeBase64(image, filename);
       dataTransfer.items.add(file);
     });
-    files = dataTransfer.files;
-  });
+
+    return dataTransfer.files;
+  }
 </script>
 
 <NodeModalBody title={NODE_TITLE.content}>
