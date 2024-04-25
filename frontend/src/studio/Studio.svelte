@@ -181,7 +181,7 @@
 <div class="svelvet-container">
   <div class="navbar-container">
     <Navbar>
-      <div class=" flex gap-2">
+      <div class="flex gap-2">
         <Heading tag="h2" class="mr-2 max-w-96 text-ellipsis">
           {botConfig.display_name}
         </Heading>
