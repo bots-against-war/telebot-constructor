@@ -4,7 +4,7 @@
   import { deleteBotConfig } from "../api/botConfig";
   import { getBotUser } from "../api/botUser";
   import { startBot, stopBot } from "../api/lifecycle";
-  import type { BotInfo } from "../api/types";
+  import type { BotInfo, BotVersionInfo } from "../api/types";
   import BotUserBadge from "../components/BotUserBadge.svelte";
   import ErrorBadge from "../components/ErrorBadge.svelte";
   import Timestamp from "../components/Timestamp.svelte";
@@ -63,6 +63,14 @@
     } else {
       error = `Failed to delete: ${resp.error}`;
     }
+  }
+
+  function studioHref(verInfo: BotVersionInfo): string {
+    let href = `/studio/${encodeURIComponent(botName)}`;
+    if (lastVersion !== verInfo.version) {
+      href += `?version=${encodeURIComponent(verInfo.version)}`;
+    }
+    return href;
   }
 
   const deleteBotWithConfirmation = withConfirmation(
@@ -124,11 +132,7 @@
               <Button size="xs" disabled={isLoading} outline on:click={() => publishOrStop(verInfo.version)}>
                 {botInfo.running_version === verInfo.version ? "Остановить" : "Опубликовать"}
               </Button>
-              <Button
-                size="xs"
-                outline
-                href={`/studio/${encodeURIComponent(botName)}?version=${encodeURIComponent(verInfo.version)}&saveable=${lastVersion === verInfo.version}`}
-              >
+              <Button size="xs" outline href={studioHref(verInfo)}>
                 {lastVersion === verInfo.version ? "Редактировать" : "Посмотреть"}
               </Button>
             </div>
