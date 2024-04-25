@@ -27,7 +27,7 @@
     defaultLanguageSelectBlockConfig,
     defaultMenuBlockConfig,
   } from "./nodes/defaultConfigs";
-  import { NodeTypeKey } from "./nodes/display";
+  import { NODE_HUE, NODE_ICON, NODE_TITLE, NodeTypeKey, headerColor } from "./nodes/display";
   import { languageConfigStore, type LanguageConfig } from "./stores";
 
   export let botName: string;
@@ -96,11 +96,12 @@
   // when the user clicks on "add" button for a particular kind of node, we save it as "tentative"
   // then, when the user selects a place for the node, we add it to the config
   enum NodeKind {
-    BLOCK,
-    ENTRYPOINT,
+    block,
+    entrypoint,
   }
   interface TentativeNode {
     kind: NodeKind;
+    typeKey: NodeTypeKey;
     id: string;
     config: UserFlowEntryPointConfig | UserFlowEntryPointConfig;
   }
@@ -108,17 +109,18 @@
 
   function nodeFactory(
     kind: NodeKind,
-    prefix: string,
+    typeKey: NodeTypeKey,
     configFactory: (
       id: string,
       langConfig: LanguageConfig | null,
     ) => UserFlowEntryPointConfig | UserFlowEntryPointConfig,
   ) {
     return () => {
-      const nodeId = `${kind}-${prefix}-${crypto.randomUUID()}`;
+      const nodeId = `${kind}-${typeKey}-${crypto.randomUUID()}`;
       const config = configFactory(nodeId, $languageConfigStore);
       tentativeNode = {
         kind,
+        typeKey,
         id: nodeId,
         config,
       };
@@ -138,7 +140,7 @@
       x: cursor.x - 125,
       y: cursor.y - 50,
     };
-    if (tentativeNode.kind === NodeKind.BLOCK) {
+    if (tentativeNode.kind === NodeKind.block) {
       botConfig.user_flow_config.blocks = [...botConfig.user_flow_config.blocks, tentativeNode.config];
     } else {
       botConfig.user_flow_config.entrypoints = [...botConfig.user_flow_config.entrypoints, tentativeNode.config];
@@ -178,8 +180,16 @@
     async () => exitStudio(),
     "Выйти",
   );
+
+  let tentativeNodeMouseFollowerElement: HTMLElement | null = null;
+  function handleMouseMove(e: MouseEvent) {
+    if (!tentativeNodeMouseFollowerElement) return;
+    tentativeNodeMouseFollowerElement.style.left = e.pageX + "px";
+    tentativeNodeMouseFollowerElement.style.top = e.pageY + "px";
+  }
 </script>
 
+<svelte:window on:mousemove={handleMouseMove} />
 <div class="svelvet-container">
   <div class="navbar-container">
     <Navbar>
@@ -209,6 +219,7 @@
     minimap={false}
     enableAllHotkeys={false}
     {customMouseDownHandler}
+    customCssCursor={tentativeNode ? "crosshair" : null}
   >
     <BotInfoNode {botName} bind:position={botConfig.user_flow_config.node_display_coords[BOT_INFO_NODE_ID]} />
     {#each botConfig.user_flow_config.entrypoints as entrypoint (getEntrypointId(entrypoint))}
@@ -268,24 +279,42 @@
     <div class="flex flex-col gap-3">
       <AddNodeButton
         key={NodeTypeKey.command}
-        on:click={nodeFactory(NodeKind.ENTRYPOINT, "command", defaultCommandEntrypoint)}
+        on:click={nodeFactory(NodeKind.entrypoint, NodeTypeKey.command, defaultCommandEntrypoint)}
       />
       <AddNodeButton
         key={NodeTypeKey.content}
-        on:click={nodeFactory(NodeKind.BLOCK, "content", defaultContentBlockConfig)}
+        on:click={nodeFactory(NodeKind.block, NodeTypeKey.content, defaultContentBlockConfig)}
       />
       <AddNodeButton
         key={NodeTypeKey.human_operator}
-        on:click={nodeFactory(NodeKind.BLOCK, "human-operator", defaultHumanOperatorBlockConfig)}
+        on:click={nodeFactory(NodeKind.block, NodeTypeKey.human_operator, defaultHumanOperatorBlockConfig)}
       />
       <AddNodeButton
         key={NodeTypeKey.language_select}
-        on:click={nodeFactory(NodeKind.BLOCK, "language-select", defaultLanguageSelectBlockConfig)}
+        on:click={nodeFactory(NodeKind.block, NodeTypeKey.language_select, defaultLanguageSelectBlockConfig)}
       />
-      <AddNodeButton key={NodeTypeKey.menu} on:click={nodeFactory(NodeKind.BLOCK, "menu", defaultMenuBlockConfig)} />
-      <AddNodeButton key={NodeTypeKey.form} on:click={nodeFactory(NodeKind.BLOCK, "form", defaultFormBlockConfig)} />
+      <AddNodeButton
+        key={NodeTypeKey.menu}
+        on:click={nodeFactory(NodeKind.block, NodeTypeKey.menu, defaultMenuBlockConfig)}
+      />
+      <AddNodeButton
+        key={NodeTypeKey.form}
+        on:click={nodeFactory(NodeKind.block, NodeTypeKey.form, defaultFormBlockConfig)}
+      />
     </div>
   </StudioSidePandel>
+  {#if tentativeNode}
+    <div
+      id="tentative-node-mouse-follower"
+      style="background-color: {headerColor(NODE_HUE[tentativeNode.typeKey])}"
+      bind:this={tentativeNodeMouseFollowerElement}
+    >
+      <div class="flex items-center gap-2">
+        <svelte:component this={NODE_ICON[tentativeNode.typeKey]} class="w-4 h-4" />
+        <span class="font-bold text-lg">{NODE_TITLE[tentativeNode.typeKey]}</span>
+      </div>
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -298,5 +327,16 @@
     top: 0;
     z-index: 100;
     width: 100%;
+  }
+  #tentative-node-mouse-follower {
+    opacity: 0.8;
+    position: absolute;
+    /* x, y of cursor should be above in the center */
+    transform: translate(-50%, -140%);
+    /* mimicking node styles */
+    background-color: white;
+    border-radius: 10px;
+    border: solid 1px rgb(206, 212, 218);
+    padding: 8px;
   }
 </style>
