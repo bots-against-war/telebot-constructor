@@ -16,12 +16,7 @@
   version = typeof version === "number" && isNaN(version) ? null : version;
 
   const urlReadonly = urlParams.get("readonly");
-  const readonly =
-    urlReadonly === "true"
-      ? true
-      : urlReadonly === "false"
-        ? false
-        : version !== null; // by default, set readonly for non-last versions
+  const readonly = urlReadonly === "true" ? true : urlReadonly === "false" ? false : version !== null; // by default, set readonly for non-last versions
 
   console.log(`Loading studio for bot id = ${botName}, version = ${version}, readonly = ${readonly}`);
 
