@@ -37,6 +37,7 @@
     bind:isValid
     configValidator={validateContentBlock}
     on:delete
+    on:clone
     on:edit={openEditModal}
   >
     {#if config.contents.length > 0 && config.contents[0].text}

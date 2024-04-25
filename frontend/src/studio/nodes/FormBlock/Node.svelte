@@ -39,6 +39,7 @@
     configValidator={validateFormBlock}
     bind:isValid
     on:delete
+    on:clone
     on:edit={openEditModal}
   >
     Полей: {flattenedFormFields(config.members).length}

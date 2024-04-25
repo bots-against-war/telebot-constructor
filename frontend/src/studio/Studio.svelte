@@ -1,11 +1,10 @@
 <script lang="ts">
   import { Button, Heading, Spinner, Tooltip } from "flowbite-svelte";
-  import { QuestionCircleOutline } from "flowbite-svelte-icons";
   import { navigate } from "svelte-routing";
   import { Svelvet } from "svelvet";
   import { saveBotConfig } from "../api/botConfig";
-  import { getBlockId, getEntrypointId } from "../api/typeUtils";
-  import type { BotConfig, UserFlowEntryPointConfig } from "../api/types";
+  import { getBlockConcreteConfig, getBlockId, getEntrypointConcreteConfig, getEntrypointId } from "../api/typeUtils";
+  import type { BotConfig, UserFlowBlockConfig, UserFlowEntryPointConfig } from "../api/types";
   import Navbar from "../components/Navbar.svelte";
   import { BOT_INFO_NODE_ID } from "../constants";
   import { err, getError, getModalOpener, ok, withConfirmation, type Result } from "../utils";
@@ -28,8 +27,9 @@
     defaultLanguageSelectBlockConfig,
     defaultMenuBlockConfig,
   } from "./nodes/defaultConfigs";
-  import { NODE_HUE, NODE_ICON, NODE_TITLE, NodeTypeKey, headerColor } from "./nodes/display";
+  import { NODE_HUE, NODE_ICON, NODE_TITLE, NodeTypeKey, getNodeTypeKey, headerColor } from "./nodes/display";
   import { languageConfigStore, type LanguageConfig } from "./stores";
+  import { clone } from "./utils";
 
   export let botName: string;
   export let botConfig: BotConfig;
@@ -108,6 +108,10 @@
   }
   let tentativeNode: TentativeNode | null = null;
 
+  function generateNodeId(kind: NodeKind, type: NodeTypeKey) {
+    return `${kind}-${type}-${crypto.randomUUID()}`;
+  }
+
   function nodeFactory(
     kind: NodeKind,
     typeKey: NodeTypeKey,
@@ -117,7 +121,7 @@
     ) => UserFlowEntryPointConfig | UserFlowEntryPointConfig,
   ) {
     return () => {
-      const nodeId = `${kind}-${typeKey}-${crypto.randomUUID()}`;
+      const nodeId = generateNodeId(kind, typeKey);
       const config = configFactory(nodeId, $languageConfigStore);
       tentativeNode = {
         kind,
@@ -126,6 +130,54 @@
         config,
       };
       console.debug(`Tentative node created`, tentativeNode);
+    };
+  }
+  // node cloning is another way to create nodes from existing one
+  function nodeCloner(id: string) {
+    return () => {
+      const entrypointIdx = botConfig.user_flow_config.entrypoints.map(getEntrypointId).findIndex((eId) => eId === id);
+      const blockIdx = botConfig.user_flow_config.blocks.map(getBlockId).findIndex((bId) => bId === id);
+      let config: UserFlowEntryPointConfig | UserFlowBlockConfig;
+      let kind: NodeKind;
+      let typeKey: NodeTypeKey | null;
+      let newId: string;
+      if (entrypointIdx !== -1) {
+        kind = NodeKind.entrypoint;
+        config = clone(botConfig.user_flow_config.entrypoints[entrypointIdx]);
+        typeKey = getNodeTypeKey(config);
+        if (!typeKey) {
+          return;
+        }
+        newId = generateNodeId(kind, typeKey);
+        const concrete = getEntrypointConcreteConfig(config);
+        if (!concrete) {
+          return;
+        }
+        concrete.entrypoint_id = newId;
+      } else if (blockIdx !== -1) {
+        kind = NodeKind.block;
+        config = clone(botConfig.user_flow_config.blocks[blockIdx]);
+        typeKey = getNodeTypeKey(config);
+        if (!typeKey) {
+          return;
+        }
+        newId = generateNodeId(kind, typeKey);
+        const concrete = getBlockConcreteConfig(config);
+        if (!concrete) {
+          return;
+        }
+        concrete.block_id = newId;
+      } else {
+        console.log(`Node with id '${id}' not found among entrypoints and blocks`);
+        return;
+      }
+
+      tentativeNode = {
+        id: newId,
+        kind,
+        typeKey,
+        config,
+      };
     };
   }
 
@@ -138,8 +190,8 @@
       return true;
     }
     botConfig.user_flow_config.node_display_coords[tentativeNode.id] = {
-      x: cursor.x - 125,
-      y: cursor.y - 50,
+      x: cursor.x - 125, // half-width of the node in svelvet's coords
+      y: cursor.y - 50, // just some arbitrary offset
     };
     if (tentativeNode.kind === NodeKind.block) {
       botConfig.user_flow_config.blocks = [...botConfig.user_flow_config.blocks, tentativeNode.config];
@@ -262,6 +314,7 @@
       {#if block.content}
         <ContentBlockNode
           on:delete={nodeDeleter(block.content.block_id)}
+          on:clone={nodeCloner(block.content.block_id)}
           bind:config={block.content}
           bind:position={botConfig.user_flow_config.node_display_coords[block.content.block_id]}
           bind:isValid={isNodeValid[block.content.block_id]}
@@ -270,6 +323,7 @@
         <HumanOperatorNode
           {botName}
           on:delete={nodeDeleter(block.human_operator.block_id)}
+          on:clone={nodeCloner(block.human_operator.block_id)}
           bind:config={block.human_operator}
           bind:position={botConfig.user_flow_config.node_display_coords[block.human_operator.block_id]}
           bind:isValid={isNodeValid[block.human_operator.block_id]}
@@ -286,6 +340,7 @@
       {:else if block.menu}
         <MenuNode
           on:delete={nodeDeleter(block.menu.block_id)}
+          on:clone={nodeCloner(block.menu.block_id)}
           bind:config={block.menu}
           bind:position={botConfig.user_flow_config.node_display_coords[block.menu.block_id]}
           bind:isValid={isNodeValid[block.menu.block_id]}
@@ -294,6 +349,7 @@
         <FormNode
           {botName}
           on:delete={nodeDeleter(block.form.block_id)}
+          on:clone={nodeCloner(block.form.block_id)}
           bind:config={block.form}
           bind:position={botConfig.user_flow_config.node_display_coords[block.form.block_id]}
           bind:isValid={isNodeValid[block.form.block_id]}
@@ -357,6 +413,8 @@
   #tentative-node-mouse-follower {
     opacity: 0.8;
     position: absolute;
+    top: -300px;
+    left: -300px;
     /* x, y of cursor should be above in the center */
     transform: translate(-50%, -140%);
     /* mimicking node styles */

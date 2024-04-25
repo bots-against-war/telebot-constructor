@@ -9,6 +9,7 @@ import {
 } from "flowbite-svelte-icons";
 import { SvelteComponent } from "svelte";
 import type { Newable } from "ts-essentials";
+import type { UserFlowBlockConfig, UserFlowEntryPointConfig } from "../../api/types";
 
 export enum NodeTypeKey {
   command = "command",
@@ -18,6 +19,24 @@ export enum NodeTypeKey {
   menu = "menu",
   form = "form",
   info = "info",
+}
+
+export function getNodeTypeKey(config: UserFlowBlockConfig | UserFlowEntryPointConfig): NodeTypeKey | null {
+  if (config.command) {
+    return NodeTypeKey.command;
+  } else if (config.content) {
+    return NodeTypeKey.content;
+  } else if (config.human_operator) {
+    return NodeTypeKey.human_operator;
+  } else if (config.language_select) {
+    return NodeTypeKey.language_select;
+  } else if (config.menu) {
+    return NodeTypeKey.menu;
+  } else if (config.form) {
+    return NodeTypeKey.form;
+  } else {
+    return null;
+  }
 }
 
 export const NODE_HUE: { [key in NodeTypeKey]: number } = {

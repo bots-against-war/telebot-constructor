@@ -39,6 +39,7 @@
     {config}
     configValidator={validateHumanOperatorBlock}
     on:delete
+    on:clone
     on:edit={openEditModal}
   >
     <GroupChatBadge {botName} chatId={config.feedback_handler_config.admin_chat_id} />

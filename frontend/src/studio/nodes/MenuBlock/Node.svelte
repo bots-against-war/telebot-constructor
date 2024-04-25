@@ -39,6 +39,7 @@
     bind:isValid
     configValidator={validateMenuBlock}
     on:delete
+    on:clone
     on:edit={openEditModal}
   >
     <LocalizableText text={config.menu.text} />

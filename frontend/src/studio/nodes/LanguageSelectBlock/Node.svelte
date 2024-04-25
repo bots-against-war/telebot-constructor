@@ -39,6 +39,7 @@
     clonable={false}
     configValidator={validateLanguageSelectBlock}
     on:delete
+    on:clone
     on:edit={openEditModal}
   >
     <div class="flex flex-row gap-2">

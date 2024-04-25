@@ -5,29 +5,27 @@ import type {
   UserFlowEntryPointConfig,
 } from "./types";
 
+export function getBlockConcreteConfig(c: UserFlowBlockConfig) {
+  return c.content || c.human_operator || c.menu || c.form || c.language_select
+}
+
 export function getBlockId(c: UserFlowBlockConfig): string {
-  if (c.content) {
-    return c.content.block_id;
-  } else if (c.human_operator) {
-    return c.human_operator.block_id;
-  } else if (c.menu) {
-    return c.menu.block_id;
-  } else if (c.form) {
-    return c.form.block_id;
-  } else if (c.language_select) {
-    return c.language_select.block_id;
+  const concreteConfig = getBlockConcreteConfig(c);
+  if (concreteConfig) {
+    return concreteConfig.block_id;
   } else {
     throw new Error(`getBlockId got unexpected config variant: ${c}`);
   }
 }
 
+export function getEntrypointConcreteConfig(c: UserFlowEntryPointConfig) {
+  return c.command || c.catch_all || c.regex;
+}
+
 export function getEntrypointId(c: UserFlowEntryPointConfig): string {
-  if (c.command) {
-    return c.command.entrypoint_id;
-  } else if (c.catch_all) {
-    return c.catch_all.entrypoint_id;
-  } else if (c.regex) {
-    return c.regex.entrypoint_id;
+  const concreteConfig = getEntrypointConcreteConfig(c);
+  if (concreteConfig) {
+    return concreteConfig.entrypoint_id;
   } else {
     throw new Error(`getEntrypointId got unexpected config variant: ${c}`);
   }

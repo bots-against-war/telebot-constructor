@@ -47,18 +47,18 @@
       <ActionIcon icon={PenOutline} on:click={() => dispatch("edit")} />
       {#if deletable || clonable}
         <ActionIcon id="show-more-actions" icon={DotsHorizontalOutline} />
-        <Popover triggeredBy="#show-more-actions" trigger="click" placement="right-start" defaultClass="">
+        <Popover triggeredBy="#show-more-actions" placement="right-start" defaultClass="">
           <Listgroup active class="text-sm border-none">
-            {#if deletable}
-              <ListgroupItem on:click={() => dispatch("delete")} class="gap-2">
-                <TrashBinOutline class="w-3 h-3 text-gray-700" />
-                Удалить
-              </ListgroupItem>
-            {/if}
             {#if clonable}
               <ListgroupItem on:click={() => dispatch("clone")} class="gap-2">
                 <FileCopyOutline class="w-3 h-3 text-gray-700" />
                 Дублировать
+              </ListgroupItem>
+            {/if}
+            {#if deletable}
+              <ListgroupItem on:click={() => dispatch("delete")} class="gap-2">
+                <TrashBinOutline class="w-3 h-3 text-gray-700" />
+                Удалить
               </ListgroupItem>
             {/if}
           </Listgroup>
