@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { Button, Heading, Spinner } from "flowbite-svelte";
+  import { Button, Heading, Spinner, Tooltip } from "flowbite-svelte";
+  import { QuestionCircleOutline } from "flowbite-svelte-icons";
   import { navigate } from "svelte-routing";
   import { Svelvet } from "svelvet";
   import { saveBotConfig } from "../api/botConfig";
@@ -7,7 +8,7 @@
   import type { BotConfig, UserFlowEntryPointConfig } from "../api/types";
   import Navbar from "../components/Navbar.svelte";
   import { BOT_INFO_NODE_ID } from "../constants";
-  import { getError, getModalOpener, withConfirmation } from "../utils";
+  import { err, getError, getModalOpener, ok, withConfirmation, type Result } from "../utils";
   import SaveConfigModal from "./SaveConfigModal.svelte";
   import AddNodeButton from "./components/AddNodeButton.svelte";
   import DeletableEdge from "./components/DeletableEdge.svelte";
@@ -151,25 +152,40 @@
 
   // automatic config validation on any nodes' validity update
   let isNodeValid: { [k: string]: boolean } = {};
-  let isConfigValid: boolean;
+  let configValidationResult: Result<null> = ok(null);
   $: {
-    isConfigValid = !(
-      botConfig.user_flow_config.blocks.some((block) => isNodeValid[getBlockId(block)] === false) ||
-      botConfig.user_flow_config.entrypoints.some((ep) => isNodeValid[getEntrypointId(ep)] === false)
-    );
+    configValidationResult = ok(null);
+    if (
+      botConfig.user_flow_config.blocks.some((b) => !isNodeValid[getBlockId(b)]) ||
+      botConfig.user_flow_config.entrypoints.some((e) => !isNodeValid[getEntrypointId(e)])
+    ) {
+      configValidationResult = err("Проблема в одном или нескольких блоках");
+    }
+    const occurrenceCounts = botConfig.user_flow_config.entrypoints
+      .map((ep) => ep.command?.command)
+      .filter((cmd) => cmd !== undefined)
+      .reduce((acc: { [k: string]: number }, cmd) => {
+        if (cmd) acc[cmd] = 1 + (acc[cmd] || 0);
+        return acc;
+      }, {});
+
+    if (Object.values(occurrenceCounts).some((v) => v > 1)) {
+      configValidationResult = err("Бот содержит повторяющиеся /команды");
+    }
   }
 
   // node saving function with "in progress" state
   let isSavingBotConfig = false;
   async function saveCurrentBotConfig(versionMessage: string | null, start: boolean) {
     if (readonly) return;
-    if (!isConfigValid) return;
+    if (!configValidationResult.ok) return;
     isSavingBotConfig = true;
     console.log(`Saving bot config for ${botName}`, botConfig);
     const res = await saveBotConfig(botName, { config: botConfig, version_message: versionMessage, start });
     isSavingBotConfig = false;
     if (getError(res) !== null) {
       window.alert(`Error saving bot config: ${getError(res)}`);
+      return;
     }
     isConfigModified = false;
   }
@@ -197,8 +213,18 @@
         <Heading tag="h2" class="mr-2 max-w-96 text-ellipsis">
           {botConfig.display_name}
         </Heading>
+        {#if readonly || !configValidationResult.ok || !isConfigModified}
+          <Tooltip placement="bottom" triggeredBy="#save-button"
+            >{readonly
+              ? "Режим просмотра"
+              : !configValidationResult.ok
+                ? "Ошибка валидации: " + getError(configValidationResult)
+                : "Нет изменений"}</Tooltip
+          >
+        {/if}
         <Button
-          disabled={readonly || !isConfigValid || !isConfigModified || isSavingBotConfig}
+          id="save-button"
+          disabled={readonly || !configValidationResult.ok || !isConfigModified || isSavingBotConfig}
           on:click={() => open(SaveConfigModal, { callback: saveCurrentBotConfig })}
         >
           {#if isSavingBotConfig}
