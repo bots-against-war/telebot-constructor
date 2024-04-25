@@ -39,7 +39,7 @@
   >
     <div class="flex items-center gap-2">
       <svelte:component this={NODE_ICON[key]} class="w-4 h-4" />
-      <span class=" font-bold text-lg">{NODE_TITLE[key]}</span>
+      <span class="font-bold text-lg">{NODE_TITLE[key]}</span>
     </div>
     <div class="flex items-center gap-0">
       <ActionIcon icon={PenOutline} on:click={() => dispatch("edit")} />

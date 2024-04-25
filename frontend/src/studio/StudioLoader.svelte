@@ -15,9 +15,10 @@
   // convert NaN -> null
   version = typeof version === "number" && isNaN(version) ? null : version;
 
-  const isSaveable = urlParams.get("saveable") === "true";
+  const urlReadonly = urlParams.get("readonly");
+  const readonly = urlReadonly === "true" ? true : urlReadonly === "false" ? false : version !== null; // by default, set readonly for non-last versions
 
-  console.log(`Loadig studio for bot id = ${botName}, version = ${version}, is saveable = ${isSaveable}`);
+  console.log(`Loading studio for bot id = ${botName}, version = ${version}, readonly = ${readonly}`);
 
   async function getBotConfig(botName: string): Promise<BotConfig> {
     const loadBotConfigResult = await loadBotConfig(botName, version);
@@ -30,7 +31,7 @@
 {#await getBotConfigPromise}
   <LoadingScreen />
 {:then botConfig}
-  <Studio {botName} {botConfig} {isSaveable} />
+  <Studio {botName} {botConfig} {readonly} />
 {:catch error}
   <FatalError {error} />
 {/await}

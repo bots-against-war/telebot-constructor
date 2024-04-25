@@ -1,4 +1,3 @@
-import type { UserFlowNodePosition } from "../api/types";
 import type { LocalizableText } from "../types";
 import type { LanguageConfig } from "./stores";
 
@@ -6,56 +5,6 @@ export function svelvetNodeIdToBlockId(id: string): string {
   // svelvet adds "N-" prefix to ids we pass to them, so we need to strip id back
   // see https://svelvet.mintlify.app/components/node#props
   return id.replace(/^N-/, "");
-}
-
-export function findNewNodePositionRight(
-  current: UserFlowNodePosition[],
-  nodeWidth: number,
-  nodeHeight: number,
-  margin: number,
-) {
-  // reusing "down" logic in transposed form
-  const transposed = findNewNodePositionDown(
-    // x, y => y, x
-    current.map(({ x, y }) => {
-      return { x: y, y: x };
-    }),
-    // switching height and width
-    nodeHeight,
-    nodeWidth,
-    margin,
-  );
-  return { x: transposed.y, y: transposed.x };
-}
-
-export function findNewNodePositionDown(
-  current: UserFlowNodePosition[],
-  nodeWidth: number,
-  nodeHeight: number,
-  margin: number,
-): UserFlowNodePosition {
-  const yMin = Math.min(...current.map(({ _, y }) => y));
-
-  function yMax(x: number): number {
-    return Math.max(
-      yMin,
-      ...current
-        .filter(
-          (nodePosition) => nodePosition.x > x - nodeWidth / 2 - margin && nodePosition.x < x + nodeWidth / 2 + margin,
-        )
-        .map((nodePosition) => nodePosition.y + nodeHeight + margin),
-    );
-  }
-
-  const leftEdgeMin = Math.min(...current.map((pos) => pos.x)) - nodeWidth / 2;
-  const leftEdgeMax = Math.max(...current.map((pos) => pos.x)) - nodeWidth / 2;
-  const leftEdgeVariants = linspace(leftEdgeMin, leftEdgeMax, 10).map((v) => v + gaussianRandom(0, margin));
-  const leftEdgeOptimalVariantIdx = argmin(leftEdgeVariants.map((x) => Math.max(yMax(x), yMax(x + nodeWidth))));
-  const xOptimal = leftEdgeVariants[leftEdgeOptimalVariantIdx] + nodeWidth / 2;
-  return {
-    x: xOptimal,
-    y: yMax(xOptimal),
-  };
 }
 
 export function linspace(start: number, stop: number, len: number): number[] {

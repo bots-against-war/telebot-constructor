@@ -4,10 +4,11 @@
   import { Svelvet } from "svelvet";
   import { saveBotConfig } from "../api/botConfig";
   import { getBlockId, getEntrypointId } from "../api/typeUtils";
-  import type { BotConfig, UserFlowBlockConfig, UserFlowEntryPointConfig, UserFlowNodePosition } from "../api/types";
+  import type { BotConfig, UserFlowEntryPointConfig } from "../api/types";
   import Navbar from "../components/Navbar.svelte";
   import { BOT_INFO_NODE_ID } from "../constants";
   import { getError, getModalOpener, withConfirmation } from "../utils";
+  import SaveConfigModal from "./SaveConfigModal.svelte";
   import AddNodeButton from "./components/AddNodeButton.svelte";
   import DeletableEdge from "./components/DeletableEdge.svelte";
   import StudioSidePandel from "./components/StudioSidePanel.svelte";
@@ -26,23 +27,22 @@
     defaultLanguageSelectBlockConfig,
     defaultMenuBlockConfig,
   } from "./nodes/defaultConfigs";
-  import { NodeTypeKey } from "./nodes/display";
+  import { NODE_HUE, NODE_ICON, NODE_TITLE, NodeTypeKey, headerColor } from "./nodes/display";
   import { languageConfigStore, type LanguageConfig } from "./stores";
-  import { findNewNodePositionDown, findNewNodePositionRight } from "./utils";
-  import SaveConfigModal from "./SaveConfigModal.svelte";
 
   export let botName: string;
   export let botConfig: BotConfig;
-  export let isSaveable: boolean;
+  export let readonly: boolean;
 
   const open = getModalOpener();
 
+  // tracking when the config is modified to prevent exiting with unsaved changes
+  let isConfigModified = false;
   let configReactivityTriggeredCount = 0;
   $: {
     botConfig; // trigger svelte's reactivity by mentioning the value we're reacting to
     configReactivityTriggeredCount += 1;
   }
-  let isConfigModified = false;
   $: {
     if (configReactivityTriggeredCount > 2) {
       // dont know why it's 2 but it just works...
@@ -50,7 +50,7 @@
     }
   }
 
-  // initial language config from the loaded config
+  // setting the initial language config based on whether bot config includes language select block
   let languageSelectBlockFound = false;
   for (const block of botConfig.user_flow_config.blocks) {
     if (block.language_select) {
@@ -65,74 +65,91 @@
     languageConfigStore.set(null);
   }
 
-  function newUserFlowNodePosition(isEntrypoing: boolean): UserFlowNodePosition {
-    const currentPositions = Object.values(botConfig.user_flow_config.node_display_coords);
-    if (currentPositions.length === 0) {
-      return { x: 0, y: 0 };
-    } else {
-      const findFunc = isEntrypoing ? findNewNodePositionRight : findNewNodePositionDown;
-      return findFunc(Object.values(botConfig.user_flow_config.node_display_coords), 250, 220, 30);
-    }
-  }
-
-  function getEntrypointDestructor(id: string) {
+  // factory for node deletion callbacks
+  function nodeDeleter(id: string, postDelete: () => any = () => {}) {
     return () => {
-      const idx = botConfig.user_flow_config.entrypoints
+      // this is a bit cumbersome because we store very similar things (blocks and entrypoing) in two different places
+      // as a result we need to look in two places and process every one of them
+      const entrypointIdx = botConfig.user_flow_config.entrypoints
         .map(getEntrypointId)
-        .findIndex((entrypointId) => entrypointId === id);
-      if (idx === -1) {
-        console.log(`Entrypoing with id '${id}' not found`);
+        .findIndex((nodeId) => nodeId === id);
+      const blockIdx = botConfig.user_flow_config.blocks.map(getBlockId).findIndex((nodeId) => nodeId === id);
+      if (entrypointIdx !== -1) {
+        console.debug(
+          `Deleting entrypoint id=${id} idx=${entrypointIdx}`,
+          botConfig.user_flow_config.entrypoints[entrypointIdx],
+        );
+        botConfig.user_flow_config.entrypoints = botConfig.user_flow_config.entrypoints.toSpliced(entrypointIdx, 1);
+      } else if (blockIdx !== -1) {
+        console.debug(`Deleting block id=${id} idx=${blockIdx}`, botConfig.user_flow_config.blocks[blockIdx]);
+        botConfig.user_flow_config.blocks = botConfig.user_flow_config.blocks.toSpliced(blockIdx, 1);
+      } else {
+        console.log(`Node with id '${id}' not found among entrypoints and blocks`);
         return;
       }
-      console.debug(
-        `Deleting entrypoint [idx = ${idx}] ${JSON.stringify(botConfig.user_flow_config.entrypoints[idx])}`,
-      );
-      botConfig.user_flow_config.entrypoints = botConfig.user_flow_config.entrypoints.toSpliced(idx, 1);
       delete botConfig.user_flow_config.node_display_coords[id];
-    };
-  }
-  function getEntrypointConstructor(
-    prefix: string,
-    entryPointConfigConstructor: (id: string, langConfig: LanguageConfig | null) => UserFlowEntryPointConfig,
-  ) {
-    return () => {
-      const id = `entrypoint-${prefix}-${crypto.randomUUID()}`;
-      console.debug(`Creating new entrypoint ${id}`);
-      botConfig.user_flow_config.node_display_coords[id] = newUserFlowNodePosition(true);
-      botConfig.user_flow_config.entrypoints = [
-        ...botConfig.user_flow_config.entrypoints,
-        entryPointConfigConstructor(id, $languageConfigStore),
-      ];
-    };
-  }
-  function getBlockDestructor(id: string, postDestruct: (() => void) | undefined = undefined) {
-    return () => {
-      const idx = botConfig.user_flow_config.blocks.map(getBlockId).findIndex((blockId) => blockId === id);
-      if (idx === -1) {
-        console.log(`Block with id '${id}' not found`);
-        return;
-      }
-      console.debug(`Deleting block [idx = ${idx}] ${JSON.stringify(botConfig.user_flow_config.blocks[idx])}`);
-      botConfig.user_flow_config.blocks = botConfig.user_flow_config.blocks.toSpliced(idx, 1);
-      delete botConfig.user_flow_config.node_display_coords[id];
-      if (postDestruct !== undefined) postDestruct();
-    };
-  }
-  function getBlockConstructor(
-    prefix: string,
-    blockConfigConstructor: (id: string, langConfig: LanguageConfig | null) => UserFlowBlockConfig,
-  ) {
-    return () => {
-      const id = `block-${prefix}-${crypto.randomUUID()}`;
-      console.debug(`Creating new block ${id}`);
-      botConfig.user_flow_config.node_display_coords[id] = newUserFlowNodePosition(false);
-      botConfig.user_flow_config.blocks = [
-        ...botConfig.user_flow_config.blocks,
-        blockConfigConstructor(id, $languageConfigStore),
-      ];
+      postDelete();
     };
   }
 
+  // node creation machinery:
+  // when the user clicks on "add" button for a particular kind of node, we save it as "tentative"
+  // then, when the user selects a place for the node, we add it to the config
+  enum NodeKind {
+    block,
+    entrypoint,
+  }
+  interface TentativeNode {
+    kind: NodeKind;
+    typeKey: NodeTypeKey;
+    id: string;
+    config: UserFlowEntryPointConfig | UserFlowEntryPointConfig;
+  }
+  let tentativeNode: TentativeNode | null = null;
+
+  function nodeFactory(
+    kind: NodeKind,
+    typeKey: NodeTypeKey,
+    configFactory: (
+      id: string,
+      langConfig: LanguageConfig | null,
+    ) => UserFlowEntryPointConfig | UserFlowEntryPointConfig,
+  ) {
+    return () => {
+      const nodeId = `${kind}-${typeKey}-${crypto.randomUUID()}`;
+      const config = configFactory(nodeId, $languageConfigStore);
+      tentativeNode = {
+        kind,
+        typeKey,
+        id: nodeId,
+        config,
+      };
+      console.debug(`Tentative node created`, tentativeNode);
+    };
+  }
+
+  function customMouseDownHandler(e: MouseEvent, cursor: { x: number; y: number }): boolean {
+    if (tentativeNode === null) return false;
+    console.log("Mouse-down event received with tentative node set, processing, cursor=", cursor);
+    if (e.button == 2) {
+      console.debug("RMB click, tentative node dropped");
+      tentativeNode = null;
+      return true;
+    }
+    botConfig.user_flow_config.node_display_coords[tentativeNode.id] = {
+      x: cursor.x - 125,
+      y: cursor.y - 50,
+    };
+    if (tentativeNode.kind === NodeKind.block) {
+      botConfig.user_flow_config.blocks = [...botConfig.user_flow_config.blocks, tentativeNode.config];
+    } else {
+      botConfig.user_flow_config.entrypoints = [...botConfig.user_flow_config.entrypoints, tentativeNode.config];
+    }
+    tentativeNode = null;
+    return true;
+  }
+
+  // automatic config validation on any nodes' validity update
   let isNodeValid: { [k: string]: boolean } = {};
   let isConfigValid: boolean;
   $: {
@@ -142,9 +159,10 @@
     );
   }
 
+  // node saving function with "in progress" state
   let isSavingBotConfig = false;
-
   async function saveCurrentBotConfig(versionMessage: string | null, start: boolean) {
+    if (readonly) return;
     if (!isConfigValid) return;
     isSavingBotConfig = true;
     console.log(`Saving bot config for ${botName}`, botConfig);
@@ -162,17 +180,25 @@
     async () => exitStudio(),
     "Выйти",
   );
+
+  let tentativeNodeMouseFollowerElement: HTMLElement | null = null;
+  function handleMouseMove(e: MouseEvent) {
+    if (!tentativeNodeMouseFollowerElement) return;
+    tentativeNodeMouseFollowerElement.style.left = e.pageX + "px";
+    tentativeNodeMouseFollowerElement.style.top = e.pageY + "px";
+  }
 </script>
 
+<svelte:window on:mousemove={handleMouseMove} />
 <div class="svelvet-container">
   <div class="navbar-container">
     <Navbar>
-      <div class=" flex gap-2">
+      <div class="flex gap-2">
         <Heading tag="h2" class="mr-2 max-w-96 text-ellipsis">
           {botConfig.display_name}
         </Heading>
         <Button
-          disabled={!isSaveable || !isConfigValid || !isConfigModified || isSavingBotConfig}
+          disabled={readonly || !isConfigValid || !isConfigModified || isSavingBotConfig}
           on:click={() => open(SaveConfigModal, { callback: saveCurrentBotConfig })}
         >
           {#if isSavingBotConfig}
@@ -192,12 +218,14 @@
     editable={false}
     minimap={false}
     enableAllHotkeys={false}
+    {customMouseDownHandler}
+    customCssCursor={tentativeNode ? "crosshair" : null}
   >
     <BotInfoNode {botName} bind:position={botConfig.user_flow_config.node_display_coords[BOT_INFO_NODE_ID]} />
     {#each botConfig.user_flow_config.entrypoints as entrypoint (getEntrypointId(entrypoint))}
       {#if entrypoint.command}
         <CommandEntryPointNode
-          on:delete={getEntrypointDestructor(entrypoint.command.entrypoint_id)}
+          on:delete={nodeDeleter(entrypoint.command.entrypoint_id)}
           bind:config={entrypoint.command}
           bind:position={botConfig.user_flow_config.node_display_coords[entrypoint.command.entrypoint_id]}
           bind:isValid={isNodeValid[entrypoint.command.entrypoint_id]}
@@ -207,7 +235,7 @@
     {#each botConfig.user_flow_config.blocks as block (getBlockId(block))}
       {#if block.content}
         <ContentBlockNode
-          on:delete={getBlockDestructor(block.content.block_id)}
+          on:delete={nodeDeleter(block.content.block_id)}
           bind:config={block.content}
           bind:position={botConfig.user_flow_config.node_display_coords[block.content.block_id]}
           bind:isValid={isNodeValid[block.content.block_id]}
@@ -215,14 +243,14 @@
       {:else if block.human_operator}
         <HumanOperatorNode
           {botName}
-          on:delete={getBlockDestructor(block.human_operator.block_id)}
+          on:delete={nodeDeleter(block.human_operator.block_id)}
           bind:config={block.human_operator}
           bind:position={botConfig.user_flow_config.node_display_coords[block.human_operator.block_id]}
           bind:isValid={isNodeValid[block.human_operator.block_id]}
         />
       {:else if block.language_select}
         <LanguageSelectNode
-          on:delete={getBlockDestructor(block.language_select.block_id, () => {
+          on:delete={nodeDeleter(block.language_select.block_id, () => {
             languageConfigStore.set(null);
           })}
           bind:config={block.language_select}
@@ -231,7 +259,7 @@
         />
       {:else if block.menu}
         <MenuNode
-          on:delete={getBlockDestructor(block.menu.block_id)}
+          on:delete={nodeDeleter(block.menu.block_id)}
           bind:config={block.menu}
           bind:position={botConfig.user_flow_config.node_display_coords[block.menu.block_id]}
           bind:isValid={isNodeValid[block.menu.block_id]}
@@ -239,7 +267,7 @@
       {:else if block.form}
         <FormNode
           {botName}
-          on:delete={getBlockDestructor(block.form.block_id)}
+          on:delete={nodeDeleter(block.form.block_id)}
           bind:config={block.form}
           bind:position={botConfig.user_flow_config.node_display_coords[block.form.block_id]}
           bind:isValid={isNodeValid[block.form.block_id]}
@@ -251,22 +279,42 @@
     <div class="flex flex-col gap-3">
       <AddNodeButton
         key={NodeTypeKey.command}
-        on:click={getEntrypointConstructor("command", defaultCommandEntrypoint)}
+        on:click={nodeFactory(NodeKind.entrypoint, NodeTypeKey.command, defaultCommandEntrypoint)}
       />
-      <AddNodeButton key={NodeTypeKey.content} on:click={getBlockConstructor("content", defaultContentBlockConfig)} />
+      <AddNodeButton
+        key={NodeTypeKey.content}
+        on:click={nodeFactory(NodeKind.block, NodeTypeKey.content, defaultContentBlockConfig)}
+      />
       <AddNodeButton
         key={NodeTypeKey.human_operator}
-        on:click={getBlockConstructor("human-operator", defaultHumanOperatorBlockConfig)}
+        on:click={nodeFactory(NodeKind.block, NodeTypeKey.human_operator, defaultHumanOperatorBlockConfig)}
       />
       <AddNodeButton
         key={NodeTypeKey.language_select}
-        on:click={getBlockConstructor("language-select", defaultLanguageSelectBlockConfig)}
+        on:click={nodeFactory(NodeKind.block, NodeTypeKey.language_select, defaultLanguageSelectBlockConfig)}
       />
-      <AddNodeButton key={NodeTypeKey.menu} on:click={getBlockConstructor("menu", defaultMenuBlockConfig)} />
-
-      <AddNodeButton key={NodeTypeKey.form} on:click={getBlockConstructor("form", defaultFormBlockConfig)} />
+      <AddNodeButton
+        key={NodeTypeKey.menu}
+        on:click={nodeFactory(NodeKind.block, NodeTypeKey.menu, defaultMenuBlockConfig)}
+      />
+      <AddNodeButton
+        key={NodeTypeKey.form}
+        on:click={nodeFactory(NodeKind.block, NodeTypeKey.form, defaultFormBlockConfig)}
+      />
     </div>
   </StudioSidePandel>
+  {#if tentativeNode}
+    <div
+      id="tentative-node-mouse-follower"
+      style="background-color: {headerColor(NODE_HUE[tentativeNode.typeKey])}"
+      bind:this={tentativeNodeMouseFollowerElement}
+    >
+      <div class="flex items-center gap-2">
+        <svelte:component this={NODE_ICON[tentativeNode.typeKey]} class="w-4 h-4" />
+        <span class="font-bold text-lg">{NODE_TITLE[tentativeNode.typeKey]}</span>
+      </div>
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -279,5 +327,16 @@
     top: 0;
     z-index: 100;
     width: 100%;
+  }
+  #tentative-node-mouse-follower {
+    opacity: 0.8;
+    position: absolute;
+    /* x, y of cursor should be above in the center */
+    transform: translate(-50%, -140%);
+    /* mimicking node styles */
+    background-color: white;
+    border-radius: 10px;
+    border: solid 1px rgb(206, 212, 218);
+    padding: 8px;
   }
 </style>

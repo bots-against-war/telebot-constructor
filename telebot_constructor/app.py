@@ -764,10 +764,12 @@ class TelebotConstructorApp:
 
     def start_stored_bots_in_background(self) -> None:
         async def _start_stored_bots() -> None:
-            logger.info("Starting stored bots")
+            logger.info("Starting stored bots...")
+            count = 0
             async for username, bot_name, version in self.store.iter_running_bot_versions():
+                count += 1
                 bot_name_full = f"{bot_name!r} (owned by {username!r}, ver {version})"
-                logger.debug(f"Starting {bot_name_full}")
+                logger.debug(f"Starting {bot_name_full} (#{count})")
                 with log_error(marker=f"Starting stored bot {bot_name_full}", logger_=logger):
                     bot_config = await self.store.load_bot_config(username, bot_name, version)
                     if bot_config is None:
@@ -777,6 +779,7 @@ class TelebotConstructorApp:
                     bot_runner = await self._construct_bot(username, bot_name, bot_config)
                     if not await self.runner.start(username=username, bot_name=bot_name, bot_runner=bot_runner):
                         logger.error(f"{bot_name_full} failed to start")
+            logger.info(f"Started {count} stored bots")
 
         self._start_stored_bots_task = create_error_logging_task(_start_stored_bots(), name="Start stored bots")
 

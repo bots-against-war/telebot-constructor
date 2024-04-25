@@ -3,6 +3,7 @@ import datetime
 import enum
 import hashlib
 import logging
+import re
 from typing import Any, Optional
 
 from pydantic import BaseModel
@@ -47,12 +48,20 @@ class ContentText(BaseModel):
 
 
 class ContentBlockContentAttachment(ExactlyOneNonNullFieldModel):
-    image: Optional[str]  # base64-encoded
+    image: Optional[str]  # base64-encoded with possible "data:*/*;base64," prefix
     filename: str = ""
 
     def content(self) -> str:
         # runtime guarantee that at least one (now it's always image) option is non-None
         return self.image  # type: ignore
+
+
+data_url_prefix_re = re.compile(r"^data:\w+/\w+;base64,")
+
+
+def decode_b64_data_url(b64_data_url: str) -> bytes:
+    print(b64_data_url[:64])
+    return base64.b64decode(data_url_prefix_re.sub("", b64_data_url))
 
 
 class Content(BaseModel):
@@ -144,7 +153,7 @@ class ContentBlock(UserFlowBlock):
                     file_id = await self._file_id_by_hash_store.load(md5_hash(attachment.image))
                     message = await context.bot.send_photo(
                         chat_id=chat_id,
-                        photo=file_id if file_id is not None else base64.b64decode(attachment.image),
+                        photo=file_id if file_id is not None else decode_b64_data_url(attachment.image),
                         caption=any_text_to_str(content.text.text, language) if content.text is not None else None,
                         parse_mode=parse_mode if content.text is not None else None,
                         reply_markup=tg.ReplyKeyboardRemove(),
@@ -170,7 +179,7 @@ class ContentBlock(UserFlowBlock):
                     (
                         tg.InputMediaPhoto(maybe_file_id)  # type: ignore
                         if maybe_file_id is not None
-                        else tg.InputMediaPhoto(base64.b64decode(attachment.image))  # type: ignore
+                        else tg.InputMediaPhoto(decode_b64_data_url(attachment.image))  # type: ignore
                     )
                     for maybe_file_id, attachment in zip(cached_file_ids, content.attachments)
                 ]

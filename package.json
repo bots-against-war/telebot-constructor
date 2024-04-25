@@ -11,7 +11,8 @@
     "check": "svelte-check --tsconfig tsconfig.json --workspace frontend/ --compiler-warnings \"ts:ignore\"",
     "check:watch": "svelte-check --tsconfig ./tsconfig.json --workspace frontend/ --watch",
     "format": "prettier --write --plugin prettier-plugin-svelte frontend",
-    "pydantic:to:ts": "poetry run python3 scripts/models/pydantic2jsonschema.py && node scripts/models/jsonschema2ts.mjs "
+    "pydantic:to:ts": "poetry run python3 scripts/models/pydantic2jsonschema.py && node scripts/models/jsonschema2ts.mjs",
+    "dev:with-deps": "API_ORIGIN=http://localhost:8088 vite --port 8081 --force frontend"
   },
   "devDependencies": {
     "@jhubbardsf/svelte-sortablejs": "^1.1.0",
@@ -34,7 +35,7 @@
     "svelte-routing": "^2.12.0",
     "svelte-select": "^5.7.0",
     "svelte-simple-modal": "^1.6.1",
-    "svelvet": "npm:svelvet-against-war@^10.0.2-baw.1",
+    "svelvet": "npm:svelvet-against-war@^10.0.2-baw.4",
     "tailwindcss": "^3.3.6",
     "transliteration": "^2.3.5",
     "ts-essentials": "^9.4.0",
