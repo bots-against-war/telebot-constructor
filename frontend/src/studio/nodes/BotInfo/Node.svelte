@@ -34,10 +34,12 @@
   }
 
   let botUserPromise = loadBotUser();
+  let id = "bot-user";
 </script>
 
-<Node id={"bot-info"} bind:position {...DEFAULT_NODE_PROPS}>
+<Node {id} bind:position {...DEFAULT_NODE_PROPS}>
   <NodeContent
+    {id}
     key={NodeTypeKey.info}
     colorOverride="white"
     deletable={false}

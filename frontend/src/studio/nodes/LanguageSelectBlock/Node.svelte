@@ -33,6 +33,7 @@
 <Node id={config.block_id} bind:position {...DEFAULT_NODE_PROPS}>
   <InputAnchor />
   <NodeContent
+    id={config.block_id}
     key={NodeTypeKey.language_select}
     bind:isValid
     {config}

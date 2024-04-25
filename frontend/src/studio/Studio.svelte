@@ -66,31 +66,29 @@
     languageConfigStore.set(null);
   }
 
-  // factory for node deletion callbacks
-  function nodeDeleter(id: string, postDelete: () => any = () => {}) {
-    return () => {
-      // this is a bit cumbersome because we store very similar things (blocks and entrypoing) in two different places
-      // as a result we need to look in two places and process every one of them
-      const entrypointIdx = botConfig.user_flow_config.entrypoints
-        .map(getEntrypointId)
-        .findIndex((nodeId) => nodeId === id);
-      const blockIdx = botConfig.user_flow_config.blocks.map(getBlockId).findIndex((nodeId) => nodeId === id);
-      if (entrypointIdx !== -1) {
-        console.debug(
-          `Deleting entrypoint id=${id} idx=${entrypointIdx}`,
-          botConfig.user_flow_config.entrypoints[entrypointIdx],
-        );
-        botConfig.user_flow_config.entrypoints = botConfig.user_flow_config.entrypoints.toSpliced(entrypointIdx, 1);
-      } else if (blockIdx !== -1) {
-        console.debug(`Deleting block id=${id} idx=${blockIdx}`, botConfig.user_flow_config.blocks[blockIdx]);
-        botConfig.user_flow_config.blocks = botConfig.user_flow_config.blocks.toSpliced(blockIdx, 1);
-      } else {
-        console.log(`Node with id '${id}' not found among entrypoints and blocks`);
-        return;
-      }
-      delete botConfig.user_flow_config.node_display_coords[id];
-      postDelete();
-    };
+  // node deletion callback
+  function deleteNode(event: CustomEvent<string>) {
+    const id = event.detail;
+    // this is a bit cumbersome because we store very similar things (blocks and entrypoing) in two different places
+    // as a result we need to look in two places and process every one of them
+    const entrypointIdx = botConfig.user_flow_config.entrypoints
+      .map(getEntrypointId)
+      .findIndex((nodeId) => nodeId === id);
+    const blockIdx = botConfig.user_flow_config.blocks.map(getBlockId).findIndex((nodeId) => nodeId === id);
+    if (entrypointIdx !== -1) {
+      console.debug(
+        `Deleting entrypoint id=${id} idx=${entrypointIdx}`,
+        botConfig.user_flow_config.entrypoints[entrypointIdx],
+      );
+      botConfig.user_flow_config.entrypoints = botConfig.user_flow_config.entrypoints.toSpliced(entrypointIdx, 1);
+    } else if (blockIdx !== -1) {
+      console.debug(`Deleting block id=${id} idx=${blockIdx}`, botConfig.user_flow_config.blocks[blockIdx]);
+      botConfig.user_flow_config.blocks = botConfig.user_flow_config.blocks.toSpliced(blockIdx, 1);
+    } else {
+      console.log(`Node with id '${id}' not found among entrypoints and blocks`);
+      return;
+    }
+    delete botConfig.user_flow_config.node_display_coords[id];
   }
 
   // node creation machinery:
@@ -119,21 +117,6 @@
       console.debug(`Tentative node created`, tentativeNode);
     };
   }
-  // node cloning is another way to create nodes from existing one
-  function nodeCloner(id: string) {
-    return () => {
-      const entrypointIdx = botConfig.user_flow_config.entrypoints.map(getEntrypointId).findIndex((eId) => eId === id);
-      const blockIdx = botConfig.user_flow_config.blocks.map(getBlockId).findIndex((bId) => bId === id);
-      if (entrypointIdx !== -1) {
-        tentativeNode = cloneEntrypointConfig(botConfig.user_flow_config.entrypoints[entrypointIdx]);
-      } else if (blockIdx !== -1) {
-        tentativeNode = cloneBlockConfig(botConfig.user_flow_config.blocks[blockIdx]);
-      } else {
-        console.log(`Node with id '${id}' not found among entrypoints and blocks`);
-        return;
-      }
-    };
-  }
 
   function customMouseDownHandler(e: MouseEvent, cursor: { x: number; y: number }): boolean {
     if (tentativeNode === null) return false;
@@ -154,6 +137,21 @@
     }
     tentativeNode = null;
     return true;
+  }
+
+  // node cloning is another way to create nodes from existing one
+  function cloneNode(event: CustomEvent<string>) {
+    const id = event.detail;
+    const entrypointIdx = botConfig.user_flow_config.entrypoints.map(getEntrypointId).findIndex((eId) => eId === id);
+    const blockIdx = botConfig.user_flow_config.blocks.map(getBlockId).findIndex((bId) => bId === id);
+    if (entrypointIdx !== -1) {
+      tentativeNode = cloneEntrypointConfig(botConfig.user_flow_config.entrypoints[entrypointIdx]);
+    } else if (blockIdx !== -1) {
+      tentativeNode = cloneBlockConfig(botConfig.user_flow_config.blocks[blockIdx]);
+    } else {
+      console.log(`Node with id '${id}' not found among entrypoints and blocks`);
+      return;
+    }
   }
 
   // automatic config validation on any nodes' validity update
@@ -257,7 +255,7 @@
     {#each botConfig.user_flow_config.entrypoints as entrypoint (getEntrypointId(entrypoint))}
       {#if entrypoint.command}
         <CommandEntryPointNode
-          on:delete={nodeDeleter(entrypoint.command.entrypoint_id)}
+          on:delete={deleteNode}
           bind:config={entrypoint.command}
           bind:position={botConfig.user_flow_config.node_display_coords[entrypoint.command.entrypoint_id]}
           bind:isValid={isNodeValid[entrypoint.command.entrypoint_id]}
@@ -267,8 +265,8 @@
     {#each botConfig.user_flow_config.blocks as block (getBlockId(block))}
       {#if block.content}
         <ContentBlockNode
-          on:delete={nodeDeleter(block.content.block_id)}
-          on:clone={nodeCloner(block.content.block_id)}
+          on:delete={deleteNode}
+          on:clone={cloneNode}
           bind:config={block.content}
           bind:position={botConfig.user_flow_config.node_display_coords[block.content.block_id]}
           bind:isValid={isNodeValid[block.content.block_id]}
@@ -276,25 +274,26 @@
       {:else if block.human_operator}
         <HumanOperatorNode
           {botName}
-          on:delete={nodeDeleter(block.human_operator.block_id)}
-          on:clone={nodeCloner(block.human_operator.block_id)}
+          on:delete={deleteNode}
+          on:clone={cloneNode}
           bind:config={block.human_operator}
           bind:position={botConfig.user_flow_config.node_display_coords[block.human_operator.block_id]}
           bind:isValid={isNodeValid[block.human_operator.block_id]}
         />
       {:else if block.language_select}
         <LanguageSelectNode
-          on:delete={nodeDeleter(block.language_select.block_id, () => {
+          on:delete={(e) => {
+            deleteNode(e);
             languageConfigStore.set(null);
-          })}
+          }}
           bind:config={block.language_select}
           bind:position={botConfig.user_flow_config.node_display_coords[block.language_select.block_id]}
           bind:isValid={isNodeValid[block.language_select.block_id]}
         />
       {:else if block.menu}
         <MenuNode
-          on:delete={nodeDeleter(block.menu.block_id)}
-          on:clone={nodeCloner(block.menu.block_id)}
+          on:delete={deleteNode}
+          on:clone={cloneNode}
           bind:config={block.menu}
           bind:position={botConfig.user_flow_config.node_display_coords[block.menu.block_id]}
           bind:isValid={isNodeValid[block.menu.block_id]}
@@ -302,8 +301,8 @@
       {:else if block.form}
         <FormNode
           {botName}
-          on:delete={nodeDeleter(block.form.block_id)}
-          on:clone={nodeCloner(block.form.block_id)}
+          on:delete={deleteNode}
+          on:clone={cloneNode}
           bind:config={block.form}
           bind:position={botConfig.user_flow_config.node_display_coords[block.form.block_id]}
           bind:isValid={isNodeValid[block.form.block_id]}

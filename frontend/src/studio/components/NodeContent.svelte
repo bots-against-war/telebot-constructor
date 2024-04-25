@@ -14,6 +14,7 @@
   import { languageConfigStore, type LanguageConfig } from "../stores";
   import { Listgroup, ListgroupItem, Popover } from "flowbite-svelte";
 
+  export let id: string;
   export let key: NodeTypeKey;
   export let config: any = null;
   export let isValid = true;
@@ -25,13 +26,15 @@
     __,
   ) => ok(null);
 
-  const dispatch = createEventDispatcher<{ edit: null; delete: null; clone: null }>();
+  const dispatch = createEventDispatcher<{ edit: string; delete: string; clone: string }>();
 
   let configValidationResult: Result<null, ValidationError>;
   $: {
     configValidationResult = configValidator(config, $languageConfigStore);
     isValid = configValidationResult.ok;
   }
+
+  let showMoreActionsIconId = `show-more-actions-${id}`;
 </script>
 
 <div class="node-content-container">
@@ -44,19 +47,22 @@
       <span class="font-bold text-lg">{NODE_TITLE[key]}</span>
     </div>
     <div class="flex items-center gap-0">
-      <ActionIcon icon={PenOutline} on:click={() => dispatch("edit")} />
+      <ActionIcon icon={PenOutline} on:click={() => dispatch("edit", id)} />
       {#if deletable || clonable}
-        <ActionIcon id="show-more-actions" icon={DotsHorizontalOutline} />
-        <Popover triggeredBy="#show-more-actions" placement="right-start" defaultClass="">
+        <ActionIcon id={showMoreActionsIconId} icon={DotsHorizontalOutline} />
+        <Popover triggeredBy={"#" + showMoreActionsIconId} placement="right-start" defaultClass="">
           <Listgroup active class="text-sm border-none">
+            <ListgroupItem>
+              {id}
+            </ListgroupItem>
             {#if clonable}
-              <ListgroupItem on:click={() => dispatch("clone")} class="gap-2">
+              <ListgroupItem on:click={() => dispatch("clone", id)} class="gap-2">
                 <FileCopyOutline class="w-3 h-3 text-gray-700" />
                 Дублировать
               </ListgroupItem>
             {/if}
             {#if deletable}
-              <ListgroupItem on:click={() => dispatch("delete")} class="gap-2">
+              <ListgroupItem on:click={() => dispatch("delete", id)} class="gap-2">
                 <TrashBinOutline class="w-3 h-3 text-gray-700" />
                 Удалить
               </ListgroupItem>
