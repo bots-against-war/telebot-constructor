@@ -27,6 +27,7 @@
   <NodeContent
     key={NodeTypeKey.command}
     deletable={!isStart}
+    clonable={false}
     bind:isValid
     on:delete
     on:edit={() =>

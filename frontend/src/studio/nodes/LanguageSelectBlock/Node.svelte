@@ -36,6 +36,7 @@
     key={NodeTypeKey.language_select}
     bind:isValid
     {config}
+    clonable={false}
     configValidator={validateLanguageSelectBlock}
     on:delete
     on:edit={openEditModal}

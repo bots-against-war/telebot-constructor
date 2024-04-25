@@ -4,7 +4,7 @@
 -->
 
 <script lang="ts">
-  import { PenOutline, TrashBinOutline } from "flowbite-svelte-icons";
+  import { DotsHorizontalOutline, FileCopyOutline, PenOutline, TrashBinOutline } from "flowbite-svelte-icons";
   import { createEventDispatcher } from "svelte";
   import ActionIcon from "../../components/ActionIcon.svelte";
   import ErrorBadge from "../../components/ErrorBadge.svelte";
@@ -12,18 +12,20 @@
   import { NODE_HUE, NODE_ICON, NODE_TITLE, headerColor, type NodeTypeKey } from "../nodes/display";
   import type { ValidationError } from "../nodes/nodeValidators";
   import { languageConfigStore, type LanguageConfig } from "../stores";
+  import { Popover } from "flowbite-svelte";
 
   export let key: NodeTypeKey;
   export let config: any = null;
   export let isValid = true;
   export let deletable = true;
+  export let clonable = true;
   export let colorOverride: string | null = null;
   export let configValidator: (config: any, langConfig: LanguageConfig | null) => Result<null, ValidationError> = (
     _,
     __,
   ) => ok(null);
 
-  const dispatch = createEventDispatcher<{ edit: null; delete: null }>();
+  const dispatch = createEventDispatcher<{ edit: null; delete: null; clone: null }>();
 
   let configValidationResult: Result<null, ValidationError>;
   $: {
@@ -43,8 +45,16 @@
     </div>
     <div class="flex items-center gap-0">
       <ActionIcon icon={PenOutline} on:click={() => dispatch("edit")} />
-      {#if deletable}
-        <ActionIcon icon={TrashBinOutline} on:click={() => dispatch("delete")} />
+      {#if deletable || clonable}
+        <ActionIcon id="show-more-actions" icon={DotsHorizontalOutline} />
+        <Popover triggeredBy="#show-more-actions" trigger="click" placement="right-start" class="m-0">
+          {#if deletable}
+            <ActionIcon icon={TrashBinOutline} on:click={() => dispatch("delete")} />
+          {/if}
+          {#if clonable}
+            <ActionIcon icon={FileCopyOutline} on:click={() => dispatch("clone")} />
+          {/if}
+        </Popover>
       {/if}
     </div>
   </div>
