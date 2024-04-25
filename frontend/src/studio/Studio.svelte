@@ -3,8 +3,8 @@
   import { navigate } from "svelte-routing";
   import { Svelvet } from "svelvet";
   import { saveBotConfig } from "../api/botConfig";
-  import { getBlockConcreteConfig, getBlockId, getEntrypointConcreteConfig, getEntrypointId } from "../api/typeUtils";
-  import type { BotConfig, UserFlowBlockConfig, UserFlowEntryPointConfig } from "../api/types";
+  import { getBlockId, getEntrypointId } from "../api/typeUtils";
+  import type { BotConfig, UserFlowEntryPointConfig } from "../api/types";
   import Navbar from "../components/Navbar.svelte";
   import { BOT_INFO_NODE_ID } from "../constants";
   import { err, getError, getModalOpener, ok, withConfirmation, type Result } from "../utils";
@@ -27,9 +27,9 @@
     defaultLanguageSelectBlockConfig,
     defaultMenuBlockConfig,
   } from "./nodes/defaultConfigs";
-  import { NODE_HUE, NODE_ICON, NODE_TITLE, NodeTypeKey, getNodeTypeKey, headerColor } from "./nodes/display";
+  import { NODE_HUE, NODE_ICON, NODE_TITLE, NodeTypeKey, headerColor } from "./nodes/display";
   import { languageConfigStore, type LanguageConfig } from "./stores";
-  import { clone } from "./utils";
+  import { NodeKind, cloneBlockConfig, cloneEntrypointConfig, generateNodeId, type TentativeNode } from "./utils";
 
   export let botName: string;
   export let botConfig: BotConfig;
@@ -96,21 +96,8 @@
   // node creation machinery:
   // when the user clicks on "add" button for a particular kind of node, we save it as "tentative"
   // then, when the user selects a place for the node, we add it to the config
-  enum NodeKind {
-    block,
-    entrypoint,
-  }
-  interface TentativeNode {
-    kind: NodeKind;
-    typeKey: NodeTypeKey;
-    id: string;
-    config: UserFlowEntryPointConfig | UserFlowEntryPointConfig;
-  }
-  let tentativeNode: TentativeNode | null = null;
 
-  function generateNodeId(kind: NodeKind, type: NodeTypeKey) {
-    return `${kind}-${type}-${crypto.randomUUID()}`;
-  }
+  let tentativeNode: TentativeNode | null = null;
 
   function nodeFactory(
     kind: NodeKind,
@@ -137,47 +124,14 @@
     return () => {
       const entrypointIdx = botConfig.user_flow_config.entrypoints.map(getEntrypointId).findIndex((eId) => eId === id);
       const blockIdx = botConfig.user_flow_config.blocks.map(getBlockId).findIndex((bId) => bId === id);
-      let config: UserFlowEntryPointConfig | UserFlowBlockConfig;
-      let kind: NodeKind;
-      let typeKey: NodeTypeKey | null;
-      let newId: string;
       if (entrypointIdx !== -1) {
-        kind = NodeKind.entrypoint;
-        config = clone(botConfig.user_flow_config.entrypoints[entrypointIdx]);
-        typeKey = getNodeTypeKey(config);
-        if (!typeKey) {
-          return;
-        }
-        newId = generateNodeId(kind, typeKey);
-        const concrete = getEntrypointConcreteConfig(config);
-        if (!concrete) {
-          return;
-        }
-        concrete.entrypoint_id = newId;
+        tentativeNode = cloneEntrypointConfig(botConfig.user_flow_config.entrypoints[entrypointIdx]);
       } else if (blockIdx !== -1) {
-        kind = NodeKind.block;
-        config = clone(botConfig.user_flow_config.blocks[blockIdx]);
-        typeKey = getNodeTypeKey(config);
-        if (!typeKey) {
-          return;
-        }
-        newId = generateNodeId(kind, typeKey);
-        const concrete = getBlockConcreteConfig(config);
-        if (!concrete) {
-          return;
-        }
-        concrete.block_id = newId;
+        tentativeNode = cloneBlockConfig(botConfig.user_flow_config.blocks[blockIdx]);
       } else {
         console.log(`Node with id '${id}' not found among entrypoints and blocks`);
         return;
       }
-
-      tentativeNode = {
-        id: newId,
-        kind,
-        typeKey,
-        config,
-      };
     };
   }
 
