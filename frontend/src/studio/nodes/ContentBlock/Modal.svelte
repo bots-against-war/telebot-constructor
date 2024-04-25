@@ -44,7 +44,10 @@
   }
 
   function decodeBase64(base64: string, filename: string) {
-    const [type, data] = base64.split(";base64,");
+    const dataTypeMatch = base64.match(/data:(.+?);base64,/);
+    if (!dataTypeMatch) throw "Failed to extract data type from base64 data URL";
+    const type = dataTypeMatch[1];
+    const [_, data] = base64.split(";base64,");
     const binary = atob(data);
     const uint8 = new Uint8Array(binary.length);
     for (let i = 0; i < binary.length; ++i) {
@@ -71,6 +74,16 @@
 
     return dataTransfer.files;
   }
+
+  let filenames: string[];
+  $: {
+    if (files) {
+      filenames = [];
+      for (const f of files) {
+        filenames.push(f.name);
+      }
+    }
+  }
 </script>
 
 <NodeModalBody title={NODE_TITLE.content}>
@@ -80,9 +93,9 @@
     <Label class="pb-2" for="multiple_files">Добавьте одно или несколько изображений</Label>
     <Fileupload id="multiple_files" class="mb-2" multiple bind:files accept="image/*" />
     <Helper>PNG, JPG, SVG, WEBP or GIF.</Helper>
-    <Listgroup items={files} let:item class="mt-2">
+    <Listgroup items={filenames} let:item class="mt-2">
       {#if item}
-        {item.name}
+        {item}
       {:else}
         <ListgroupItem>No files</ListgroupItem>
       {/if}
