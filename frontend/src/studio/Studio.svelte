@@ -1,13 +1,16 @@
 <script lang="ts">
+  import type { Writable } from "svelte/store";
   import { Button, Heading, Spinner } from "flowbite-svelte";
+  import { onDestroy } from "svelte";
   import { navigate } from "svelte-routing";
-  import { Svelvet } from "svelvet";
+  import { Svelvet, graphStore, type Graph, type XYPair } from "svelvet";
   import { saveBotConfig } from "../api/botConfig";
   import { getBlockId, getEntrypointId } from "../api/typeUtils";
   import type { BotConfig, UserFlowBlockConfig, UserFlowEntryPointConfig, UserFlowNodePosition } from "../api/types";
   import Navbar from "../components/Navbar.svelte";
   import { BOT_INFO_NODE_ID } from "../constants";
   import { getError, getModalOpener, withConfirmation } from "../utils";
+  import SaveConfigModal from "./SaveConfigModal.svelte";
   import AddNodeButton from "./components/AddNodeButton.svelte";
   import DeletableEdge from "./components/DeletableEdge.svelte";
   import StudioSidePandel from "./components/StudioSidePanel.svelte";
@@ -29,7 +32,6 @@
   import { NodeTypeKey } from "./nodes/display";
   import { languageConfigStore, type LanguageConfig } from "./stores";
   import { findNewNodePositionDown, findNewNodePositionRight } from "./utils";
-  import SaveConfigModal from "./SaveConfigModal.svelte";
 
   export let botName: string;
   export let botConfig: BotConfig;
@@ -162,6 +164,18 @@
     async () => exitStudio(),
     "Выйти",
   );
+
+  // HACK: we're hooking into Svelvet's internal writeables storing current graph translation and scale
+  let translationStore: Writable<XYPair>;
+  let scaleStore: Writable<number>;
+  function hookIntoGraphTransformStores(graph: Graph) {
+    translationStore = graph.transforms.translation;
+    scaleStore = graph.transforms.scale;
+  }
+
+  function logCurrentTransform() {
+    console.log("translation:", $translationStore, "scale:", $scaleStore);
+  }
 </script>
 
 <div class="svelvet-container">
@@ -192,6 +206,7 @@
     editable={false}
     minimap={false}
     enableAllHotkeys={false}
+    graphCallback={hookIntoGraphTransformStores}
   >
     <BotInfoNode {botName} bind:position={botConfig.user_flow_config.node_display_coords[BOT_INFO_NODE_ID]} />
     {#each botConfig.user_flow_config.entrypoints as entrypoint (getEntrypointId(entrypoint))}
