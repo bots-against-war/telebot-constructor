@@ -2,6 +2,7 @@
   import { TabItem, Tabs } from "flowbite-svelte";
   import { flattenedFormFields } from "../../../api/typeUtils";
   import type { FormBlock, FormBranchConfig } from "../../../api/types";
+  import LocalizableTextInput from "../../components/LocalizableTextInput.svelte";
   import NodeModalBody from "../../components/NodeModalBody.svelte";
   import NodeModalControls from "../../components/NodeModalControls.svelte";
   import { languageConfigStore } from "../../stores";
@@ -10,6 +11,7 @@
   import FormBranch from "./components/FormBranch.svelte";
   import FormMessages from "./components/FormMessages.svelte";
   import FormResultExportOptions from "./components/FormResultExportOptions.svelte";
+  import { getRandomFormStartMessage } from "./content";
   import { updateWithPrefilled, type FormErrorMessages } from "./prefill";
 
   export let config: FormBlock;
@@ -68,17 +70,23 @@
 </script>
 
 <NodeModalBody title={NODE_TITLE.form}>
-  <!-- NOTE: additional div is needed because Tabs have no to-level container -->
+  <!-- NOTE: additional div is needed because Tabs have no top-level container -->
   <div>
     <Tabs style="underline" contentClass="mt-3">
       <TabItem open title={`Поля (${flattenedFormFields(topLevelBranch.members).length})`}>
-        <FormBranch bind:branch={topLevelBranch} />
+        <div class="mb-4">
+          <LocalizableTextInput
+            placeholder={getRandomFormStartMessage()}
+            bind:value={editedConfig.messages.form_start}
+          />
+        </div>
+        <FormBranch isMovableUp={false} isMovableDown={false} bind:branch={topLevelBranch} />
       </TabItem>
-      <TabItem title="Сообщения">
-        <FormMessages bind:messages={editedConfig.messages} bind:errors={formErrorMessages} />
-      </TabItem>
-      <TabItem title="Обработка результатов">
+      <TabItem title="Ответы">
         <FormResultExportOptions bind:config={editedConfig.results_export} {botName} />
+      </TabItem>
+      <TabItem title="Технические сообщения">
+        <FormMessages bind:messages={editedConfig.messages} bind:errors={formErrorMessages} />
       </TabItem>
     </Tabs>
   </div>

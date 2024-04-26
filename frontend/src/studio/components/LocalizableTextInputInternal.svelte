@@ -10,8 +10,8 @@
   import LanguageMenu from "./LanguageMenu.svelte";
 
   export let label: string | undefined = undefined;
-  export let description: string | undefined = undefined;
-  export let placeholder: string | undefined = undefined;
+  export let description: string | null = null;
+  export let placeholder: string | null = null;
   export let value: LocalizableText;
   export let langConfig: LanguageConfig | null;
   export let isLongText: boolean = true;

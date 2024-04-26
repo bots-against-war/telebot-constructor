@@ -40,7 +40,7 @@ from telebot_constructor.runners import (
     PollingConstructedBotRunner,
     WebhookAppConstructedBotRunner,
 )
-from telebot_constructor.static import static_file_content
+from telebot_constructor.static import get_prefilled_messages, static_file_content
 from telebot_constructor.store.store import (
     BotConfigVersionMetadata,
     BotVersion,
@@ -704,10 +704,7 @@ class TelebotConstructorApp:
                     description: List of Language objects
             """
             await self.authenticate(request)
-            return web.Response(
-                body=static_file_content(Path(__file__).parent / "data/prefilled_messages.json"),
-                content_type="application/json",
-            )
+            return web.Response(body=get_prefilled_messages(), content_type="application/json")
 
         @routes.get("/api/logged-in-user")
         async def get_logged_in_user(request: web.Request) -> web.Response:

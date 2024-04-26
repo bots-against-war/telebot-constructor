@@ -153,10 +153,15 @@ export function validateFormBlock(config: FormBlock, langConfig: LanguageConfig 
       idx += 1; //  1-based indexing
       const resultfForField: Result<null, ValidationError>[] = [];
       const fieldBaseConfig = getBaseFormFieldConfig(field);
-      resultfForField.push(
-        fieldBaseConfig.name.length > 0 ? ok(null) : err({ error: `Не указано название поля #${idx}` }),
+      const promptValidationResult = validateLocalizableText(
+        fieldBaseConfig.prompt,
+        `вопрос в поле #${idx}`,
+        langConfig,
       );
-      resultfForField.push(validateLocalizableText(fieldBaseConfig.prompt, `вопрос в поле #${idx}`, langConfig));
+      resultfForField.push(promptValidationResult);
+      if (promptValidationResult.ok && fieldBaseConfig.name.length === 0) {
+        resultfForField.push(err({ error: `Не указано название поля #${idx}` }));
+      }
       if (field.single_select) {
         if (field.single_select.options.length === 0) {
           resultfForField.push(err({ error: `Не указано ни одного варианта выбора в поле #${idx}` }));

@@ -152,10 +152,11 @@ export type UnsupportedCommand =
   | {
       [k: string]: string;
     };
+export type FormResultUserAttribution = "none" | "unique_id" | "name" | "full";
 export type EchoToUser = boolean;
-export type IsAnonymous = boolean;
 export type ChatId = string | number;
 export type ViaFeedbackHandler = boolean;
+export type IsAnonymous = boolean | null;
 export type FormCompletedNextBlockId = string | null;
 export type FormCancelledNextBlockId = string | null;
 export type BlockId4 = string;
@@ -457,9 +458,10 @@ export interface FormMessages {
   unsupported_command: UnsupportedCommand;
 }
 export interface FormResultsExport {
+  user_attribution?: FormResultUserAttribution & string;
   echo_to_user: EchoToUser;
-  is_anonymous: IsAnonymous;
   to_chat: FormResultsExportToChatConfig | null;
+  is_anonymous?: IsAnonymous;
   [k: string]: unknown;
 }
 export interface FormResultsExportToChatConfig {
