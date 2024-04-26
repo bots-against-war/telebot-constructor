@@ -6,7 +6,7 @@
   import type { SingleSelectFormFieldConfig } from "../../../../api/types";
 
   export let allowAddField: boolean;
-  export let currentSwitchField: SingleSelectFormFieldConfig | null;
+  export let currentSwitchField: SingleSelectFormFieldConfig | null | undefined;
 
   const dispatch = createEventDispatcher<{ add_field: null; add_branch: null }>();
 

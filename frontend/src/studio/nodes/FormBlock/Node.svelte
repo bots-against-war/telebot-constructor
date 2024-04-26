@@ -12,6 +12,8 @@
   import { DEFAULT_NODE_PROPS } from "../nodeProps";
   import { validateFormBlock } from "../nodeValidators";
   import Modal from "./Modal.svelte";
+  import { Li, List } from "flowbite-svelte";
+  import { getBaseFormFieldConfig } from "./utils";
 
   const openModal = getModalOpener();
 
@@ -43,8 +45,14 @@
     on:clone
     on:edit={openEditModal}
   >
-    {config.messages.form_start}
-    <span class="text-gray-600 font-light">вопросов: {flattenedFormFields(config.members).length}</span>
+    <div class="flex flex-col">
+      <span>{config.messages.form_start} </span>
+      <List>
+        {#each flattenedFormFields(config.members) as field}
+          <Li>{getBaseFormFieldConfig(field).name}</Li>
+        {/each}
+      </List>
+    </div>
   </NodeContent>
   <OutputAnchorsBox>
     <OutputAnchor bind:nextBlockId={config.form_completed_next_block_id} anchorLabel="ОК" />

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Select } from "flowbite-svelte";
-  import type { FormBranchConfig, SingleSelectFormFieldConfig } from "../../../../api/types";
+  import type { BranchingFormMemberConfig, FormBranchConfig, SingleSelectFormFieldConfig } from "../../../../api/types";
   import { languageConfigStore } from "../../../stores";
   import { localizableTextToString } from "../../../utils";
   import { backgroundColor, borderColor, generateHue } from "../colors";
@@ -39,46 +39,73 @@
   // field acts as switch for any given position in the members array
   // these arrays are one item longer than branch.members to account for adding stuff
   // after the last one member (e.g. before the virtual one-after-last)
-  let currentSwitchFieldAt: (SingleSelectFormFieldConfig | null)[];
-  let currentSwitchFieldIdxAt: (number | null)[];
-  $: {
-    currentSwitchFieldAt = [];
-    currentSwitchFieldIdxAt = [];
-    let currSwitch: SingleSelectFormFieldConfig | null = null;
-    let currSwitchIdx: number | null = null;
-    for (const [idx, m] of branch.members.entries()) {
-      if (currSwitch && currSwitchIdx && currSwitch.options.length < idx - currSwitchIdx) {
-        // invalidate current switch after # branches > # options
-        [currSwitch, currSwitchIdx] = [null, null];
-      }
 
-      currentSwitchFieldAt.push(currSwitch);
-      currentSwitchFieldIdxAt.push(currSwitchIdx);
-      if (m.field) {
-        if (m.field.single_select) {
-          [currSwitch, currSwitchIdx] = [m.field.single_select, idx]; // found new current switch
+  interface SwitchField {
+    config: SingleSelectFormFieldConfig;
+    idx: number;
+    currentBranches: number;
+  }
+
+  function isAcceptingBranches(sf: SwitchField | undefined | null): boolean {
+    if (!sf) return false;
+    else return sf.currentBranches < sf.config.options.length;
+  }
+
+  function newBranchMemberAt(idx: number): BranchingFormMemberConfig | null {
+    const sf = switchFieldFor[idx];
+    if (!sf) return null;
+    const usedConditionMatchValues = branch.members
+      .map((m) => m.branch)
+      .filter<FormBranchConfig>(
+        (b, branchIdx): b is FormBranchConfig =>
+          Boolean(b) && branchIdx > sf.idx && switchFieldFor[branchIdx]?.idx === sf.idx,
+      )
+      .map((b) => b.condition_match_value);
+    const freeConditionMatchValues = sf.config.options
+      .map((o) => o.id)
+      .filter((cmv) => !usedConditionMatchValues.includes(cmv));
+    if (freeConditionMatchValues.length === 0) return null;
+    return {
+      branch: {
+        members: [],
+        condition_match_value: freeConditionMatchValues[0],
+      },
+    };
+  }
+
+  let switchFieldFor: (SwitchField | null)[];
+  $: {
+    switchFieldFor = [];
+    let lastSwitchField: SwitchField | null = null;
+    for (const [idx, member] of branch.members.entries()) {
+      switchFieldFor.push(lastSwitchField);
+      if (member.field) {
+        if (member.field.single_select) {
+          lastSwitchField = { config: member.field.single_select, idx, currentBranches: 0 };
         } else {
-          [currSwitch, currSwitchIdx] = [null, null];
+          lastSwitchField = null;
+        }
+      } else if (member.branch) {
+        if (lastSwitchField) {
+          lastSwitchField.currentBranches += 1;
+        } else {
+          console.error("Error: found branch, but no last switch field", branch.members);
         }
       }
     }
-    if (currSwitch && currSwitchIdx && currSwitch.options.length < branch.members.length - currSwitchIdx) {
-      [currSwitch, currSwitchIdx] = [null, null];
-    }
-    currentSwitchFieldAt.push(currSwitch);
-    currentSwitchFieldIdxAt.push(currSwitchIdx);
+    switchFieldFor.push(lastSwitchField);
   }
 
   enum Direction {
     Down,
     Up,
   }
-  function findFieldIdx(fromIdx: number, dir: Direction): number | null {
+  function findNextFieldIdx(fromIdx: number, dir: Direction): number | null {
     const increment = dir == Direction.Down ? 1 : -1;
-    let idx = fromIdx;
-    while (idx > 0 && idx < branch.members.length) {
-      idx = idx + increment;
+    let idx = fromIdx + increment;
+    while (idx >= 0 && idx <= branch.members.length - 1) {
       if (branch.members[idx].field !== null) return idx;
+      idx = idx + increment;
     }
     return null;
   }
@@ -124,21 +151,17 @@
           <!-- buttons that add stuff before the current member -->
           <AddBranchMemberButtons
             allowAddField={member.field !== null}
-            currentSwitchField={currentSwitchFieldAt[idx]}
+            currentSwitchField={isAcceptingBranches(switchFieldFor[idx]) ? switchFieldFor[idx]?.config : null}
             on:add_field={() => {
               branch.members = branch.members.toSpliced(idx, 0, {
                 field: getDefaultFormFieldConfig(getDefaultBaseFormFieldConfig(), "plain_text"),
               });
             }}
             on:add_branch={() => {
-              branch.members = branch.members.toSpliced(idx, 0, {
-                branch: {
-                  members: [],
-                  condition_match_value:
-                    // @ts-expect-error
-                    currentSwitchFieldAt[idx].options[idx - currentSwitchFieldIdxAt[idx] - 1].id,
-                },
-              });
+              const newMember = newBranchMemberAt(idx);
+              if (newMember) {
+                branch.members = branch.members.toSpliced(idx, 0, newMember);
+              }
             }}
           />
 
@@ -153,19 +176,33 @@
                 branch.members = branch.members.toSpliced(idx, fieldMoveGroupSize(idx));
               }}
               on:moveup={() => {
-                const newIdx = findFieldIdx(idx, Direction.Up);
-                if (newIdx === null) return;
+                const newIdx = findNextFieldIdx(idx, Direction.Up) || 0;
                 const moveGroupSize = fieldMoveGroupSize(idx);
                 const moveGroup = branch.members.slice(idx, idx + moveGroupSize);
                 const newMembers = branch.members.toSpliced(idx, moveGroupSize);
                 newMembers.splice(newIdx, 0, ...moveGroup);
+                console.debug(
+                  `Moving field #${idx} up, newIdx = ${newIdx} moveGroupsize = ${moveGroupSize}`,
+                  moveGroup,
+                  newMembers,
+                );
                 branch.members = newMembers;
               }}
               on:movedown={() => {
+                const newIdxInOriginalList = findNextFieldIdx(idx + 1, Direction.Down);
                 const moveGroupSize = fieldMoveGroupSize(idx);
                 const moveGroup = branch.members.slice(idx, idx + moveGroupSize);
                 const newMembers = branch.members.toSpliced(idx, moveGroupSize);
-                newMembers.splice(idx + moveGroupSize, 0, ...moveGroup);
+                if (newIdxInOriginalList !== null) {
+                  newMembers.splice(newIdxInOriginalList - moveGroupSize + 1, 0, ...moveGroup);
+                } else {
+                  newMembers.push(...moveGroup);
+                }
+                console.debug(
+                  `Moving field #${idx} down, newIdx = ${newIdxInOriginalList} moveGroupSize = ${moveGroupSize} updated members`,
+                  moveGroup,
+                  newMembers,
+                );
                 branch.members = newMembers;
               }}
             />
@@ -174,7 +211,7 @@
               isMovableUp={idx > 0 && branch.members[idx - 1].branch !== null}
               isMovableDown={idx < branch.members.length - 1 && branch.members[idx + 1].branch !== null}
               bind:branch={member.branch}
-              switchField={currentSwitchFieldAt[idx]}
+              switchField={switchFieldFor[idx]?.config}
               on:delete={() => {
                 branch.members = branch.members.toSpliced(idx, 1);
               }}
@@ -185,7 +222,7 @@
         <!-- at the end, buttons to add stuff after everything -->
         <AddBranchMemberButtons
           allowAddField
-          currentSwitchField={currentSwitchFieldAt[branch.members.length]}
+          currentSwitchField={switchFieldFor[branch.members.length]?.config}
           on:add_field={() => {
             branch.members = [
               ...branch.members,
@@ -195,18 +232,10 @@
             ];
           }}
           on:add_branch={() => {
-            const idx = branch.members.length;
-            branch.members = [
-              ...branch.members,
-              {
-                branch: {
-                  members: [],
-                  condition_match_value:
-                    // @ts-expect-error
-                    currentSwitchFieldAt[idx].options[idx - currentSwitchFieldIdxAt[idx] - 1].id,
-                },
-              },
-            ];
+            const newMember = newBranchMemberAt(branch.members.length);
+            if (newMember) {
+              branch.members = [...branch.members, newMember];
+            }
           }}
         />
       </div>
