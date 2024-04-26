@@ -43,4 +43,8 @@
       </span>
     </Button>
   {/if}
+  {#if !allowAddField && !currentSwitchField}
+    <!-- just a spacer -->
+    <div class="h-4" />
+  {/if}
 </div>

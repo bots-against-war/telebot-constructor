@@ -189,17 +189,22 @@
                 branch.members = newMembers;
               }}
               on:movedown={() => {
-                const newIdxInOriginalList = findNextFieldIdx(idx + 1, Direction.Down);
+                let newIdxInOriginalList = findNextFieldIdx(idx, Direction.Down);
+                if (newIdxInOriginalList) {
+                  // since we're inserting *before* the next field, we need to find the second from the original
+                  newIdxInOriginalList = findNextFieldIdx(newIdxInOriginalList, Direction.Down);
+                }
                 const moveGroupSize = fieldMoveGroupSize(idx);
                 const moveGroup = branch.members.slice(idx, idx + moveGroupSize);
                 const newMembers = branch.members.toSpliced(idx, moveGroupSize);
                 if (newIdxInOriginalList !== null) {
-                  newMembers.splice(newIdxInOriginalList - moveGroupSize + 1, 0, ...moveGroup);
+                  const newIdx = newIdxInOriginalList - moveGroupSize;
+                  newMembers.splice(newIdx, 0, ...moveGroup);
                 } else {
                   newMembers.push(...moveGroup);
                 }
                 console.debug(
-                  `Moving field #${idx} down, newIdx = ${newIdxInOriginalList} moveGroupSize = ${moveGroupSize} updated members`,
+                  `Moving field #${idx} down, new idx in original list = ${newIdxInOriginalList}, moveGroupSize = ${moveGroupSize} updated members`,
                   moveGroup,
                   newMembers,
                 );
