@@ -1,18 +1,24 @@
 <script lang="ts">
-  import { Button, Select } from "flowbite-svelte";
-  import { type ButtonProps } from "flowbite-svelte/Button.svelte";
-  import { CloseOutline, PlusOutline } from "flowbite-svelte-icons";
-  import { createEventDispatcher } from "svelte";
-  import type { FormBranchConfig, SingleSelectFormFieldConfig } from "../../../../api/types";
-  import ActionIcon from "../../../../components/ActionIcon.svelte";
+  import { Select } from "flowbite-svelte";
+  import type { ConditionMatchValue, FormBranchConfig, SingleSelectFormFieldConfig } from "../../../../api/types";
   import { languageConfigStore } from "../../../stores";
   import { localizableTextToString } from "../../../utils";
   import { backgroundColor, borderColor, generateHue } from "../colors";
   import { getDefaultBaseFormFieldConfig, getDefaultFormFieldConfig } from "../utils";
   import FormField from "./FormField.svelte";
+  import FormMemberFrame from "./FormMemberFrame.svelte";
+
+  import AddBranchMemberButtons from "./AddBranchMemberButtons.svelte";
 
   export let branch: FormBranchConfig;
+  export let isMovableUp: boolean;
+  export let isMovableDown: boolean;
   export let switchField: SingleSelectFormFieldConfig | null = null;
+  export let switchFieldSelectedConditionValue: ConditionMatchValue | undefined = undefined;
+
+  $: {
+    branch.condition_match_value = switchFieldSelectedConditionValue;
+  }
 
   // index among options of the switch field; used for color-coding
   let conditionMatchValueIdx: number | null = null;
@@ -22,7 +28,7 @@
         .map((option, idx) => {
           return { option, idx };
         })
-        .find(({ option }) => option.id === branch.condition_match_value);
+        .find(({ option }) => option.id === switchFieldSelectedConditionValue);
       if (foundOptionRes) conditionMatchValueIdx = foundOptionRes.idx;
     }
   }
@@ -32,8 +38,6 @@
     switchField !== null && conditionMatchValueIdx !== null
       ? generateHue(switchField.id, conditionMatchValueIdx)
       : null;
-
-  const dispatch = createEventDispatcher<{ delete: null }>();
 
   // each (sub)branch requires a previous Single Select field as a switch (condition)
   // here we find in advance (and update with reactive block), which single select
@@ -69,105 +73,90 @@
     currentSwitchFieldAt.push(currSwitch);
     currentSwitchFieldIdxAt.push(currSwitchIdx);
   }
-
-  const buttonProps: ButtonProps = {
-    color: "light",
-    size: "sm",
-    outline: true,
-  };
 </script>
 
-<div
-  class:conditional-branch-container={switchField !== null}
-  style={branchHue ? `border-color: ${borderColor(branchHue)};` : ""}
->
-  {#if switchField}
-    <div class="conditional-branch-header" style={branchHue ? `background-color: ${backgroundColor(branchHue)};` : ""}>
-      <div class="flex flex-row justify-between">
-        <div class="conditional-branch-condition">
-          Если <strong>{switchField.name}</strong> =
-          <Select
-            items={switchField.options.map((o) => {
-              return {
-                name: localizableTextToString(o.label, $languageConfigStore),
-                value: o.id,
-              };
-            })}
-            bind:value={branch.condition_match_value}
-          />
-        </div>
-        <ActionIcon icon={CloseOutline} on:click={() => dispatch("delete")} />
+<FormMemberFrame {isMovableUp} {isMovableDown} isDeletable={switchField !== null} on:delete on:moveup on:movedown>
+  <!-- if the current branch is conditional, render conditional branch header, showing what option it is conditioned on -->
+  <div
+    class:conditional-branch-container={switchField !== null}
+    style={branchHue ? `border-color: ${borderColor(branchHue)};` : ""}
+  >
+    {#if switchField}
+      <div
+        class="flex flex-row p-4 items-center justify-between gap-2"
+        style={branchHue ? `background-color: ${backgroundColor(branchHue)};` : ""}
+      >
+        <strong>{switchField.name}</strong>
+        <Select
+          placeholder=""
+          items={switchField.options.map((o) => {
+            return {
+              name: localizableTextToString(o.label, $languageConfigStore),
+              value: o.id,
+            };
+          })}
+          bind:value={switchFieldSelectedConditionValue}
+        />
       </div>
-    </div>
-  {/if}
-  <div class:conditional-branch-body={switchField !== null}>
-    <div class="flex flex-col gap-2">
-      <!-- each block is keyed so that it is correctly modified on inserting new members -->
-      {#each branch.members as member, idx (member.field ? member.field : member.branch)}
-        <!-- buttons that add stuff before the current member -->
-        {#if member.field}
-          <div class="flex flex-row justify-center gap-2">
-            <Button
-              on:click={() => {
-                branch.members = branch.members.toSpliced(idx, 0, {
-                  field: getDefaultFormFieldConfig(getDefaultBaseFormFieldConfig(), "plain_text"),
-                });
+    {/if}
+    <!-- the actual branch body: sequence of fields and possible sub-branches -->
+    <div class:conditional-branch-body={switchField !== null}>
+      <div class="flex flex-col gap-2">
+        <!-- each block is keyed so that it is correctly modified on inserting new members -->
+        {#each branch.members as member, idx (member.field ? member.field : member.branch)}
+          <!-- buttons that add stuff before the current member -->
+          <AddBranchMemberButtons
+            allowAddField={member.field !== null}
+            currentSwitchField={currentSwitchFieldAt[idx]}
+            on:add_field={() => {
+              branch.members = branch.members.toSpliced(idx, 0, {
+                field: getDefaultFormFieldConfig(getDefaultBaseFormFieldConfig(), "plain_text"),
+              });
+            }}
+            on:add_branch={() => {
+              branch.members = branch.members.toSpliced(idx, 0, {
+                branch: {
+                  members: [],
+                  condition_match_value:
+                    // @ts-expect-error
+                    currentSwitchFieldAt[idx].options[idx - currentSwitchFieldIdxAt[idx] - 1].id,
+                },
+              });
+            }}
+          />
+
+          <!-- actual branch member -->
+          {#if member.field}
+            <FormField
+              isMovableUp={idx > 0}
+              isMovableDown={idx < branch.members.length - 1}
+              bind:fieldConfig={member.field}
+              on:delete={() => {
+                let firstIdxToLeave = idx + 1;
+                // deleting branches with the switch, if present
+                while (firstIdxToLeave <= branch.members.length - 1 && branch.members[firstIdxToLeave].branch)
+                  firstIdxToLeave += 1;
+                branch.members = branch.members.toSpliced(idx, firstIdxToLeave - idx);
               }}
-              {...buttonProps}
-            >
-              <PlusOutline size="sm" class="mr-2" />
-              Поле
-            </Button>
-            {#if currentSwitchFieldAt[idx] !== null}
-              <Button
-                on:click={() => {
-                  branch.members = branch.members.toSpliced(idx, 0, {
-                    branch: {
-                      members: [],
-                      condition_match_value:
-                        // @ts-expect-error
-                        currentSwitchFieldAt[idx].options[idx - currentSwitchFieldIdxAt[idx] - 1].id,
-                    },
-                  });
-                }}
-                {...buttonProps}
-              >
-                <PlusOutline size="sm" class="mr-2" />
-                <span>
-                  Ветвь с условием на "{(currentSwitchFieldAt[idx] || { name: "" }).name}"
-                </span>
-              </Button>
-            {/if}
-          </div>
-        {/if}
+            />
+          {:else if member.branch}
+            <svelte:self
+              isMovableUp={idx > 0 && branch.members[idx - 1].branch !== null}
+              isMovableDown={idx < branch.members.length - 1 && branch.members[idx + 1].branch !== null}
+              bind:branch={member.branch}
+              switchField={currentSwitchFieldAt[idx]}
+              on:delete={() => {
+                branch.members = branch.members.toSpliced(idx, 1);
+              }}
+            />
+          {/if}
+        {/each}
 
-        <!-- actual branch member -->
-        {#if member.field}
-          <FormField
-            bind:fieldConfig={member.field}
-            on:delete={() => {
-              let firstIdxToLeave = idx + 1;
-              // deleting branches with the switch, if present
-              while (firstIdxToLeave <= branch.members.length - 1 && branch.members[firstIdxToLeave].branch)
-                firstIdxToLeave += 1;
-              branch.members = branch.members.toSpliced(idx, firstIdxToLeave - idx);
-            }}
-          />
-        {:else if member.branch}
-          <svelte:self
-            bind:branch={member.branch}
-            switchField={currentSwitchFieldAt[idx]}
-            on:delete={() => {
-              branch.members = branch.members.toSpliced(idx, 1);
-            }}
-          />
-        {/if}
-      {/each}
-
-      <!-- at the end, buttons to add stuff after everything -->
-      <div class="flex flex-row justify-center gap-2">
-        <Button
-          on:click={() => {
+        <!-- at the end, buttons to add stuff after everything -->
+        <AddBranchMemberButtons
+          allowAddField
+          currentSwitchField={currentSwitchFieldAt[branch.members.length]}
+          on:add_field={() => {
             branch.members = [
               ...branch.members,
               {
@@ -175,58 +164,34 @@
               },
             ];
           }}
-          {...buttonProps}
-        >
-          <PlusOutline size="sm" class="mr-2" />
-          Поле
-        </Button>
-        {#if currentSwitchFieldAt[branch.members.length] !== null}
-          <Button
-            on:click={() => {
-              const idx = branch.members.length;
-              branch.members = [
-                ...branch.members,
-                {
-                  branch: {
-                    members: [],
+          on:add_branch={() => {
+            const idx = branch.members.length;
+            branch.members = [
+              ...branch.members,
+              {
+                branch: {
+                  members: [],
+                  condition_match_value:
                     // @ts-expect-error
-                    condition_match_value: currentSwitchFieldAt[idx].options[idx - currentSwitchFieldIdxAt[idx] - 1].id,
-                  },
+                    currentSwitchFieldAt[idx].options[idx - currentSwitchFieldIdxAt[idx] - 1].id,
                 },
-              ];
-            }}
-            {...buttonProps}
-          >
-            <PlusOutline size="sm" class="mr-2" />
-            <span>
-              Ветвь с условием на "{(currentSwitchFieldAt[branch.members.length] || { name: "" }).name}"
-            </span>
-          </Button>
-        {/if}
+              },
+            ];
+          }}
+        />
       </div>
     </div>
   </div>
-</div>
+</FormMemberFrame>
 
 <!-- TODO: move at least some of the styles to tailwind classes -->
 <style>
   div.conditional-branch-container {
     border-left: 2px white solid;
     border-bottom: 2px white solid;
+    border-right: 2px white solid;
   }
-
-  div.conditional-branch-header {
-    padding: 15px;
-  }
-
   div.conditional-branch-body {
     padding: 10px;
-  }
-
-  div.conditional-branch-condition {
-    width: 70%;
-    display: inline-flex;
-    gap: 0.2em;
-    align-items: center;
   }
 </style>

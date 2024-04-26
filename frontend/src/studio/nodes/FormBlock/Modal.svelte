@@ -74,8 +74,13 @@
   <div>
     <Tabs style="underline" contentClass="mt-3">
       <TabItem open title={`Поля (${flattenedFormFields(topLevelBranch.members).length})`}>
-        <LocalizableTextInput placeholder={getRandomFormStartMessage()} bind:value={editedConfig.messages.form_start} />
-        <FormBranch bind:branch={topLevelBranch} />
+        <div class="mb-4">
+          <LocalizableTextInput
+            placeholder={getRandomFormStartMessage()}
+            bind:value={editedConfig.messages.form_start}
+          />
+        </div>
+        <FormBranch isMovableUp={false} isMovableDown={false} bind:branch={topLevelBranch} />
       </TabItem>
       <TabItem title="Ответы">
         <FormResultExportOptions bind:config={editedConfig.results_export} {botName} />

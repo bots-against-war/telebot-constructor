@@ -1,14 +1,12 @@
 <script lang="ts">
-  import { Toggle } from "flowbite-svelte";
+  import { Input, Toggle } from "flowbite-svelte";
+  import { CheckOutline } from "flowbite-svelte-icons";
   import type { BaseFormFieldConfig } from "../../../../api/types";
-  import TextInput from "../../../../components/inputs/TextInput.svelte";
-  import LocalizableTextInput from "../../../components/LocalizableTextInput.svelte";
-  import { getRandomContent as getRandomFormExampleContent } from "../content";
-  import { Input } from "flowbite-svelte";
   import ActionIcon from "../../../../components/ActionIcon.svelte";
-  import { CheckOutline, PenOutline } from "flowbite-svelte-icons";
-  import { localizableTextToString } from "../../../utils";
+  import LocalizableTextInput from "../../../components/LocalizableTextInput.svelte";
   import { languageConfigStore } from "../../../stores";
+  import { localizableTextToString } from "../../../utils";
+  import { getRandomContent as getRandomFormExampleContent } from "../content";
   export let config: BaseFormFieldConfig;
 
   let exampleContent = getRandomFormExampleContent();
