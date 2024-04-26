@@ -13,10 +13,10 @@
   const buttonClass = "!p-1 bg-none border-none hover:bg-gray-200";
 </script>
 
-<div>
-  <div class="w-full flex flex-row gap-1 justify-end mt-[-10px]">
+<div class="relative mt-[10px]">
+  <div class="w-fit absolute right-0 bottom-full">
     {#if isMovableUp || isMovableDown || isDeletable}
-      <div class="px-2 py-1 border-t border-x rounded-tr-md rounded-tl-md">
+      <div class="px-2 py-1 bg-white border-t border-x rounded-tr-md rounded-tl-md">
         {#if isMovableUp}
           <ActionIcon {iconClass} {buttonClass} size="sm" icon={ChevronUpOutline} on:click={() => dispatch("moveup")} />
         {/if}

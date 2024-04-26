@@ -17,24 +17,23 @@
       config.name = localizableTextToString(config.prompt, $languageConfigStore);
     }
   }
-
-  let nameInputEl: Input | null = null;
+  let nameInputEl: HTMLElement | null = null;
 </script>
 
 <div class="flex flex-col gap-1">
   {#if config.name}
     {#if isEditingFieldName}
       <div class="flex flex-row gap-3 items-baseline">
-        <Input
-          bind:this={nameInputEl}
-          focus
-          on:blur={() => {
-            isEditingFieldName = false;
-          }}
-          class="font-semibold py-1"
-          placeholder={exampleContent.name}
-          bind:value={config.name}
-        />
+        <Input class="font-semibold py-1" placeholder={exampleContent.name} let:props>
+          <input
+            bind:this={nameInputEl}
+            {...props}
+            bind:value={config.name}
+            on:blur={() => {
+              isEditingFieldName = false;
+            }}
+          />
+        </Input>
         <ActionIcon
           icon={CheckOutline}
           on:click={() => {
@@ -48,6 +47,11 @@
         on:click={() => {
           isEditingFieldName = true;
           hasEditedFieldName = true;
+          setTimeout(() => {
+            if (nameInputEl) {
+              nameInputEl.focus();
+            }
+          }, 100);
         }}
       >
         {#if config.is_required}

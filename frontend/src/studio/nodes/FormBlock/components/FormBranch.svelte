@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Select } from "flowbite-svelte";
-  import type { ConditionMatchValue, FormBranchConfig, SingleSelectFormFieldConfig } from "../../../../api/types";
+  import type { FormBranchConfig, SingleSelectFormFieldConfig } from "../../../../api/types";
   import { languageConfigStore } from "../../../stores";
   import { localizableTextToString } from "../../../utils";
   import { backgroundColor, borderColor, generateHue } from "../colors";
@@ -14,11 +14,6 @@
   export let isMovableUp: boolean;
   export let isMovableDown: boolean;
   export let switchField: SingleSelectFormFieldConfig | null = null;
-  export let switchFieldSelectedConditionValue: ConditionMatchValue | undefined = undefined;
-
-  $: {
-    branch.condition_match_value = switchFieldSelectedConditionValue;
-  }
 
   // index among options of the switch field; used for color-coding
   let conditionMatchValueIdx: number | null = null;
@@ -28,7 +23,7 @@
         .map((option, idx) => {
           return { option, idx };
         })
-        .find(({ option }) => option.id === switchFieldSelectedConditionValue);
+        .find(({ option }) => option.id === branch.condition_match_value);
       if (foundOptionRes) conditionMatchValueIdx = foundOptionRes.idx;
     }
   }
@@ -117,7 +112,7 @@
               value: o.id,
             };
           })}
-          bind:value={switchFieldSelectedConditionValue}
+          bind:value={branch.condition_match_value}
         />
       </div>
     {/if}
