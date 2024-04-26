@@ -878,14 +878,28 @@
       "title": "FormMessages",
       "type": "object"
     },
+    "FormResultUserAttribution": {
+      "enum": [
+        "none",
+        "unique_id",
+        "name",
+        "full"
+      ],
+      "title": "FormResultUserAttribution",
+      "type": "string"
+    },
     "FormResultsExport": {
       "properties": {
+        "user_attribution": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/FormResultUserAttribution"
+            }
+          ],
+          "default": "none"
+        },
         "echo_to_user": {
           "title": "Echo To User",
-          "type": "boolean"
-        },
-        "is_anonymous": {
-          "title": "Is Anonymous",
           "type": "boolean"
         },
         "to_chat": {
@@ -897,11 +911,22 @@
               "type": "null"
             }
           ]
+        },
+        "is_anonymous": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Is Anonymous"
         }
       },
       "required": [
         "echo_to_user",
-        "is_anonymous",
         "to_chat"
       ],
       "title": "FormResultsExport",
