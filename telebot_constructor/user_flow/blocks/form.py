@@ -3,7 +3,7 @@ import logging
 from enum import Enum
 from typing import Any, Literal, Optional, Sequence, Type, Union, cast
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, model_validator
 from telebot import types as tg
 from telebot_components.form.field import (
     FormField,
@@ -18,8 +18,14 @@ from telebot_components.form.handler import FormHandler as ComponentsFormHandler
 from telebot_components.form.handler import (
     FormHandlerConfig as ComponentsFormHandlerConfig,
 )
+from telebot_components.utils import emoji_hash
+from typing_extensions import Self
 
 from telebot_constructor.user_flow.blocks.base import UserFlowBlock
+from telebot_constructor.user_flow.blocks.constants import (
+    FORM_CANCEL_CMD,
+    FORM_SKIP_FIELD_CMD,
+)
 from telebot_constructor.user_flow.types import (
     SetupResult,
     UserFlowBlockId,
@@ -166,10 +172,29 @@ class FormResultsExportToChatConfig(BaseModel):
     via_feedback_handler: bool
 
 
+class FormResultUserAttribution(Enum):
+    NONE = "none"  # no data collected from user
+    UNIQUE_ID = "unique_id"  # only a unique anonymized ID
+    NAME = "name"  # only telegram name
+    FULL = "full"  # telegram name, username, user id
+
+
 class FormResultsExport(BaseModel):
+    user_attribution: FormResultUserAttribution = FormResultUserAttribution.NONE
     echo_to_user: bool
-    is_anonymous: bool
     to_chat: Optional[FormResultsExportToChatConfig]
+
+    is_anonymous: Optional[bool] = None  # deprecated, use user_attribution instead
+
+    @model_validator(mode="after")
+    def backwards_compatibility(self) -> Self:
+        if self.is_anonymous is None and self.user_attribution is None:
+            raise ValueError("At least one of the properties must not be None: is_anonymous, user_attribution")
+        if self.is_anonymous is not None:
+            self.user_attribution = (
+                FormResultUserAttribution.NONE if self.is_anonymous else FormResultUserAttribution.FULL
+            )
+        return self
 
 
 class FormBlock(UserFlowBlock):
@@ -215,28 +240,18 @@ class FormBlock(UserFlowBlock):
                 echo_filled_field=False,
                 form_starting_template=join_localizable_texts(
                     [
-                        validate_template_text(
-                            self.messages.form_start, placeholder_count=0, title="form start message"
-                        ),
-                        validate_template_text(
-                            self.messages.cancel_command_is, placeholder_count=1, title="cancel command message"
-                        ),
+                        self.messages.form_start,
+                        self.messages.cancel_command_is,
                     ],
                     sep="\n\n",
                 ),
-                can_skip_field_template=validate_template_text(
-                    self.messages.field_is_skippable, placeholder_count=1, title="field is skippable message"
-                ),
-                cant_skip_field_msg=validate_template_text(
-                    self.messages.field_is_not_skippable, placeholder_count=0, title="field is not skippable message"
-                ),
-                retry_field_msg=validate_template_text(
-                    self.messages.please_enter_correct_value, placeholder_count=0, title="enter correct value msg"
-                ),
-                unsupported_cmd_error_template=validate_template_text(
-                    self.messages.unsupported_command, placeholder_count=1, title="unsupported command message"
-                ),
+                can_skip_field_template=self.messages.field_is_skippable,
+                cant_skip_field_msg=self.messages.field_is_not_skippable,
+                retry_field_msg=self.messages.please_enter_correct_value,
+                unsupported_cmd_error_template=self.messages.unsupported_command,
                 cancelling_because_of_error_template=cancelling_because_of_error,
+                cancel_cmd=FORM_CANCEL_CMD,
+                skip_cmd=FORM_SKIP_FIELD_CMD,
             ),
             language_store=context.language_store,
         )
@@ -282,12 +297,24 @@ class FormBlock(UserFlowBlock):
                             text=text,
                             attachment=None,
                             no_response=True,
-                            send_user_identifier_message=self.results_export.is_anonymous,
+                            send_user_identifier_message=self.results_export.user_attribution
+                            != FormResultUserAttribution.NONE,
                             parse_mode="HTML",
                         )
                     else:
-                        if not self.results_export.is_anonymous:
-                            text = telegram_user_link(form_exit_context.last_update.from_user) + "\n\n" + text
+                        user_id_text: Optional[str] = None
+                        if self.results_export.user_attribution == FormResultUserAttribution.FULL:
+                            user_id_text = telegram_user_link(form_exit_context.last_update.from_user)
+                        elif self.results_export.user_attribution == FormResultUserAttribution.NAME:
+                            user_id_text = form_exit_context.last_update.from_user.full_name
+                        elif self.results_export.user_attribution == FormResultUserAttribution.UNIQUE_ID:
+                            user_id_text = emoji_hash(
+                                form_exit_context.last_update.from_user.id,
+                                bot_prefix=self.block_id,
+                                length=6,
+                            )
+                        if user_id_text:
+                            text = user_id_text + "\n\n" + text
                         await context.bot.send_message(
                             chat_id=self.results_export.to_chat.chat_id,
                             text=text,
@@ -331,39 +358,12 @@ class FormBlock(UserFlowBlock):
         )
 
 
-def validate_template_text(template: LocalizableText, placeholder_count: int, title: str) -> LocalizableText:
-    """
-    Validate that the template has required number of placeholders for dynamic data interpolation inside form handler.
-    This function DOES NOT actually validate that the text is localized into all languages etc, but this is taken care
-    of by form handler internally.
-    """
-
-    def _validate_string(template_str: str, subtitle: Optional[str]) -> str:
-        full_title = title
-        if subtitle:
-            full_title += f" ({subtitle})"
-        template_str = template_str.strip()
-        actual_placeholder_count = template_str.count(r"{}")
-        if actual_placeholder_count != placeholder_count:
-            raise ValueError(
-                f'Expected {placeholder_count} "{{}}" placeholders in {full_title!r}, found {actual_placeholder_count}'
-            )
-        if not template_str:
-            raise ValueError(f"Empty {full_title!r}")
-        return template_str
-
-    if isinstance(template, str):
-        return _validate_string(template, subtitle=None)
-    else:
-        return {lang: _validate_string(localization, subtitle=str(lang)) for lang, localization in template.items()}
-
-
 def join_localizable_texts(msgs: Sequence[LocalizableText], sep: str) -> LocalizableText:
     if not msgs:
         raise ValueError("Nothing to join")
 
-    def _join_str(ss: list[str]) -> str:
-        return sep.join(ss)
+    def _join_str(strings: list[str]) -> str:
+        return sep.join([s for s in strings if s])
 
     if all(isinstance(msg, str) for msg in msgs):
         return _join_str(cast(list[str], msgs))

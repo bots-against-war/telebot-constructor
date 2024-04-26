@@ -1,3 +1,5 @@
+from typing import Any
+
 import pytest
 from pydantic import ValidationError
 from telebot.test_util import MockedAsyncTeleBot
@@ -20,6 +22,7 @@ from telebot_constructor.user_flow.blocks.form import (
     FormMessages,
     FormResultsExport,
     FormResultsExportToChatConfig,
+    FormResultUserAttribution,
     PlainTextFormFieldConfig,
     SingleSelectFormFieldConfig,
 )
@@ -840,7 +843,45 @@ async def test_multilang_user_flow() -> None:
     bot.method_calls.clear()
 
 
-async def test_user_flow_with_form() -> None:
+@pytest.mark.parametrize(
+    "form_result_export_kwargs, expected_name_line",
+    [
+        pytest.param(
+            dict(is_anonymous=False),
+            '<a href="tg://user?id=161">User</a>\n\n',
+            id="legacy way of specifying user attribution by flag = true",
+        ),
+        pytest.param(
+            dict(is_anonymous=True),
+            "",
+            id="legacy way of specifying user attribution by flag = false",
+        ),
+        pytest.param(
+            dict(user_attribution=FormResultUserAttribution.FULL),
+            '<a href="tg://user?id=161">User</a>\n\n',
+            id="full user attribution",
+        ),
+        pytest.param(
+            dict(user_attribution=FormResultUserAttribution.NAME),
+            "User\n\n",
+            id="name-only user attribution",
+        ),
+        pytest.param(
+            dict(user_attribution=FormResultUserAttribution.UNIQUE_ID),
+            "🤯🧄🌝🎳🚿♿\n\n",
+            id="anonymized id user attribution",
+        ),
+        pytest.param(
+            dict(user_attribution=FormResultUserAttribution.NONE),
+            "",
+            id="no user attribution",
+        ),
+    ],
+)
+async def test_user_flow_with_form(
+    form_result_export_kwargs: dict[str, Any],
+    expected_name_line: str,
+) -> None:
     bot_config = BotConfig(
         token_secret_name="token",
         display_name="lalala",
@@ -934,8 +975,8 @@ async def test_user_flow_with_form() -> None:
                         ),
                         results_export=FormResultsExport(
                             echo_to_user=True,
-                            is_anonymous=False,
                             to_chat=FormResultsExportToChatConfig(chat_id=111222, via_feedback_handler=True),
+                            **form_result_export_kwargs,
                         ),
                         form_completed_next_block_id="thanks-msg",
                         form_cancelled_next_block_id=None,
@@ -1023,7 +1064,7 @@ async def test_user_flow_with_form() -> None:
             {
                 "chat_id": 111222,
                 "text": (
-                    '<a href="tg://user?id=161">User</a>\n\n'
+                    expected_name_line
                     + "<b>Name</b>: John Doe\n"
                     + "<b>Apples</b>: Yes I do\n"
                     + "<b>Which apples</b>: granny smith"
