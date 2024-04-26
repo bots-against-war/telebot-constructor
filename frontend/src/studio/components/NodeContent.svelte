@@ -52,9 +52,8 @@
         <ActionIcon id={showMoreActionsIconId} icon={DotsHorizontalOutline} />
         <Popover triggeredBy={"#" + showMoreActionsIconId} placement="right-start" defaultClass="">
           <Listgroup active class="text-sm border-none">
-            <ListgroupItem>
-              {id}
-            </ListgroupItem>
+            <!-- debugging -->
+            <!-- <ListgroupItem active={false}>{id}</ListgroupItem> -->
             {#if clonable}
               <ListgroupItem on:click={() => dispatch("clone", id)} class="gap-2">
                 <FileCopyOutline class="w-3 h-3 text-gray-700" />

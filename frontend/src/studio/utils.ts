@@ -1,5 +1,6 @@
-import { getEntrypointConcreteConfig } from "../api/typeUtils";
-import type { UserFlowBlockConfig, UserFlowEntryPointConfig } from "../api/types";
+import { getBlockId, getEntrypointConcreteConfig, getEntrypointId } from "../api/typeUtils";
+import type { BotConfig, NodeDisplayCoords, UserFlowBlockConfig, UserFlowEntryPointConfig } from "../api/types";
+import { BOT_INFO_NODE_ID } from "../constants";
 import type { LocalizableText } from "../types";
 import { NodeTypeKey, getNodeTypeKey } from "./nodes/display";
 import type { LanguageConfig } from "./stores";
@@ -104,4 +105,12 @@ export function cloneBlockConfig(c: UserFlowBlockConfig): TentativeNode {
   };
 }
 
-
+export function filterNodeDisplayCoords(coords: NodeDisplayCoords, config: BotConfig): NodeDisplayCoords {
+  return Object.fromEntries(
+    Object.entries(coords).filter(([id, _]) =>
+      id === BOT_INFO_NODE_ID ||
+      config.user_flow_config.entrypoints.some(ep => getEntrypointId(ep) == id) ||
+      config.user_flow_config.blocks.some(block => getBlockId(block) == id)
+    )
+  )
+}

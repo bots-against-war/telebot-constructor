@@ -29,13 +29,27 @@
   } from "./nodes/defaultConfigs";
   import { NODE_HUE, NODE_ICON, NODE_TITLE, NodeTypeKey, headerColor } from "./nodes/display";
   import { languageConfigStore, type LanguageConfig } from "./stores";
-  import { NodeKind, cloneBlockConfig, cloneEntrypointConfig, generateNodeId, type TentativeNode } from "./utils";
+  import {
+    NodeKind,
+    clone,
+    cloneBlockConfig,
+    cloneEntrypointConfig,
+    filterNodeDisplayCoords,
+    generateNodeId,
+    type TentativeNode,
+  } from "./utils";
 
   export let botName: string;
   export let botConfig: BotConfig;
   export let readonly: boolean;
 
   const open = getModalOpener();
+
+  // we store node positions separately to be able to react to bot config changes with sveltes $:{} blocks,
+  // while ignoring changes in the noisy and unimportant node position data
+  // this way, node movement doesn't trigger any logic reactive to bot config
+  // when we save / load bot config, we manually add display coords to it
+  let nodeDisplayCoords = botConfig.user_flow_config.node_display_coords;
 
   // tracking when the config is modified to prevent exiting with unsaved changes
   let isConfigModified = false;
@@ -48,6 +62,43 @@
     if (configReactivityTriggeredCount > 2) {
       // dont know why it's 2 but it just works...
       isConfigModified = true;
+    }
+  }
+
+  // saving bot config copy on every update for ctrl+Z functionality
+  const botConfigEditHistory: BotConfig[] = [];
+  const EDIT_HISTORY_LENGTH = 30;
+  let lastEditSavedAt: number | null = null;
+  $: {
+    const configClone = clone(botConfig);
+    const now = Date.now();
+    if (botConfigEditHistory.length > 0 && (lastEditSavedAt === null || now - lastEditSavedAt < 100)) {
+      console.debug("Overwriting the last change in edit history with ", configClone);
+      botConfigEditHistory[botConfigEditHistory.length - 1] = configClone;
+    } else {
+      console.debug("Pushing bot config to edit history: ", configClone);
+      botConfigEditHistory.push(configClone);
+      if (botConfigEditHistory.length > EDIT_HISTORY_LENGTH) {
+        botConfigEditHistory.splice(0, botConfigEditHistory.length - EDIT_HISTORY_LENGTH);
+      }
+      lastEditSavedAt = now;
+    }
+  }
+
+  function undo() {
+    if (botConfigEditHistory.length < 2) {
+      console.debug("Already at the last change, nothing to undo");
+      return;
+    }
+    console.debug("Undoing the last change...");
+    botConfigEditHistory.pop();
+    const prevBotConfig = botConfigEditHistory.pop();
+    if (prevBotConfig) {
+      prevBotConfig.user_flow_config.node_display_coords = filterNodeDisplayCoords(
+        { ...prevBotConfig.user_flow_config.node_display_coords, ...nodeDisplayCoords },
+        prevBotConfig,
+      );
+      botConfig = prevBotConfig;
     }
   }
 
@@ -85,10 +136,9 @@
       console.debug(`Deleting block id=${id} idx=${blockIdx}`, botConfig.user_flow_config.blocks[blockIdx]);
       botConfig.user_flow_config.blocks = botConfig.user_flow_config.blocks.toSpliced(blockIdx, 1);
     } else {
-      console.log(`Node with id '${id}' not found among entrypoints and blocks`);
+      console.debug(`Node with id '${id}' not found among entrypoints and blocks`);
       return;
     }
-    delete botConfig.user_flow_config.node_display_coords[id];
   }
 
   // node creation machinery:
@@ -120,13 +170,13 @@
 
   function customMouseDownHandler(e: MouseEvent, cursor: { x: number; y: number }): boolean {
     if (tentativeNode === null) return false;
-    console.log("Mouse-down event received with tentative node set, processing, cursor=", cursor);
+    console.debug("Mouse-down event received with tentative node set, processing, cursor=", cursor);
     if (e.button == 2) {
       console.debug("RMB click, tentative node dropped");
       tentativeNode = null;
       return true;
     }
-    botConfig.user_flow_config.node_display_coords[tentativeNode.id] = {
+    nodeDisplayCoords[tentativeNode.id] = {
       x: cursor.x - 125, // half-width of the node in svelvet's coords
       y: cursor.y - 50, // just some arbitrary offset
     };
@@ -149,7 +199,7 @@
     } else if (blockIdx !== -1) {
       tentativeNode = cloneBlockConfig(botConfig.user_flow_config.blocks[blockIdx]);
     } else {
-      console.log(`Node with id '${id}' not found among entrypoints and blocks`);
+      console.debug(`Node with id '${id}' not found among entrypoints and blocks`);
       return;
     }
   }
@@ -184,14 +234,19 @@
     if (readonly) return;
     if (!configValidationResult.ok) return;
     isSavingBotConfig = true;
-    console.log(`Saving bot config for ${botName}`, botConfig);
+    console.debug(`Saving bot config for ${botName}`, botConfig);
+    // returning node display coords from separate storage to config
+    botConfig.user_flow_config.node_display_coords = filterNodeDisplayCoords(
+      { ...botConfig.user_flow_config.node_display_coords, ...nodeDisplayCoords },
+      botConfig,
+    );
     const res = await saveBotConfig(botName, { config: botConfig, version_message: versionMessage, start });
     isSavingBotConfig = false;
     if (getError(res) !== null) {
       window.alert(`Error saving bot config: ${getError(res)}`);
-      return;
+    } else {
+      isConfigModified = false;
     }
-    isConfigModified = false;
   }
 
   const exitStudio = () => navigate(`/#${botName}`);
@@ -209,7 +264,23 @@
   }
 </script>
 
-<svelte:window on:mousemove={handleMouseMove} />
+<svelte:window
+  on:mousemove={handleMouseMove}
+  on:keydown={(e) => {
+    if (
+      e.target &&
+      // @ts-expect-error
+      e.target.tagName !== "TEXTAREA" &&
+      // @ts-expect-error
+      e.target.tagName !== "INPUT" &&
+      !e.repeat &&
+      (e.metaKey || e.ctrlKey) &&
+      e.code === "KeyZ"
+    ) {
+      undo();
+    }
+  }}
+/>
 <div class="svelvet-container">
   <div class="navbar-container">
     <Navbar>
@@ -251,13 +322,13 @@
     {customMouseDownHandler}
     customCssCursor={tentativeNode ? "crosshair" : null}
   >
-    <BotInfoNode {botName} bind:position={botConfig.user_flow_config.node_display_coords[BOT_INFO_NODE_ID]} />
+    <BotInfoNode {botName} bind:position={nodeDisplayCoords[BOT_INFO_NODE_ID]} />
     {#each botConfig.user_flow_config.entrypoints as entrypoint (getEntrypointId(entrypoint))}
       {#if entrypoint.command}
         <CommandEntryPointNode
           on:delete={deleteNode}
           bind:config={entrypoint.command}
-          bind:position={botConfig.user_flow_config.node_display_coords[entrypoint.command.entrypoint_id]}
+          bind:position={nodeDisplayCoords[entrypoint.command.entrypoint_id]}
           bind:isValid={isNodeValid[entrypoint.command.entrypoint_id]}
         />
       {/if}
@@ -268,7 +339,7 @@
           on:delete={deleteNode}
           on:clone={cloneNode}
           bind:config={block.content}
-          bind:position={botConfig.user_flow_config.node_display_coords[block.content.block_id]}
+          bind:position={nodeDisplayCoords[block.content.block_id]}
           bind:isValid={isNodeValid[block.content.block_id]}
         />
       {:else if block.human_operator}
@@ -277,7 +348,7 @@
           on:delete={deleteNode}
           on:clone={cloneNode}
           bind:config={block.human_operator}
-          bind:position={botConfig.user_flow_config.node_display_coords[block.human_operator.block_id]}
+          bind:position={nodeDisplayCoords[block.human_operator.block_id]}
           bind:isValid={isNodeValid[block.human_operator.block_id]}
         />
       {:else if block.language_select}
@@ -287,7 +358,7 @@
             languageConfigStore.set(null);
           }}
           bind:config={block.language_select}
-          bind:position={botConfig.user_flow_config.node_display_coords[block.language_select.block_id]}
+          bind:position={nodeDisplayCoords[block.language_select.block_id]}
           bind:isValid={isNodeValid[block.language_select.block_id]}
         />
       {:else if block.menu}
@@ -295,7 +366,7 @@
           on:delete={deleteNode}
           on:clone={cloneNode}
           bind:config={block.menu}
-          bind:position={botConfig.user_flow_config.node_display_coords[block.menu.block_id]}
+          bind:position={nodeDisplayCoords[block.menu.block_id]}
           bind:isValid={isNodeValid[block.menu.block_id]}
         />
       {:else if block.form}
@@ -304,7 +375,7 @@
           on:delete={deleteNode}
           on:clone={cloneNode}
           bind:config={block.form}
-          bind:position={botConfig.user_flow_config.node_display_coords[block.form.block_id]}
+          bind:position={nodeDisplayCoords[block.form.block_id]}
           bind:isValid={isNodeValid[block.form.block_id]}
         />
       {/if}
