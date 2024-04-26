@@ -86,30 +86,42 @@ export function getRandomContent(): FormExampleContent {
   return EXAMPLE_CONTENT[idx];
 }
 
+const EXAMPLE_START_MESSAGES: string[] = [
+  "Пожалуйста, уделите немного времени, чтобы ответить на несколько важных вопросов.",
+  "Пожалуйста, заполните эту краткую анкету и мы ответим вам в течение нескольких дней.",
+  "Ответьте, пожалуйста, на несколько вопросов ниже.",
+  "Пожалуйста, заполните форму ниже!"
+]
+
+export function getRandomFormStartMessage(): string {
+  const idx = Math.floor(Math.random() * EXAMPLE_START_MESSAGES.length);
+  return EXAMPLE_START_MESSAGES[idx];
+}
+
 export function formMessageName(key: keyof FormMessages | keyof FormErrorMessages | string): string {
   switch (key) {
     case "form_start":
-      return "В начале заполнения формы";
+      return "стартовое сообщение";
     case "cancel_command_is":
-      return "Команда отмены";
+      return "О команде выхода из формы";
     case "field_is_skippable":
-      return "Когда поле можно пропустить";
+      return "О необязательном поле";
     case "field_is_not_skippable":
-      return "Когда поле нельзя пропустить";
+      return "Об обязательном поле";
     case "please_enter_correct_value":
-      return "При некорректном значении";
+      return "При некорректном значении в ответ";
     case "unsupported_command":
       return "При неподдерживаемой команде";
     case "empty_text_error_msg":
-      return "Сообщение без текста";
+      return "Прислано сообщение без текста";
     case "not_an_integer_error_msg":
-      return "Не валидное число";
+      return "Невалидное число";
     case "not_an_integer_list_error_msg":
-      return "Не валидный список чисел";
+      return "Невалидный список чисел";
     case "bad_time_format_msg":
-      return "Не валидная дата";
+      return "Невалидная дата";
     case "invalid_enum_error_msg":
-      return "Не валидный вариант ответа";
+      return "Невалидный вариант ответа";
     case "attachments_expected_error_msg":
       return "Нет вложений";
     case "only_one_media_message_allowed_error_msg":
@@ -120,5 +132,14 @@ export function formMessageName(key: keyof FormMessages | keyof FormErrorMessage
       return "Сообщение вместо использования меню";
     default:
       return key;
+  }
+}
+
+export function formMessageDescription(key: keyof FormMessages | keyof FormErrorMessages | string): string | null {
+  switch (key) {
+    case "field_is_not_skippable":
+      return "Если пользователь:ница присылает команду /skip на обязательное поле";
+    default:
+      return null;
   }
 }
