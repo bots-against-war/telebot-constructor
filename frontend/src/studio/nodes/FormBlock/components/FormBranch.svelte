@@ -97,15 +97,23 @@
   }
 
   enum Direction {
-    Down,
-    Up,
+    Down = "down",
+    Up = "up",
+  }
+  function increment(dir: Direction) {
+    switch (dir) {
+      case Direction.Down:
+        return 1;
+      case Direction.Up:
+        return -1;
+    }
   }
   function findNextFieldIdx(fromIdx: number, dir: Direction): number | null {
-    const increment = dir == Direction.Down ? 1 : -1;
-    let idx = fromIdx + increment;
+    const incr = increment(dir);
+    let idx = fromIdx + incr;
     while (idx >= 0 && idx <= branch.members.length - 1) {
       if (branch.members[idx].field !== null) return idx;
-      idx = idx + increment;
+      idx = idx + incr;
     }
     return null;
   }
@@ -116,6 +124,43 @@
     // including branches following the switch into "move group"
     while (moveGroupEndIdx <= branch.members.length - 1 && branch.members[moveGroupEndIdx].branch) moveGroupEndIdx += 1;
     return moveGroupEndIdx - idx;
+  }
+
+  function moveField(idx: number, dir: Direction) {
+    let targetIdx = findNextFieldIdx(idx, dir);
+    if (dir === Direction.Down && targetIdx) {
+      // since we're inserting *before* the next field, for "down" direction,
+      // we actually need to find the second field from the starting one
+      targetIdx = findNextFieldIdx(targetIdx, Direction.Down);
+    }
+
+    const moveGroupSize = fieldMoveGroupSize(idx);
+    const moveGroup = branch.members.slice(idx, idx + moveGroupSize);
+    const newMembers = branch.members.toSpliced(idx, moveGroupSize);
+    if (targetIdx === null) {
+      targetIdx = dir === Direction.Up ? 0 : branch.members.length;
+    } else if (dir === Direction.Down) {
+      // after splicing everything moved up, we need to adjust the idx
+      targetIdx -= moveGroupSize;
+    }
+    newMembers.splice(targetIdx, 0, ...moveGroup);
+
+    console.debug(
+      `Moving field #${idx} ${dir}, target idx = ${targetIdx}, moveGroupSize = ${moveGroupSize}`,
+      moveGroup,
+      newMembers,
+    );
+    branch.members = newMembers;
+  }
+
+  function moveBranch(idx: number, dir: Direction) {
+    const targetIdx = idx + increment(dir);
+    if (branch.members[targetIdx].field) return;
+    const moved = branch.members[idx];
+    const newMembers = branch.members.toSpliced(idx, 1);
+    newMembers.splice(targetIdx, 0, moved);
+    console.debug(`Moving branch #${idx} ${dir}, target idx = ${targetIdx}`, newMembers);
+    branch.members = newMembers;
   }
 </script>
 
@@ -167,6 +212,7 @@
 
           <!-- actual branch member -->
           {#if member.field}
+            <!-- regular field -->
             <FormField
               isMovableUp={idx > 0}
               isMovableDown={idx < branch.members.length - 1 &&
@@ -175,43 +221,11 @@
               on:delete={() => {
                 branch.members = branch.members.toSpliced(idx, fieldMoveGroupSize(idx));
               }}
-              on:moveup={() => {
-                const newIdx = findNextFieldIdx(idx, Direction.Up) || 0;
-                const moveGroupSize = fieldMoveGroupSize(idx);
-                const moveGroup = branch.members.slice(idx, idx + moveGroupSize);
-                const newMembers = branch.members.toSpliced(idx, moveGroupSize);
-                newMembers.splice(newIdx, 0, ...moveGroup);
-                console.debug(
-                  `Moving field #${idx} up, newIdx = ${newIdx} moveGroupsize = ${moveGroupSize}`,
-                  moveGroup,
-                  newMembers,
-                );
-                branch.members = newMembers;
-              }}
-              on:movedown={() => {
-                let newIdxInOriginalList = findNextFieldIdx(idx, Direction.Down);
-                if (newIdxInOriginalList) {
-                  // since we're inserting *before* the next field, we need to find the second from the original
-                  newIdxInOriginalList = findNextFieldIdx(newIdxInOriginalList, Direction.Down);
-                }
-                const moveGroupSize = fieldMoveGroupSize(idx);
-                const moveGroup = branch.members.slice(idx, idx + moveGroupSize);
-                const newMembers = branch.members.toSpliced(idx, moveGroupSize);
-                if (newIdxInOriginalList !== null) {
-                  const newIdx = newIdxInOriginalList - moveGroupSize;
-                  newMembers.splice(newIdx, 0, ...moveGroup);
-                } else {
-                  newMembers.push(...moveGroup);
-                }
-                console.debug(
-                  `Moving field #${idx} down, new idx in original list = ${newIdxInOriginalList}, moveGroupSize = ${moveGroupSize} updated members`,
-                  moveGroup,
-                  newMembers,
-                );
-                branch.members = newMembers;
-              }}
+              on:moveup={() => moveField(idx, Direction.Up)}
+              on:movedown={() => moveField(idx, Direction.Down)}
             />
           {:else if member.branch}
+            <!-- sub-branch, rendering it with recursive call to svelte:self -->
             <svelte:self
               isMovableUp={idx > 0 && branch.members[idx - 1].branch !== null}
               isMovableDown={idx < branch.members.length - 1 && branch.members[idx + 1].branch !== null}
@@ -220,6 +234,8 @@
               on:delete={() => {
                 branch.members = branch.members.toSpliced(idx, 1);
               }}
+              on:moveup={() => moveBranch(idx, Direction.Up)}
+              on:movedown={() => moveBranch(idx, Direction.Down)}
             />
           {/if}
         {/each}
