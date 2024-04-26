@@ -23,6 +23,7 @@ from telebot_components.form.handler import (
 from telebot_components.utils import emoji_hash
 from typing_extensions import Self
 
+from telebot_constructor.store.form_results import BotSpecificFormResultsStore
 from telebot_constructor.user_flow.blocks.base import UserFlowBlock
 from telebot_constructor.user_flow.blocks.constants import (
     FORM_CANCEL_CMD,
@@ -109,8 +110,11 @@ class SingleSelectFormFieldConfig(BaseFormFieldConfig):
         # HACK: we need to programmatically create Enum class from a user-provided set of options
         # see https://docs.python.org/3/howto/enum.html#functional-api
         # but also, we need to inject this class into global scope so that (de)serializers can find this class
-        # in the present module
-        # so we do this using globals()
+        # in the present module so we do this using globals()
+
+        # in doing so, we rely on frontend generating nice unique field ids, which might not be the case always
+        # TODO: validate uniqueness and make other precautions to prevent accidental / malicious
+        # intereference between users
         enum_def = [(o.id, o.label) for o in self.options]
         enum_class_name = f"{self.id}_single_select_field_options"
         EnumClass: Type[Enum] = Enum(enum_class_name, enum_def, module=__name__)  # type: ignore
@@ -234,10 +238,18 @@ class FormBlock(UserFlowBlock):
     def model_post_init(self, __context: Any) -> None:
         if not self.members:
             raise ValueError("Form must contain at least one member field")
+        self._store: BotSpecificFormResultsStore | None = None
+
+    @property
+    def store(self) -> BotSpecificFormResultsStore:
+        if self._store is None:
+            raise RuntimeError("Attempt to access FormBlock.store property before setup is done")
+        return self._store
 
     async def setup(self, context: UserFlowSetupContext) -> SetupResult:
         component_form_members: list[Union[FormField, FormBranch]] = [m.construct_member() for m in self.members]
         self._form = ComponentsForm.branching(component_form_members)
+        self._store = context.form_results_store
 
         cancelling_because_of_error_eng = "Something went wrong, details: {}"
         if context.language_store is not None:
@@ -344,14 +356,16 @@ class FormBlock(UserFlowBlock):
                 except Exception:
                     logger.exception("Error sending form result to admin chat")
 
-            # TODO: more result export options
-            # + more export options: Airtable, Google Sheets, Trello
-            # + save to internal storage to show in Constructor UI
             if self.form_completed_next_block_id is not None:
                 await context.enter_block(
                     self.form_completed_next_block_id,
                     _user_flow_context_for_next_block(form_exit_context),
                 )
+
+            # TODO: use self.store to save form results!
+
+            # TODO: more result export options
+            # + more export options: Airtable, Google Sheets, Trello
 
         async def on_form_cancelled(form_exit_context: ComponentsFormExitContext):
             # TODO: maybe save not completed form in a separate storage?

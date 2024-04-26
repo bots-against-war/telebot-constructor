@@ -176,6 +176,10 @@ class TelebotConstructorApp:
             bot_name=bot_name,
             bot_config=bot_config,
             secret_store=self.secret_store,
+            form_results_store=self.store.form_results.adapter_for(
+                username=username,
+                bot_id=bot_name,
+            ),
             redis=self.redis,
             group_chat_discovery_handler=self.group_chat_discovery_handler,
             _bot_factory=self._bot_factory,

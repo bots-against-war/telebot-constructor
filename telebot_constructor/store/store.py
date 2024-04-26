@@ -11,6 +11,7 @@ from telebot_components.stores.generic import (
 
 from telebot_constructor.app_models import BotInfo, BotVersionInfo
 from telebot_constructor.bot_config import BotConfig
+from telebot_constructor.store.form_results import FormResultsStore
 from telebot_constructor.store.types import (
     BotConfigVersionMetadata,
     BotEvent,
@@ -67,6 +68,8 @@ class TelebotConstructorStore:
             dumper=str,
             loader=str,
         )
+
+        self.form_results = FormResultsStore(redis=redis)
 
     # bot config store CRUD
 

@@ -814,9 +814,9 @@ soupsieve==2.5 ; python_version >= "3.10" and python_version < "4.0" \
 telebot-against-war==0.6.13 ; python_version >= "3.10" and python_version < "4.0" \
     --hash=sha256:2e12d131d9dc6b6a718bfe4096053c9aafd2a5f6e340b126c5cbfc398a047d23 \
     --hash=sha256:9046973824ff7f80919ad7eced71dc8f7c1a7ced5bf6bc0a736c35b0c437a0ff
-telebot-components==0.11.9 ; python_version >= "3.10" and python_version < "4.0" \
-    --hash=sha256:3f72feb6eb51b29e360e0fa4ffe3195b03b749bd695042dcd50cd73dc72b8108 \
-    --hash=sha256:7e2943cfee01b536d8cfa5e690747af71d75af92537f945cbd5fd716f0f72496
+telebot-components==0.11.12 ; python_version >= "3.10" and python_version < "4.0" \
+    --hash=sha256:6920462ec1bd6141f72b326ae7a5487a1ac579e1f9344654c3c078df66885fc0 \
+    --hash=sha256:ab0e396567850c73ccf1a96a78f392f4e48ba14a0b7d2262629c6fc03789d807
 tenacity==8.2.3 ; python_version >= "3.10" and python_version < "4.0" \
     --hash=sha256:5398ef0d78e63f40007c1fb4c0bff96e1911394d2fa8d194f77619c05ff6cc8a \
     --hash=sha256:ce510e327a630c9e1beaf17d42e6ffacc88185044ad85cf74c0a8887c6a0f88c

@@ -10,6 +10,7 @@ from telebot_components.utils.secrets import SecretStore
 
 from telebot_constructor.bot_config import BotConfig
 from telebot_constructor.group_chat_discovery import GroupChatDiscoveryHandler
+from telebot_constructor.store.form_results import BotSpecificFormResultsStore
 from telebot_constructor.user_flow.types import BotCommandInfo
 from telebot_constructor.utils.rate_limit_retry import rate_limit_retry
 
@@ -35,6 +36,7 @@ async def construct_bot(
     bot_name: str,
     bot_config: BotConfig,
     secret_store: SecretStore,
+    form_results_store: BotSpecificFormResultsStore,
     redis: RedisInterface,
     group_chat_discovery_handler: Optional[GroupChatDiscoveryHandler] = None,
     _bot_factory: BotFactory = AsyncTeleBot,  # used for testing
@@ -73,6 +75,7 @@ async def construct_bot(
             bot=bot,
             redis=redis,
             banned_users_store=banned_users_store,
+            form_results_store=form_results_store,
         )
 
         logger.info(log_prefix + f"Got result: {user_flow_setup_result}")
