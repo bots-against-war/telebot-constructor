@@ -5,6 +5,8 @@ from typing import Any, Literal, Optional, Sequence, Type, Union, cast
 
 from pydantic import BaseModel, ConfigDict, model_validator
 from telebot import types as tg
+from telebot_components.feedback import FeedbackConfig as ComponentsFeedbackConfig
+from telebot_components.feedback import UserAnonymization as ComponentsUserAnonymization
 from telebot_components.form.field import (
     FormField,
     FormFieldResultFormattingOpts,
@@ -178,6 +180,21 @@ class FormResultUserAttribution(Enum):
     NAME = "name"  # only telegram name
     FULL = "full"  # telegram name, username, user id
 
+    def should_send_user_identifier(self, fh: ComponentsFeedbackConfig) -> bool:
+        """
+        Based on the level attribution, decide if it's safe to send user identifier to a given
+        feedback handler without revealing more info than we want. Doesn't account for integrations,
+        but we're not using them in the constructor!
+        """
+        match self:
+            case self.FULL:
+                return True
+            case self.NAME:
+                return fh.user_anonymization in {ComponentsUserAnonymization.FULL, ComponentsUserAnonymization.LEGACY}
+            case self.UNIQUE_ID:
+                return fh.user_anonymization == ComponentsUserAnonymization.FULL
+        return False
+
 
 class FormResultsExport(BaseModel):
     user_attribution: FormResultUserAttribution = FormResultUserAttribution.NONE
@@ -298,8 +315,11 @@ class FormBlock(UserFlowBlock):
                             text=text,
                             attachment=None,
                             no_response=True,
-                            send_user_identifier_message=self.results_export.user_attribution
-                            != FormResultUserAttribution.NONE,
+                            send_user_identifier_message=(
+                                self.results_export.user_attribution.should_send_user_identifier(
+                                    feedback_handler.config
+                                )
+                            ),
                             parse_mode="HTML",
                         )
                     else:

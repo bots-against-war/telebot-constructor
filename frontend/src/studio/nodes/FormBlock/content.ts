@@ -101,7 +101,7 @@ export function getRandomFormStartMessage(): string {
 export function formMessageName(key: keyof FormMessages | keyof FormErrorMessages | string): string {
   switch (key) {
     case "form_start":
-      return "стартовое сообщение";
+      return "Начальное сообщение";
     case "cancel_command_is":
       return "О команде выхода из формы";
     case "field_is_skippable":

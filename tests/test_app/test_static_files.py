@@ -67,3 +67,36 @@ async def test_cors(
         # "Date": "Mon, 23 Oct 2023 17:59:37 GMT",
         # "Server": "Python/3.10 aiohttp/3.8.6",
     }
+
+
+async def test_prefilled_messages(
+    constructor_app: Tuple[TelebotConstructorApp, aiohttp.web.Application],
+    aiohttp_client: AiohttpClient,
+) -> None:
+    _, web_app = constructor_app
+    client = await aiohttp_client(web_app)
+
+    for _ in range(3):
+        resp = await client.get("/api/prefilled-messages")
+        assert resp.status == 200
+        resp_json = await resp.json()
+        assert isinstance(resp_json, dict)
+        assert list(resp_json.keys()) == [
+            "cancel_command_is",
+            "field_is_skippable",
+            "field_is_not_skippable",
+            "unsupported_command",
+            "please_enter_correct_value",
+            "empty_text_error_msg",
+            "not_an_integer_error_msg",
+            "not_an_integer_list_error_msg",
+            "bad_time_format_msg",
+            "invalid_enum_error_msg",
+            "attachments_expected_error_msg",
+            "only_one_media_message_allowed_error_msg",
+            "bad_attachment_type_error_msg",
+            "please_use_inline_menu",
+        ]
+
+        assert all(["/skip" in msg for msg in resp_json["field_is_skippable"].values()])
+        assert all("/cancel" in msg for msg in resp_json["cancel_command_is"].values())
