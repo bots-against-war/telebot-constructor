@@ -6,7 +6,7 @@ import type {
 } from "./types";
 
 export function getBlockConcreteConfig(c: UserFlowBlockConfig) {
-  return c.content || c.human_operator || c.menu || c.form || c.language_select
+  return c.content || c.human_operator || c.menu || c.form || c.language_select;
 }
 
 export function getBlockId(c: UserFlowBlockConfig): string {

@@ -107,10 +107,11 @@ export function cloneBlockConfig(c: UserFlowBlockConfig): TentativeNode {
 
 export function filterNodeDisplayCoords(coords: NodeDisplayCoords, config: BotConfig): NodeDisplayCoords {
   return Object.fromEntries(
-    Object.entries(coords).filter(([id, _]) =>
-      id === BOT_INFO_NODE_ID ||
-      config.user_flow_config.entrypoints.some(ep => getEntrypointId(ep) == id) ||
-      config.user_flow_config.blocks.some(block => getBlockId(block) == id)
-    )
-  )
+    Object.entries(coords).filter(
+      ([id, _]) =>
+        id === BOT_INFO_NODE_ID ||
+        config.user_flow_config.entrypoints.some((ep) => getEntrypointId(ep) == id) ||
+        config.user_flow_config.blocks.some((block) => getBlockId(block) == id),
+    ),
+  );
 }
