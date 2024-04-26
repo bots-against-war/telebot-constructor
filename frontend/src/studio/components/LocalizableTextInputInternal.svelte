@@ -45,6 +45,7 @@
       internalDebug(`missingSupportedLangs = ${JSON.stringify(missingSupportedLangs)}`);
       const emptyLocalizations = Object.fromEntries(missingSupportedLangs.map((lang) => [lang, ""]));
       const existingLocalizations = Object.fromEntries(
+        // @ts-expect-error
         Object.entries(value).filter(([langCode]) => langConfig.supportedLanguageCodes.includes(langCode)),
       );
       value = { ...existingLocalizations, ...emptyLocalizations };

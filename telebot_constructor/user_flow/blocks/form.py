@@ -194,6 +194,7 @@ class FormResultsExport(BaseModel):
             self.user_attribution = (
                 FormResultUserAttribution.NONE if self.is_anonymous else FormResultUserAttribution.FULL
             )
+        self.is_anonymous = None
         return self
 
 

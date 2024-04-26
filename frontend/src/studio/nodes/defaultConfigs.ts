@@ -107,8 +107,8 @@ export function defaultFormBlockConfig(id: string, langConfig: LanguageConfig | 
       form_name: `form-${crypto.randomUUID()}`,
       messages: messages,
       results_export: {
+        user_attribution: "none",
         echo_to_user: true,
-        is_anonymous: true,
         to_chat: null,
       },
       form_cancelled_next_block_id: null,

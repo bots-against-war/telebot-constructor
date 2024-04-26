@@ -24,7 +24,7 @@
   else window.alert("Internal error! All keys in field config are null!");
 </script>
 
-<div class=" p-3 border border-gray-300 bg-gray-100 rounded-md relative">
+<div class="p-3 border border-gray-300 bg-gray-100 rounded-md relative">
   <div class="delete-button-container">
     <ActionIcon icon={CloseOutline} on:click={() => dispatch("delete")} />
   </div>
