@@ -10,18 +10,29 @@
   export let isDeletable: boolean;
 
   const iconClass = "w-3 h-3 text-gray-500";
+  const buttonClass = "!p-1 bg-none border-none hover:bg-gray-200";
 </script>
 
 <div>
-  <div class="w-full flex flex-row gap-1 justify-start mb-1">
-    {#if isMovableUp}
-      <ActionIcon {iconClass} size="sm" icon={ChevronUpOutline} on:click={() => dispatch("moveup")} />
-    {/if}
-    {#if isMovableDown}
-      <ActionIcon {iconClass} size="sm" icon={ChevronDownOutline} on:click={() => dispatch("movedown")} />
-    {/if}
-    {#if isDeletable}
-      <ActionIcon {iconClass} size="sm" icon={CloseOutline} on:click={() => dispatch("delete")} />
+  <div class="w-full flex flex-row gap-1 justify-end mt-[-10px]">
+    {#if isMovableUp || isMovableDown || isDeletable}
+      <div class="px-2 py-1 border-t border-x rounded-tr-md rounded-tl-md">
+        {#if isMovableUp}
+          <ActionIcon {iconClass} {buttonClass} size="sm" icon={ChevronUpOutline} on:click={() => dispatch("moveup")} />
+        {/if}
+        {#if isMovableDown}
+          <ActionIcon
+            {iconClass}
+            {buttonClass}
+            size="sm"
+            icon={ChevronDownOutline}
+            on:click={() => dispatch("movedown")}
+          />
+        {/if}
+        {#if isDeletable}
+          <ActionIcon {iconClass} {buttonClass} size="sm" icon={CloseOutline} on:click={() => dispatch("delete")} />
+        {/if}
+      </div>
     {/if}
   </div>
   <slot />

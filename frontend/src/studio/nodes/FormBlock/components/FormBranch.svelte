@@ -73,6 +73,28 @@
     currentSwitchFieldAt.push(currSwitch);
     currentSwitchFieldIdxAt.push(currSwitchIdx);
   }
+
+  enum Direction {
+    Down,
+    Up,
+  }
+  function findFieldIdx(fromIdx: number, dir: Direction): number | null {
+    const increment = dir == Direction.Down ? 1 : -1;
+    let idx = fromIdx;
+    while (idx > 0 && idx < branch.members.length) {
+      idx = idx + increment;
+      if (branch.members[idx].field !== null) return idx;
+    }
+    return null;
+  }
+
+  function fieldMoveGroupSize(idx: number): number {
+    if (!branch.members[idx]?.field) return 1;
+    let moveGroupEndIdx = idx + 1;
+    // including branches following the switch into "move group"
+    while (moveGroupEndIdx <= branch.members.length - 1 && branch.members[moveGroupEndIdx].branch) moveGroupEndIdx += 1;
+    return moveGroupEndIdx - idx;
+  }
 </script>
 
 <FormMemberFrame {isMovableUp} {isMovableDown} isDeletable={switchField !== null} on:delete on:moveup on:movedown>
@@ -129,14 +151,27 @@
           {#if member.field}
             <FormField
               isMovableUp={idx > 0}
-              isMovableDown={idx < branch.members.length - 1}
+              isMovableDown={idx < branch.members.length - 1 &&
+                branch.members.some((member, memberIdx) => memberIdx > idx && member.field !== null)}
               bind:fieldConfig={member.field}
               on:delete={() => {
-                let firstIdxToLeave = idx + 1;
-                // deleting branches with the switch, if present
-                while (firstIdxToLeave <= branch.members.length - 1 && branch.members[firstIdxToLeave].branch)
-                  firstIdxToLeave += 1;
-                branch.members = branch.members.toSpliced(idx, firstIdxToLeave - idx);
+                branch.members = branch.members.toSpliced(idx, fieldMoveGroupSize(idx));
+              }}
+              on:moveup={() => {
+                const newIdx = findFieldIdx(idx, Direction.Up);
+                if (newIdx === null) return;
+                const moveGroupSize = fieldMoveGroupSize(idx);
+                const moveGroup = branch.members.slice(idx, idx + moveGroupSize);
+                const newMembers = branch.members.toSpliced(idx, moveGroupSize);
+                newMembers.splice(newIdx, 0, ...moveGroup);
+                branch.members = newMembers;
+              }}
+              on:movedown={() => {
+                const moveGroupSize = fieldMoveGroupSize(idx);
+                const moveGroup = branch.members.slice(idx, idx + moveGroupSize);
+                const newMembers = branch.members.toSpliced(idx, moveGroupSize);
+                newMembers.splice(idx + moveGroupSize, 0, ...moveGroup);
+                branch.members = newMembers;
               }}
             />
           {:else if member.branch}

@@ -11,7 +11,6 @@
   const dispatch = createEventDispatcher<{ add_field: null; add_branch: null }>();
 
   const buttonProps: ButtonProps = {
-    pill: true,
     color: "light",
     size: "xs",
     outline: true,

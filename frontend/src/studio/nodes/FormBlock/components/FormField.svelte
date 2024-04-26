@@ -23,7 +23,7 @@
 </script>
 
 <FormMemberFrame {isMovableUp} {isMovableDown} isDeletable on:delete on:moveup on:movedown>
-  <div class="p-3 border border-gray-300 bg-gray-100 rounded-md relative w-full flex flex-col gap-3">
+  <div class="p-3 border border-gray-300 bg-gray-100 relative w-full flex flex-col gap-3">
     {#if fieldConfig.plain_text}
       <BaseFormFieldInputs bind:config={fieldConfig.plain_text} />
     {:else if fieldConfig.single_select}

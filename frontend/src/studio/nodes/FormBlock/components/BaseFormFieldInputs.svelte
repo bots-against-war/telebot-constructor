@@ -13,17 +13,28 @@
   let hasEditedFieldName = config.name !== localizableTextToString(config.prompt, $languageConfigStore);
   let isEditingFieldName = false;
   $: {
-    if (!hasEditedFieldName) {
+    if (!hasEditedFieldName || config.name.length === 0) {
       config.name = localizableTextToString(config.prompt, $languageConfigStore);
     }
   }
+
+  let nameInputEl: Input | null = null;
 </script>
 
 <div class="flex flex-col gap-1">
   {#if config.name}
     {#if isEditingFieldName}
       <div class="flex flex-row gap-3 items-baseline">
-        <Input class="font-semibold py-1" placeholder={exampleContent.name} bind:value={config.name} />
+        <Input
+          bind:this={nameInputEl}
+          focus
+          on:blur={() => {
+            isEditingFieldName = false;
+          }}
+          class="font-semibold py-1"
+          placeholder={exampleContent.name}
+          bind:value={config.name}
+        />
         <ActionIcon
           icon={CheckOutline}
           on:click={() => {
