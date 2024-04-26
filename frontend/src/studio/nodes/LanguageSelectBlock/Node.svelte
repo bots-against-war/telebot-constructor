@@ -33,11 +33,14 @@
 <Node id={config.block_id} bind:position {...DEFAULT_NODE_PROPS}>
   <InputAnchor />
   <NodeContent
+    id={config.block_id}
     key={NodeTypeKey.language_select}
     bind:isValid
     {config}
+    clonable={false}
     configValidator={validateLanguageSelectBlock}
     on:delete
+    on:clone
     on:edit={openEditModal}
   >
     <div class="flex flex-row gap-2">

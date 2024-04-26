@@ -1,5 +1,25 @@
+import { getBlockId, getEntrypointConcreteConfig, getEntrypointId } from "../api/typeUtils";
+import type { BotConfig, NodeDisplayCoords, UserFlowBlockConfig, UserFlowEntryPointConfig } from "../api/types";
+import { BOT_INFO_NODE_ID } from "../constants";
 import type { LocalizableText } from "../types";
+import { NodeTypeKey, getNodeTypeKey } from "./nodes/display";
 import type { LanguageConfig } from "./stores";
+
+export enum NodeKind {
+  block = "block",
+  entrypoint = "entrypoin",
+}
+
+export interface TentativeNode {
+  kind: NodeKind;
+  typeKey: NodeTypeKey;
+  id: string;
+  config: UserFlowEntryPointConfig | UserFlowEntryPointConfig;
+}
+
+export function generateNodeId(kind: NodeKind, type: NodeTypeKey) {
+  return `${kind}-${type}-${crypto.randomUUID()}`;
+}
 
 export function svelvetNodeIdToBlockId(id: string): string {
   // svelvet adds "N-" prefix to ids we pass to them, so we need to strip id back
@@ -7,56 +27,8 @@ export function svelvetNodeIdToBlockId(id: string): string {
   return id.replace(/^N-/, "");
 }
 
-export function linspace(start: number, stop: number, len: number): number[] {
-  if (len === 0) {
-    return [];
-  } else if (len === 1) {
-    return [start];
-  }
-
-  const out = new Array(len);
-  out[0] = start;
-
-  const delta = (stop - start) / (len - 1);
-  for (let i = 1; i < len; i++) {
-    out[i] = start + delta * i;
-  }
-
-  return out;
-}
-
 export function range(size: number, start: number, step: number): number[] {
   return [...Array(size).keys()].map((i) => start + step * i);
-}
-
-function argmin(arr: number[]): number {
-  return argmax(arr.map((v) => -v));
-}
-
-function argmax(arr: number[]): number {
-  if (arr.length === 0) {
-    return -1;
-  }
-
-  let max = arr[0];
-  let maxIndex = 0;
-
-  for (let i = 1; i < arr.length; i++) {
-    if (arr[i] > max) {
-      maxIndex = i;
-      max = arr[i];
-    }
-  }
-
-  return maxIndex;
-}
-
-function gaussianRandom(mean: number, stdev: number) {
-  const u = 1 - Math.random(); // Converting [0,1) to (0,1]
-  const v = Math.random();
-  const z = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
-  // Transform to the desired mean and standard deviation:
-  return z * stdev + mean;
 }
 
 export function base64Image(b64: string): string {
@@ -76,4 +48,70 @@ export function localizableTextToString(lc: LocalizableText, langConfig: Languag
 
 export function clone<T>(jsonSerializable: T): T {
   return JSON.parse(JSON.stringify(jsonSerializable));
+}
+
+export function cloneEntrypointConfig(c: UserFlowEntryPointConfig): TentativeNode {
+  const config = clone(c);
+  const concrete = getEntrypointConcreteConfig(config);
+  if (!concrete) {
+    throw "Failed to get concrete entrypoint config from config";
+  }
+  const typeKey = getNodeTypeKey(config);
+  if (!typeKey) {
+    throw "Failed to get node type key from config";
+  }
+  const id = generateNodeId(NodeKind.entrypoint, typeKey);
+  concrete.entrypoint_id = id;
+  concrete.next_block_id = null;
+  return {
+    kind: NodeKind.entrypoint,
+    typeKey,
+    id,
+    config,
+  };
+}
+
+export function cloneBlockConfig(c: UserFlowBlockConfig): TentativeNode {
+  const config = clone(c);
+  const typeKey = getNodeTypeKey(config);
+  if (!typeKey) {
+    throw "Failed to get node type key from config";
+  }
+  const id = generateNodeId(NodeKind.block, typeKey);
+  if (config.content) {
+    config.content.block_id = id;
+    config.content.next_block_id = null;
+  } else if (config.form) {
+    config.form.block_id = id;
+    config.form.form_cancelled_next_block_id = null;
+    config.form.form_completed_next_block_id = null;
+  } else if (config.human_operator) {
+    config.human_operator.block_id = id;
+  } else if (config.language_select) {
+    config.language_select.block_id = id;
+    config.language_select.next_block_id = null;
+    config.language_select.language_selected_next_block_id = null;
+  } else if (config.menu) {
+    config.menu.block_id = id;
+    for (const menuItem of config.menu.menu.items) {
+      menuItem.next_block_id = null;
+    }
+  }
+  return {
+    kind: NodeKind.block,
+    typeKey,
+    id,
+    config,
+  };
+}
+
+export function filterNodeDisplayCoords(coords: NodeDisplayCoords, config: BotConfig): NodeDisplayCoords {
+  return Object.fromEntries(
+    Object.entries(coords).filter(
+      ([id, _]) =>
+        id === BOT_INFO_NODE_ID ||
+        config.user_flow_config.entrypoints.some((ep) => getEntrypointId(ep) == id) ||
+        config.user_flow_config.blocks.some((block) => getBlockId(block) == id),
+    ),
+  );
 }

@@ -34,11 +34,13 @@
 <Node id={config.block_id} bind:position {...DEFAULT_NODE_PROPS}>
   <InputAnchor />
   <NodeContent
+    id={config.block_id}
     key={NodeTypeKey.human_operator}
     bind:isValid
     {config}
     configValidator={validateHumanOperatorBlock}
     on:delete
+    on:clone
     on:edit={openEditModal}
   >
     <GroupChatBadge {botName} chatId={config.feedback_handler_config.admin_chat_id} />

@@ -25,8 +25,10 @@
     <InputAnchor dummy />
   {/if}
   <NodeContent
+    id={config.entrypoint_id}
     key={NodeTypeKey.command}
     deletable={!isStart}
+    clonable={false}
     bind:isValid
     on:delete
     on:edit={() =>

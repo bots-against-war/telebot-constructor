@@ -32,11 +32,13 @@
 <Node id={config.block_id} bind:position {...DEFAULT_NODE_PROPS}>
   <InputAnchor />
   <NodeContent
+    id={config.block_id}
     key={NodeTypeKey.content}
     {config}
     bind:isValid
     configValidator={validateContentBlock}
     on:delete
+    on:clone
     on:edit={openEditModal}
   >
     {#if config.contents.length > 0 && config.contents[0].text}

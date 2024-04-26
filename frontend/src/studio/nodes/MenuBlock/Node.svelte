@@ -34,11 +34,13 @@
 <Node id={config.block_id} bind:position {...DEFAULT_NODE_PROPS}>
   <InputAnchor />
   <NodeContent
+    id={config.block_id}
     key={NodeTypeKey.menu}
     {config}
     bind:isValid
     configValidator={validateMenuBlock}
     on:delete
+    on:clone
     on:edit={openEditModal}
   >
     <LocalizableText text={config.menu.text} />

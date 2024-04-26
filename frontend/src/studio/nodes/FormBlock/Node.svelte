@@ -34,11 +34,13 @@
 <Node id={config.block_id} bind:position {...DEFAULT_NODE_PROPS}>
   <InputAnchor />
   <NodeContent
+    id={config.block_id}
     key={NodeTypeKey.form}
     {config}
     configValidator={validateFormBlock}
     bind:isValid
     on:delete
+    on:clone
     on:edit={openEditModal}
   >
     Полей: {flattenedFormFields(config.members).length}
