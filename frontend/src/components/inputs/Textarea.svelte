@@ -6,7 +6,7 @@
   export let value: string;
   export let label: string | null = null;
   export let required: boolean = true;
-  export let placeholder: string = "";
+  export let placeholder: string | null = null;
   export let description: string | null = null;
   export let error: string | boolean | null = null;
   export let maxLength: number | null = null;

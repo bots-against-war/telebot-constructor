@@ -10,8 +10,8 @@
   import LanguageMenu from "./LanguageMenu.svelte";
 
   export let label: string | undefined = undefined;
-  export let description: string | undefined = undefined;
-  export let placeholder: string | undefined = undefined;
+  export let description: string | null = null;
+  export let placeholder: string | null = null;
   export let value: LocalizableText;
   export let langConfig: LanguageConfig | null;
   export let isLongText: boolean = true;
@@ -45,7 +45,6 @@
       internalDebug(`missingSupportedLangs = ${JSON.stringify(missingSupportedLangs)}`);
       const emptyLocalizations = Object.fromEntries(missingSupportedLangs.map((lang) => [lang, ""]));
       const existingLocalizations = Object.fromEntries(
-        // @ts-expect-error
         Object.entries(value).filter(([langCode]) => langConfig.supportedLanguageCodes.includes(langCode)),
       );
       value = { ...existingLocalizations, ...emptyLocalizations };
