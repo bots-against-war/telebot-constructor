@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from telebot_components.redis_utils.interface import RedisInterface
-from telebot_components.stores.generic import KeyDictStore, KeyListStore
+from telebot_components.stores.generic import KeyDictStore, KeyListStore, KeyValueStore
 
 FieldId = str
 
@@ -41,6 +41,24 @@ class FormResultsStore:
             dumper=noop,
             loader=noop,
         )
+        # form prompt, can be used as a title/identifier
+        self._form_prompt_store = KeyValueStore[str](
+            name="form-prompt",
+            prefix=self.PREFIX,
+            redis=redis,
+            expiration_time=None,
+            dumper=noop,
+            loader=noop,
+        )
+        # dedicated form title that can be set by user, preferred over prompt
+        self._form_title_store = KeyValueStore[str](
+            name="form-title",
+            prefix=self.PREFIX,
+            redis=redis,
+            expiration_time=None,
+            dumper=noop,
+            loader=noop,
+        )
 
     def adapter_for(self, username: str, bot_id: str) -> "BotSpecificFormResultsStore":
         return BotSpecificFormResultsStore(
@@ -60,6 +78,12 @@ class FormResultsStore:
             key=self._composite_key(form_id),
             subkey_to_value=id_to_names,  # type: ignore
         )
+
+    async def save_form_title(self, form_id: GlobalFormId, title: str) -> bool:
+        return await self._form_title_store.save(self._composite_key(form_id), title)
+
+    async def save_form_prompt(self, form_id: GlobalFormId, prompt: str) -> bool:
+        return await self._form_prompt_store.save(self._composite_key(form_id), prompt)
 
     async def load_page(self, form_id: GlobalFormId, offset: int, count: int) -> list[FormResult]:
         start = -1 - offset  # offset 0 = last = -1, offset -1 = next-to-last = -2, etc
@@ -96,12 +120,17 @@ class BotSpecificFormResultsStore:
     bot_id: str
 
     async def save_form_result(
-        self, form_block_id: str, form_result: FormResult, field_names: dict[FieldId, str]
+        self,
+        form_block_id: str,
+        form_result: FormResult,
+        field_names: dict[FieldId, str],
+        prompt: str,
     ) -> bool:
         form_id = GlobalFormId(username=self.username, bot_id=self.bot_id, form_block_id=form_block_id)
         return all(
             (
                 await self.storage.save(form_id, result=form_result),
                 await self.storage.save_field_names(form_id, id_to_names=field_names),
+                await self.storage.save_form_prompt(form_id, prompt),
             )
         )

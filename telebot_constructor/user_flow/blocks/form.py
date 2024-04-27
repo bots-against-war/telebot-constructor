@@ -7,6 +7,7 @@ from typing import Any, Literal, Optional, Sequence, Type, Union, cast
 from pydantic import BaseModel, ConfigDict, model_validator
 from telebot import types as tg
 from telebot_components.feedback import FeedbackConfig as ComponentsFeedbackConfig
+from telebot_components.language import any_text_to_str
 from telebot_components.feedback import UserAnonymization as ComponentsUserAnonymization
 from telebot_components.form.field import (
     FormField,
@@ -463,8 +464,10 @@ class FormBlock(UserFlowBlock):
                     await self.store.save_form_result(
                         form_block_id=self.block_id,
                         form_result=result_dump,
-                        # NOTE: we re-save field names every time to always save name as of last result time
+                        # on each form result, we update form metadata (field names and prompt) so that it's
+                        # savecd separately and stored even if form is deleted or edited
                         field_names=self._field_names,
+                        prompt=any_text_to_str(self.messages.form_start, language=admin_lang),
                     )
                 except Exception:
                     logger.exception("Error saving form result to internal storage")
