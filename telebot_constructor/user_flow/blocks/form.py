@@ -35,7 +35,12 @@ from telebot_constructor.user_flow.types import (
     UserFlowContext,
     UserFlowSetupContext,
 )
-from telebot_constructor.utils import AnyChatId, telegram_user_link, without_nones
+from telebot_constructor.utils import (
+    AnyChatId,
+    telegram_user_link,
+    validate_unique,
+    without_nones,
+)
 from telebot_constructor.utils.pydantic import (
     ExactlyOneNonNullFieldModel,
     LocalizableText,
@@ -45,6 +50,12 @@ from telebot_constructor.utils.pydantic import (
 logger = logging.getLogger(__name__)
 
 # region: form fields
+# note that the form component offers a lot of dirrefeent kinds of fields,
+# and here we only support a subset of them;
+
+# semantically, the classes here are "configs", while the actual
+# objects that go into FormHandler are "fields"
+# e.g. "XFieldConfig" instance stores stores info needed to create XField instance
 
 
 class BaseFormFieldConfig(BaseModel, abc.ABC):
@@ -112,9 +123,10 @@ class SingleSelectFormFieldConfig(BaseFormFieldConfig):
         # but also, we need to inject this class into global scope so that (de)serializers can find this class
         # in the present module so we do this using globals()
 
-        # in doing so, we rely on frontend generating nice unique field ids, which might not be the case always
-        # TODO: validate uniqueness and make other precautions to prevent accidental / malicious
-        # intereference between users
+        # the form validates during construction that
+        # a) all field ids are unique within one form
+        # b) all single-select field ids are uniquely attributed to a particular form
+        #    = no interference between forms/users
         enum_def = [(o.id, o.label) for o in self.options]
         enum_class_name = f"{self.id}_single_select_field_options"
         EnumClass: Type[Enum] = Enum(enum_class_name, enum_def, module=__name__)  # type: ignore
@@ -127,6 +139,8 @@ class SingleSelectFormFieldConfig(BaseFormFieldConfig):
 
 
 class FormFieldConfig(ExactlyOneNonNullFieldModel):
+    """Wrapper object for all kinds of fields; see individual classes for details on each field's specifics"""
+
     plain_text: Optional[PlainTextFormFieldConfig] = None
     single_select: Optional[SingleSelectFormFieldConfig] = None
 
@@ -135,6 +149,9 @@ class FormFieldConfig(ExactlyOneNonNullFieldModel):
 
 
 # endregion
+
+# besides fields, there are "branches", i.e. sequences of fields with attached
+# condition. together fields and branches are referred to as "members"
 
 
 class FormBranchConfig(ExactlyOneNonNullFieldModel):
@@ -161,6 +178,17 @@ class BranchingFormMemberConfig(ExactlyOneNonNullFieldModel):
             raise RuntimeError("All fields in exactly one non null field model are None")
 
 
+def flatten_fields(members: list[BranchingFormMemberConfig]) -> list[FormFieldConfig]:
+    """Recursively flatten all members to a list of fields, including all branches, subbrances etc"""
+    res: list[FormFieldConfig] = []
+    for m in members:
+        if m.field is not None:
+            res.append(m.field)
+        elif m.branch is not None:
+            res.extend(flatten_fields(m.branch.members))
+    return res
+
+
 class FormMessages(BaseModel):
     form_start: LocalizableText
     cancel_command_is: LocalizableText
@@ -171,6 +199,9 @@ class FormMessages(BaseModel):
 
     # for easier frontend validation
     model_config = ConfigDict(extra="forbid")
+
+
+# region: form result processing / export configutation
 
 
 class FormResultsExportToChatConfig(BaseModel):
@@ -204,8 +235,10 @@ class FormResultsExport(BaseModel):
     user_attribution: FormResultUserAttribution = FormResultUserAttribution.NONE
     echo_to_user: bool
     to_chat: Optional[FormResultsExportToChatConfig]
+    to_store: bool = False  # default for backwards compatibility
 
-    is_anonymous: Optional[bool] = None  # deprecated, use user_attribution instead
+    # deprecated, use user_attribution instead
+    is_anonymous: Optional[bool] = None
 
     @model_validator(mode="after")
     def backwards_compatibility(self) -> Self:
@@ -217,6 +250,14 @@ class FormResultsExport(BaseModel):
             )
         self.is_anonymous = None
         return self
+
+
+# endregion
+
+
+# to ensure unique single select field -> form attribution
+# see the comment in the field's construction method
+FORM_ID_BY_SINGLE_SELECT_FIELD_ID = dict[str, str]()
 
 
 class FormBlock(UserFlowBlock):
@@ -239,6 +280,23 @@ class FormBlock(UserFlowBlock):
         if not self.members:
             raise ValueError("Form must contain at least one member field")
         self._store: BotSpecificFormResultsStore | None = None
+
+        all_field_configs = flatten_fields(self.members)
+        validate_unique([f.specific_config().id for f in all_field_configs], f"field ids for form {self.block_id!r}")
+
+        for f in all_field_configs:
+            if f.single_select is None:
+                continue
+            ssfid = f.single_select.id
+            attributed_form_id = FORM_ID_BY_SINGLE_SELECT_FIELD_ID.get(ssfid)
+            if attributed_form_id is None:
+                FORM_ID_BY_SINGLE_SELECT_FIELD_ID[ssfid] = self.block_id
+            elif attributed_form_id != self.block_id:
+                raise ValueError(
+                    f"Attempt to create form block with a single select field id={ssfid!r} "
+                    + "that is already used in another form block! Ensure ids for single select "
+                    + "fields are globally unique, e.g. by appending UUID to them"
+                )
 
     @property
     def store(self) -> BotSpecificFormResultsStore:
