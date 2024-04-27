@@ -1,4 +1,5 @@
 import abc
+import datetime
 import logging
 from enum import Enum
 from typing import Any, Literal, Optional, Sequence, Type, Union, cast
@@ -20,7 +21,7 @@ from telebot_components.form.handler import FormHandler as ComponentsFormHandler
 from telebot_components.form.handler import (
     FormHandlerConfig as ComponentsFormHandlerConfig,
 )
-from telebot_components.utils import emoji_hash
+from telebot_components.utils import emoji_hash, telegram_html_escape
 from typing_extensions import Self
 
 from telebot_constructor.store.form_results import BotSpecificFormResultsStore
@@ -37,6 +38,7 @@ from telebot_constructor.user_flow.types import (
 )
 from telebot_constructor.utils import (
     AnyChatId,
+    format_telegram_user,
     telegram_user_link,
     validate_unique,
     without_nones,
@@ -209,6 +211,9 @@ class FormResultsExportToChatConfig(BaseModel):
     via_feedback_handler: bool
 
 
+USER_EMOJI_HASH_LEN = 6
+
+
 class FormResultUserAttribution(Enum):
     NONE = "none"  # no data collected from user
     UNIQUE_ID = "unique_id"  # only a unique anonymized ID
@@ -229,6 +234,28 @@ class FormResultUserAttribution(Enum):
             case self.UNIQUE_ID:
                 return fh.user_anonymization == ComponentsUserAnonymization.FULL
         return False
+
+    def user_html(self, user: tg.User, form_block_id: str) -> str | None:
+        match self:
+            case FormResultUserAttribution.FULL:
+                return telegram_user_link(user)
+            case FormResultUserAttribution.NAME:
+                return telegram_html_escape(user.full_name)
+            case FormResultUserAttribution.UNIQUE_ID:
+                return telegram_html_escape(emoji_hash(user.id, bot_prefix=form_block_id, length=USER_EMOJI_HASH_LEN))
+            case _:
+                return None
+
+    def user_plain(self, user: tg.User, form_block_id: str) -> str | None:
+        match self:
+            case FormResultUserAttribution.FULL:
+                return format_telegram_user(user, with_id=True)
+            case FormResultUserAttribution.NAME:
+                return user.full_name
+            case FormResultUserAttribution.UNIQUE_ID:
+                return emoji_hash(user.id, bot_prefix=form_block_id, length=USER_EMOJI_HASH_LEN)
+            case _:
+                return None
 
 
 class FormResultsExport(BaseModel):
@@ -258,6 +285,10 @@ class FormResultsExport(BaseModel):
 # to ensure unique single select field -> form attribution
 # see the comment in the field's construction method
 FORM_ID_BY_SINGLE_SELECT_FIELD_ID = dict[str, str]()
+# form field ids reserved for use in internal storage
+TIMESTAMP_KEY = "timestamp"
+USER_KEY = "user"
+RESERVED_FORM_FIELD_IDS = {TIMESTAMP_KEY, USER_KEY}
 
 
 class FormBlock(UserFlowBlock):
@@ -277,26 +308,39 @@ class FormBlock(UserFlowBlock):
         return without_nones([self.form_cancelled_next_block_id, self.form_completed_next_block_id])
 
     def model_post_init(self, __context: Any) -> None:
+        form_id_error_prefix = f"Form block {self.block_id!r} error: "
+
         if not self.members:
-            raise ValueError("Form must contain at least one member field")
-        self._store: BotSpecificFormResultsStore | None = None
+            raise ValueError(form_id_error_prefix + "Must contain at least one member field")
 
         all_field_configs = flatten_fields(self.members)
-        validate_unique([f.specific_config().id for f in all_field_configs], f"field ids for form {self.block_id!r}")
+        validate_unique(
+            [f.specific_config().id for f in all_field_configs],
+            items_name=f"field ids for form {self.block_id!r}",
+            prefix=form_id_error_prefix,
+        )
 
         for f in all_field_configs:
-            if f.single_select is None:
-                continue
-            ssfid = f.single_select.id
-            attributed_form_id = FORM_ID_BY_SINGLE_SELECT_FIELD_ID.get(ssfid)
-            if attributed_form_id is None:
-                FORM_ID_BY_SINGLE_SELECT_FIELD_ID[ssfid] = self.block_id
-            elif attributed_form_id != self.block_id:
-                raise ValueError(
-                    f"Attempt to create form block with a single select field id={ssfid!r} "
-                    + "that is already used in another form block! Ensure ids for single select "
-                    + "fields are globally unique, e.g. by appending UUID to them"
-                )
+            field_id = f.specific_config().id
+            if field_id in RESERVED_FORM_FIELD_IDS:
+                raise ValueError(form_id_error_prefix + f"Field id {field_id!r} is reserved")
+            if f.single_select is not None:
+                if self.block_id != FORM_ID_BY_SINGLE_SELECT_FIELD_ID.setdefault(field_id, self.block_id):
+                    raise ValueError(
+                        form_id_error_prefix
+                        + f"Attempt to create form block with a single select field id={field_id!r} "
+                        + "that is already used in another form block! Ensure ids for single select "
+                        + "fields are globally unique, e.g. by appending UUID to them"
+                    )
+
+        try:
+            component_form_members: list[Union[FormField, FormBranch]] = [m.construct_member() for m in self.members]
+            self._form = ComponentsForm.branching(component_form_members)
+        except Exception as e:
+            raise ValueError(form_id_error_prefix + "Form construction error: " + e)
+
+        # real store is supplied only during setup
+        self._store: BotSpecificFormResultsStore | None = None
 
     @property
     def store(self) -> BotSpecificFormResultsStore:
@@ -305,8 +349,6 @@ class FormBlock(UserFlowBlock):
         return self._store
 
     async def setup(self, context: UserFlowSetupContext) -> SetupResult:
-        component_form_members: list[Union[FormField, FormBranch]] = [m.construct_member() for m in self.members]
-        self._form = ComponentsForm.branching(component_form_members)
         self._store = context.form_results_store
 
         cancelling_because_of_error_eng = "Something went wrong, details: {}"
@@ -358,6 +400,11 @@ class FormBlock(UserFlowBlock):
 
         async def on_form_completed(form_exit_context: ComponentsFormExitContext):
             user = form_exit_context.last_update.from_user
+            result = form_exit_context.result
+            # to localize data for admins
+            admin_lang = context.language_store.default_language if context.language_store is not None else None
+
+            # first, exporting results to whenever the config tells us
             if self.results_export.echo_to_user:
                 try:
                     user_lang = (
@@ -365,7 +412,7 @@ class FormBlock(UserFlowBlock):
                         if context.language_store is not None
                         else None
                     )
-                    text = self._form.result_to_html(result=form_exit_context.result, lang=user_lang)
+                    text = self._form.result_to_html(result=result, lang=user_lang)
                     await context.bot.send_message(chat_id=user.id, text=text, parse_mode="HTML")
                 except Exception:
                     logger.exception("Error echoing form result to user")
@@ -376,12 +423,11 @@ class FormBlock(UserFlowBlock):
                         if self.results_export.to_chat.via_feedback_handler
                         else None
                     )
-                    admin_lang = context.language_store.default_language if context.language_store is not None else None
-                    text = self._form.result_to_html(result=form_exit_context.result, lang=admin_lang)
+                    text = self._form.result_to_html(result=result, lang=admin_lang)
                     if feedback_handler is not None:
                         await feedback_handler.emulate_user_message(
                             bot=context.bot,
-                            user=form_exit_context.last_update.from_user,
+                            user=user,
                             text=text,
                             attachment=None,
                             no_response=True,
@@ -393,18 +439,7 @@ class FormBlock(UserFlowBlock):
                             parse_mode="HTML",
                         )
                     else:
-                        user_id_text: Optional[str] = None
-                        if self.results_export.user_attribution == FormResultUserAttribution.FULL:
-                            user_id_text = telegram_user_link(form_exit_context.last_update.from_user)
-                        elif self.results_export.user_attribution == FormResultUserAttribution.NAME:
-                            user_id_text = form_exit_context.last_update.from_user.full_name
-                        elif self.results_export.user_attribution == FormResultUserAttribution.UNIQUE_ID:
-                            user_id_text = emoji_hash(
-                                form_exit_context.last_update.from_user.id,
-                                bot_prefix=self.block_id,
-                                length=6,
-                            )
-                        if user_id_text:
+                        if user_id_text := self.results_export.user_attribution.user_html(user, self.block_id):
                             text = user_id_text + "\n\n" + text
                         await context.bot.send_message(
                             chat_id=self.results_export.to_chat.chat_id,
@@ -413,17 +448,26 @@ class FormBlock(UserFlowBlock):
                         )
                 except Exception:
                     logger.exception("Error sending form result to admin chat")
+            if self.results_export.to_store:
+                try:
+                    result_dump: dict[str, str] = {
+                        TIMESTAMP_KEY: datetime.datetime.now(datetime.timezone.utc).isoformat()
+                    }
+                    for field_id, field_value in result.items():
+                        result_dump[field_id] = self._form.fields_by_name[field_id](field_value, admin_lang)
+                    if user_str := self.results_export.user_attribution.user_plain(user, self.block_id):
+                        result_dump[USER_KEY] = user_str
+                    self.store.save(form_block_id=self.block_id, form_result=result_dump)
+                except Exception:
+                    logger.exception("Error saving form result to internal storage")
+
+            # TODO: more result export options: Airtable, Google Sheets, Trello
 
             if self.form_completed_next_block_id is not None:
                 await context.enter_block(
                     self.form_completed_next_block_id,
                     _user_flow_context_for_next_block(form_exit_context),
                 )
-
-            # TODO: use self.store to save form results!
-
-            # TODO: more result export options
-            # + more export options: Airtable, Google Sheets, Trello
 
         async def on_form_cancelled(form_exit_context: ComponentsFormExitContext):
             # TODO: maybe save not completed form in a separate storage?
