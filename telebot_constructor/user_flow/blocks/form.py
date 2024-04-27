@@ -319,6 +319,7 @@ class FormBlock(UserFlowBlock):
             items_name=f"field ids for form {self.block_id!r}",
             prefix=form_id_error_prefix,
         )
+        self._field_names = {f.specific_config().id: f.specific_config().name for f in all_field_configs}
 
         for f in all_field_configs:
             field_id = f.specific_config().id
@@ -459,12 +460,16 @@ class FormBlock(UserFlowBlock):
                         )
                     if user_str := self.results_export.user_attribution.user_plain(user, self.block_id):
                         result_dump[USER_KEY] = user_str
-                    await self.store.save(form_block_id=self.block_id, form_result=result_dump)
-                    # TODO: also save form metadata (current field names etc)
+                    await self.store.save_form_result(
+                        form_block_id=self.block_id,
+                        form_result=result_dump,
+                        # NOTE: we re-save field names every time to always save name as of last result time
+                        field_names=self._field_names,
+                    )
                 except Exception:
                     logger.exception("Error saving form result to internal storage")
 
-            # TODO: more result export options: Airtable, Google Sheets, Trello
+            # TODO: more result export options: Airtable, Google Sheets, Trello, etc
 
             if self.form_completed_next_block_id is not None:
                 await context.enter_block(

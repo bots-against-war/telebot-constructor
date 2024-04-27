@@ -68,13 +68,17 @@ def validate_unique(items: Iterable[ValueT], items_name: str, prefix: str = "") 
 
 
 def format_telegram_user(user: tg.User, with_id: bool) -> str:
-    ids_info = []
+    full_name = user.full_name
+    appendix = []
     if user.username:
-        ids_info.append("@" + user.username)
+        appendix.append("@" + user.username)
     if with_id:
-        ids_info.append(str(user.id))
-    ids_str = ", ".join(ids_info)
-    return f"{user.full_name} ({ids_str})"
+        appendix.append(str(user.id))
+    if appendix:
+        appendix_str = ", ".join(appendix)
+        return f"{full_name} ({appendix_str})"
+    else:
+        return full_name
 
 
 def telegram_user_link_raw(user_id: int, title: str) -> str:

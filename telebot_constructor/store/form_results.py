@@ -1,11 +1,17 @@
 from dataclasses import dataclass
 
 from telebot_components.redis_utils.interface import RedisInterface
-from telebot_components.stores.generic import KeyListStore
+from telebot_components.stores.generic import KeyDictStore, KeyListStore
+
+FieldId = str
 
 # form results can have a lot of "internal" data types, but for this simple storage
 # they're all cast to strings - CSV doesn't support anything complicated anyway!
-FormResult = dict[str, str]
+FormResult = dict[FieldId, str]
+
+
+def noop(x: str) -> str:
+    return x
 
 
 @dataclass
@@ -16,12 +22,24 @@ class GlobalFormId:
 
 
 class FormResultsStore:
+    PREFIX = "telebot-constructor/form-results"
+
     def __init__(self, redis: RedisInterface) -> None:
-        self._storage = KeyListStore[FormResult](
-            name="form-result-storage/",
-            prefix="telebot-constructor",
+        # list of responses/results for a particular form
+        self._results_store = KeyListStore[FormResult](
+            name="data",
+            prefix=self.PREFIX,
             redis=redis,
             expiration_time=None,
+        )
+        # for each form, mapping field id -> field name to be displayed
+        self._field_names_store = KeyDictStore[str](
+            name="field-names",
+            prefix=self.PREFIX,
+            redis=redis,
+            expiration_time=None,
+            dumper=noop,
+            loader=noop,
         )
 
     def adapter_for(self, username: str, bot_id: str) -> "BotSpecificFormResultsStore":
@@ -35,13 +53,19 @@ class FormResultsStore:
         return "/".join([form_id.username, form_id.bot_id, form_id.form_block_id])
 
     async def save(self, form_id: GlobalFormId, result: FormResult) -> bool:
-        return (await self._storage.push(key=self._composite_key(form_id), item=result)) == 1
+        return (await self._results_store.push(key=self._composite_key(form_id), item=result)) == 1
+
+    async def save_field_names(self, form_id: GlobalFormId, id_to_names: dict[str, str]) -> bool:
+        return await self._field_names_store.set_multiple_subkeys(
+            key=self._composite_key(form_id),
+            subkey_to_value=id_to_names,  # type: ignore
+        )
 
     async def load_page(self, form_id: GlobalFormId, offset: int, count: int) -> list[FormResult]:
         start = -1 - offset  # offset 0 = last = -1, offset -1 = next-to-last = -2, etc
         end = start + count - 1  # redis indices are inclusive, so subtract one
         return (
-            await self._storage.slice(
+            await self._results_store.slice(
                 key=self._composite_key(form_id),
                 start=start,
                 end=end,
@@ -55,7 +79,7 @@ class FormResultsStore:
         start = 0
         page_size = 100
         while True:
-            page = await self._storage.slice(key, start, start + page_size - 1)
+            page = await self._results_store.slice(key, start, start + page_size - 1)
             if not page:
                 break
             res.extend(page)
@@ -71,12 +95,13 @@ class BotSpecificFormResultsStore:
     username: str
     bot_id: str
 
-    async def save(self, form_block_id: str, form_result: FormResult) -> bool:
-        return await self.storage.save(
-            form_id=GlobalFormId(
-                username=self.username,
-                bot_id=self.bot_id,
-                form_block_id=form_block_id,
-            ),
-            result=form_result,
+    async def save_form_result(
+        self, form_block_id: str, form_result: FormResult, field_names: dict[FieldId, str]
+    ) -> bool:
+        form_id = GlobalFormId(username=self.username, bot_id=self.bot_id, form_block_id=form_block_id)
+        return all(
+            (
+                await self.storage.save(form_id, result=form_result),
+                await self.storage.save_field_names(form_id, id_to_names=field_names),
+            )
         )
