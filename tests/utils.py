@@ -5,8 +5,14 @@ from cryptography.fernet import Fernet
 from telebot import types as tg
 from telebot.test_util import MethodCall
 from telebot.types import Dictionaryable
+from telebot_components.redis_utils.emulation import RedisEmulation
 from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.utils.secrets import RedisSecretStore, SecretStore
+
+from telebot_constructor.store.form_results import (
+    BotSpecificFormResultsStore,
+    FormResultsStore,
+)
 
 
 def dummy_secret_store(redis: RedisInterface) -> SecretStore:
@@ -127,3 +133,7 @@ def assert_method_call_dictified_kwargs_include(
         {k: v.to_dict() for k, v in mc.full_kwargs.items() if isinstance(v, Dictionaryable)} for mc in method_calls
     ]
     assert_dicts_include(preprocessed_kwargs, required_call_kwargs)
+
+
+def dummy_form_results_store() -> BotSpecificFormResultsStore:
+    return FormResultsStore(RedisEmulation()).adapter_for(username="dummy", bot_id="dummy")

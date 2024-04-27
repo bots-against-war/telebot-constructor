@@ -337,7 +337,7 @@ class FormBlock(UserFlowBlock):
             component_form_members: list[Union[FormField, FormBranch]] = [m.construct_member() for m in self.members]
             self._form = ComponentsForm.branching(component_form_members)
         except Exception as e:
-            raise ValueError(form_id_error_prefix + "Form construction error: " + e)
+            raise ValueError(form_id_error_prefix + "Form construction error: " + str(e))
 
         # real store is supplied only during setup
         self._store: BotSpecificFormResultsStore | None = None
@@ -454,10 +454,13 @@ class FormBlock(UserFlowBlock):
                         TIMESTAMP_KEY: datetime.datetime.now(datetime.timezone.utc).isoformat()
                     }
                     for field_id, field_value in result.items():
-                        result_dump[field_id] = self._form.fields_by_name[field_id](field_value, admin_lang)
+                        result_dump[field_id] = self._form.fields_by_name[field_id].value_to_str(
+                            field_value, admin_lang
+                        )
                     if user_str := self.results_export.user_attribution.user_plain(user, self.block_id):
                         result_dump[USER_KEY] = user_str
-                    self.store.save(form_block_id=self.block_id, form_result=result_dump)
+                    await self.store.save(form_block_id=self.block_id, form_result=result_dump)
+                    # TODO: also save form metadata (current field names etc)
                 except Exception:
                     logger.exception("Error saving form result to internal storage")
 
