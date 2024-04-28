@@ -14,9 +14,14 @@ export function getFormFieldId(config: FormFieldConfig): string {
   return getBaseFormFieldConfig(config).id;
 }
 
+export function generateFormFieldId(): string {
+  // this should be a valid Python identifier for backend reasons, so camel_case instead of kebab-case
+  return `form_field_${crypto.randomUUID()}`;
+}
+
 export function getDefaultBaseFormFieldConfig(): BaseFormFieldConfig {
   return {
-    id: `form_field_${crypto.randomUUID()}`,
+    id: generateFormFieldId(),
     name: "",
     prompt: "",
     is_required: true,

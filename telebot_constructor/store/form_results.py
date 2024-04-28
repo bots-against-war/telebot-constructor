@@ -1,7 +1,5 @@
-import collections
 from dataclasses import dataclass
 from typing import cast
-from typing_extensions import Self
 
 from pydantic import BaseModel
 from telebot_components.redis_utils.interface import RedisInterface
@@ -28,7 +26,7 @@ class GlobalFormId:
         return "/".join([self.username, self.bot_id, self.form_block_id])
 
     @classmethod
-    def from_key(self, ck: str) -> Self:
+    def from_key(self, ck: str) -> "GlobalFormId":
         # this is simplistic, but user and bot ids are validated to not contain "/"
         # so, should be fine...
         parts = ck.split("/", maxsplit=2)

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Alert, Button } from "flowbite-svelte";
+  import { Alert, Button, Li, List } from "flowbite-svelte";
   import { createEventDispatcher } from "svelte";
   import { deleteBotConfig } from "../api/botConfig";
   import { getBotUser } from "../api/botUser";
@@ -89,7 +89,7 @@
   {/if}
   <div class="mt-5 pt-3 border-t">
     <h2 class="text-xl font-bold">Аккаунт</h2>
-    <div class=" max-w-[300px]">
+    <div class="max-w-[350px]">
       <DataBadge>
         {#await botUserPromise}
           <DataBadgeLoader />
@@ -103,6 +103,17 @@
       </DataBadge>
     </div>
   </div>
+  {#if botInfo.forms_with_responses.length > 0}
+    <div class="mt-5 pt-3 border-t">
+      <h2 class="text-xl font-bold">Ответы на формы</h2>
+      <List>
+        {#each botInfo.forms_with_responses as resp}
+          <!-- TODO: link to form's page -->
+          <Li>{resp.title || resp.prompt}</Li>
+        {/each}
+      </List>
+    </div>
+  {/if}
   <div class="mt-5 pt-3 border-t">
     <h2 class="text-xl font-bold">Версии</h2>
     <ol class="relative border-s border-gray-200 mt-2">
