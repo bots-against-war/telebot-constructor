@@ -33,8 +33,12 @@
     </div>
   </div>
   <div class="flex flex-col gap-3">
-    <h3 class="font-bold">Отправлять ответы</h3>
-    <Toggle bind:checked={config.echo_to_user}>юзер:ке</Toggle>
+    <h3 class="font-bold">Ответы на форму</h3>
+    <Toggle bind:checked={config.to_store}>Сохранять в память бота</Toggle>
+    {#if config.to_store}
+      <!-- TODO: link to form's page -->
+    {/if}
+    <Toggle bind:checked={config.echo_to_user}>Отправлять юзер:ке</Toggle>
     <div class="flex flex-col gap-1">
       <Toggle
         checked={config.to_chat !== null}
@@ -45,7 +49,7 @@
           } else {
             config.to_chat = null;
           }
-        }}>в чат</Toggle
+        }}>Отправлять в чат</Toggle
       >
       {#if config.to_chat}
         <div class="p-2 m-2 border-l-2 border-grey-600 flex flex-col gap-3">

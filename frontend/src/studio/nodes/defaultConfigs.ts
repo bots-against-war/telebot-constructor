@@ -110,6 +110,7 @@ export function defaultFormBlockConfig(id: string, langConfig: LanguageConfig | 
         user_attribution: "none",
         echo_to_user: true,
         to_chat: null,
+        to_store: false,
       },
       form_cancelled_next_block_id: null,
       form_completed_next_block_id: null,
