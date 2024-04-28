@@ -7,7 +7,6 @@ from typing import Any, Literal, Optional, Sequence, Type, Union, cast
 from pydantic import BaseModel, ConfigDict, model_validator
 from telebot import types as tg
 from telebot_components.feedback import FeedbackConfig as ComponentsFeedbackConfig
-from telebot_components.language import any_text_to_str
 from telebot_components.feedback import UserAnonymization as ComponentsUserAnonymization
 from telebot_components.form.field import (
     FormField,
@@ -22,6 +21,7 @@ from telebot_components.form.handler import FormHandler as ComponentsFormHandler
 from telebot_components.form.handler import (
     FormHandlerConfig as ComponentsFormHandlerConfig,
 )
+from telebot_components.language import any_text_to_str
 from telebot_components.utils import emoji_hash, telegram_html_escape
 from typing_extensions import Self
 
