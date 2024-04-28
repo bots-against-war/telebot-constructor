@@ -1,5 +1,9 @@
+import collections
 from dataclasses import dataclass
+from typing import cast
+from typing_extensions import Self
 
+from pydantic import BaseModel
 from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.stores.generic import KeyDictStore, KeyListStore, KeyValueStore
 
@@ -19,6 +23,24 @@ class GlobalFormId:
     username: str
     bot_id: str
     form_block_id: str
+
+    def as_key(self) -> str:
+        return "/".join([self.username, self.bot_id, self.form_block_id])
+
+    @classmethod
+    def from_key(self, ck: str) -> Self:
+        # this is simplistic, but user and bot ids are validated to not contain "/"
+        # so, should be fine...
+        parts = ck.split("/", maxsplit=2)
+        if len(parts) != 3:
+            raise ValueError(f"Error parsing composite key: {ck} -> {parts}")
+        return GlobalFormId(username=parts[0], bot_id=parts[1], form_block_id=parts[2])
+
+
+class FormInfoBasic(BaseModel):
+    form_block_id: str
+    prompt: str
+    title: str | None
 
 
 class FormResultsStore:
@@ -42,7 +64,7 @@ class FormResultsStore:
             loader=noop,
         )
         # form prompt, can be used as a title/identifier
-        self._form_prompt_store = KeyValueStore[str](
+        self._prompt_store = KeyValueStore[str](
             name="form-prompt",
             prefix=self.PREFIX,
             redis=redis,
@@ -51,7 +73,7 @@ class FormResultsStore:
             loader=noop,
         )
         # dedicated form title that can be set by user, preferred over prompt
-        self._form_title_store = KeyValueStore[str](
+        self._title_store = KeyValueStore[str](
             name="form-title",
             prefix=self.PREFIX,
             redis=redis,
@@ -67,23 +89,53 @@ class FormResultsStore:
             bot_id=bot_id,
         )
 
-    def _composite_key(self, form_id: GlobalFormId) -> str:
-        return "/".join([form_id.username, form_id.bot_id, form_id.form_block_id])
-
     async def save(self, form_id: GlobalFormId, result: FormResult) -> bool:
-        return (await self._results_store.push(key=self._composite_key(form_id), item=result)) == 1
+        return (await self._results_store.push(key=form_id.as_key(), item=result)) == 1
 
     async def save_field_names(self, form_id: GlobalFormId, id_to_names: dict[str, str]) -> bool:
         return await self._field_names_store.set_multiple_subkeys(
-            key=self._composite_key(form_id),
+            key=form_id.as_key(),
             subkey_to_value=id_to_names,  # type: ignore
         )
 
     async def save_form_title(self, form_id: GlobalFormId, title: str) -> bool:
-        return await self._form_title_store.save(self._composite_key(form_id), title)
+        return await self._title_store.save(form_id.as_key(), title)
 
     async def save_form_prompt(self, form_id: GlobalFormId, prompt: str) -> bool:
-        return await self._form_prompt_store.save(self._composite_key(form_id), prompt)
+        return await self._prompt_store.save(form_id.as_key(), prompt)
+
+    async def list_forms(self, username: str, bot_id: str) -> list[FormInfoBasic]:
+        """Returns dict of bot id -> list of form block ids with saved data"""
+        form_keys = await self._results_store.find_keys(
+            pattern=GlobalFormId(
+                username,
+                bot_id=bot_id,
+                form_block_id="*",
+            ).as_key()
+        )
+
+        global_form_ids = [GlobalFormId.from_key(key) for key in form_keys]
+        if invalid_form_ids := [
+            gfid for gfid in global_form_ids if (gfid.username != username or bot_id != gfid.bot_id)
+        ]:
+            raise ValueError(
+                f"Parsed global form ids not matching the query: {username = } {bot_id = } {invalid_form_ids = }"
+            )
+
+        prompts = await self._prompt_store.load_multiple(form_keys)
+        if keys_without_prompt := [key for prompt, key in zip(prompts, form_keys) if prompt is None]:
+            raise ValueError(f"Prompt not found for keys: {keys_without_prompt}")
+
+        titles = await self._title_store.load_multiple(form_keys)
+
+        return [
+            FormInfoBasic(
+                form_block_id=global_form_id.form_block_id,
+                prompt=cast(str, prompt),  # see check above
+                title=title,
+            )
+            for global_form_id, prompt, title in zip(global_form_ids, prompts, titles)
+        ]
 
     async def load_page(self, form_id: GlobalFormId, offset: int, count: int) -> list[FormResult]:
         # "offset" goes from last to earlier results
@@ -91,7 +143,7 @@ class FormResultsStore:
         start = end - (count - 1)  # redis indices are inclusive, so subtract one from count
         return (
             await self._results_store.slice(
-                key=self._composite_key(form_id),
+                key=form_id.as_key(),
                 start=start,
                 end=end,
             )
@@ -99,7 +151,7 @@ class FormResultsStore:
         )
 
     async def load_all(self, form_id: GlobalFormId) -> list[FormResult]:
-        key = self._composite_key(form_id)
+        key = form_id.as_key()
         res: list[FormResult] = []
         start = 0
         page_size = 100

@@ -8,6 +8,7 @@ from telebot import AsyncTeleBot
 from telebot import types as tg
 
 from telebot_constructor.bot_config import BotConfig
+from telebot_constructor.store.form_results import FormInfoBasic
 from telebot_constructor.store.types import BotConfigVersionMetadata, BotEvent
 from telebot_constructor.telegram_files_downloader import TelegramFilesDownloader
 from telebot_constructor.utils.rate_limit_retry import rate_limit_retry
@@ -154,6 +155,7 @@ class BotInfo(BaseModel):
     running_version: Optional[int]  # None = bot not running
     last_versions: list[BotVersionInfo]  # versions, including last and running (if present) versions
     last_events: list[BotEvent]
+    forms_with_responses: list[FormInfoBasic]
 
 
 class SaveBotConfigVersionPayload(BaseModel):

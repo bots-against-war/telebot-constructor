@@ -231,6 +231,10 @@ export type Username6 = string;
 export type Event3 = "edited";
 export type NewVersion = number;
 export type LastEvents = (BotStoppedEvent | BotDeletedEvent | BotStartedEvent | BotEditedEvent)[];
+export type FormBlockId = string;
+export type Prompt3 = string;
+export type Title1 = string | null;
+export type FormsWithResponses = FormInfoBasic[];
 export type VersionMessage = string | null;
 export type Start = boolean;
 export type DisplayName2 = string | null;
@@ -572,6 +576,7 @@ export interface BotInfo {
   running_version: RunningVersion;
   last_versions: LastVersions;
   last_events: LastEvents;
+  forms_with_responses: FormsWithResponses;
   [k: string]: unknown;
 }
 export interface BotVersionInfo {
@@ -608,6 +613,12 @@ export interface BotEditedEvent {
   username: Username6;
   event: Event3;
   new_version: NewVersion;
+  [k: string]: unknown;
+}
+export interface FormInfoBasic {
+  form_block_id: FormBlockId;
+  prompt: Prompt3;
+  title: Title1;
   [k: string]: unknown;
 }
 export interface SaveBotConfigVersionPayload {

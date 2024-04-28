@@ -199,4 +199,5 @@ class TelebotConstructorStore:
                 for version, metadata in zip(range(first_shown_version, next_to_last_version), version_metadata)
             ],
             last_events=last_events,
+            forms_with_responses=await self.form_results.list_forms(username, bot_id),
         )

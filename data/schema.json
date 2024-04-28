@@ -211,6 +211,13 @@
           },
           "title": "Last Events",
           "type": "array"
+        },
+        "forms_with_responses": {
+          "items": {
+            "$ref": "#/$defs/FormInfoBasic"
+          },
+          "title": "Forms With Responses",
+          "type": "array"
         }
       },
       "required": [
@@ -218,7 +225,8 @@
         "display_name",
         "running_version",
         "last_versions",
-        "last_events"
+        "last_events",
+        "forms_with_responses"
       ],
       "title": "BotInfo",
       "type": "object"
@@ -778,6 +786,36 @@
         "descr"
       ],
       "title": "FormFieldResultFormattingOpts",
+      "type": "object"
+    },
+    "FormInfoBasic": {
+      "properties": {
+        "form_block_id": {
+          "title": "Form Block Id",
+          "type": "string"
+        },
+        "prompt": {
+          "title": "Prompt",
+          "type": "string"
+        },
+        "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Title"
+        }
+      },
+      "required": [
+        "form_block_id",
+        "prompt",
+        "title"
+      ],
+      "title": "FormInfoBasic",
       "type": "object"
     },
     "FormMessages": {
