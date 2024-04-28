@@ -719,6 +719,7 @@
       "type": "object"
     },
     "FormFieldConfig": {
+      "description": "Wrapper object for all kinds of fields; see individual classes for details on each field's specifics",
       "properties": {
         "plain_text": {
           "anyOf": [
@@ -911,6 +912,11 @@
               "type": "null"
             }
           ]
+        },
+        "to_store": {
+          "default": false,
+          "title": "To Store",
+          "type": "boolean"
         },
         "is_anonymous": {
           "anyOf": [

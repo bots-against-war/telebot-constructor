@@ -156,6 +156,7 @@ export type FormResultUserAttribution = "none" | "unique_id" | "name" | "full";
 export type EchoToUser = boolean;
 export type ChatId = string | number;
 export type ViaFeedbackHandler = boolean;
+export type ToStore = boolean;
 export type IsAnonymous = boolean | null;
 export type FormCompletedNextBlockId = string | null;
 export type FormCancelledNextBlockId = string | null;
@@ -408,6 +409,9 @@ export interface BranchingFormMemberConfig {
   branch?: FormBranchConfig | null;
   [k: string]: unknown;
 }
+/**
+ * Wrapper object for all kinds of fields; see individual classes for details on each field's specifics
+ */
 export interface FormFieldConfig {
   plain_text?: PlainTextFormFieldConfig | null;
   single_select?: SingleSelectFormFieldConfig | null;
@@ -461,6 +465,7 @@ export interface FormResultsExport {
   user_attribution?: FormResultUserAttribution & string;
   echo_to_user: EchoToUser;
   to_chat: FormResultsExportToChatConfig | null;
+  to_store?: ToStore;
   is_anonymous?: IsAnonymous;
   [k: string]: unknown;
 }
