@@ -1,5 +1,5 @@
 import time
-from typing import Optional
+from typing import Any, Optional
 
 from cryptography.fernet import Fernet
 from telebot import types as tg
@@ -30,12 +30,13 @@ def tg_update_message_to_bot(
     first_name: str,
     text: str,
     group_chat_id: Optional[int] = None,
+    user_kwargs: dict[str, Any] | None = None,
 ) -> tg.Update:
     return tg.Update(
         update_id=1,
         message=tg.Message(
             message_id=1,
-            from_user=tg.User(id=user_id, is_bot=False, first_name=first_name),
+            from_user=tg.User(id=user_id, is_bot=False, first_name=first_name, **(user_kwargs or {})),
             date=int(time.time()),
             chat=(
                 tg.Chat(id=user_id, type="private", first_name=first_name)

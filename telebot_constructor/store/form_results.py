@@ -86,8 +86,9 @@ class FormResultsStore:
         return await self._form_prompt_store.save(self._composite_key(form_id), prompt)
 
     async def load_page(self, form_id: GlobalFormId, offset: int, count: int) -> list[FormResult]:
-        start = -1 - offset  # offset 0 = last = -1, offset -1 = next-to-last = -2, etc
-        end = start + count - 1  # redis indices are inclusive, so subtract one
+        # "offset" goes from last to earlier results
+        end = -1 - offset  # offset 0 = last = -1, offset 1 = next-to-last = -2, etc
+        start = end - (count - 1)  # redis indices are inclusive, so subtract one from count
         return (
             await self._results_store.slice(
                 key=self._composite_key(form_id),

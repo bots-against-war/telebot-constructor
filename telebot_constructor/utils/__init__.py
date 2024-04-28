@@ -73,7 +73,7 @@ def format_telegram_user(user: tg.User, with_id: bool) -> str:
     if user.username:
         appendix.append("@" + user.username)
     if with_id:
-        appendix.append(str(user.id))
+        appendix.append("#" + str(user.id))
     if appendix:
         appendix_str = ", ".join(appendix)
         return f"{full_name} ({appendix_str})"
