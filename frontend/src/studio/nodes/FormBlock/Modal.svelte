@@ -83,7 +83,7 @@
         <FormBranch isMovableUp={false} isMovableDown={false} bind:branch={topLevelBranch} />
       </TabItem>
       <TabItem title="Ответы">
-        <FormResultExportOptions bind:config={editedConfig.results_export} {botName} />
+        <FormResultExportOptions bind:config={editedConfig.results_export} {botName} blockId={config.block_id} />
       </TabItem>
       <TabItem title="Технические сообщения">
         <FormMessages bind:messages={editedConfig.messages} bind:errors={formErrorMessages} />

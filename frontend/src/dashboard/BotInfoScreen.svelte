@@ -4,12 +4,13 @@
   import { deleteBotConfig } from "../api/botConfig";
   import { getBotUser } from "../api/botUser";
   import { startBot, stopBot } from "../api/lifecycle";
-  import type { BotInfo, BotVersionInfo } from "../api/types";
+  import type { BotInfo } from "../api/types";
   import BotUserBadge from "../components/BotUserBadge.svelte";
   import ErrorBadge from "../components/ErrorBadge.svelte";
   import Timestamp from "../components/Timestamp.svelte";
   import DataBadge from "../components/internal/DataBadge.svelte";
   import DataBadgeLoader from "../components/internal/DataBadgeLoader.svelte";
+  import { formResultsPagePath, studioPath } from "../routeUtils";
   import { withConfirmation } from "../utils";
 
   export let botName: string;
@@ -65,14 +66,6 @@
     }
   }
 
-  function studioHref(verInfo: BotVersionInfo): string {
-    let href = `/studio/${encodeURIComponent(botName)}`;
-    if (lastVersion !== verInfo.version) {
-      href += `?version=${encodeURIComponent(verInfo.version)}`;
-    }
-    return href;
-  }
-
   const deleteBotWithConfirmation = withConfirmation(
     "Вы уверены, что хотите удалить бота? Это действие дельзя отменить.",
     () => deleteBot(),
@@ -117,13 +110,7 @@
                   "{formInfo.prompt}"
                 {/if}
               </span>
-              <Button
-                size="xs"
-                outline
-                href={`/forms/${encodeURIComponent(botName)}/${encodeURIComponent(formInfo.form_block_id)}`}
-              >
-                Ответы
-              </Button>
+              <Button size="xs" outline href={formResultsPagePath(botName, formInfo.form_block_id)}>Ответы</Button>
             </div>
           </Li>
         {/each}
@@ -159,7 +146,11 @@
               <Button size="xs" disabled={isLoading} outline on:click={() => publishOrStop(verInfo.version)}>
                 {botInfo.running_version === verInfo.version ? "Остановить" : "Опубликовать"}
               </Button>
-              <Button size="xs" outline href={studioHref(verInfo)}>
+              <Button
+                size="xs"
+                outline
+                href={studioPath(botName, verInfo.version === lastVersion ? null : verInfo.version)}
+              >
                 {lastVersion === verInfo.version ? "Редактировать" : "Посмотреть"}
               </Button>
             </div>
