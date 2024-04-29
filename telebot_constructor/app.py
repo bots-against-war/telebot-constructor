@@ -253,12 +253,14 @@ class TelebotConstructorApp:
             ),
         )
 
+    # region: API endpoints
+
     async def create_constructor_web_app(self) -> web.Application:
         app = web.Application()
         routes = web.RouteTableDef()
 
         ##################################################################################
-        # secrets
+        # region secrets API
 
         @routes.post("/api/secrets/{secret_name}")
         async def upsert_secret(request: web.Request) -> web.Response:
@@ -316,8 +318,9 @@ class TelebotConstructorApp:
             secret_names = await self.secret_store.list_secrets(owner_id=username)
             return web.json_response(data=secret_names)
 
+        # endregion
         ##################################################################################
-        # bot configs CRUD
+        # region configs CRUD
 
         @routes.post("/api/config/{bot_name}")
         async def save_new_bot_config_version(request: web.Request) -> web.Response:
@@ -418,8 +421,10 @@ class TelebotConstructorApp:
             )
             return web.json_response(text=config.model_dump_json())
 
+        # endregion
         ##################################################################################
-        # bot lifecycle control: start, stop
+        # region bot lifecycle
+        # starting and stopping bots
 
         @routes.post("/api/start/{bot_name}")
         async def start_bot(request: web.Request) -> web.Response:
@@ -460,8 +465,10 @@ class TelebotConstructorApp:
             else:
                 return web.Response(text="Bot was not running")
 
+        # endregion
         ##################################################################################
-        # bot info methods: name, running status, history, etc
+        # region bot info
+        # name, running status, history, etc
 
         @routes.put("/api/display-name/{bot_name}")
         async def update_bot_display_name(request: web.Request) -> web.Response:
@@ -533,8 +540,9 @@ class TelebotConstructorApp:
                 data={name: bot_info.model_dump(mode="json") for name, bot_info in bot_infos.items()}
             )
 
+        # endregion
         ##################################################################################
-        # form result store endpoints
+        # region form results
 
         @routes.get("/api/forms/{bot_name}/{form_block_id}/responses")
         async def get_form_responses_page(request: web.Request) -> web.Response:
@@ -565,8 +573,9 @@ class TelebotConstructorApp:
                 text=FormResultsPage(info=form_info, results=form_results).model_dump_json(),
             )
 
+        # endregion
         ##################################################################################
-        # validation endpoints
+        # region validation
 
         @routes.post("/api/validate-token")
         async def validate_bot_token(request: web.Request) -> web.Response:
@@ -589,8 +598,10 @@ class TelebotConstructorApp:
                 raise web.HTTPBadRequest(reason=f"Bot token validation failed ({e})")
             return web.Response(text="Token is valid")
 
+        # endregion
         ##################################################################################
-        # endpoints for syncing constructor state with telegram
+        # region sync w/ telegram
+        # retrieving up-to-date data from Telegram or sending updates to them
 
         @routes.get("/api/bot-user/{bot_name}")
         async def get_bot_user(request: web.Request) -> web.Response:
@@ -725,8 +736,9 @@ class TelebotConstructorApp:
             else:
                 return web.json_response(data=chat.model_dump(mode="json"))
 
+        # endregion
         ##################################################################################
-        # static content routes
+        # region static content
 
         @routes.get("/api/all-languages")
         async def all_languages(request: web.Request) -> web.Response:
@@ -809,6 +821,7 @@ class TelebotConstructorApp:
                 # falling back to index page to support client-side routing
                 return await index(request)
 
+        # endregion
         ##################################################################################
 
         app.add_routes(routes)
@@ -817,6 +830,10 @@ class TelebotConstructorApp:
         setup_cors(app)
         setup_debugging(app)
         return app
+
+    # endregion
+
+    # region constructor lifecycle
 
     def start_stored_bots_in_background(self) -> None:
         async def _start_stored_bots() -> None:
@@ -882,3 +899,5 @@ class TelebotConstructorApp:
         app = await self.create_constructor_web_app()
         app.on_cleanup.append(lambda _: self.cleanup())
         webhook_app.aiohttp_app.add_subapp(BASE_PATH, app)
+
+    # endregion
