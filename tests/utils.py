@@ -158,12 +158,12 @@ DataT = TypeVar("DataT")
 RECENT_TIMESTAMP = "<recent timestamp>"
 
 
-def mask_recent_timestamps(data: DataT) -> DataT:
+def mask_recent_timestamps(data: DataT) -> DataT | str:
     if looks_like_recent_timestamp(data):
         return RECENT_TIMESTAMP
     elif isinstance(data, dict):
-        return {k: mask_recent_timestamps(v) for k, v in data.items()}
+        return {k: mask_recent_timestamps(v) for k, v in data.items()}  # type: ignore
     elif isinstance(data, list):
-        return [mask_recent_timestamps(item) for item in data]
+        return [mask_recent_timestamps(item) for item in data]  # type: ignore
     else:
         return data

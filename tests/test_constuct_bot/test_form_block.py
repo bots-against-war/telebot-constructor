@@ -413,53 +413,45 @@ async def test_form_results_internal_storage() -> None:
         assert len(bot.method_calls) == 0
 
     # check the result is saved
-    assert (
-        mask_recent_timestamps(
-            await form_results_store.load_page(
-                form_id=GlobalFormId(username=username, bot_id=bot_id, form_block_id="form"),
-                offset=0,
-                count=2,
-            )
+    assert mask_recent_timestamps(
+        await form_results_store.load_page(
+            form_id=GlobalFormId(username=username, bot_id=bot_id, form_block_id="form"),
+            offset=0,
+            count=2,
         )
-        == [
-            {
-                "timestamp": RECENT_TIMESTAMP,
-                "age": "I'm 27 y.o.",
-                "dog_name": "My dog is called Bob after me",
-                "user": "Bob (@bob, #2)",
-            },
-            {
-                "timestamp": RECENT_TIMESTAMP,
-                "age": "I'm 28 y.o.",
-                "dog_name": "My dog is called Mary after me",
-                "user": "Mary (@mmmmmm, #3)",
-            },
-        ],
-    )
-    assert (
-        mask_recent_timestamps(
-            await form_results_store.load_all(
-                form_id=GlobalFormId(username=username, bot_id=bot_id, form_block_id="form")
-            )
-        )
-        == [
-            {
-                "timestamp": RECENT_TIMESTAMP,
-                "age": "I'm 26 y.o.",
-                "dog_name": "My dog is called Alice after me",
-                "user": "Alice (@all, #1)",
-            },
-            {
-                "timestamp": RECENT_TIMESTAMP,
-                "age": "I'm 27 y.o.",
-                "dog_name": "My dog is called Bob after me",
-                "user": "Bob (@bob, #2)",
-            },
-            {
-                "timestamp": RECENT_TIMESTAMP,
-                "age": "I'm 28 y.o.",
-                "dog_name": "My dog is called Mary after me",
-                "user": "Mary (@mmmmmm, #3)",
-            },
-        ],
-    )
+    ) == [
+        {
+            "timestamp": RECENT_TIMESTAMP,
+            "age": "I'm 27 y.o.",
+            "dog_name": "My dog is called Bob after me",
+            "user": "Bob (@bob, #2)",
+        },
+        {
+            "timestamp": RECENT_TIMESTAMP,
+            "age": "I'm 28 y.o.",
+            "dog_name": "My dog is called Mary after me",
+            "user": "Mary (@mmmmmm, #3)",
+        },
+    ]
+    assert mask_recent_timestamps(
+        await form_results_store.load_all(form_id=GlobalFormId(username=username, bot_id=bot_id, form_block_id="form"))
+    ) == [
+        {
+            "timestamp": RECENT_TIMESTAMP,
+            "user": "Alice (@all, #1)",
+            "age": "I'm 26 y.o.",
+            "dog_name": "My dog is called Alice after me",
+        },
+        {
+            "timestamp": RECENT_TIMESTAMP,
+            "user": "Bob (@bob, #2)",
+            "age": "I'm 27 y.o.",
+            "dog_name": "My dog is called Bob after me",
+        },
+        {
+            "timestamp": RECENT_TIMESTAMP,
+            "user": "Mary (@mmmmmm, #3)",
+            "age": "I'm 28 y.o.",
+            "dog_name": "My dog is called Mary after me",
+        },
+    ]

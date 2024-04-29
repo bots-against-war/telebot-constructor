@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import cast
+from typing import Mapping, cast
 
 from pydantic import BaseModel
 from telebot_components.redis_utils.interface import RedisInterface
@@ -9,7 +9,7 @@ FieldId = str
 
 # form results can have a lot of "internal" data types, but for this simple storage
 # they're all cast to strings - CSV doesn't support anything complicated anyway!
-FormResult = dict[FieldId, str]
+FormResult = Mapping[FieldId, str | int | float]
 
 
 def noop(x: str) -> str:
@@ -94,7 +94,7 @@ class FormResultsStore:
     async def save(self, form_id: GlobalFormId, result: FormResult) -> bool:
         return (await self._results_store.push(key=form_id.as_key(), item=result)) == 1
 
-    async def save_field_names(self, form_id: GlobalFormId, id_to_names: dict[str, str]) -> bool:
+    async def save_field_names(self, form_id: GlobalFormId, id_to_names: Mapping[str, str]) -> bool:
         return await self._field_names_store.set_multiple_subkeys(
             key=form_id.as_key(),
             subkey_to_value=id_to_names,  # type: ignore
@@ -190,7 +190,7 @@ class BotSpecificFormResultsStore:
         self,
         form_block_id: str,
         form_result: FormResult,
-        field_names: dict[FieldId, str],
+        field_names: Mapping[FieldId, str],
         prompt: str,
     ) -> bool:
         form_id = GlobalFormId(username=self.username, bot_id=self.bot_id, form_block_id=form_block_id)

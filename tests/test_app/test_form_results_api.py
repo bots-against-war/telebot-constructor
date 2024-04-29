@@ -2,13 +2,13 @@ from typing import Tuple
 
 import aiohttp.web
 from pytest_aiohttp.plugin import AiohttpClient  # type: ignore
-from telebot import types as tg
 from telebot.test_util import MockedAsyncTeleBot
 
 from telebot_constructor.app import TelebotConstructorApp
 from tests.test_app.conftest import MockBotRunner
 from tests.utils import (
     RECENT_TIMESTAMP,
+    assert_method_call_kwargs_include,
     mask_recent_timestamps,
     tg_update_message_to_bot,
 )
@@ -126,34 +126,111 @@ async def test_form_results_api(
         "forms_with_responses": [],
     }
 
-    # assert isinstance(constructor.runner, MockBotRunner)
-    # bot_runner = constructor.runner.running["no-auth"]["my-test-bot"]
-    # assert isinstance(bot_runner.bot, MockedAsyncTeleBot)
-    # await bot_runner.bot.process_new_updates(
-    #     [
-    #         tg_update_message_to_bot(
-    #             user_id=123,
-    #             first_name="User",
-    #             text="/discover_chat",
-    #             group_chat_id=456,
-    #         )
-    #     ]
-    # )
+    assert isinstance(constructor.runner, MockBotRunner)
+    bot_runner = constructor.runner.running["no-auth"]["mybot"]
+    assert isinstance(bot_runner.bot, MockedAsyncTeleBot)
+    bot = bot_runner.bot
+    assert isinstance(bot, MockedAsyncTeleBot)
+    bot.method_calls.clear()
+    # several users fill out the form
+    for user_id, first_name in [(1, "AAA"), (2, "BBB"), (3, "CCC")]:
+        # using start command to start the form
+        await bot.process_new_updates([tg_update_message_to_bot(user_id, first_name=first_name, text="/start")])
+        assert len(bot.method_calls) == 1
+        assert_method_call_kwargs_include(
+            bot.method_calls["send_message"],
+            [
+                {"chat_id": user_id, "text": "Hello welcome to the form testing bot\n\n/cancel — to cancel"},
+                {"chat_id": user_id, "text": "Please answer the first question"},
+            ],
+        )
+        bot.method_calls.clear()
 
-    # resp = await client.post("/api/stop-group-chat-discovery/my-test-bot")
-    # assert resp.status == 200
+        await bot.process_new_updates(
+            [tg_update_message_to_bot(user_id, first_name=first_name, text=f"First answer by user #{user_id}")]
+        )
+        assert len(bot.method_calls) == 1
+        assert_method_call_kwargs_include(
+            bot.method_calls["send_message"],
+            [{"chat_id": user_id, "text": "Please answer the second question"}],
+        )
+        bot.method_calls.clear()
 
-    # bot_runner.bot.add_return_values("get_chat", tg.Chat(id=456, type="supergroup", title="some group chat"))
-    # resp = await client.get("/api/available-group-chats/my-test-bot")
-    # assert resp.status == 200
-    # assert await resp.json() == [
-    #     {
-    #         "id": 456,
-    #         "type": "supergroup",
-    #         "title": "some group chat",
-    #         "description": None,
-    #         "username": None,
-    #         "is_forum": None,
-    #         "photo": None,
-    #     }
-    # ]
+        await bot.process_new_updates(
+            [tg_update_message_to_bot(user_id, first_name=first_name, text=f"Second answer by user #{user_id}")]
+        )
+        assert len(bot.method_calls) == 1
+        assert_method_call_kwargs_include(
+            bot.method_calls["send_message"],
+            [
+                {
+                    "chat_id": user_id,
+                    "text": (
+                        f"<b>one</b>: First answer by user #{user_id}\n"
+                        + f"<b>two</b>: Second answer by user #{user_id}"
+                    ),
+                }
+            ],
+        )
+        bot.method_calls.clear()
+
+    # checking bot info, the form should be there
+    resp = await client.get("/api/info/mybot")
+    assert resp.status == 200
+    assert mask_recent_timestamps(await resp.json()) == {
+        "bot_name": "mybot",
+        "display_name": "my test bot",
+        "running_version": 0,
+        "last_versions": [
+            {
+                "version": 0,
+                "metadata": {
+                    "timestamp": RECENT_TIMESTAMP,
+                    "message": "init",
+                },
+            }
+        ],
+        "last_events": [
+            {"timestamp": RECENT_TIMESTAMP, "username": "no-auth", "event": "edited", "new_version": 0},
+            {"timestamp": RECENT_TIMESTAMP, "username": "no-auth", "event": "started", "version": 0},
+        ],
+        "forms_with_responses": [
+            {
+                "form_block_id": "form-block-123",
+                "prompt": "Hello welcome to the form testing bot",
+                "title": None,
+            }
+        ],
+    }
+
+    # finally, calling the form results api to get user's responses
+    resp = await client.get("/api/forms/mybot/form-block-123/responses")
+    assert resp.status == 200
+    assert mask_recent_timestamps(await resp.json()) == {
+        "info": {
+            "form_block_id": "form-block-123",
+            "prompt": "Hello welcome to the form testing bot",
+            "title": None,
+            "field_names": {"form-field-1": "one", "form-field-2": "two"},
+        },
+        "results": [
+            {
+                "timestamp": RECENT_TIMESTAMP,
+                "user": "AAA",
+                "form-field-1": "First answer by user #1",
+                "form-field-2": "Second answer by user #1",
+            },
+            {
+                "timestamp": RECENT_TIMESTAMP,
+                "user": "BBB",
+                "form-field-1": "First answer by user #2",
+                "form-field-2": "Second answer by user #2",
+            },
+            {
+                "timestamp": RECENT_TIMESTAMP,
+                "user": "CCC",
+                "form-field-1": "First answer by user #3",
+                "form-field-2": "Second answer by user #3",
+            },
+        ],
+    }
