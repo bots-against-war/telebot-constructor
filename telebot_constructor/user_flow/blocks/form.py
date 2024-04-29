@@ -1,6 +1,6 @@
 import abc
-import datetime
 import logging
+import time
 from enum import Enum
 from typing import Any, Literal, Optional, Sequence, Type, Union, cast
 
@@ -452,9 +452,7 @@ class FormBlock(UserFlowBlock):
                     logger.exception("Error sending form result to admin chat")
             if self.results_export.to_store:
                 try:
-                    result_dump: dict[str, str] = {
-                        TIMESTAMP_KEY: datetime.datetime.now(datetime.timezone.utc).isoformat()
-                    }
+                    result_dump: dict[str, str] = {TIMESTAMP_KEY: time.time()}
                     for field_id, field_value in result.items():
                         result_dump[field_id] = self._form.fields_by_name[field_id].value_to_str(
                             field_value, admin_lang

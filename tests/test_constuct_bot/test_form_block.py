@@ -28,11 +28,12 @@ from telebot_constructor.user_flow.blocks.form import (
 )
 from telebot_constructor.user_flow.entrypoints.command import CommandEntryPoint
 from tests.utils import (
-    assert_dicts_include,
+    RECENT_TIMESTAMP,
     assert_method_call_dictified_kwargs_include,
     assert_method_call_kwargs_include,
     dummy_form_results_store,
     dummy_secret_store,
+    mask_recent_timestamps,
     tg_update_message_to_bot,
 )
 
@@ -412,44 +413,50 @@ async def test_form_results_internal_storage() -> None:
         assert len(bot.method_calls) == 0
 
     # check the result is saved
-    assert_dicts_include(
-        await form_results_store.load_page(
-            form_id=GlobalFormId(username=username, bot_id=bot_id, form_block_id="form"),
-            offset=0,
-            count=2,
-        ),
-        [
+    assert (
+        mask_recent_timestamps(
+            await form_results_store.load_page(
+                form_id=GlobalFormId(username=username, bot_id=bot_id, form_block_id="form"),
+                offset=0,
+                count=2,
+            )
+        )
+        == [
             {
-                # "timestamp": "2024-04-28T14:22:37.048239+00:00",
+                "timestamp": RECENT_TIMESTAMP,
                 "age": "I'm 27 y.o.",
                 "dog_name": "My dog is called Bob after me",
                 "user": "Bob (@bob, #2)",
             },
             {
-                # "timestamp": "2024-04-28T14:22:37.050404+00:00",
+                "timestamp": RECENT_TIMESTAMP,
                 "age": "I'm 28 y.o.",
                 "dog_name": "My dog is called Mary after me",
                 "user": "Mary (@mmmmmm, #3)",
             },
         ],
     )
-    assert_dicts_include(
-        await form_results_store.load_all(form_id=GlobalFormId(username=username, bot_id=bot_id, form_block_id="form")),
-        [
+    assert (
+        mask_recent_timestamps(
+            await form_results_store.load_all(
+                form_id=GlobalFormId(username=username, bot_id=bot_id, form_block_id="form")
+            )
+        )
+        == [
             {
-                # "timestamp": "2024-04-28T14:22:37.048239+00:00",
+                "timestamp": RECENT_TIMESTAMP,
                 "age": "I'm 26 y.o.",
                 "dog_name": "My dog is called Alice after me",
                 "user": "Alice (@all, #1)",
             },
             {
-                # "timestamp": "2024-04-28T14:22:37.048239+00:00",
+                "timestamp": RECENT_TIMESTAMP,
                 "age": "I'm 27 y.o.",
                 "dog_name": "My dog is called Bob after me",
                 "user": "Bob (@bob, #2)",
             },
             {
-                # "timestamp": "2024-04-28T14:22:37.050404+00:00",
+                "timestamp": RECENT_TIMESTAMP,
                 "age": "I'm 28 y.o.",
                 "dog_name": "My dog is called Mary after me",
                 "user": "Mary (@mmmmmm, #3)",

@@ -1,5 +1,6 @@
+import datetime
 import time
-from typing import Any, Optional
+from typing import Any, Optional, TypeVar
 
 from cryptography.fernet import Fernet
 from telebot import types as tg
@@ -8,6 +9,7 @@ from telebot.types import Dictionaryable
 from telebot_components.redis_utils.emulation import RedisEmulation
 from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.utils.secrets import RedisSecretStore, SecretStore
+from typing_extensions import TypeGuard
 
 from telebot_constructor.store.form_results import (
     BotSpecificFormResultsStore,
@@ -138,3 +140,30 @@ def assert_method_call_dictified_kwargs_include(
 
 def dummy_form_results_store() -> BotSpecificFormResultsStore:
     return FormResultsStore(RedisEmulation()).adapter_for(username="dummy", bot_id="dummy")
+
+
+def looks_like_recent_timestamp(value: Any) -> TypeGuard[float]:
+    if not isinstance(value, float):
+        return False
+    try:
+        dt = datetime.datetime.fromtimestamp(value)
+    except Exception:
+        return False
+    now = datetime.datetime.now()
+    return dt < now and now - dt < datetime.timedelta(minutes=5)
+
+
+DataT = TypeVar("DataT")
+
+RECENT_TIMESTAMP = "<recent timestamp>"
+
+
+def mask_recent_timestamps(data: DataT) -> DataT:
+    if looks_like_recent_timestamp(data):
+        return RECENT_TIMESTAMP
+    elif isinstance(data, dict):
+        return {k: mask_recent_timestamps(v) for k, v in data.items()}
+    elif isinstance(data, list):
+        return [mask_recent_timestamps(item) for item in data]
+    else:
+        return data

@@ -1,9 +1,8 @@
-import time
-
 import aiohttp.web
 from pytest_aiohttp.plugin import AiohttpClient  # type: ignore
 
 from telebot_constructor.app import TelebotConstructorApp
+from tests.utils import RECENT_TIMESTAMP, mask_recent_timestamps
 
 
 async def test_get_logged_in_user(
@@ -61,23 +60,20 @@ async def test_bot_config(
     # checking basic bot info
     resp = await client.get("/api/info")
     assert resp.status == 200
-    resp_body = await resp.json()
-    assert list(resp_body.keys()) == [bot_name]
-    bot_info = resp_body[bot_name]
-    assert bot_info["display_name"] == "my bot"
-    assert bot_info["running_version"] is None
-    versions = bot_info["last_versions"]
-    assert len(versions) == 1
-    version_info = versions[0]
-    assert version_info["version"] == 0
-    assert time.time() - version_info["metadata"]["timestamp"] < 1
-    assert version_info["metadata"]["message"] == "init message"
-    assert len(bot_info["last_events"]) == 1
-    bot_created_event = bot_info["last_events"][0]
-    assert time.time() - bot_created_event["timestamp"] < 1
-    assert bot_created_event["username"] == "no-auth"
-    assert bot_created_event["event"] == "edited"
-    assert bot_created_event["new_version"] == 0
+    resp_json_1 = mask_recent_timestamps(await resp.json())
+    assert resp_json_1 == {
+        "test-bot-1312": {
+            "bot_name": "test-bot-1312",
+            "display_name": "my bot",
+            "running_version": None,
+            "last_versions": [{"version": 0, "metadata": {"timestamp": RECENT_TIMESTAMP, "message": "init message"}}],
+            "last_events": [
+                {"timestamp": RECENT_TIMESTAMP, "username": "no-auth", "event": "edited", "new_version": 0}
+            ],
+            "forms_with_responses": [],
+        }
+    }
+    bot_created_event = resp_json_1[bot_name]["last_events"][0]
 
     # starting bot
     resp = await client.post(f"/api/start/{bot_name}", json={"version": 0})
@@ -86,34 +82,33 @@ async def test_bot_config(
     # checking info again, corresponding "started" event should be there
     resp = await client.get("/api/info")
     assert resp.status == 200
-    resp_body = await resp.json()
-    assert list(resp_body.keys()) == [bot_name]
-    bot_info = resp_body[bot_name]
-    assert bot_info["display_name"] == "my bot"
-    assert bot_info["running_version"] == 0
-    assert len(bot_info["last_versions"]) == 1
-    assert len(bot_info["last_events"]) == 2
-    assert bot_info["last_events"][0] == bot_created_event
-    bot_started_events = bot_info["last_events"][1]
-    assert time.time() - bot_started_events["timestamp"] < 1
-    assert bot_started_events["username"] == "no-auth"
-    assert bot_started_events["event"] == "started"
+    resp_json_2 = mask_recent_timestamps(await resp.json())
+    assert resp_json_2 == {
+        "test-bot-1312": {
+            "bot_name": "test-bot-1312",
+            "display_name": "my bot",
+            "running_version": 0,
+            "last_versions": [{"version": 0, "metadata": {"timestamp": RECENT_TIMESTAMP, "message": "init message"}}],
+            "last_events": [
+                bot_created_event,
+                {"timestamp": RECENT_TIMESTAMP, "username": "no-auth", "event": "started", "version": 0},
+            ],
+            "forms_with_responses": [],
+        }
+    }
+    bot_started_event = resp_json_2[bot_name]["last_events"][1]
 
     # checking same info but with a bot-specific endpoint
     resp = await client.get(f"/api/info/{bot_name}")
     assert resp.status == 200
-    resp_body = await resp.json()
-    assert isinstance(resp_body, dict)
-    assert resp_body["display_name"] == "my bot"
-    assert resp_body["running_version"] == 0
+    assert mask_recent_timestamps(await resp.json()) == resp_json_2[bot_name]
 
     # update display name and check it's changed in the info
     resp = await client.put(f"/api/display-name/{bot_name}", json={"display_name": "changed display name"})
     assert resp.status == 200
     resp = await client.get(f"/api/info/{bot_name}")
     assert resp.status == 200
-    resp_body = await resp.json()
-    assert resp_body["display_name"] == "changed display name"
+    assert (await resp.json())["display_name"] == "changed display name"
 
     # updating bot config
     bot_config_2 = {
@@ -147,13 +142,13 @@ async def test_bot_config(
     )
     assert resp.status == 200
 
-    # checking that it's saved indeed, however we request last version...
+    # checking that it's saved indeed and we can retrieve the last version in multiple ways
     for url in [f"/api/config/{bot_name}", f"/api/config/{bot_name}?version=-1", f"/api/config/{bot_name}?version=1"]:
         resp = await client.get(url)
         assert resp.status == 200
         assert await resp.json() == bot_config_2
 
-    # ...but we can always retrieve the old version too!
+    # ... but we can always retrieve the old version too!
     resp = await client.get(f"/api/config/{bot_name}?version=0")
     assert resp.status == 200
     assert await resp.json() == bot_config_1
@@ -161,20 +156,25 @@ async def test_bot_config(
     # and this update must be reflected in bot info
     resp = await client.get(f"/api/info/{bot_name}")
     assert resp.status == 200
-    bot_info = await resp.json()
-    assert bot_info["display_name"] == "changed display name"
-    assert bot_info["running_version"] == 1
-    assert len(bot_info["last_versions"]) == 2
-    assert len(bot_info["last_events"]) == 5
-    assert bot_info["last_events"][0] == bot_created_event
-    assert bot_info["last_events"][1] == bot_started_events
-    bot_edited_event, bot_stopped_event, bot_started_again_event = bot_info["last_events"][2:]
-    for event in bot_info["last_events"]:
-        assert time.time() - event["timestamp"] < 1
-        assert event["username"] == "no-auth"
-    assert bot_edited_event["event"] == "edited"
-    assert bot_stopped_event["event"] == "stopped"
-    assert bot_started_again_event["event"] == "started"
+    resp_json_3 = mask_recent_timestamps(await resp.json())
+    assert resp_json_3 == {
+        "bot_name": "test-bot-1312",
+        "display_name": "changed display name",
+        "running_version": 1,
+        "last_versions": [
+            {"version": 0, "metadata": {"timestamp": RECENT_TIMESTAMP, "message": "init message"}},
+            {"version": 1, "metadata": {"timestamp": RECENT_TIMESTAMP, "message": "bot config update"}},
+        ],
+        "last_events": [
+            bot_created_event,
+            bot_started_event,
+            {"timestamp": RECENT_TIMESTAMP, "username": "no-auth", "event": "edited", "new_version": 1},
+            {"timestamp": RECENT_TIMESTAMP, "username": "no-auth", "event": "stopped"},
+            {"timestamp": RECENT_TIMESTAMP, "username": "no-auth", "event": "started", "version": 1},
+        ],
+        "forms_with_responses": [],
+    }
+    bot_edited_event, bot_stopped_event, bot_started_again_event = resp_json_3["last_events"][2:]
 
     # now let's stop the bot
     resp = await client.post(f"/api/stop/{bot_name}")
@@ -183,21 +183,32 @@ async def test_bot_config(
     # check it's reflected in the info
     resp = await client.get(f"/api/info/{bot_name}")
     assert resp.status == 200
-    bot_info = await resp.json()
-    assert bot_info["display_name"] == "changed display name"
-    assert bot_info["running_version"] is None
-    assert len(bot_info["last_events"]) == 6
-    assert bot_info["last_events"][0] == bot_created_event
-    assert bot_info["last_events"][1] == bot_started_events
-    assert bot_info["last_events"][2] == bot_edited_event
-    assert bot_info["last_events"][3] == bot_stopped_event
-    assert bot_info["last_events"][4] == bot_started_again_event
-    bot_stopped_finally_event = bot_info["last_events"][5]
-    assert time.time() - bot_stopped_finally_event["timestamp"] < 1
-    assert bot_stopped_finally_event["username"] == "no-auth"
-    assert bot_stopped_finally_event["event"] == "stopped"
+    resp_json_4 = mask_recent_timestamps(await resp.json())
+    assert resp_json_4 == {
+        "bot_name": "test-bot-1312",
+        "display_name": "changed display name",
+        "running_version": None,
+        "last_versions": [
+            {"version": 0, "metadata": {"timestamp": RECENT_TIMESTAMP, "message": "init message"}},
+            {"version": 1, "metadata": {"timestamp": RECENT_TIMESTAMP, "message": "bot config update"}},
+        ],
+        "last_events": [
+            bot_created_event,
+            bot_started_event,
+            bot_edited_event,
+            bot_stopped_event,
+            bot_started_again_event,
+            {"timestamp": RECENT_TIMESTAMP, "username": "no-auth", "event": "stopped"},
+        ],
+        "forms_with_responses": [],
+    }
 
     # let's delete this bot for good
     resp = await client.delete(f"/api/config/{bot_name}")
     assert resp.status == 200
     assert await resp.json() == bot_config_2
+
+    # try to see it one more time and fail
+    resp = await client.get(f"/api/info/{bot_name}")
+    assert resp.status == 404
+    assert await resp.text() == "404: Bot id not found"
