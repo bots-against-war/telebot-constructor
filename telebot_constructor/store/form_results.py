@@ -41,6 +41,10 @@ class FormInfoBasic(BaseModel):
     title: str | None
 
 
+class FormInfo(FormInfoBasic):
+    field_names: dict[FieldId, str]
+
+
 class FormResultsStore:
     PREFIX = "telebot-constructor/form-results"
 
@@ -134,6 +138,18 @@ class FormResultsStore:
             )
             for global_form_id, prompt, title in zip(global_form_ids, prompts, titles)
         ]
+
+    async def load_form_info(self, form_id: GlobalFormId) -> FormInfo | None:
+        key = form_id.as_key()
+        prompt = await self._prompt_store.load(key)
+        if prompt is None:
+            return None  # we consider only prompt as a mandatory field, no prompt = form not found
+        return FormInfo(
+            form_block_id=form_id.form_block_id,
+            prompt=prompt,
+            title=await self._title_store.load(key),
+            field_names=await self._field_names_store.load(key),
+        )
 
     async def load_page(self, form_id: GlobalFormId, offset: int, count: int) -> list[FormResult]:
         # "offset" goes from last to earlier results

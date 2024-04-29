@@ -21,6 +21,7 @@ from telebot_components.utils.secrets import SecretStore
 
 from telebot_constructor.app_models import (
     BotTokenPayload,
+    FormResultsPage,
     LoggedInUser,
     SaveBotConfigVersionPayload,
     StartBotPayload,
@@ -41,6 +42,7 @@ from telebot_constructor.runners import (
     WebhookAppConstructedBotRunner,
 )
 from telebot_constructor.static import get_prefilled_messages, static_file_content
+from telebot_constructor.store.form_results import GlobalFormId
 from telebot_constructor.store.store import (
     BotConfigVersionMetadata,
     BotVersion,
@@ -100,6 +102,9 @@ class TelebotConstructorApp:
             raise RuntimeError("Constructed bot runner was not initialized properly")
         return self._runner
 
+    # region: request processing
+    # helper methods to e.g. parse data from requests
+
     async def _authenticate_full(self, request: web.Request) -> LoggedInUser:
         try:
             logged_in_user = await self.auth.authenticate_request(request)
@@ -114,29 +119,27 @@ class TelebotConstructorApp:
         logged_in_user = await self._authenticate_full(request)
         return logged_in_user.username
 
+    # used for bot user and bot names
     VALID_NAME_RE = re.compile(r"^[0-9a-zA-Z\-_]{3,64}$")
 
     def _validate_name(self, name: str) -> None:
         if not self.VALID_NAME_RE.match(name):
-            raise web.HTTPBadRequest(reason="Name must consist of 3-64 alphanumeric characters, hyphens and dashes")
+            raise web.HTTPBadRequest(
+                reason="Name must be 3-64 characters long and include only alphanumerics, hyphens and dashes"
+            )
+
+    def parse_path_part(self, request: web.Request, part_name: str) -> str:
+        part = request.match_info.get(part_name)
+        if part is None:
+            raise web.HTTPNotFound()
+        return part
 
     def parse_bot_name(self, request: web.Request) -> str:
-        name = request.match_info.get("bot_name")
-        if name is None:
-            raise web.HTTPNotFound()
+        name = self.parse_path_part(request, "bot_name")
         self._validate_name(name)
         return name
 
-    def parse_version_query_param(self, request: web.Request) -> Optional[int]:
-        version_str = request.query.get("version")
-        if version_str is None:
-            return None
-        try:
-            return int(version_str)
-        except Exception:
-            raise web.HTTPBadRequest(reason="version query argument must be a valid integer")
-
-    async def parse_pydantic_model(self, request: web.Request, Model: Type[PydanticModelT]) -> PydanticModelT:
+    async def parse_body_as_model(self, request: web.Request, Model: Type[PydanticModelT]) -> PydanticModelT:
         try:
             return Model.model_validate(await request.json())
         except json.JSONDecodeError:
@@ -150,11 +153,31 @@ class TelebotConstructorApp:
             raise web.HTTPBadRequest(reason=str(e))
 
     def parse_secret_name(self, request: web.Request) -> str:
-        name = request.match_info.get("secret_name")
-        if name is None:
-            raise web.HTTPNotFound()
+        name = self.parse_path_part(request, "secret_name")
         self._validate_name(name)
         return name
+
+    def parse_query_param_int(self, request: web.Request, name: str, min_: int | None, max_: int | None) -> int | None:
+        value_str = request.query.get(name)
+        if not value_str:
+            return None
+        try:
+            value = int(value_str)
+        except ValueError:
+            raise web.HTTPBadRequest(reason=f"Query param {name!r} must be an integer")
+        if min_ is not None and value < min_:
+            raise web.HTTPBadRequest(reason=f"Query param {name!r} can't be less than {min_}")
+        if max_ is not None and value > max_:
+            raise web.HTTPBadRequest(reason=f"Query param {name!r} can't be greater than {max_}")
+        return value
+
+    def parse_version_query_param(self, request: web.Request) -> Optional[int]:
+        return self.parse_query_param_int(request, "version", min_=None, max_=None)
+
+    # endregion
+
+    # region: bot manipulation
+    # methods to do common tasks with bots, used in endpoints
 
     async def load_bot_config(self, username: str, bot_name: str, version: BotVersion) -> BotConfig:
         config = await self.store.load_bot_config(username, bot_name, version)
@@ -312,7 +335,7 @@ class TelebotConstructorApp:
             username = await self.authenticate(request)
             bot_name = self.parse_bot_name(request)
             existing_bot_config = await self.store.load_bot_config(username, bot_name)
-            payload = await self.parse_pydantic_model(request, SaveBotConfigVersionPayload)
+            payload = await self.parse_body_as_model(request, SaveBotConfigVersionPayload)
             await self.store.save_bot_config(
                 username,
                 bot_name,
@@ -413,7 +436,7 @@ class TelebotConstructorApp:
             """
             username = await self.authenticate(request)
             bot_name = self.parse_bot_name(request)
-            payload = await self.parse_pydantic_model(request, StartBotPayload)
+            payload = await self.parse_body_as_model(request, StartBotPayload)
             await self.start_bot(username, bot_name, version=payload.version)
             return web.Response(text="OK", status=201)
 
@@ -455,7 +478,7 @@ class TelebotConstructorApp:
             """
             username = await self.authenticate(request)
             bot_name = self.parse_bot_name(request)
-            payload = await self.parse_pydantic_model(request, UpdateBotDisplayNamePayload)
+            payload = await self.parse_body_as_model(request, UpdateBotDisplayNamePayload)
             if not await self.store.is_bot_exists(username, bot_name):
                 raise web.HTTPNotFound(reason="Bot id not found")
             if await self.store.save_bot_display_name(username, bot_name, payload.display_name):
@@ -513,7 +536,34 @@ class TelebotConstructorApp:
         ##################################################################################
         # form result store endpoints
 
-        # TODO
+        @routes.get("/api/forms/{bot_name}/{form_block_id}/responses")
+        async def get_form_responses_page(request: web.Request) -> web.Response:
+            """
+            ---
+            description: Get form responses
+            produces:
+            - application/json
+            responses:
+                "200":
+                    description: OK
+                "400":
+                    description: Invalid token (with forwarded Telegram bot API response)
+            """
+            username = await self.authenticate(request)
+            form_id = GlobalFormId(
+                username=username,
+                bot_id=self.parse_bot_name(request),
+                form_block_id=self.parse_path_part(request, "form_block_id"),
+            )
+            offset = self.parse_query_param_int(request, "offset", min_=0, max_=None) or 0
+            count = self.parse_query_param_int(request, "count", min_=0, max_=100) or 20
+            form_info = await self.store.form_results.load_form_info(form_id)
+            if not form_info:
+                raise web.HTTPNotFound(reason="Form not found")
+            form_results = await self.store.form_results.load_page(form_id, offset=offset, count=count)
+            return web.json_response(
+                text=FormResultsPage(info=form_info, results=form_results).model_dump_json(),
+            )
 
         ##################################################################################
         # validation endpoints
@@ -532,7 +582,7 @@ class TelebotConstructorApp:
                     description: Invalid token (with forwarded Telegram bot API response)
             """
             _ = await self.authenticate(request)
-            token_payload = await self.parse_pydantic_model(request, BotTokenPayload)
+            token_payload = await self.parse_body_as_model(request, BotTokenPayload)
             try:
                 await AsyncTeleBot(token=token_payload.token).get_me()
             except Exception as e:
@@ -576,7 +626,7 @@ class TelebotConstructorApp:
             """
             username = await self.authenticate(request)
             bot_name = self.parse_bot_name(request)
-            bot_user_update = await self.parse_pydantic_model(request, TgBotUserUpdate)
+            bot_user_update = await self.parse_body_as_model(request, TgBotUserUpdate)
             if not bot_user_update.name:
                 raise web.HTTPBadRequest(reason="Bot name can't be empty")
             bot = await self._make_raw_bot(username, bot_name)
