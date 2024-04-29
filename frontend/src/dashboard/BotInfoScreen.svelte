@@ -109,18 +109,22 @@
       <List>
         {#each botInfo.forms_with_responses as formInfo}
           <Li>
-            {#if formInfo.title}
-              {formInfo.title}
-            {:else}
-              "{formInfo.prompt}"
-            {/if}
-            <Button
-              size="xs"
-              outline
-              href={`/forms/${encodeURIComponent(botName)}/${encodeURIComponent(formInfo.form_block_id)}`}
-            >
-              Ответы
-            </Button>
+            <div class=" inline-flex flex-row gap-2 items-baseline">
+              <span>
+                {#if formInfo.title}
+                  {formInfo.title}
+                {:else}
+                  "{formInfo.prompt}"
+                {/if}
+              </span>
+              <Button
+                size="xs"
+                outline
+                href={`/forms/${encodeURIComponent(botName)}/${encodeURIComponent(formInfo.form_block_id)}`}
+              >
+                Ответы
+              </Button>
+            </div>
           </Li>
         {/each}
       </List>
@@ -163,7 +167,7 @@
         </li>
       {/each}
     </ol>
-    <div>TBD: полный список версий</div>
+    <div class="text-gray-400">TBD: полный список версий</div>
   </div>
   <div class="mt-5 pt-3 border-t">
     <h2 class="text-xl font-bold">Активность</h2>
@@ -190,7 +194,7 @@
         </li>
       {/each}
     </ol>
-    <div>TBD: полный лог активности</div>
+    <div class="text-gray-400">TBD: полный лог активности</div>
   </div>
   <div class="mt-5 pt-3 border-t">
     <h2 class="text-xl font-bold">Управление</h2>
