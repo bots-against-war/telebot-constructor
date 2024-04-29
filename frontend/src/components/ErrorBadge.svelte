@@ -10,11 +10,13 @@
   <ExclamationCircleOutline slot="icon" class="w-4 h-4 self-start p-0" />
   {#if typeof text === "string"}
     {text}
-  {:else}
+  {:else if Symbol.iterator in Object(text)}
     <List>
       {#each text as textItem}
         <Li>{textItem}</Li>
       {/each}
     </List>
+  {:else}
+    {text}
   {/if}
 </Alert>

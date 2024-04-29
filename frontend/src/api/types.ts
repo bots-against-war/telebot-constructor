@@ -239,6 +239,12 @@ export type VersionMessage = string | null;
 export type Start = boolean;
 export type DisplayName2 = string | null;
 export type Version2 = number;
+export type FormBlockId1 = string;
+export type Prompt4 = string;
+export type Title2 = string | null;
+export type Results = {
+  [k: string]: string | number | number;
+}[];
 
 /**
  * Temporary class to pack several models into one schema; not used directly by frontend code
@@ -254,6 +260,9 @@ export interface BackendDataModels {
   bot_info: BotInfo;
   save_bot_config_version_payload: SaveBotConfigVersionPayload;
   start_bot_payload: StartBotPayload;
+  form_info: FormInfo;
+  form_info_basic: FormInfoBasic;
+  form_results_page: FormResultsPage;
   [k: string]: unknown;
 }
 export interface BotConfig {
@@ -630,5 +639,20 @@ export interface SaveBotConfigVersionPayload {
 }
 export interface StartBotPayload {
   version: Version2;
+  [k: string]: unknown;
+}
+export interface FormInfo {
+  form_block_id: FormBlockId1;
+  prompt: Prompt4;
+  title: Title2;
+  field_names: FieldNames;
+  [k: string]: unknown;
+}
+export interface FieldNames {
+  [k: string]: string;
+}
+export interface FormResultsPage {
+  info: FormInfo;
+  results: Results;
   [k: string]: unknown;
 }

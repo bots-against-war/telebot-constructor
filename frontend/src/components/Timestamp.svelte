@@ -3,6 +3,7 @@
 
   export let timestamp: string | number; // ISO string or epoch time in SECONDS (i.e. Python backend format)
   export let timeClass: string = "";
+  export let alwaysAbsolute: boolean = false;
 
   const dt = new Date(
     typeof timestamp === "string"
@@ -18,7 +19,7 @@
     const deltaMin = (now.getTime() - dt.getTime()) / (1000 * 60);
     // NOTE: sometimes when we send something to the server and receive a timestamp it can be slightly in the future
     // due to different clocks; so here we allow times up to 10 sec in the future to be "now"
-    if (-1 / 6 < deltaMin && deltaMin < 60 * 24) {
+    if (!alwaysAbsolute && -1 / 6 < deltaMin && deltaMin < 60 * 24) {
       if (deltaMin < 1 / 6) {
         rendered = "только что";
         return 5;

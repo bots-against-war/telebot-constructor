@@ -93,7 +93,7 @@ export function cloneBlockConfig(c: UserFlowBlockConfig): TentativeNode {
     config.form.members.forEach((m) => {
       if (!m.field) return;
       getBaseFormFieldConfig(m.field).id = generateFormFieldId();
-    })
+    });
   } else if (config.human_operator) {
     config.human_operator.block_id = id;
   } else if (config.language_select) {

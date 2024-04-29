@@ -107,9 +107,21 @@
     <div class="mt-5 pt-3 border-t">
       <h2 class="text-xl font-bold">Ответы на формы</h2>
       <List>
-        {#each botInfo.forms_with_responses as resp}
-          <!-- TODO: link to form's page -->
-          <Li>{resp.title || resp.prompt}</Li>
+        {#each botInfo.forms_with_responses as formInfo}
+          <Li>
+            {#if formInfo.title}
+              {formInfo.title}
+            {:else}
+              "{formInfo.prompt}"
+            {/if}
+            <Button
+              size="xs"
+              outline
+              href={`/forms/${encodeURIComponent(botName)}/${encodeURIComponent(formInfo.form_block_id)}`}
+            >
+              Ответы
+            </Button>
+          </Li>
         {/each}
       </List>
     </div>

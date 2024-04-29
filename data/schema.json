@@ -788,6 +788,44 @@
       "title": "FormFieldResultFormattingOpts",
       "type": "object"
     },
+    "FormInfo": {
+      "properties": {
+        "form_block_id": {
+          "title": "Form Block Id",
+          "type": "string"
+        },
+        "prompt": {
+          "title": "Prompt",
+          "type": "string"
+        },
+        "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Title"
+        },
+        "field_names": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Field Names",
+          "type": "object"
+        }
+      },
+      "required": [
+        "form_block_id",
+        "prompt",
+        "title",
+        "field_names"
+      ],
+      "title": "FormInfo",
+      "type": "object"
+    },
     "FormInfoBasic": {
       "properties": {
         "form_block_id": {
@@ -999,6 +1037,39 @@
         "via_feedback_handler"
       ],
       "title": "FormResultsExportToChatConfig",
+      "type": "object"
+    },
+    "FormResultsPage": {
+      "properties": {
+        "info": {
+          "$ref": "#/$defs/FormInfo"
+        },
+        "results": {
+          "items": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "number"
+                }
+              ]
+            },
+            "type": "object"
+          },
+          "title": "Results",
+          "type": "array"
+        }
+      },
+      "required": [
+        "info",
+        "results"
+      ],
+      "title": "FormResultsPage",
       "type": "object"
     },
     "HumanOperatorBlock": {
@@ -2010,6 +2081,15 @@
     },
     "start_bot_payload": {
       "$ref": "#/$defs/StartBotPayload"
+    },
+    "form_info": {
+      "$ref": "#/$defs/FormInfo"
+    },
+    "form_info_basic": {
+      "$ref": "#/$defs/FormInfoBasic"
+    },
+    "form_results_page": {
+      "$ref": "#/$defs/FormResultsPage"
     }
   },
   "required": [
@@ -2022,7 +2102,10 @@
     "logged_in_user",
     "bot_info",
     "save_bot_config_version_payload",
-    "start_bot_payload"
+    "start_bot_payload",
+    "form_info",
+    "form_info_basic",
+    "form_results_page"
   ],
   "title": "BackendDataModels",
   "type": "object"
