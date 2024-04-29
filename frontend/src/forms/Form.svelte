@@ -10,6 +10,7 @@
   import ActionIcon from "../components/ActionIcon.svelte";
   import { ChevronLeftOutline, ChevronRightOutline } from "flowbite-svelte-icons";
   import { getError } from "../utils";
+  import { dashboardPath } from "../routeUtils";
 
   export let botId: string;
   export let formResultsPage: FormResultsPage;
@@ -57,7 +58,7 @@
 <Navbar>
   <div class="flex gap-2">
     <!-- TODO: bot display name, get from API or from somewhere upper in the hierarchy e.g. via store -->
-    <Button outline on:click={() => navigate(`/#${botId}`)}>Назад</Button>
+    <Button outline on:click={() => navigate(dashboardPath(botId))}>Назад</Button>
   </div>
 </Navbar>
 <div class="p-1">
