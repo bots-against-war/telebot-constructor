@@ -56,22 +56,29 @@ def parse_any_chat_id(s: str) -> AnyChatId:
 ValueT = TypeVar("ValueT")
 
 
-def validate_unique(items: Iterable[ValueT], items_name: str) -> None:
+def validate_unique(items: Iterable[ValueT], items_name: str, prefix: str = "") -> None:
     item_counter = collections.Counter(items)
     repeating = {v: count for v, count in item_counter.items() if count > 1}
     if repeating:
         raise ValueError(
-            f"All {items_name} must be unique, but there are duplicates: " + ", ".join(str(v) for v in repeating.keys())
+            prefix
+            + f"All {items_name} must be unique, but there are duplicates: "
+            + ", ".join(str(v) for v in repeating.keys())
         )
 
 
-def format_telegram_user(user: tg.User):
-    dump = user.first_name
-    if user.last_name:
-        dump += " " + user.last_name
+def format_telegram_user(user: tg.User, with_id: bool) -> str:
+    full_name = user.full_name
+    appendix = []
     if user.username:
-        dump += " (@" + user.username + ")"
-    return dump
+        appendix.append("@" + user.username)
+    if with_id:
+        appendix.append("#" + str(user.id))
+    if appendix:
+        appendix_str = ", ".join(appendix)
+        return f"{full_name} ({appendix_str})"
+    else:
+        return full_name
 
 
 def telegram_user_link_raw(user_id: int, title: str) -> str:
@@ -79,7 +86,7 @@ def telegram_user_link_raw(user_id: int, title: str) -> str:
 
 
 def telegram_user_link(user: tg.User) -> str:
-    return telegram_user_link_raw(user_id=user.id, title=format_telegram_user(user))
+    return telegram_user_link_raw(user_id=user.id, title=format_telegram_user(user, with_id=False))
 
 
 ItemT = TypeVar("ItemT")

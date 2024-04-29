@@ -1,12 +1,20 @@
+import datetime
 import time
-from typing import Optional
+from typing import Any, Optional, TypeVar
 
 from cryptography.fernet import Fernet
 from telebot import types as tg
 from telebot.test_util import MethodCall
 from telebot.types import Dictionaryable
+from telebot_components.redis_utils.emulation import RedisEmulation
 from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.utils.secrets import RedisSecretStore, SecretStore
+from typing_extensions import TypeGuard
+
+from telebot_constructor.store.form_results import (
+    BotSpecificFormResultsStore,
+    FormResultsStore,
+)
 
 
 def dummy_secret_store(redis: RedisInterface) -> SecretStore:
@@ -24,12 +32,13 @@ def tg_update_message_to_bot(
     first_name: str,
     text: str,
     group_chat_id: Optional[int] = None,
+    user_kwargs: dict[str, Any] | None = None,
 ) -> tg.Update:
     return tg.Update(
         update_id=1,
         message=tg.Message(
             message_id=1,
-            from_user=tg.User(id=user_id, is_bot=False, first_name=first_name),
+            from_user=tg.User(id=user_id, is_bot=False, first_name=first_name, **(user_kwargs or {})),
             date=int(time.time()),
             chat=(
                 tg.Chat(id=user_id, type="private", first_name=first_name)
@@ -127,3 +136,34 @@ def assert_method_call_dictified_kwargs_include(
         {k: v.to_dict() for k, v in mc.full_kwargs.items() if isinstance(v, Dictionaryable)} for mc in method_calls
     ]
     assert_dicts_include(preprocessed_kwargs, required_call_kwargs)
+
+
+def dummy_form_results_store() -> BotSpecificFormResultsStore:
+    return FormResultsStore(RedisEmulation()).adapter_for(username="dummy", bot_id="dummy")
+
+
+def looks_like_recent_timestamp(value: Any) -> TypeGuard[float]:
+    if not isinstance(value, float):
+        return False
+    try:
+        dt = datetime.datetime.fromtimestamp(value)
+    except Exception:
+        return False
+    now = datetime.datetime.now()
+    return dt < now and now - dt < datetime.timedelta(minutes=5)
+
+
+DataT = TypeVar("DataT")
+
+RECENT_TIMESTAMP = "<recent timestamp>"
+
+
+def mask_recent_timestamps(data: DataT) -> DataT | str:
+    if looks_like_recent_timestamp(data):
+        return RECENT_TIMESTAMP
+    elif isinstance(data, dict):
+        return {k: mask_recent_timestamps(v) for k, v in data.items()}  # type: ignore
+    elif isinstance(data, list):
+        return [mask_recent_timestamps(item) for item in data]  # type: ignore
+    else:
+        return data

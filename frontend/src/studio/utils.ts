@@ -2,6 +2,8 @@ import { getBlockId, getEntrypointConcreteConfig, getEntrypointId } from "../api
 import type { BotConfig, NodeDisplayCoords, UserFlowBlockConfig, UserFlowEntryPointConfig } from "../api/types";
 import { BOT_INFO_NODE_ID } from "../constants";
 import type { LocalizableText } from "../types";
+import { generateFormFieldId, getBaseFormFieldConfig } from "./nodes/FormBlock/utils";
+import { generateFormName } from "./nodes/defaultConfigs";
 import { NodeTypeKey, getNodeTypeKey } from "./nodes/display";
 import type { LanguageConfig } from "./stores";
 
@@ -85,6 +87,13 @@ export function cloneBlockConfig(c: UserFlowBlockConfig): TentativeNode {
     config.form.block_id = id;
     config.form.form_cancelled_next_block_id = null;
     config.form.form_completed_next_block_id = null;
+    // form names must be unique within one bot
+    config.form.form_name = generateFormName();
+    // re-generating form fields' ids
+    config.form.members.forEach((m) => {
+      if (!m.field) return;
+      getBaseFormFieldConfig(m.field).id = generateFormFieldId();
+    });
   } else if (config.human_operator) {
     config.human_operator.block_id = id;
   } else if (config.language_select) {

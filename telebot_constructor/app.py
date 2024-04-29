@@ -21,6 +21,7 @@ from telebot_components.utils.secrets import SecretStore
 
 from telebot_constructor.app_models import (
     BotTokenPayload,
+    FormResultsPage,
     LoggedInUser,
     SaveBotConfigVersionPayload,
     StartBotPayload,
@@ -41,6 +42,7 @@ from telebot_constructor.runners import (
     WebhookAppConstructedBotRunner,
 )
 from telebot_constructor.static import get_prefilled_messages, static_file_content
+from telebot_constructor.store.form_results import GlobalFormId
 from telebot_constructor.store.store import (
     BotConfigVersionMetadata,
     BotVersion,
@@ -100,6 +102,9 @@ class TelebotConstructorApp:
             raise RuntimeError("Constructed bot runner was not initialized properly")
         return self._runner
 
+    # region: request processing
+    # helper methods to e.g. parse data from requests
+
     async def _authenticate_full(self, request: web.Request) -> LoggedInUser:
         try:
             logged_in_user = await self.auth.authenticate_request(request)
@@ -114,29 +119,27 @@ class TelebotConstructorApp:
         logged_in_user = await self._authenticate_full(request)
         return logged_in_user.username
 
+    # used for bot user and bot names
     VALID_NAME_RE = re.compile(r"^[0-9a-zA-Z\-_]{3,64}$")
 
     def _validate_name(self, name: str) -> None:
         if not self.VALID_NAME_RE.match(name):
-            raise web.HTTPBadRequest(reason="Name must consist of 3-64 alphanumeric characters, hyphens and dashes")
+            raise web.HTTPBadRequest(
+                reason="Name must be 3-64 characters long and include only alphanumerics, hyphens and dashes"
+            )
+
+    def parse_path_part(self, request: web.Request, part_name: str) -> str:
+        part = request.match_info.get(part_name)
+        if part is None:
+            raise web.HTTPNotFound()
+        return part
 
     def parse_bot_name(self, request: web.Request) -> str:
-        name = request.match_info.get("bot_name")
-        if name is None:
-            raise web.HTTPNotFound()
+        name = self.parse_path_part(request, "bot_name")
         self._validate_name(name)
         return name
 
-    def parse_version_query_param(self, request: web.Request) -> Optional[int]:
-        version_str = request.query.get("version")
-        if version_str is None:
-            return None
-        try:
-            return int(version_str)
-        except Exception:
-            raise web.HTTPBadRequest(reason="version query argument must be a valid integer")
-
-    async def parse_pydantic_model(self, request: web.Request, Model: Type[PydanticModelT]) -> PydanticModelT:
+    async def parse_body_as_model(self, request: web.Request, Model: Type[PydanticModelT]) -> PydanticModelT:
         try:
             return Model.model_validate(await request.json())
         except json.JSONDecodeError:
@@ -150,11 +153,31 @@ class TelebotConstructorApp:
             raise web.HTTPBadRequest(reason=str(e))
 
     def parse_secret_name(self, request: web.Request) -> str:
-        name = request.match_info.get("secret_name")
-        if name is None:
-            raise web.HTTPNotFound()
+        name = self.parse_path_part(request, "secret_name")
         self._validate_name(name)
         return name
+
+    def parse_query_param_int(self, request: web.Request, name: str, min_: int | None, max_: int | None) -> int | None:
+        value_str = request.query.get(name)
+        if not value_str:
+            return None
+        try:
+            value = int(value_str)
+        except ValueError:
+            raise web.HTTPBadRequest(reason=f"Query param {name!r} must be an integer")
+        if min_ is not None and value < min_:
+            raise web.HTTPBadRequest(reason=f"Query param {name!r} can't be less than {min_}")
+        if max_ is not None and value > max_:
+            raise web.HTTPBadRequest(reason=f"Query param {name!r} can't be greater than {max_}")
+        return value
+
+    def parse_version_query_param(self, request: web.Request) -> Optional[int]:
+        return self.parse_query_param_int(request, "version", min_=None, max_=None)
+
+    # endregion
+
+    # region: bot manipulation
+    # methods to do common tasks with bots, used in endpoints
 
     async def load_bot_config(self, username: str, bot_name: str, version: BotVersion) -> BotConfig:
         config = await self.store.load_bot_config(username, bot_name, version)
@@ -176,6 +199,10 @@ class TelebotConstructorApp:
             bot_name=bot_name,
             bot_config=bot_config,
             secret_store=self.secret_store,
+            form_results_store=self.store.form_results.adapter_for(
+                username=username,
+                bot_id=bot_name,
+            ),
             redis=self.redis,
             group_chat_discovery_handler=self.group_chat_discovery_handler,
             _bot_factory=self._bot_factory,
@@ -226,12 +253,14 @@ class TelebotConstructorApp:
             ),
         )
 
+    # region: API endpoints
+
     async def create_constructor_web_app(self) -> web.Application:
         app = web.Application()
         routes = web.RouteTableDef()
 
         ##################################################################################
-        # secrets
+        # region secrets API
 
         @routes.post("/api/secrets/{secret_name}")
         async def upsert_secret(request: web.Request) -> web.Response:
@@ -289,8 +318,9 @@ class TelebotConstructorApp:
             secret_names = await self.secret_store.list_secrets(owner_id=username)
             return web.json_response(data=secret_names)
 
+        # endregion
         ##################################################################################
-        # bot configs CRUD
+        # region configs CRUD
 
         @routes.post("/api/config/{bot_name}")
         async def save_new_bot_config_version(request: web.Request) -> web.Response:
@@ -308,7 +338,7 @@ class TelebotConstructorApp:
             username = await self.authenticate(request)
             bot_name = self.parse_bot_name(request)
             existing_bot_config = await self.store.load_bot_config(username, bot_name)
-            payload = await self.parse_pydantic_model(request, SaveBotConfigVersionPayload)
+            payload = await self.parse_body_as_model(request, SaveBotConfigVersionPayload)
             await self.store.save_bot_config(
                 username,
                 bot_name,
@@ -391,8 +421,10 @@ class TelebotConstructorApp:
             )
             return web.json_response(text=config.model_dump_json())
 
+        # endregion
         ##################################################################################
-        # bot lifecycle control: start, stop
+        # region bot lifecycle
+        # starting and stopping bots
 
         @routes.post("/api/start/{bot_name}")
         async def start_bot(request: web.Request) -> web.Response:
@@ -409,7 +441,7 @@ class TelebotConstructorApp:
             """
             username = await self.authenticate(request)
             bot_name = self.parse_bot_name(request)
-            payload = await self.parse_pydantic_model(request, StartBotPayload)
+            payload = await self.parse_body_as_model(request, StartBotPayload)
             await self.start_bot(username, bot_name, version=payload.version)
             return web.Response(text="OK", status=201)
 
@@ -433,8 +465,10 @@ class TelebotConstructorApp:
             else:
                 return web.Response(text="Bot was not running")
 
+        # endregion
         ##################################################################################
-        # bot info methods: name, running status, history, etc
+        # region bot info
+        # name, running status, history, etc
 
         @routes.put("/api/display-name/{bot_name}")
         async def update_bot_display_name(request: web.Request) -> web.Response:
@@ -451,7 +485,7 @@ class TelebotConstructorApp:
             """
             username = await self.authenticate(request)
             bot_name = self.parse_bot_name(request)
-            payload = await self.parse_pydantic_model(request, UpdateBotDisplayNamePayload)
+            payload = await self.parse_body_as_model(request, UpdateBotDisplayNamePayload)
             if not await self.store.is_bot_exists(username, bot_name):
                 raise web.HTTPNotFound(reason="Bot id not found")
             if await self.store.save_bot_display_name(username, bot_name, payload.display_name):
@@ -506,8 +540,65 @@ class TelebotConstructorApp:
                 data={name: bot_info.model_dump(mode="json") for name, bot_info in bot_infos.items()}
             )
 
+        # endregion
         ##################################################################################
-        # validation endpoints
+        # region form results
+
+        @routes.get("/api/forms/{bot_name}/{form_block_id}/responses")
+        async def get_form_responses_page(request: web.Request) -> web.Response:
+            """
+            ---
+            description: Get form responses
+            produces:
+            - application/json
+            responses:
+                "200":
+                    description: OK
+            """
+            username = await self.authenticate(request)
+            form_id = GlobalFormId(
+                username=username,
+                bot_id=self.parse_bot_name(request),
+                form_block_id=self.parse_path_part(request, "form_block_id"),
+            )
+            offset = self.parse_query_param_int(request, "offset", min_=0, max_=None) or 0
+            count = self.parse_query_param_int(request, "count", min_=0, max_=100) or 20
+            form_info = await self.store.form_results.load_form_info(form_id)
+            if not form_info:
+                raise web.HTTPNotFound(reason="Form not found")
+            form_results = await self.store.form_results.load_page(form_id, offset=offset, count=count)
+            return web.json_response(
+                text=FormResultsPage(info=form_info, results=form_results).model_dump_json(),
+            )
+
+        @routes.put("/api/forms/{bot_name}/{form_block_id}/title")
+        async def update_form_title(request: web.Request) -> web.Response:
+            """
+            ---
+            description: Update form title
+            produces:
+            - application/json
+            responses:
+                "200":
+                    description: OK
+            """
+            username = await self.authenticate(request)
+            form_id = GlobalFormId(
+                username=username,
+                bot_id=self.parse_bot_name(request),
+                form_block_id=self.parse_path_part(request, "form_block_id"),
+            )
+            new_title = await request.text()
+            if len(new_title) > 512:
+                raise web.HTTPBadRequest(reason="The title is too long")
+            if await self.store.form_results.save_form_title(form_id, title=new_title):
+                return web.Response()
+            else:
+                return web.HTTPInternalServerError(reason="Unable to save new form title")
+
+        # endregion
+        ##################################################################################
+        # region validation
 
         @routes.post("/api/validate-token")
         async def validate_bot_token(request: web.Request) -> web.Response:
@@ -523,15 +614,17 @@ class TelebotConstructorApp:
                     description: Invalid token (with forwarded Telegram bot API response)
             """
             _ = await self.authenticate(request)
-            token_payload = await self.parse_pydantic_model(request, BotTokenPayload)
+            token_payload = await self.parse_body_as_model(request, BotTokenPayload)
             try:
                 await AsyncTeleBot(token=token_payload.token).get_me()
             except Exception as e:
                 raise web.HTTPBadRequest(reason=f"Bot token validation failed ({e})")
             return web.Response(text="Token is valid")
 
+        # endregion
         ##################################################################################
-        # endpoints for syncing constructor state with telegram
+        # region sync w/ telegram
+        # retrieving up-to-date data from Telegram or sending updates to them
 
         @routes.get("/api/bot-user/{bot_name}")
         async def get_bot_user(request: web.Request) -> web.Response:
@@ -567,7 +660,7 @@ class TelebotConstructorApp:
             """
             username = await self.authenticate(request)
             bot_name = self.parse_bot_name(request)
-            bot_user_update = await self.parse_pydantic_model(request, TgBotUserUpdate)
+            bot_user_update = await self.parse_body_as_model(request, TgBotUserUpdate)
             if not bot_user_update.name:
                 raise web.HTTPBadRequest(reason="Bot name can't be empty")
             bot = await self._make_raw_bot(username, bot_name)
@@ -666,8 +759,9 @@ class TelebotConstructorApp:
             else:
                 return web.json_response(data=chat.model_dump(mode="json"))
 
+        # endregion
         ##################################################################################
-        # static content routes
+        # region static content
 
         @routes.get("/api/all-languages")
         async def all_languages(request: web.Request) -> web.Response:
@@ -750,6 +844,7 @@ class TelebotConstructorApp:
                 # falling back to index page to support client-side routing
                 return await index(request)
 
+        # endregion
         ##################################################################################
 
         app.add_routes(routes)
@@ -758,6 +853,10 @@ class TelebotConstructorApp:
         setup_cors(app)
         setup_debugging(app)
         return app
+
+    # endregion
+
+    # region constructor lifecycle
 
     def start_stored_bots_in_background(self) -> None:
         async def _start_stored_bots() -> None:
@@ -823,3 +922,5 @@ class TelebotConstructorApp:
         app = await self.create_constructor_web_app()
         app.on_cleanup.append(lambda _: self.cleanup())
         webhook_app.aiohttp_app.add_subapp(BASE_PATH, app)
+
+    # endregion

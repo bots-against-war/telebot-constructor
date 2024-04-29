@@ -28,7 +28,9 @@
     }
 
     // 2. prefilled messages
-    if (Object.keys(getPrefilledMessages()).length === 0) {
+    // TODO: now we always fetch prefilled messages anew, because they're sometimes updated on backend;
+    // we need to turn it off after public releas
+    if (true || Object.keys(getPrefilledMessages()).length === 0) {
       const res = await fetchPrefilledMessages();
       if (res.ok) {
         console.log("Loaded prefilled messages, will save to localStorage");
@@ -40,8 +42,7 @@
     }
 
     // 3. logged-in user details
-    // TODO: this can be bundled with some other request to reduce network latency
-    // but for now that'll do
+    // TODO: this can be bundled with some other request to reduce network latency, but for now that'll do
     const loggedInUser = await getLoggedInUser();
     if (!loggedInUser.ok) return loggedInUser;
     loggedInUserStore.set(loggedInUser.data);

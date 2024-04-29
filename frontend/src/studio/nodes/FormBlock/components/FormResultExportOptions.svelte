@@ -1,11 +1,13 @@
 <script lang="ts">
-  import { Heading, Select, Toggle } from "flowbite-svelte";
-  import type { FormResultsExport, FormResultUserAttribution } from "../../../../api/types";
+  import { A, Select, Toggle } from "flowbite-svelte";
+  import type { FormResultUserAttribution, FormResultsExport } from "../../../../api/types";
+  import { formResultsPagePath } from "../../../../routeUtils";
   import GroupChatIdSelect from "../../../components/GroupChatIdSelect.svelte";
   import { PLACEHOLDER_GROUP_CHAT_ID } from "../../defaultConfigs";
 
   export let config: FormResultsExport;
   export let botName: string;
+  export let blockId: string;
 
   const userAttributionOptions: { value: FormResultUserAttribution; name: string }[] = [
     { value: "none", name: "Не сохранять" },
@@ -33,8 +35,16 @@
     </div>
   </div>
   <div class="flex flex-col gap-3">
-    <h3 class="font-bold">Отправлять ответы</h3>
-    <Toggle bind:checked={config.echo_to_user}>юзер:ке</Toggle>
+    <h3 class="font-bold">Ответы на форму</h3>
+    <Toggle bind:checked={config.to_store}
+      >Сохранять в&nbsp;
+      {#if config.to_store}
+        <A href={formResultsPagePath(botName, blockId)} target="_blank">память бота</A>
+      {:else}
+        <span>память бота</span>
+      {/if}
+    </Toggle>
+    <Toggle bind:checked={config.echo_to_user}>Отправлять юзер:ке</Toggle>
     <div class="flex flex-col gap-1">
       <Toggle
         checked={config.to_chat !== null}
@@ -45,7 +55,7 @@
           } else {
             config.to_chat = null;
           }
-        }}>в чат</Toggle
+        }}>Отправлять в чат</Toggle
       >
       {#if config.to_chat}
         <div class="p-2 m-2 border-l-2 border-grey-600 flex flex-col gap-3">

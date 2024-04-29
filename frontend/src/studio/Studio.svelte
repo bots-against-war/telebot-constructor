@@ -38,6 +38,7 @@
     generateNodeId,
     type TentativeNode,
   } from "./utils";
+  import { dashboardPath } from "../routeUtils";
 
   export let botName: string;
   export let botConfig: BotConfig;
@@ -249,7 +250,7 @@
     }
   }
 
-  const exitStudio = () => navigate(`/#${botName}`);
+  const exitStudio = () => navigate(dashboardPath(botName));
   const exitStudioWithConfirmation = withConfirmation(
     "Вы уверены, что хотите выйти из студии? Несохранённые изменения будут потеряны.",
     async () => exitStudio(),

@@ -11,6 +11,7 @@ from telebot_components.stores.generic import (
 
 from telebot_constructor.app_models import BotInfo, BotVersionInfo
 from telebot_constructor.bot_config import BotConfig
+from telebot_constructor.store.form_results import FormResultsStore
 from telebot_constructor.store.types import (
     BotConfigVersionMetadata,
     BotEvent,
@@ -67,6 +68,8 @@ class TelebotConstructorStore:
             dumper=str,
             loader=str,
         )
+
+        self.form_results = FormResultsStore(redis=redis)
 
     # bot config store CRUD
 
@@ -145,6 +148,8 @@ class TelebotConstructorStore:
         return await self._display_names_store.get_subkey(username, bot_id)
 
     async def load_bot_info(self, username: str, bot_id: str) -> Optional[BotInfo]:
+        INCLUDE_LAST_EVENTS = 10
+        INCLUDE_LAST_VERSIONS = 10
         next_to_last_version = await self.bot_config_version_count(username, bot_id)
         if next_to_last_version == 0:
             return None
@@ -152,8 +157,7 @@ class TelebotConstructorStore:
         display_name = await self.load_bot_display_name(username, bot_id) or bot_id
 
         last_events = await self._bot_events_store.tail(
-            key=self._composite_key(username, bot_id),
-            start=-30,  # loading last 30 events
+            key=self._composite_key(username, bot_id), start=-INCLUDE_LAST_EVENTS
         )
         if not last_events:
             return None
@@ -163,7 +167,7 @@ class TelebotConstructorStore:
             running_version = None
 
         # by default show 30 last versions
-        first_shown_version = next_to_last_version - 30
+        first_shown_version = next_to_last_version - INCLUDE_LAST_VERSIONS
         # or, including running version and its close ancestors
         if running_version is not None:
             first_shown_version = min(first_shown_version, running_version - 3)
@@ -196,4 +200,5 @@ class TelebotConstructorStore:
                 for version, metadata in zip(range(first_shown_version, next_to_last_version), version_metadata)
             ],
             last_events=last_events,
+            forms_with_responses=await self.form_results.list_forms(username, bot_id),
         )

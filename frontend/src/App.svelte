@@ -5,6 +5,7 @@
   import DashboardLoader from "./dashboard/DashboardLoader.svelte";
   import GlobalStateProvider from "./GlobalStateProvider.svelte";
   import StudioLoader from "./studio/StudioLoader.svelte";
+  import FormLoader from "./forms/FormLoader.svelte";
 
   // Global icon settings for flowbite-icons
   const iconCtx = {
@@ -22,8 +23,11 @@
         <Route path="/">
           <DashboardLoader />
         </Route>
-        <Route path="/studio/:botname" let:params>
-          <StudioLoader botName={params.botname} />
+        <Route path="/studio/:botId" let:params>
+          <StudioLoader botName={params.botId} />
+        </Route>
+        <Route path="/forms/:botId/:formBlockId" let:params>
+          <FormLoader botId={params.botId} formBlockId={params.formBlockId} />
         </Route>
       </Router>
     </div>

@@ -1,15 +1,16 @@
 <script lang="ts">
-  import { Alert, Button } from "flowbite-svelte";
+  import { Alert, Button, Li, List } from "flowbite-svelte";
   import { createEventDispatcher } from "svelte";
   import { deleteBotConfig } from "../api/botConfig";
   import { getBotUser } from "../api/botUser";
   import { startBot, stopBot } from "../api/lifecycle";
-  import type { BotInfo, BotVersionInfo } from "../api/types";
+  import type { BotInfo } from "../api/types";
   import BotUserBadge from "../components/BotUserBadge.svelte";
   import ErrorBadge from "../components/ErrorBadge.svelte";
   import Timestamp from "../components/Timestamp.svelte";
   import DataBadge from "../components/internal/DataBadge.svelte";
   import DataBadgeLoader from "../components/internal/DataBadgeLoader.svelte";
+  import { formResultsPagePath, studioPath } from "../routeUtils";
   import { withConfirmation } from "../utils";
 
   export let botName: string;
@@ -65,14 +66,6 @@
     }
   }
 
-  function studioHref(verInfo: BotVersionInfo): string {
-    let href = `/studio/${encodeURIComponent(botName)}`;
-    if (lastVersion !== verInfo.version) {
-      href += `?version=${encodeURIComponent(verInfo.version)}`;
-    }
-    return href;
-  }
-
   const deleteBotWithConfirmation = withConfirmation(
     "Вы уверены, что хотите удалить бота? Это действие дельзя отменить.",
     () => deleteBot(),
@@ -89,7 +82,7 @@
   {/if}
   <div class="mt-5 pt-3 border-t">
     <h2 class="text-xl font-bold">Аккаунт</h2>
-    <div class=" max-w-[300px]">
+    <div class="max-w-[350px]">
       <DataBadge>
         {#await botUserPromise}
           <DataBadgeLoader />
@@ -103,6 +96,27 @@
       </DataBadge>
     </div>
   </div>
+  {#if botInfo.forms_with_responses.length > 0}
+    <div class="mt-5 pt-3 border-t">
+      <h2 class="text-xl font-bold">Ответы на формы</h2>
+      <List>
+        {#each botInfo.forms_with_responses as formInfo}
+          <Li>
+            <div class=" inline-flex flex-row gap-2 items-baseline">
+              <span>
+                {#if formInfo.title}
+                  {formInfo.title}
+                {:else}
+                  "{formInfo.prompt}"
+                {/if}
+              </span>
+              <Button size="xs" outline href={formResultsPagePath(botName, formInfo.form_block_id)}>Ответы</Button>
+            </div>
+          </Li>
+        {/each}
+      </List>
+    </div>
+  {/if}
   <div class="mt-5 pt-3 border-t">
     <h2 class="text-xl font-bold">Версии</h2>
     <ol class="relative border-s border-gray-200 mt-2">
@@ -132,7 +146,11 @@
               <Button size="xs" disabled={isLoading} outline on:click={() => publishOrStop(verInfo.version)}>
                 {botInfo.running_version === verInfo.version ? "Остановить" : "Опубликовать"}
               </Button>
-              <Button size="xs" outline href={studioHref(verInfo)}>
+              <Button
+                size="xs"
+                outline
+                href={studioPath(botName, verInfo.version === lastVersion ? null : verInfo.version)}
+              >
                 {lastVersion === verInfo.version ? "Редактировать" : "Посмотреть"}
               </Button>
             </div>
@@ -140,7 +158,7 @@
         </li>
       {/each}
     </ol>
-    <div>TBD: полный список версий</div>
+    <div class="text-gray-400">TBD: полный список версий</div>
   </div>
   <div class="mt-5 pt-3 border-t">
     <h2 class="text-xl font-bold">Активность</h2>
@@ -167,7 +185,7 @@
         </li>
       {/each}
     </ol>
-    <div>TBD: полный лог активности</div>
+    <div class="text-gray-400">TBD: полный лог активности</div>
   </div>
   <div class="mt-5 pt-3 border-t">
     <h2 class="text-xl font-bold">Управление</h2>

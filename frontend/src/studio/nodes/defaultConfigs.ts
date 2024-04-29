@@ -90,6 +90,10 @@ export function defaultLanguageSelectBlockConfig(id: string): UserFlowBlockConfi
   };
 }
 
+export function generateFormName(): string {
+  return `form-${crypto.randomUUID()}`;
+}
+
 export function defaultFormBlockConfig(id: string, langConfig: LanguageConfig | null): UserFlowBlockConfig {
   let messages: FormMessages = {
     form_start: "",
@@ -104,12 +108,13 @@ export function defaultFormBlockConfig(id: string, langConfig: LanguageConfig | 
     form: {
       block_id: id,
       members: [],
-      form_name: `form-${crypto.randomUUID()}`,
+      form_name: generateFormName(),
       messages: messages,
       results_export: {
         user_attribution: "none",
         echo_to_user: true,
         to_chat: null,
+        to_store: false,
       },
       form_cancelled_next_block_id: null,
       form_completed_next_block_id: null,

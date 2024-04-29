@@ -39,5 +39,8 @@ def get_prefilled_messages() -> str:
             raw["cancel_command_is"][key] = raw["cancel_command_is"][key].format(FORM_CANCEL_CMD)
         for key in raw["field_is_skippable"]:
             raw["field_is_skippable"][key] = raw["field_is_skippable"][key].format(FORM_SKIP_FIELD_CMD)
+        supported_cmds = f"{FORM_SKIP_FIELD_CMD}, {FORM_CANCEL_CMD}"
+        for key in raw["unsupported_command"]:
+            raw["unsupported_command"][key] = raw["unsupported_command"][key].format(supported_cmds)
         _PREFILLED_MESSAGES_JSON = json.dumps(raw)
     return _PREFILLED_MESSAGES_JSON
