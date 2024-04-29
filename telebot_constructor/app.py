@@ -554,8 +554,6 @@ class TelebotConstructorApp:
             responses:
                 "200":
                     description: OK
-                "400":
-                    description: Invalid token (with forwarded Telegram bot API response)
             """
             username = await self.authenticate(request)
             form_id = GlobalFormId(
@@ -572,6 +570,31 @@ class TelebotConstructorApp:
             return web.json_response(
                 text=FormResultsPage(info=form_info, results=form_results).model_dump_json(),
             )
+
+        @routes.put("/api/forms/{bot_name}/{form_block_id}/title")
+        async def update_form_title(request: web.Request) -> web.Response:
+            """
+            ---
+            description: Update form title
+            produces:
+            - application/json
+            responses:
+                "200":
+                    description: OK
+            """
+            username = await self.authenticate(request)
+            form_id = GlobalFormId(
+                username=username,
+                bot_id=self.parse_bot_name(request),
+                form_block_id=self.parse_path_part(request, "form_block_id"),
+            )
+            new_title = await request.text()
+            if len(new_title) > 512:
+                raise web.HTTPBadRequest(reason="The title is too long")
+            if await self.store.form_results.save_form_title(form_id, title=new_title):
+                return web.Response()
+            else:
+                return web.HTTPInternalServerError(reason="Unable to save new form title")
 
         # endregion
         ##################################################################################

@@ -242,6 +242,7 @@ export type Version2 = number;
 export type FormBlockId1 = string;
 export type Prompt4 = string;
 export type Title2 = string | null;
+export type TotalResponses = number;
 export type Results = {
   [k: string]: string | number | number;
 }[];
@@ -646,6 +647,7 @@ export interface FormInfo {
   prompt: Prompt4;
   title: Title2;
   field_names: FieldNames;
+  total_responses: TotalResponses;
   [k: string]: unknown;
 }
 export interface FieldNames {

@@ -212,6 +212,7 @@ async def test_form_results_api(
             "prompt": "Hello welcome to the form testing bot",
             "title": None,
             "field_names": {"form-field-1": "one", "form-field-2": "two"},
+            "total_responses": 3,
         },
         "results": [
             {
@@ -231,6 +232,31 @@ async def test_form_results_api(
                 "user": "CCC",
                 "form-field-1": "First answer by user #3",
                 "form-field-2": "Second answer by user #3",
+            },
+        ],
+    }
+
+    # update form title to something custom
+    resp = await client.put("/api/forms/mybot/form-block-123/title", data="updated form name")
+    assert resp.status == 200
+
+    # retrieve the results again but with pagination
+    resp = await client.get("/api/forms/mybot/form-block-123/responses?offset=1&count=1")
+    assert resp.status == 200
+    assert mask_recent_timestamps(await resp.json()) == {
+        "info": {
+            "form_block_id": "form-block-123",
+            "prompt": "Hello welcome to the form testing bot",
+            "title": "updated form name",
+            "field_names": {"form-field-1": "one", "form-field-2": "two"},
+            "total_responses": 3,
+        },
+        "results": [
+            {
+                "timestamp": RECENT_TIMESTAMP,
+                "user": "BBB",
+                "form-field-1": "First answer by user #2",
+                "form-field-2": "Second answer by user #2",
             },
         ],
     }

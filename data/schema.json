@@ -815,13 +815,18 @@
           },
           "title": "Field Names",
           "type": "object"
+        },
+        "total_responses": {
+          "title": "Total Responses",
+          "type": "integer"
         }
       },
       "required": [
         "form_block_id",
         "prompt",
         "title",
-        "field_names"
+        "field_names",
+        "total_responses"
       ],
       "title": "FormInfo",
       "type": "object"

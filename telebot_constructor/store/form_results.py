@@ -43,6 +43,7 @@ class FormInfoBasic(BaseModel):
 
 class FormInfo(FormInfoBasic):
     field_names: dict[FieldId, str]
+    total_responses: int
 
 
 class FormResultsStore:
@@ -149,6 +150,7 @@ class FormResultsStore:
             prompt=prompt,
             title=await self._title_store.load(key),
             field_names=await self._field_names_store.load(key),
+            total_responses=await self._results_store.length(key),
         )
 
     async def load_page(self, form_id: GlobalFormId, offset: int, count: int) -> list[FormResult]:
