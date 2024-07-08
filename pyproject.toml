@@ -5,7 +5,7 @@ description = "No-code Telegram bot constructor"
 authors = ["Igor Vaiman <gosha.vaiman@gmail.com>"]
 license = "GPL-3"
 readme = "README.md"
-packages = [{include = "telebot_constructor"}]
+packages = [{ include = "telebot_constructor" }]
 include = ["telebot_constructor/static/**/*"]
 
 [tool.poetry.group.dev.dependencies]
@@ -26,7 +26,7 @@ flake8-pyproject = "^1.2.3"
 enable = true
 vcs = "git"
 dirty = false
-style="semver"
+style = "semver"
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -57,19 +57,19 @@ asyncio_mode = "auto"
 [tool.mypy]
 incremental = false
 files = '.'
-exclude = [
-    "dist"
-]
+exclude = ["dist"]
 
 [tool.flake8]
 max-line-length = 120
 extend-ignore = [
-    "F841",  # local variable 'xxx' is assigned to but never used
-    "E203",  # whitespace before ':' (black formatting compatibility)
+    "F841", # local variable 'xxx' is assigned to but never used
+    "E203", # whitespace before ':' (black formatting compatibility)
+    "E251", # conflicts with meaningful f"this is {value = }" 
+    "E202",
 ]
 
 [tool.coverage.report]
-omit = ['tests/**',]
+omit = ['tests/**']
 skip_covered = true
 show_missing = true
 fail_under = 60

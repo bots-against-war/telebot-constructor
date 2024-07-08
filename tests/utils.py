@@ -11,6 +11,7 @@ from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.utils.secrets import RedisSecretStore, SecretStore
 from typing_extensions import TypeGuard
 
+from telebot_constructor.store.bot_metrics import MetricsStore
 from telebot_constructor.store.form_results import (
     BotSpecificFormResultsStore,
     FormResultsStore,
@@ -140,6 +141,10 @@ def assert_method_call_dictified_kwargs_include(
 
 def dummy_form_results_store() -> BotSpecificFormResultsStore:
     return FormResultsStore(RedisEmulation()).adapter_for(username="dummy", bot_id="dummy")
+
+
+def dummy_metrics_store() -> MetricsStore:
+    return MetricsStore(RedisEmulation())
 
 
 def looks_like_recent_timestamp(value: Any) -> TypeGuard[float]:
