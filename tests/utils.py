@@ -11,11 +11,11 @@ from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.utils.secrets import RedisSecretStore, SecretStore
 from typing_extensions import TypeGuard
 
-from telebot_constructor.store.bot_metrics import MetricsStore
 from telebot_constructor.store.form_results import (
     BotSpecificFormResultsStore,
     FormResultsStore,
 )
+from telebot_constructor.store.metrics import MetricsStore
 
 
 def dummy_secret_store(redis: RedisInterface) -> SecretStore:

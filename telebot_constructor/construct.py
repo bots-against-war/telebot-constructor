@@ -11,8 +11,8 @@ from telebot_components.utils.secrets import SecretStore
 
 from telebot_constructor.bot_config import BotConfig
 from telebot_constructor.group_chat_discovery import GroupChatDiscoveryHandler
-from telebot_constructor.store.bot_metrics import MetricsStore
 from telebot_constructor.store.form_results import BotSpecificFormResultsStore
+from telebot_constructor.store.metrics import MetricsStore
 from telebot_constructor.user_flow.types import BotCommandInfo
 from telebot_constructor.utils.rate_limit_retry import rate_limit_retry
 
