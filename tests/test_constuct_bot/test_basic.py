@@ -21,7 +21,7 @@ async def test_construct_empty_bot() -> None:
     await secret_store.save_secret(secret_name="empty-bot-token", secret_value="mock-token", owner_id=username)
     await construct_bot(
         username=username,
-        bot_name="empty-bot-test",
+        bot_id="empty-bot-test",
         bot_config=BotConfig(
             token_secret_name="empty-bot-token", display_name="Test bot", user_flow_config=EMPTY_USER_FLOW_CONFIG
         ),
@@ -37,7 +37,7 @@ async def test_missing_token_secret() -> None:
     with pytest.raises(ValueError):
         await construct_bot(
             username="some-user",
-            bot_name="bot-test",
+            bot_id="bot-test",
             bot_config=BotConfig(
                 token_secret_name="empty-bot-token", display_name="Test bot", user_flow_config=EMPTY_USER_FLOW_CONFIG
             ),
@@ -58,7 +58,7 @@ async def test_bot_token_validation_failed() -> None:
         with pytest.raises(ValueError, match="Failed to get bot user with getMe, the token is probably invalid"):
             await construct_bot(
                 username=username,
-                bot_name="test",
+                bot_id="test",
                 bot_config=BotConfig(
                     token_secret_name="token",
                     display_name="Test bot",

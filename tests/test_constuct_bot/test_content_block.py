@@ -73,7 +73,7 @@ async def test_single_photo() -> None:
     # calling main constructor function, in prod it is done when starting the bot (see /api/start/{bot_name})
     bot_runner = await construct_bot(
         username=username,
-        bot_name="simple-user-flow-bot",
+        bot_id="simple-user-flow-bot",
         bot_config=bot_config,
         form_results_store=dummy_form_results_store(),
         secret_store=secret_store,
@@ -198,7 +198,7 @@ async def test_multiple_photos() -> None:
 
     bot_runner = await construct_bot(
         username=username,
-        bot_name="multiple-photos-in-content-block",
+        bot_id="multiple-photos-in-content-block",
         bot_config=bot_config,
         form_results_store=dummy_form_results_store(),
         secret_store=secret_store,
@@ -267,7 +267,7 @@ async def test_multiple_photos() -> None:
     )
     bot_runner_2 = await construct_bot(
         username=username,
-        bot_name="multiple-photos-in-content-block",
+        bot_id="multiple-photos-in-content-block",
         bot_config=bot_config,
         form_results_store=dummy_form_results_store(),
         secret_store=secret_store,

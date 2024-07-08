@@ -36,11 +36,15 @@ class MockBotRunner(ConstructedBotRunner):
 _MOCKED_ASYNC_TELEBOT_CACHE: dict[str, AsyncTeleBot] = dict()
 
 
-def mocked_async_telebot_factory(token: str) -> AsyncTeleBot:
+def mocked_async_telebot_factory(token: str, **kwargs) -> AsyncTeleBot:
+    """
+    Caching by token is a hack to test scenarios where the same bot is re-created and must
+    remember server-side information (the one that would be saved by telegram backend IRL)
+    """
     cached = _MOCKED_ASYNC_TELEBOT_CACHE.get(token)
     if cached is not None:
         return cached
-    bot = MockedAsyncTeleBot(token)
+    bot = MockedAsyncTeleBot(token, **kwargs)
     _MOCKED_ASYNC_TELEBOT_CACHE[token] = bot
     return bot
 

@@ -187,7 +187,7 @@ async def test_user_flow_with_form(
     await secret_store.save_secret(secret_name="token", secret_value="mock-token", owner_id=username)
     bot_runner = await construct_bot(
         username=username,
-        bot_name="form-bot-test",
+        bot_id="form-bot-test",
         bot_config=bot_config,
         form_results_store=dummy_form_results_store(),
         secret_store=secret_store,
@@ -350,7 +350,7 @@ async def test_form_results_internal_storage() -> None:
     await secret_store.save_secret(secret_name="token", secret_value="mock-token", owner_id=username)
     bot_runner = await construct_bot(
         username=username,
-        bot_name=bot_id,
+        bot_id=bot_id,
         bot_config=bot_config,
         form_results_store=form_results_store.adapter_for(username=username, bot_id=bot_id),
         secret_store=secret_store,

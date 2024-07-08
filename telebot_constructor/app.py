@@ -32,7 +32,7 @@ from telebot_constructor.app_models import (
 from telebot_constructor.auth.auth import Auth
 from telebot_constructor.bot_config import BotConfig
 from telebot_constructor.build_time_config import BASE_PATH
-from telebot_constructor.construct import BotFactory, construct_bot, make_raw_bot
+from telebot_constructor.construct import BotFactory, construct_bot, make_bare_bot
 from telebot_constructor.cors import setup_cors
 from telebot_constructor.debug import setup_debugging
 from telebot_constructor.group_chat_discovery import GroupChatDiscoveryHandler
@@ -185,8 +185,8 @@ class TelebotConstructorApp:
             raise web.HTTPNotFound(reason=f"Bot not found: {bot_name!r}")
         return config
 
-    async def _make_raw_bot(self, username: str, bot_name: str) -> AsyncTeleBot:
-        return await make_raw_bot(
+    async def _make_bare_bot(self, username: str, bot_name: str) -> AsyncTeleBot:
+        return await make_bare_bot(
             username,
             bot_config=await self.load_bot_config(username, bot_name, version=-1),
             secret_store=self.secret_store,
@@ -196,13 +196,14 @@ class TelebotConstructorApp:
     async def _construct_bot(self, username: str, bot_name: str, bot_config: BotConfig) -> BotRunner:
         return await construct_bot(
             username=username,
-            bot_name=bot_name,
+            bot_id=bot_name,
             bot_config=bot_config,
             secret_store=self.secret_store,
             form_results_store=self.store.form_results.adapter_for(
                 username=username,
                 bot_id=bot_name,
             ),
+            metrics_store=self.store.metrics,
             redis=self.redis,
             group_chat_discovery_handler=self.group_chat_discovery_handler,
             _bot_factory=self._bot_factory,
@@ -639,7 +640,7 @@ class TelebotConstructorApp:
             """
             username = await self.authenticate(request)
             bot_name = self.parse_bot_name(request)
-            bot = await self._make_raw_bot(username, bot_name)
+            bot = await self._make_bare_bot(username, bot_name)
             try:
                 tg_bot_user = await TgBotUser.fetch(bot, telegram_files_downloader=self.telegram_files_downloader)
                 return web.json_response(tg_bot_user.model_dump())
@@ -663,7 +664,7 @@ class TelebotConstructorApp:
             bot_user_update = await self.parse_body_as_model(request, TgBotUserUpdate)
             if not bot_user_update.name:
                 raise web.HTTPBadRequest(reason="Bot name can't be empty")
-            bot = await self._make_raw_bot(username, bot_name)
+            bot = await self._make_bare_bot(username, bot_name)
             try:
                 await bot_user_update.save(bot, telegram_files_downloader=self.telegram_files_downloader)
                 return web.Response(reason="OK")
@@ -727,7 +728,7 @@ class TelebotConstructorApp:
             chats = await self.group_chat_discovery_handler.validate_discovered_chats(
                 username,
                 bot_name,
-                bot=await self._make_raw_bot(username, bot_name),
+                bot=await self._make_bare_bot(username, bot_name),
             )
             # this is probably not chronological or anything, but at least it's consistent...
             chats.sort(key=lambda c: c.id)
@@ -748,7 +749,7 @@ class TelebotConstructorApp:
             """
             username = await self.authenticate(request)
             bot_name = self.parse_bot_name(request)
-            bot = await self._make_raw_bot(username, bot_name)
+            bot = await self._make_bare_bot(username, bot_name)
             # NOTE: numeric chat ids are not casted into ints because it doesn't matter for Telegram bot API
             group_chat_id = request.query.get("group_chat")
             if group_chat_id is None:
