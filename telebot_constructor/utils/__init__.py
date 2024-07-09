@@ -145,6 +145,10 @@ def page_params_to_redis_indices(offset: int, count: int) -> tuple[int, int]:
     both ends included in the slice). Offset goes from 0 (last page) to positive values for
     earlier entries.
     """
+    if offset < 0:
+        raise ValueError(f"offset must be non-negative, got {offset=}")
+    if count < 0:
+        raise ValueError(f"count must be non-negative, got {count=}")
     end = -1 - offset  # offset 0 = last = -1, offset 1 = next-to-last = -2, etc
     start = end - (count - 1)  # redis indices are inclusive, so subtract one from count
     return start, end
