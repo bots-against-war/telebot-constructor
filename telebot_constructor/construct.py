@@ -57,7 +57,10 @@ async def construct_bot(
         username=username,
         bot_config=bot_config,
         secret_store=secret_store,
-        update_metrics_handler=metrics_store.get_update_metrics_handler(bot_id=bot_id),
+        update_metrics_handler=metrics_store.get_update_metrics_handler(
+            username=username,
+            bot_id=bot_id,
+        ),
         _bot_factory=_bot_factory,
     )
 

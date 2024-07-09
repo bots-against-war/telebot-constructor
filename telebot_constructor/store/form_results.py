@@ -5,6 +5,8 @@ from pydantic import BaseModel
 from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.stores.generic import KeyDictStore, KeyListStore, KeyValueStore
 
+from telebot_constructor.utils import page_params_to_redis_indices
+
 FieldId = str
 
 # form results can have a lot of "internal" data types, but for this simple storage
@@ -154,9 +156,7 @@ class FormResultsStore:
         )
 
     async def load_page(self, form_id: GlobalFormId, offset: int, count: int) -> list[FormResult]:
-        # "offset" goes from last to earlier results
-        end = -1 - offset  # offset 0 = last = -1, offset 1 = next-to-last = -2, etc
-        start = end - (count - 1)  # redis indices are inclusive, so subtract one from count
+        start, end = page_params_to_redis_indices(offset, count)
         return (
             await self._results_store.slice(
                 key=form_id.as_key(),

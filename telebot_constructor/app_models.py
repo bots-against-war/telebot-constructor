@@ -9,6 +9,7 @@ from telebot import types as tg
 
 from telebot_constructor.bot_config import BotConfig
 from telebot_constructor.store.form_results import FormInfo, FormInfoBasic, FormResult
+from telebot_constructor.store.metrics import BotError
 from telebot_constructor.store.types import BotConfigVersionMetadata, BotEvent
 from telebot_constructor.telegram_files_downloader import TelegramFilesDownloader
 from telebot_constructor.utils.rate_limit_retry import rate_limit_retry
@@ -172,3 +173,7 @@ class StartBotPayload(BaseModel):
 class FormResultsPage(BaseModel):
     info: FormInfo
     results: list[FormResult]
+
+
+class BotErrorsPage(BaseModel):
+    errors: list[BotError]

@@ -20,6 +20,7 @@ from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.utils.secrets import SecretStore
 
 from telebot_constructor.app_models import (
+    BotErrorsPage,
     BotTokenPayload,
     FormResultsPage,
     LoggedInUser,
@@ -134,8 +135,8 @@ class TelebotConstructorApp:
             raise web.HTTPNotFound()
         return part
 
-    def parse_bot_name(self, request: web.Request) -> str:
-        name = self.parse_path_part(request, "bot_name")
+    def parse_bot_name(self, request: web.Request, path_part_name: str = "bot_name") -> str:
+        name = self.parse_path_part(request, path_part_name)
         self._validate_name(name)
         return name
 
@@ -596,6 +597,28 @@ class TelebotConstructorApp:
                 return web.Response()
             else:
                 return web.HTTPInternalServerError(reason="Unable to save new form title")
+
+        # endregion
+        ##################################################################################
+        # region bot metrics and errors
+
+        @routes.get("/api/errors/{bot_id}")
+        async def get_bot_errors(request: web.Request) -> web.Response:
+            """
+            ---
+            description: Get form responses
+            produces:
+            - application/json
+            responses:
+                "200":
+                    description: OK
+            """
+            username = await self.authenticate(request)
+            bot_id = self.parse_bot_name(request, "bot_id")
+            offset = self.parse_query_param_int(request, "offset", min_=0, max_=None) or 0
+            count = self.parse_query_param_int(request, "count", min_=0, max_=100) or 20
+            errors = await self.store.metrics.load_errors_page(username, bot_id, offset, count)
+            return web.json_response(text=BotErrorsPage(errors=errors).model_dump_json())
 
         # endregion
         ##################################################################################
