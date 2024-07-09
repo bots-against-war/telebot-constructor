@@ -1,9 +1,10 @@
 import datetime
 import time
-from typing import Any, Optional, TypeVar
+from typing import Any, Callable, Optional, TypeVar
 
 from cryptography.fernet import Fernet
 from telebot import types as tg
+from telebot.metrics import TelegramUpdateMetrics
 from telebot.test_util import MethodCall
 from telebot.types import Dictionaryable
 from telebot_components.redis_utils.emulation import RedisEmulation
@@ -34,6 +35,7 @@ def tg_update_message_to_bot(
     text: str,
     group_chat_id: Optional[int] = None,
     user_kwargs: dict[str, Any] | None = None,
+    metrics: Optional[TelegramUpdateMetrics] = None,
 ) -> tg.Update:
     return tg.Update(
         update_id=1,
@@ -67,6 +69,7 @@ def tg_update_message_to_bot(
         my_chat_member=None,
         chat_member=None,
         chat_join_request=None,
+        metrics=metrics,
         _json_dict={},
     )
 
@@ -147,28 +150,44 @@ def dummy_metrics_store() -> MetricsStore:
     return MetricsStore(RedisEmulation())
 
 
-def looks_like_recent_timestamp(value: Any) -> TypeGuard[float]:
-    if not isinstance(value, float):
-        return False
-    try:
-        dt = datetime.datetime.fromtimestamp(value)
-    except Exception:
-        return False
-    now = datetime.datetime.now()
-    return dt < now and now - dt < datetime.timedelta(minutes=5)
-
-
 DataT = TypeVar("DataT")
 
+
+def mask_recursively(
+    data: DataT,
+    predicate: Callable[[Any], bool],
+    mask: Callable[[Any], str],
+) -> DataT | str:
+    if predicate(data):
+        return mask(data)
+    elif isinstance(data, dict):
+        return {k: mask_recursively(v, predicate, mask) for k, v in data.items()}  # type: ignore
+    elif isinstance(data, list):
+        return [mask_recursively(item, predicate, mask) for item in data]  # type: ignore
+    else:
+        return data
+
+
 RECENT_TIMESTAMP = "<recent timestamp>"
+SMALL_TIME_DURATION = "<small time duration>"
 
 
 def mask_recent_timestamps(data: DataT) -> DataT | str:
-    if looks_like_recent_timestamp(data):
-        return RECENT_TIMESTAMP
-    elif isinstance(data, dict):
-        return {k: mask_recent_timestamps(v) for k, v in data.items()}  # type: ignore
-    elif isinstance(data, list):
-        return [mask_recent_timestamps(item) for item in data]  # type: ignore
-    else:
-        return data
+    def looks_like_recent_timestamp(value: Any) -> TypeGuard[float]:
+        if not isinstance(value, float):
+            return False
+        try:
+            dt = datetime.datetime.fromtimestamp(value)
+        except Exception:
+            return False
+        now = datetime.datetime.now()
+        return dt < now and now - dt < datetime.timedelta(minutes=1)
+
+    return mask_recursively(data, predicate=looks_like_recent_timestamp, mask=lambda _: RECENT_TIMESTAMP)
+
+
+def mask_small_time_durations(data: DataT) -> DataT | str:
+    def looks_like_small_time_duration(v: Any) -> bool:
+        return isinstance(v, float) and 0 < v < 0.1
+
+    return mask_recursively(data, predicate=looks_like_small_time_duration, mask=lambda _: SMALL_TIME_DURATION)
