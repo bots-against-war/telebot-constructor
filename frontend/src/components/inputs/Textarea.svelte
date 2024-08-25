@@ -16,7 +16,7 @@
   {#if maxLength !== null && value.length / maxLength > 0.5}
     <span class="text-xs {value.length > maxLength ? 'text-red-600' : 'text-gray-500'}">
       {value.length} / {maxLength} символов {#if value.length > maxLength}
-        (будет разрезано на несколько сообщений)
+        – сообщения могут быть разрезаны
       {/if}
     </span>
   {/if}
