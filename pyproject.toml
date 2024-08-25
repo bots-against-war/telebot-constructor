@@ -6,7 +6,7 @@ authors = ["Igor Vaiman <gosha.vaiman@gmail.com>"]
 license = "GPL-3"
 readme = "README.md"
 packages = [{ include = "telebot_constructor" }]
-include = ["telebot_constructor/static/**/*"]
+include = ["telebot_constructor/static/**/*", "telebot_constructor/data/*"]
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.0"
