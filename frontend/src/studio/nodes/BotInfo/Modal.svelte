@@ -12,7 +12,7 @@
 
   const closeModal = getModalCloser();
 
-  export let botName: string;
+  export let botId: string;
   export let botUser: TgBotUser;
   export let onBotUserUpdated: (updated: TgBotUser) => any;
 
@@ -24,7 +24,7 @@
 
   async function saveBotUser() {
     isUpdating = true;
-    const res = await updateBotUser(botName, {
+    const res = await updateBotUser(botId, {
       name: botUser.name,
       description: botUser.description,
       short_description: botUser.short_description,

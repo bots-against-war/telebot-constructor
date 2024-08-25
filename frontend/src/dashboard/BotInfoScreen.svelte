@@ -13,7 +13,7 @@
   import { formResultsPagePath, studioPath } from "../routeUtils";
   import { withConfirmation } from "../utils";
 
-  export let botName: string;
+  export let botId: string;
   export let botInfo: BotInfo;
 
   let lastVersion = botInfo.last_versions[botInfo.last_versions.length - 1].version;
@@ -30,7 +30,7 @@
       if (botInfo.running_version !== null) {
         botInfo.last_events.push({ event: "stopped", timestamp: new Date().getTime() / 1000, username: "" });
       }
-      const resp = await startBot(botName, { version });
+      const resp = await startBot(botId, { version });
       // optimistically update events, this should be mostly accurate
       botInfo.last_events.push({
         event: "started",
@@ -46,7 +46,7 @@
         botInfo.running_version = null;
       }
     } else {
-      const resp = await stopBot(botName);
+      const resp = await stopBot(botId);
       botInfo.last_events.push({ event: "stopped", timestamp: new Date().getTime() / 1000, username: "" });
       isLoading = false;
       if (resp.ok) {
@@ -58,7 +58,7 @@
   }
 
   async function deleteBot() {
-    const resp = await deleteBotConfig(botName);
+    const resp = await deleteBotConfig(botId);
     if (resp.ok) {
       dispatch("botDeleted");
     } else {
@@ -72,7 +72,7 @@
     "Удалить",
   );
 
-  const botUserPromise = getBotUser(botName);
+  const botUserPromise = getBotUser(botId);
 </script>
 
 <div class="flex flex-col my-20 w-[700px]">
@@ -110,7 +110,7 @@
                   "{formInfo.prompt}"
                 {/if}
               </span>
-              <Button size="xs" outline href={formResultsPagePath(botName, formInfo.form_block_id)}>Ответы</Button>
+              <Button size="xs" outline href={formResultsPagePath(botId, formInfo.form_block_id)}>Ответы</Button>
             </div>
           </Li>
         {/each}
@@ -149,7 +149,7 @@
               <Button
                 size="xs"
                 outline
-                href={studioPath(botName, verInfo.version === lastVersion ? null : verInfo.version)}
+                href={studioPath(botId, verInfo.version === lastVersion ? null : verInfo.version)}
               >
                 {lastVersion === verInfo.version ? "Редактировать" : "Посмотреть"}
               </Button>

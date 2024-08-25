@@ -193,6 +193,20 @@
       "title": "BotError",
       "type": "object"
     },
+    "BotErrorBlock": {
+      "description": "User flow block that raises an exception when the user enters it.",
+      "properties": {
+        "block_id": {
+          "title": "Block Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "block_id"
+      ],
+      "title": "BotErrorBlock",
+      "type": "object"
+    },
     "BotErrorsPage": {
       "properties": {
         "errors": {
@@ -211,8 +225,8 @@
     },
     "BotInfo": {
       "properties": {
-        "bot_name": {
-          "title": "Bot Name",
+        "bot_id": {
+          "title": "Bot Id",
           "type": "string"
         },
         "display_name": {
@@ -263,15 +277,23 @@
           },
           "title": "Forms With Responses",
           "type": "array"
+        },
+        "last_errors": {
+          "items": {
+            "$ref": "#/$defs/BotError"
+          },
+          "title": "Last Errors",
+          "type": "array"
         }
       },
       "required": [
-        "bot_name",
+        "bot_id",
         "display_name",
         "running_version",
         "last_versions",
         "last_events",
-        "forms_with_responses"
+        "forms_with_responses",
+        "last_errors"
       ],
       "title": "BotInfo",
       "type": "object"
@@ -2121,6 +2143,17 @@
           "anyOf": [
             {
               "$ref": "#/$defs/LanguageSelectBlock"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "error": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BotErrorBlock"
             },
             {
               "type": "null"

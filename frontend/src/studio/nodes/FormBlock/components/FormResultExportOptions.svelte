@@ -6,7 +6,7 @@
   import { PLACEHOLDER_GROUP_CHAT_ID } from "../../defaultConfigs";
 
   export let config: FormResultsExport;
-  export let botName: string;
+  export let botId: string;
   export let blockId: string;
 
   const userAttributionOptions: { value: FormResultUserAttribution; name: string }[] = [
@@ -39,7 +39,7 @@
     <Toggle bind:checked={config.to_store}
       >Сохранять в&nbsp;
       {#if config.to_store}
-        <A href={formResultsPagePath(botName, blockId)} target="_blank">память бота</A>
+        <A href={formResultsPagePath(botId, blockId)} target="_blank">память бота</A>
       {:else}
         <span>память бота</span>
       {/if}
@@ -59,7 +59,7 @@
       >
       {#if config.to_chat}
         <div class="p-2 m-2 border-l-2 border-grey-600 flex flex-col gap-3">
-          <GroupChatIdSelect label="" {botName} bind:selectedGroupChatId={config.to_chat.chat_id} />
+          <GroupChatIdSelect label="" {botId} bind:selectedGroupChatId={config.to_chat.chat_id} />
           <Toggle bind:checked={config.to_chat.via_feedback_handler}>С возможностью ответить через бота</Toggle>
         </div>
       {/if}

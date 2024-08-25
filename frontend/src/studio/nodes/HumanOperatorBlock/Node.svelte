@@ -16,7 +16,7 @@
   export let config: HumanOperatorBlock;
   export let position: SvelvetPosition;
   export let isValid = true;
-  export let botName: string;
+  export let botId: string;
 
   const setNewConfig = (newConfig: HumanOperatorBlock) => {
     config = newConfig;
@@ -25,7 +25,7 @@
   function openEditModal() {
     openModal(Modal, {
       config,
-      botName,
+      botId,
       onConfigUpdate: setNewConfig,
     });
   }
@@ -43,6 +43,6 @@
     on:clone
     on:edit={openEditModal}
   >
-    <GroupChatBadge {botName} chatId={config.feedback_handler_config.admin_chat_id} />
+    <GroupChatBadge {botId} chatId={config.feedback_handler_config.admin_chat_id} />
   </NodeContent>
 </Node>

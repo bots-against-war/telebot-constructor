@@ -72,8 +72,8 @@ export function getModalCloser(): () => void {
   return close;
 }
 
-export async function createBotTokenSecret(botName: string, token: string): Promise<Result<string, string>> {
-  let secretName = botName + "-token-" + crypto.randomUUID().slice(0, 8);
+export async function createBotTokenSecret(botId: string, token: string): Promise<Result<string, string>> {
+  let secretName = botId + "-token-" + crypto.randomUUID().slice(0, 8);
   console.log("Generated secret name", secretName);
   // TODO: check if secret with this value does not exist, not its possible to save
   // the same token in two secrets and cause clashes

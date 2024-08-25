@@ -67,7 +67,7 @@
         </div>
       {:else}
         <BotInfoScreen
-          botName={selectedBot}
+          botId={selectedBot}
           bind:botInfo={botInfos[selectedBot]}
           on:botDeleted={() => {
             if (selectedBot === null) return;

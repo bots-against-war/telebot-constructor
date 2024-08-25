@@ -15,7 +15,7 @@
   import { updateWithPrefilled, type FormErrorMessages } from "./prefill";
 
   export let config: FormBlock;
-  export let botName: string;
+  export let botId: string;
   export let onConfigUpdate: (newConfig: FormBlock) => any;
 
   function updateConfig() {
@@ -83,7 +83,7 @@
         <FormBranch isMovableUp={false} isMovableDown={false} bind:branch={topLevelBranch} />
       </TabItem>
       <TabItem title="Ответы">
-        <FormResultExportOptions bind:config={editedConfig.results_export} {botName} blockId={config.block_id} />
+        <FormResultExportOptions bind:config={editedConfig.results_export} {botId} blockId={config.block_id} />
       </TabItem>
       <TabItem title="Технические сообщения">
         <FormMessages bind:messages={editedConfig.messages} bind:errors={formErrorMessages} />

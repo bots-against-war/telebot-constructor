@@ -166,6 +166,7 @@ export type EmojiButtons = boolean;
 export type SupportedLanguages = string[];
 export type LanguageSelectedNextBlockId = string | null;
 export type NextBlockId5 = string | null;
+export type BlockId5 = string;
 export type Blocks = UserFlowBlockConfig[];
 export type X = number;
 export type Y = number;
@@ -209,7 +210,7 @@ export type Username2 = string;
 export type Name6 = string;
 export type DisplayUsername = string | null;
 export type Userpic1 = string | null;
-export type BotName = string;
+export type BotId = string;
 export type DisplayName1 = string;
 export type RunningVersion = number | null;
 export type Version = number;
@@ -235,17 +236,6 @@ export type FormBlockId = string;
 export type Prompt3 = string;
 export type Title1 = string | null;
 export type FormsWithResponses = FormInfoBasic[];
-export type VersionMessage = string | null;
-export type Start = boolean;
-export type DisplayName2 = string | null;
-export type Version2 = number;
-export type FormBlockId1 = string;
-export type Prompt4 = string;
-export type Title2 = string | null;
-export type TotalResponses = number;
-export type Results = {
-  [k: string]: string | number | number;
-}[];
 export type Timestamp5 = number;
 export type BotPrefix = string;
 export type ReceivedAt = number;
@@ -261,6 +251,18 @@ export type LanguageCode = string | null;
 export type IsForwarded = boolean;
 export type IsReply = boolean;
 export type ContentType = string;
+export type LastErrors = BotError[];
+export type VersionMessage = string | null;
+export type Start = boolean;
+export type DisplayName2 = string | null;
+export type Version2 = number;
+export type FormBlockId1 = string;
+export type Prompt4 = string;
+export type Title2 = string | null;
+export type TotalResponses = number;
+export type Results = {
+  [k: string]: string | number | number;
+}[];
 export type Errors = BotError[];
 
 /**
@@ -335,6 +337,7 @@ export interface UserFlowBlockConfig {
   menu?: MenuBlock | null;
   form?: FormBlock | null;
   language_select?: LanguageSelectBlock | null;
+  error?: BotErrorBlock | null;
   [k: string]: unknown;
 }
 /**
@@ -527,6 +530,13 @@ export interface LanguageSelectionMenuConfig {
 export interface Propmt {
   [k: string]: string;
 }
+/**
+ * User flow block that raises an exception when the user enters it.
+ */
+export interface BotErrorBlock {
+  block_id: BlockId5;
+  [k: string]: unknown;
+}
 export interface NodeDisplayCoords {
   [k: string]: UserFlowNodePosition;
 }
@@ -598,12 +608,13 @@ export interface LoggedInUser {
   [k: string]: unknown;
 }
 export interface BotInfo {
-  bot_name: BotName;
+  bot_id: BotId;
   display_name: DisplayName1;
   running_version: RunningVersion;
   last_versions: LastVersions;
   last_events: LastEvents;
   forms_with_responses: FormsWithResponses;
+  last_errors: LastErrors;
   [k: string]: unknown;
 }
 export interface BotVersionInfo {
@@ -648,37 +659,6 @@ export interface FormInfoBasic {
   title: Title1;
   [k: string]: unknown;
 }
-export interface SaveBotConfigVersionPayload {
-  config: BotConfig;
-  version_message: VersionMessage;
-  start: Start;
-  display_name?: DisplayName2;
-  [k: string]: unknown;
-}
-export interface StartBotPayload {
-  version: Version2;
-  [k: string]: unknown;
-}
-export interface FormInfo {
-  form_block_id: FormBlockId1;
-  prompt: Prompt4;
-  title: Title2;
-  field_names: FieldNames;
-  total_responses: TotalResponses;
-  [k: string]: unknown;
-}
-export interface FieldNames {
-  [k: string]: string;
-}
-export interface FormResultsPage {
-  info: FormInfo;
-  results: Results;
-  [k: string]: unknown;
-}
-export interface BotErrorsPage {
-  errors: Errors;
-  [k: string]: unknown;
-}
 export interface BotError {
   timestamp: Timestamp5;
   update_metrics: TelegramUpdateMetrics;
@@ -715,5 +695,36 @@ export interface MessageInfo {
   is_forwarded: IsForwarded;
   is_reply: IsReply;
   content_type: ContentType;
+  [k: string]: unknown;
+}
+export interface SaveBotConfigVersionPayload {
+  config: BotConfig;
+  version_message: VersionMessage;
+  start: Start;
+  display_name?: DisplayName2;
+  [k: string]: unknown;
+}
+export interface StartBotPayload {
+  version: Version2;
+  [k: string]: unknown;
+}
+export interface FormInfo {
+  form_block_id: FormBlockId1;
+  prompt: Prompt4;
+  title: Title2;
+  field_names: FieldNames;
+  total_responses: TotalResponses;
+  [k: string]: unknown;
+}
+export interface FieldNames {
+  [k: string]: string;
+}
+export interface FormResultsPage {
+  info: FormInfo;
+  results: Results;
+  [k: string]: unknown;
+}
+export interface BotErrorsPage {
+  errors: Errors;
   [k: string]: unknown;
 }
