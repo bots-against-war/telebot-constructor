@@ -78,31 +78,45 @@ async def test_bot_errors_api(
     # TODO: checking bot info, the last error should be there
     resp = await client.get("/api/info/mybot")
     assert resp.status == 200
-    # assert mask_recent_timestamps(await resp.json()) == {
-    #     "bot_name": "mybot",
-    #     "display_name": "my test bot",
-    #     "running_version": 0,
-    #     "last_versions": [
-    #         {
-    #             "version": 0,
-    #             "metadata": {
-    #                 "timestamp": RECENT_TIMESTAMP,
-    #                 "message": "init",
-    #             },
-    #         }
-    #     ],
-    #     "last_events": [
-    #         {"timestamp": RECENT_TIMESTAMP, "username": "no-auth", "event": "edited", "new_version": 0},
-    #         {"timestamp": RECENT_TIMESTAMP, "username": "no-auth", "event": "started", "version": 0},
-    #     ],
-    #     "forms_with_responses": [
-    #         {
-    #             "form_block_id": "form-block-123",
-    #             "prompt": "Hello welcome to the form testing bot",
-    #             "title": None,
-    #         }
-    #     ],
-    # }
+    assert mask_small_time_durations(mask_recent_timestamps(await resp.json())) == {
+        "bot_name": "mybot",
+        "display_name": "my test bot",
+        "running_version": 0,
+        "last_versions": [
+            {
+                "version": 0,
+                "metadata": {
+                    "timestamp": RECENT_TIMESTAMP,
+                    "message": "init",
+                },
+            }
+        ],
+        "last_events": [
+            {"timestamp": RECENT_TIMESTAMP, "username": "no-auth", "event": "edited", "new_version": 0},
+            {"timestamp": RECENT_TIMESTAMP, "username": "no-auth", "event": "started", "version": 0},
+        ],
+        "forms_with_responses": [],
+        "last_errors": [
+            {
+                "timestamp": RECENT_TIMESTAMP,
+                "update_metrics": {
+                    "bot_prefix": "test-bot",
+                    "exception_info": {
+                        "body": "User entered the error block (self.block_id='error-block')",
+                        "type_name": "RuntimeError",
+                    },
+                    "handler_name": (
+                        "telebot_constructor.user_flow.entrypoints.command."
+                        "CommandEntryPoint.setup.<locals>.cmd_handler"
+                    ),
+                    "handler_test_durations": [SMALL_TIME_DURATION],
+                    "processing_duration": SMALL_TIME_DURATION,
+                    "received_at": RECENT_TIMESTAMP,
+                },
+            }
+            for _ in range(10)
+        ],
+    }
 
     # calling the bot errors api to get the full list
     resp = await client.get("/api/errors/mybot")

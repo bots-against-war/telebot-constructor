@@ -43,7 +43,7 @@ class MetricsStore:
 
         return handler
 
-    async def load_errors_page(self, username: str, bot_id: str, offset: int, count: int) -> list[BotError]:
+    async def load_errors(self, username: str, bot_id: str, offset: int, count: int) -> list[BotError]:
         start, end = page_params_to_redis_indices(offset, count)
         return (
             await self._errors_store.slice(

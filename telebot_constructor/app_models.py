@@ -157,6 +157,7 @@ class BotInfo(BaseModel):
     last_versions: list[BotVersionInfo]  # versions, including last and running (if present) versions
     last_events: list[BotEvent]
     forms_with_responses: list[FormInfoBasic]
+    last_errors: list[BotError]
 
 
 class SaveBotConfigVersionPayload(BaseModel):

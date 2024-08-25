@@ -152,6 +152,8 @@ class TelebotConstructorStore:
     async def load_bot_info(self, username: str, bot_id: str) -> Optional[BotInfo]:
         INCLUDE_LAST_EVENTS = 10
         INCLUDE_LAST_VERSIONS = 10
+        INCLUDE_LAST_ERRORS = 10
+
         next_to_last_version = await self.bot_config_version_count(username, bot_id)
         if next_to_last_version == 0:
             return None
@@ -203,4 +205,5 @@ class TelebotConstructorStore:
             ],
             last_events=last_events,
             forms_with_responses=await self.form_results.list_forms(username, bot_id),
+            last_errors=await self.metrics.load_errors(username, bot_id, offset=0, count=INCLUDE_LAST_ERRORS),
         )

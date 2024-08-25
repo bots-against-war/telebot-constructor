@@ -71,6 +71,7 @@ async def test_bot_config(
                 {"timestamp": RECENT_TIMESTAMP, "username": "no-auth", "event": "edited", "new_version": 0}
             ],
             "forms_with_responses": [],
+            "last_errors": [],
         }
     }
     bot_created_event = resp_json_1[bot_name]["last_events"][0]  # type: ignore
@@ -94,6 +95,7 @@ async def test_bot_config(
                 {"timestamp": RECENT_TIMESTAMP, "username": "no-auth", "event": "started", "version": 0},
             ],
             "forms_with_responses": [],
+            "last_errors": [],
         }
     }
     bot_started_event = resp_json_2[bot_name]["last_events"][1]  # type: ignore
@@ -173,6 +175,7 @@ async def test_bot_config(
             {"timestamp": RECENT_TIMESTAMP, "username": "no-auth", "event": "started", "version": 1},
         ],
         "forms_with_responses": [],
+        "last_errors": [],
     }
     bot_edited_event, bot_stopped_event, bot_started_again_event = resp_json_3["last_events"][2:]  # type: ignore
 
@@ -201,6 +204,7 @@ async def test_bot_config(
             {"timestamp": RECENT_TIMESTAMP, "username": "no-auth", "event": "stopped"},
         ],
         "forms_with_responses": [],
+        "last_errors": [],
     }
 
     # let's delete this bot for good

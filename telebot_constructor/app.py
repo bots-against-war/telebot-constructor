@@ -101,8 +101,8 @@ class TelebotConstructorApp:
             raise RuntimeError("Constructed bot runner was not initialized properly")
         return self._runner
 
-    # region: request processing
-    # helper methods to e.g. parse data from requests
+    # region: request helpers
+    # parse data from requests etc
 
     async def _authenticate_full(self, request: web.Request) -> LoggedInUser:
         try:
@@ -175,8 +175,8 @@ class TelebotConstructorApp:
 
     # endregion
 
-    # region: bot manipulation
-    # methods to do common tasks with bots, used in endpoints
+    # region: bot helpers
+    # common tasks with bots / related data
 
     async def load_bot_config(self, username: str, bot_name: str, version: BotVersion) -> BotConfig:
         config = await self.store.load_bot_config(username, bot_name, version)
@@ -615,7 +615,7 @@ class TelebotConstructorApp:
             bot_id = self.parse_bot_name(request, "bot_id")
             offset = self.parse_query_param_int(request, "offset", min_=0, max_=None) or 0
             count = self.parse_query_param_int(request, "count", min_=0, max_=100) or 20
-            errors = await self.store.metrics.load_errors_page(username, bot_id, offset, count)
+            errors = await self.store.metrics.load_errors(username, bot_id, offset, count)
             return web.json_response(text=BotErrorsPage(errors=errors).model_dump_json())
 
         # endregion

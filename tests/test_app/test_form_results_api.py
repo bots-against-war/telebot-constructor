@@ -124,6 +124,7 @@ async def test_form_results_api(
             {"timestamp": RECENT_TIMESTAMP, "username": "no-auth", "event": "started", "version": 0},
         ],
         "forms_with_responses": [],
+        "last_errors": [],
     }
 
     assert isinstance(constructor.runner, MockBotRunner)
@@ -201,6 +202,7 @@ async def test_form_results_api(
                 "title": None,
             }
         ],
+        "last_errors": [],
     }
 
     # finally, calling the form results api to get user's responses
