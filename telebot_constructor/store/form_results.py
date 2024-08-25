@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.stores.generic import KeyDictStore, KeyListStore, KeyValueStore
 
+from telebot_constructor.constants import CONSTRUCTOR_PREFIX
 from telebot_constructor.utils import page_params_to_redis_indices
 
 FieldId = str
@@ -49,20 +50,20 @@ class FormInfo(FormInfoBasic):
 
 
 class FormResultsStore:
-    PREFIX = "telebot-constructor/form-results"
+    STORE_PREFIX = f"{CONSTRUCTOR_PREFIX}/form-results"
 
     def __init__(self, redis: RedisInterface) -> None:
         # list of responses/results for a particular form
         self._results_store = KeyListStore[FormResult](
             name="data",
-            prefix=self.PREFIX,
+            prefix=self.STORE_PREFIX,
             redis=redis,
             expiration_time=None,
         )
         # for each form, mapping field id -> field name to be displayed
         self._field_names_store = KeyDictStore[str](
             name="field-names",
-            prefix=self.PREFIX,
+            prefix=self.STORE_PREFIX,
             redis=redis,
             expiration_time=None,
             dumper=noop,
@@ -71,7 +72,7 @@ class FormResultsStore:
         # form prompt, can be used as a title/identifier
         self._prompt_store = KeyValueStore[str](
             name="form-prompt",
-            prefix=self.PREFIX,
+            prefix=self.STORE_PREFIX,
             redis=redis,
             expiration_time=None,
             dumper=noop,
@@ -80,7 +81,7 @@ class FormResultsStore:
         # dedicated form title that can be set by user, preferred over prompt
         self._title_store = KeyValueStore[str](
             name="form-title",
-            prefix=self.PREFIX,
+            prefix=self.STORE_PREFIX,
             redis=redis,
             expiration_time=None,
             dumper=noop,

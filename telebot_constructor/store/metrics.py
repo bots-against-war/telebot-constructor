@@ -5,6 +5,7 @@ from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.stores.generic import KeyListStore
 from typing_extensions import TypedDict
 
+from telebot_constructor.constants import CONSTRUCTOR_PREFIX
 from telebot_constructor.utils import page_params_to_redis_indices
 
 
@@ -14,12 +15,12 @@ class BotError(TypedDict):
 
 
 class MetricsStore:
-    PREFIX = "telebot-constructor/metrics/"
+    STORE_PREFIX = f"{CONSTRUCTOR_PREFIX}/metrics/"
 
     def __init__(self, redis: RedisInterface) -> None:
         self._errors_store = KeyListStore[BotError](
             name="errors",
-            prefix=self.PREFIX,
+            prefix=self.STORE_PREFIX,
             redis=redis,
             expiration_time=None,
         )

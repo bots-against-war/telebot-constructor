@@ -71,8 +71,6 @@ class TelebotConstructorApp:
     Main application class, managing aiohttp app setup (routes, middlewares) and running bots (via bot runner)
     """
 
-    STORE_PREFIX = "telebot-constructor"
-
     def __init__(
         self,
         redis: RedisInterface,

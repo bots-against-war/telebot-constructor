@@ -10,6 +10,7 @@ from telebot_components.stores.banned_users import BannedUsersStore
 from telebot_components.utils.secrets import SecretStore
 
 from telebot_constructor.bot_config import BotConfig
+from telebot_constructor.constants import CONSTRUCTOR_PREFIX
 from telebot_constructor.group_chat_discovery import GroupChatDiscoveryHandler
 from telebot_constructor.store.form_results import BotSpecificFormResultsStore
 from telebot_constructor.store.metrics import MetricsStore
@@ -49,7 +50,7 @@ async def construct_bot(
     _bot_factory: BotFactory = AsyncTeleBot,  # used for testing
 ) -> BotRunner:
     """Core bot construction function responsible for turning a config into a functional bot"""
-    bot_prefix = f"{username}-{bot_id}"
+    bot_prefix = f"{CONSTRUCTOR_PREFIX}/{username}/{bot_id}"
     log_prefix = f"[{username}][{bot_id}] "
     logger.info(log_prefix + "Constructing bot")
 

@@ -10,6 +10,7 @@ from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.stores.generic import KeyFlagStore, KeySetStore
 
 from telebot_constructor.app_models import TgGroupChat, TgGroupChatType
+from telebot_constructor.constants import CONSTRUCTOR_PREFIX
 from telebot_constructor.telegram_files_downloader import TelegramFilesDownloader
 from telebot_constructor.utils import (
     AnyChatId,
@@ -27,7 +28,7 @@ class GroupChatDiscoveryHandler:
     (e.g. to automagically discover admin chats for users)
     """
 
-    STORE_PREFIX = "telebot-constructor-group-chat-discovery"
+    STORE_PREFIX = f"{CONSTRUCTOR_PREFIX}/group-chat-discovery"
 
     def __init__(self, redis: RedisInterface, telegram_files_downloader: TelegramFilesDownloader) -> None:
         # "{username}-{bot name}" -> flag for group chat discovery mode
