@@ -87,7 +87,7 @@
 </script>
 
 <NodeModalBody title={NODE_TITLE.content}>
-  <LocalizableTextInput label="Текст сообщения" bind:value={editedMessageText} />
+  <LocalizableTextInput label="Текст сообщения" bind:value={editedMessageText} maxCharacters={4096} />
 
   <div>
     <Label class="pb-2" for="multiple_files">Добавьте одно или несколько изображений</Label>
