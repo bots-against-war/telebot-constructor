@@ -21,6 +21,7 @@ isort = "^5.10.1"
 pre-commit = "^2.19.0"
 mypy = "^1.4.1"
 flake8-pyproject = "^1.2.3"
+setuptools = "^73.0.1"
 
 [tool.poetry-dynamic-versioning]
 enable = true
