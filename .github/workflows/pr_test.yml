@@ -42,6 +42,10 @@ jobs:
           poetry run coverage report
       - name: (back) Validate JSON schema is up-to-date
         run: poetry run python scripts/models/pydantic2jsonschema.py --check
+      - name: Validate requirements.txt are up to date
+        run: |
+          poetry export -f requirements.txt --output latest-requirements.txt
+          cmp requirements.txt latest-requirements.txt
 
       # frontend checks
       - name: (front) Check Prettier formatting

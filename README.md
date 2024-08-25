@@ -68,6 +68,8 @@ coverage run -m pytest tests -vv
 coverage html
 ```
 
+Then you can review `htmlcov/index.html` in browser.
+
 #### Running linters and code checks
 
 ```bash
@@ -90,10 +92,7 @@ Then, re-generate `requirements.txt` with (there is a github action to check it)
 
 ```shell
 poetry export -f requirements.txt --output requirements.txt 
-poetry export --only dev -f requirements.txt --output requirements.dev.txt 
 ```
-
-Then you can review `htmlcov/index.html` in browser.
 
 ### Frontend
 
