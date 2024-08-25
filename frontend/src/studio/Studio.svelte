@@ -40,7 +40,7 @@
   } from "./utils";
   import { dashboardPath } from "../routeUtils";
 
-  export let botName: string;
+  export let botId: string;
   export let botConfig: BotConfig;
   export let readonly: boolean;
 
@@ -235,13 +235,13 @@
     if (readonly) return;
     if (!configValidationResult.ok) return;
     isSavingBotConfig = true;
-    console.debug(`Saving bot config for ${botName}`, botConfig);
+    console.debug(`Saving bot config for ${botId}`, botConfig);
     // returning node display coords from separate storage to config
     botConfig.user_flow_config.node_display_coords = filterNodeDisplayCoords(
       { ...botConfig.user_flow_config.node_display_coords, ...nodeDisplayCoords },
       botConfig,
     );
-    const res = await saveBotConfig(botName, { config: botConfig, version_message: versionMessage, start });
+    const res = await saveBotConfig(botId, { config: botConfig, version_message: versionMessage, start });
     isSavingBotConfig = false;
     if (getError(res) !== null) {
       window.alert(`Error saving bot config: ${getError(res)}`);
@@ -250,7 +250,7 @@
     }
   }
 
-  const exitStudio = () => navigate(dashboardPath(botName));
+  const exitStudio = () => navigate(dashboardPath(botId));
   const exitStudioWithConfirmation = withConfirmation(
     "Вы уверены, что хотите выйти из студии? Несохранённые изменения будут потеряны.",
     async () => exitStudio(),
@@ -323,7 +323,7 @@
     {customMouseDownHandler}
     customCssCursor={tentativeNode ? "crosshair" : null}
   >
-    <BotInfoNode {botName} bind:position={nodeDisplayCoords[BOT_INFO_NODE_ID]} />
+    <BotInfoNode {botId} bind:position={nodeDisplayCoords[BOT_INFO_NODE_ID]} />
     {#each botConfig.user_flow_config.entrypoints as entrypoint (getEntrypointId(entrypoint))}
       {#if entrypoint.command}
         <CommandEntryPointNode
@@ -345,7 +345,7 @@
         />
       {:else if block.human_operator}
         <HumanOperatorNode
-          {botName}
+          {botId}
           on:delete={deleteNode}
           on:clone={cloneNode}
           bind:config={block.human_operator}
@@ -372,7 +372,7 @@
         />
       {:else if block.form}
         <FormNode
-          {botName}
+          {botId}
           on:delete={deleteNode}
           on:clone={cloneNode}
           bind:config={block.form}

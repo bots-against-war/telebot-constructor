@@ -12,7 +12,7 @@
   import { createBotTokenSecret, getError, getModalCloser, unwrap } from "../utils";
   import ButtonLoadingSpinner from "../components/ButtonLoadingSpinner.svelte";
 
-  export let newBotCallback: (botName: string, info: BotInfo) => void;
+  export let newBotCallback: (botId: string, info: BotInfo) => void;
 
   const closeModal = getModalCloser();
 
@@ -40,22 +40,22 @@
       return;
     }
 
-    let botName = slugify(botDisplayName, {
+    let botId = slugify(botDisplayName, {
       separator: "-",
       allowedChars: "a-zA-Z0-9-_",
       lowercase: true,
       trim: true,
     });
-    const MAX_BOT_NAME_LEN = 64;
+    const MAX_BOT_ID_LEN = 64;
     const UUID_SUFFIX_LEN = 8;
-    const MAX_TRANSLIT_PREFIX_LEN = MAX_BOT_NAME_LEN - UUID_SUFFIX_LEN - 1;
-    if (botName.length > MAX_TRANSLIT_PREFIX_LEN) {
-      botName = botName.slice(0, MAX_TRANSLIT_PREFIX_LEN);
+    const MAX_TRANSLIT_PREFIX_LEN = MAX_BOT_ID_LEN - UUID_SUFFIX_LEN - 1;
+    if (botId.length > MAX_TRANSLIT_PREFIX_LEN) {
+      botId = botId.slice(0, MAX_TRANSLIT_PREFIX_LEN);
     }
-    botName += "-" + crypto.randomUUID().slice(0, UUID_SUFFIX_LEN);
-    console.log("Generated bot name", botName);
+    botId += "-" + crypto.randomUUID().slice(0, UUID_SUFFIX_LEN);
+    console.log("Generated bot id", botId);
 
-    let newTokenSecretRes = await createBotTokenSecret(botName, botToken);
+    let newTokenSecretRes = await createBotTokenSecret(botId, botToken);
     let newTokenSaveErr = getError(newTokenSecretRes);
     if (newTokenSaveErr !== null) {
       errorTitle = "Не получилось сохранить токен";
@@ -84,7 +84,7 @@
         ]),
       },
     };
-    const res1 = await saveBotConfig(botName, {
+    const res1 = await saveBotConfig(botId, {
       config,
       start: false,
       version_message: null,
@@ -93,9 +93,9 @@
 
     if (res1.ok) {
       error = null;
-      const botInfo = unwrap(await getBotInfo(botName));
+      const botInfo = unwrap(await getBotInfo(botId));
       isCreating = false;
-      newBotCallback(botName, botInfo);
+      newBotCallback(botId, botInfo);
       closeModal();
     } else if (!res1.ok) {
       isCreating = false;

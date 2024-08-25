@@ -21,12 +21,12 @@ class MockBotRunner(ConstructedBotRunner):
     def __init__(self) -> None:
         self.running: dict[str, dict[str, BotRunner]] = collections.defaultdict(dict)
 
-    async def start(self, username: str, bot_name: str, bot_runner: BotRunner) -> bool:
-        self.running[username][bot_name] = bot_runner
+    async def start(self, username: str, bot_id: str, bot_runner: BotRunner) -> bool:
+        self.running[username][bot_id] = bot_runner
         return True
 
-    async def stop(self, username: str, bot_name: str) -> bool:
-        stopped = self.running[username].pop(bot_name, None)
+    async def stop(self, username: str, bot_id: str) -> bool:
+        stopped = self.running[username].pop(bot_id, None)
         return stopped is not None
 
     async def cleanup(self) -> None:
@@ -36,11 +36,15 @@ class MockBotRunner(ConstructedBotRunner):
 _MOCKED_ASYNC_TELEBOT_CACHE: dict[str, AsyncTeleBot] = dict()
 
 
-def mocked_async_telebot_factory(token: str) -> AsyncTeleBot:
+def mocked_async_telebot_factory(token: str, **kwargs) -> AsyncTeleBot:
+    """
+    Caching by token is a hack to test scenarios where the same bot is re-created and must
+    remember server-side information (the one that would be saved by telegram backend IRL)
+    """
     cached = _MOCKED_ASYNC_TELEBOT_CACHE.get(token)
     if cached is not None:
         return cached
-    bot = MockedAsyncTeleBot(token)
+    bot = MockedAsyncTeleBot(token, **kwargs)
     _MOCKED_ASYNC_TELEBOT_CACHE[token] = bot
     return bot
 

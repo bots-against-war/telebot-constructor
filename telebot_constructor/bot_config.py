@@ -8,6 +8,7 @@ from telebot_constructor.user_flow.blocks.base import UserFlowBlock
 from telebot_constructor.user_flow.blocks.content import ContentBlock
 from telebot_constructor.user_flow.blocks.form import FormBlock
 from telebot_constructor.user_flow.blocks.human_operator import HumanOperatorBlock
+from telebot_constructor.user_flow.blocks.internal import BotErrorBlock
 from telebot_constructor.user_flow.blocks.language_select import LanguageSelectBlock
 from telebot_constructor.user_flow.blocks.menu import MenuBlock
 from telebot_constructor.user_flow.entrypoints.base import UserFlowEntryPoint
@@ -34,11 +35,16 @@ class UserFlowBlockConfig(ExactlyOneNonNullFieldModel):
     form: Optional[FormBlock] = None
     language_select: Optional[LanguageSelectBlock] = None
 
+    # internal block types, used for debugging and tests
+    error: Optional[BotErrorBlock] = None
+
     def to_user_flow_block(self) -> UserFlowBlock:
-        # runtime guarantee that exactly one of the options is not None
-        return copy.deepcopy(  # type: ignore
-            self.content or self.human_operator or self.menu or self.form or self.language_select,
+        block = copy.deepcopy(
+            self.content or self.human_operator or self.menu or self.form or self.language_select or self.error,
         )
+        # runtime guarantee that exactly one of the options is not None
+        assert block is not None, "failed to extract user flow block config, did someone forgot to add it to or-chain?"
+        return block
 
 
 class UserFlowNodePosition(BaseModel):

@@ -23,6 +23,7 @@ from telebot_constructor.user_flow.entrypoints.command import CommandEntryPoint
 from tests.utils import (
     assert_method_call_kwargs_include,
     dummy_form_results_store,
+    dummy_metrics_store,
     dummy_secret_store,
     tg_update_message_to_bot,
 )
@@ -70,12 +71,13 @@ async def test_single_photo() -> None:
     username = "test-username"
     await secret_store.save_secret(secret_name="token", secret_value="<token>", owner_id=username)
 
-    # calling main constructor function, in prod it is done when starting the bot (see /api/start/{bot_name})
+    # calling main constructor function, in prod it is done when starting the bot (see /api/start/{bot_id})
     bot_runner = await construct_bot(
         username=username,
-        bot_name="simple-user-flow-bot",
+        bot_id="simple-user-flow-bot",
         bot_config=bot_config,
         form_results_store=dummy_form_results_store(),
+        metrics_store=dummy_metrics_store(),
         secret_store=secret_store,
         redis=redis,
         # for tests we use "mocked" bot class instead of the real one; it will not make any requests
@@ -198,9 +200,10 @@ async def test_multiple_photos() -> None:
 
     bot_runner = await construct_bot(
         username=username,
-        bot_name="multiple-photos-in-content-block",
+        bot_id="multiple-photos-in-content-block",
         bot_config=bot_config,
         form_results_store=dummy_form_results_store(),
+        metrics_store=dummy_metrics_store(),
         secret_store=secret_store,
         redis=redis,
         _bot_factory=MockedAsyncTeleBot,
@@ -267,9 +270,10 @@ async def test_multiple_photos() -> None:
     )
     bot_runner_2 = await construct_bot(
         username=username,
-        bot_name="multiple-photos-in-content-block",
+        bot_id="multiple-photos-in-content-block",
         bot_config=bot_config,
         form_results_store=dummy_form_results_store(),
+        metrics_store=dummy_metrics_store(),
         secret_store=secret_store,
         redis=redis,
         _bot_factory=MockedAsyncTeleBot,

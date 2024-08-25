@@ -11,6 +11,7 @@ from telebot_components.redis_utils.emulation import RedisEmulation
 from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.stores.generic import KeyValueStore
 
+from telebot_constructor.constants import CONSTRUCTOR_PREFIX
 from telebot_constructor.utils.rate_limit_retry import rate_limit_retry
 
 logger = logging.getLogger(__name__)
@@ -30,12 +31,14 @@ class TelegramFilesDownloader(abc.ABC):
 
 
 class RedisCacheTelegramFilesDownloader(TelegramFilesDownloader):
+    STORE_PREFIX = f"{CONSTRUCTOR_PREFIX}/files-cache"
+
     def __init__(self, redis: RedisInterface, max_cached: int = 1024) -> None:
         self.redis = redis
         self.max_cached = max_cached
         self.cached_files_storage = KeyValueStore[str](
             name="tg-file",
-            prefix="global",
+            prefix=self.STORE_PREFIX,
             redis=redis,
             expiration_time=datetime.timedelta(days=60),
             dumper=str,
@@ -43,7 +46,7 @@ class RedisCacheTelegramFilesDownloader(TelegramFilesDownloader):
         )
         self.last_accessed_storage = KeyValueStore[float](
             name="tg-file-last-accessed",
-            prefix="global",
+            prefix=self.STORE_PREFIX,
             redis=redis,
             expiration_time=datetime.timedelta(days=60),
         )

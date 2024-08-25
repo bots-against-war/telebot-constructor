@@ -43,7 +43,11 @@
               "$ref": "#/$defs/FormFieldResultFormattingOpts"
             },
             {
-              "const": "auto"
+              "const": "auto",
+              "enum": [
+                "auto"
+              ],
+              "type": "string"
             },
             {
               "type": "null"
@@ -127,7 +131,11 @@
         },
         "event": {
           "const": "deleted",
-          "title": "Event"
+          "enum": [
+            "deleted"
+          ],
+          "title": "Event",
+          "type": "string"
         }
       },
       "required": [
@@ -149,7 +157,11 @@
         },
         "event": {
           "const": "edited",
-          "title": "Event"
+          "enum": [
+            "edited"
+          ],
+          "title": "Event",
+          "type": "string"
         },
         "new_version": {
           "title": "New Version",
@@ -164,10 +176,57 @@
       "title": "BotEditedEvent",
       "type": "object"
     },
+    "BotError": {
+      "properties": {
+        "timestamp": {
+          "title": "Timestamp",
+          "type": "number"
+        },
+        "update_metrics": {
+          "$ref": "#/$defs/TelegramUpdateMetrics"
+        }
+      },
+      "required": [
+        "timestamp",
+        "update_metrics"
+      ],
+      "title": "BotError",
+      "type": "object"
+    },
+    "BotErrorBlock": {
+      "description": "User flow block that raises an exception when the user enters it.",
+      "properties": {
+        "block_id": {
+          "title": "Block Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "block_id"
+      ],
+      "title": "BotErrorBlock",
+      "type": "object"
+    },
+    "BotErrorsPage": {
+      "properties": {
+        "errors": {
+          "items": {
+            "$ref": "#/$defs/BotError"
+          },
+          "title": "Errors",
+          "type": "array"
+        }
+      },
+      "required": [
+        "errors"
+      ],
+      "title": "BotErrorsPage",
+      "type": "object"
+    },
     "BotInfo": {
       "properties": {
-        "bot_name": {
-          "title": "Bot Name",
+        "bot_id": {
+          "title": "Bot Id",
           "type": "string"
         },
         "display_name": {
@@ -218,15 +277,23 @@
           },
           "title": "Forms With Responses",
           "type": "array"
+        },
+        "last_errors": {
+          "items": {
+            "$ref": "#/$defs/BotError"
+          },
+          "title": "Last Errors",
+          "type": "array"
         }
       },
       "required": [
-        "bot_name",
+        "bot_id",
         "display_name",
         "running_version",
         "last_versions",
         "last_events",
-        "forms_with_responses"
+        "forms_with_responses",
+        "last_errors"
       ],
       "title": "BotInfo",
       "type": "object"
@@ -243,7 +310,11 @@
         },
         "event": {
           "const": "started",
-          "title": "Event"
+          "enum": [
+            "started"
+          ],
+          "title": "Event",
+          "type": "string"
         },
         "version": {
           "anyOf": [
@@ -251,7 +322,11 @@
               "type": "integer"
             },
             {
-              "const": "stub"
+              "const": "stub",
+              "enum": [
+                "stub"
+              ],
+              "type": "string"
             }
           ],
           "title": "Version"
@@ -277,7 +352,11 @@
         },
         "event": {
           "const": "stopped",
-          "title": "Event"
+          "enum": [
+            "stopped"
+          ],
+          "title": "Event",
+          "type": "string"
         }
       },
       "required": [
@@ -566,6 +645,24 @@
         "label"
       ],
       "title": "EnumOption",
+      "type": "object"
+    },
+    "ExceptionInfo": {
+      "properties": {
+        "type_name": {
+          "title": "Type Name",
+          "type": "string"
+        },
+        "body": {
+          "title": "Body",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type_name",
+        "body"
+      ],
+      "title": "ExceptionInfo",
       "type": "object"
     },
     "FeedbackHandlerConfig": {
@@ -1424,6 +1521,29 @@
       "title": "MenuMechanism",
       "type": "string"
     },
+    "MessageInfo": {
+      "properties": {
+        "is_forwarded": {
+          "title": "Is Forwarded",
+          "type": "boolean"
+        },
+        "is_reply": {
+          "title": "Is Reply",
+          "type": "boolean"
+        },
+        "content_type": {
+          "title": "Content Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "is_forwarded",
+        "is_reply",
+        "content_type"
+      ],
+      "title": "MessageInfo",
+      "type": "object"
+    },
     "MessagesToAdmin": {
       "properties": {
         "copied_to_user_ok": {
@@ -1519,7 +1639,11 @@
               "$ref": "#/$defs/FormFieldResultFormattingOpts"
             },
             {
-              "const": "auto"
+              "const": "auto",
+              "enum": [
+                "auto"
+              ],
+              "type": "string"
             },
             {
               "type": "null"
@@ -1664,7 +1788,11 @@
               "$ref": "#/$defs/FormFieldResultFormattingOpts"
             },
             {
-              "const": "auto"
+              "const": "auto",
+              "enum": [
+                "auto"
+              ],
+              "type": "string"
             },
             {
               "type": "null"
@@ -1717,6 +1845,67 @@
         "version"
       ],
       "title": "StartBotPayload",
+      "type": "object"
+    },
+    "TelegramUpdateMetrics": {
+      "properties": {
+        "bot_prefix": {
+          "title": "Bot Prefix",
+          "type": "string"
+        },
+        "received_at": {
+          "title": "Received At",
+          "type": "number"
+        },
+        "update_id": {
+          "title": "Update Id",
+          "type": "integer"
+        },
+        "update_type": {
+          "title": "Update Type",
+          "type": "string"
+        },
+        "handler_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Handler Name"
+        },
+        "handler_metrics": {
+          "title": "Handler Metrics",
+          "type": "object"
+        },
+        "handler_test_durations": {
+          "items": {
+            "type": "number"
+          },
+          "title": "Handler Test Durations",
+          "type": "array"
+        },
+        "processing_duration": {
+          "title": "Processing Duration",
+          "type": "number"
+        },
+        "exception_info": {
+          "$ref": "#/$defs/ExceptionInfo"
+        },
+        "user_info": {
+          "$ref": "#/$defs/UserInfo"
+        },
+        "message_info": {
+          "$ref": "#/$defs/MessageInfo"
+        }
+      },
+      "required": [
+        "bot_prefix",
+        "received_at"
+      ],
+      "title": "TelegramUpdateMetrics",
       "type": "object"
     },
     "TgBotCommand": {
@@ -1960,6 +2149,17 @@
             }
           ],
           "default": null
+        },
+        "error": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BotErrorBlock"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         }
       },
       "title": "UserFlowBlockConfig",
@@ -2053,6 +2253,31 @@
       ],
       "title": "UserFlowNodePosition",
       "type": "object"
+    },
+    "UserInfo": {
+      "properties": {
+        "user_id_hash": {
+          "title": "User Id Hash",
+          "type": "string"
+        },
+        "language_code": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Language Code"
+        }
+      },
+      "required": [
+        "user_id_hash",
+        "language_code"
+      ],
+      "title": "UserInfo",
+      "type": "object"
     }
   },
   "description": "Temporary class to pack several models into one schema; not used directly by frontend code",
@@ -2095,6 +2320,9 @@
     },
     "form_results_page": {
       "$ref": "#/$defs/FormResultsPage"
+    },
+    "bot_errors_page": {
+      "$ref": "#/$defs/BotErrorsPage"
     }
   },
   "required": [
@@ -2110,7 +2338,8 @@
     "start_bot_payload",
     "form_info",
     "form_info_basic",
-    "form_results_page"
+    "form_results_page",
+    "bot_errors_page"
   ],
   "title": "BackendDataModels",
   "type": "object"

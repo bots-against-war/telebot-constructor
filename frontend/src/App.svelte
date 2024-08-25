@@ -24,7 +24,7 @@
           <DashboardLoader />
         </Route>
         <Route path="/studio/:botId" let:params>
-          <StudioLoader botName={params.botId} />
+          <StudioLoader botId={params.botId} />
         </Route>
         <Route path="/forms/:botId/:formBlockId" let:params>
           <FormLoader botId={params.botId} formBlockId={params.formBlockId} />

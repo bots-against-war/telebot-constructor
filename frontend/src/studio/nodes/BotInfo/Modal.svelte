@@ -12,19 +12,19 @@
 
   const closeModal = getModalCloser();
 
-  export let botName: string;
+  export let botId: string;
   export let botUser: TgBotUser;
   export let onBotUserUpdated: (updated: TgBotUser) => any;
 
   let isUpdating = false;
   let updateError: string | null = null;
-  const MAX_BOT_NAME_LEN = 64;
+  const MAX_BOT_ID_LEN = 64;
   const MAX_BOT_SHORT_DESCRIPTION_LEN = 120;
   const MAX_BOT_DESCRIPTION_LEN = 512;
 
   async function saveBotUser() {
     isUpdating = true;
-    const res = await updateBotUser(botName, {
+    const res = await updateBotUser(botId, {
       name: botUser.name,
       description: botUser.description,
       short_description: botUser.short_description,
@@ -43,7 +43,7 @@
   <div class="flex flex-row gap-2 items-center">
     <Avatar src={botUser.userpic ? base64Image(botUser.userpic) : undefined} class="w-20 h-20" />
     <div class="h-full w-full flex flex-col gap-1">
-      <TextInput styleClass="text-2xl" bind:value={botUser.name} maxLength={MAX_BOT_NAME_LEN} />
+      <TextInput styleClass="text-2xl" bind:value={botUser.name} maxLength={MAX_BOT_ID_LEN} />
       <p class="text-gray-500">@{botUser.username}</p>
     </div>
   </div>

@@ -11,7 +11,7 @@
   import DataBadge from "./internal/DataBadge.svelte";
   import DataBadgeLoader from "./internal/DataBadgeLoader.svelte";
 
-  export let botName: string;
+  export let botId: string;
   export let chatId: number | string;
   export let chatData: TgGroupChat | null = null; // null = get from localstorage or load, if not there
 
@@ -33,7 +33,7 @@
     }
 
     async function loadAndSaveChatData() {
-      const res = await getGroupChatData(botName, chatId);
+      const res = await getGroupChatData(botId, chatId);
       if (res.ok) {
         saveToCache(res.data);
       }

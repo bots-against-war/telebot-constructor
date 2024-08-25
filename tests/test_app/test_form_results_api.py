@@ -107,7 +107,7 @@ async def test_form_results_api(
     assert resp.status == 200
     print(await resp.json())
     assert mask_recent_timestamps(await resp.json()) == {
-        "bot_name": "mybot",
+        "bot_id": "mybot",
         "display_name": "my test bot",
         "running_version": 0,
         "last_versions": [
@@ -124,6 +124,7 @@ async def test_form_results_api(
             {"timestamp": RECENT_TIMESTAMP, "username": "no-auth", "event": "started", "version": 0},
         ],
         "forms_with_responses": [],
+        "last_errors": [],
     }
 
     assert isinstance(constructor.runner, MockBotRunner)
@@ -178,7 +179,7 @@ async def test_form_results_api(
     resp = await client.get("/api/info/mybot")
     assert resp.status == 200
     assert mask_recent_timestamps(await resp.json()) == {
-        "bot_name": "mybot",
+        "bot_id": "mybot",
         "display_name": "my test bot",
         "running_version": 0,
         "last_versions": [
@@ -201,6 +202,7 @@ async def test_form_results_api(
                 "title": None,
             }
         ],
+        "last_errors": [],
     }
 
     # finally, calling the form results api to get user's responses

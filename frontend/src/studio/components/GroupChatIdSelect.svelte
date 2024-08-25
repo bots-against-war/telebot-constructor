@@ -11,7 +11,7 @@
   import { PLACEHOLDER_GROUP_CHAT_ID } from "../nodes/defaultConfigs";
 
   export let label: string;
-  export let botName: string;
+  export let botId: string;
   export let selectedGroupChatId: number | string;
 
   let showGroupChatSelect = selectedGroupChatId === PLACEHOLDER_GROUP_CHAT_ID;
@@ -20,7 +20,7 @@
 
   $: {
     if (showGroupChatSelect) {
-      availableGroupChatsPromise = getAvailableGroupChats(botName);
+      availableGroupChatsPromise = getAvailableGroupChats(botId);
     } else {
       // on any close of the accordion we make sure to stop the discovery
       stopAdminChatDiscovery();
@@ -33,7 +33,7 @@
     }
     discoverChatsPollingIntervalId !== null ? clearInterval(discoverChatsPollingIntervalId) : null;
     stopChatDiscoveryAfterTimeoutId !== null ? clearTimeout(stopChatDiscoveryAfterTimeoutId) : null;
-    await stopGroupChatDiscovery(botName);
+    await stopGroupChatDiscovery(botId);
     isDiscoveringAdminChats = false;
   }
 
@@ -48,7 +48,7 @@
     <div slot="header" class="flex flex-col gap-2 text-gray-900">
       <span class="font-bold">{label}</span>
       {#if selectedGroupChatId !== PLACEHOLDER_GROUP_CHAT_ID}
-        <GroupChatBadge {botName} chatId={selectedGroupChatId} />
+        <GroupChatBadge {botId} chatId={selectedGroupChatId} />
       {/if}
     </div>
     <div slot="arrowdown">
@@ -78,7 +78,7 @@
                 value={availableGroupChat.id}
               />
               <label for={`group-chat-${availableGroupChat.id}`}>
-                <GroupChatBadge {botName} chatId={availableGroupChat.id} chatData={availableGroupChat} />
+                <GroupChatBadge {botId} chatId={availableGroupChat.id} chatData={availableGroupChat} />
               </label>
             </div>
           {/each}
@@ -92,14 +92,14 @@
             size="xs"
             on:click={async () => {
               isDiscoveringAdminChats = true;
-              await startGroupChatDiscovery(botName);
+              await startGroupChatDiscovery(botId);
 
               // update available group list each 5 seconds
               // @ts-expect-error
               discoverChatsPollingIntervalId = setInterval(() => {
                 if (isDiscoveringAdminChats) {
                   console.log("Updating available group chats list");
-                  availableGroupChatsPromise = getAvailableGroupChats(botName);
+                  availableGroupChatsPromise = getAvailableGroupChats(botId);
                 } else if (discoverChatsPollingIntervalId !== null) {
                   clearInterval(discoverChatsPollingIntervalId);
                 }
