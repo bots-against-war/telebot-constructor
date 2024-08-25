@@ -19,18 +19,18 @@ async def test_polling_bot_runner() -> None:
 
         await runner.start(
             username="user",
-            bot_name="bot",
+            bot_id="bot",
             bot_runner=bot_runner,
         )
         await asyncio.sleep(0.1)
         assert ("get", URL("https://api.telegram.org/botTOKEN/getUpdates")) in mock.requests
-        await runner.stop(username="user", bot_name="bot")
+        await runner.stop(username="user", bot_id="bot")
 
         await runner.start(
             username="user",
-            bot_name="bot",
+            bot_id="bot",
             bot_runner=bot_runner,
         )
         await asyncio.sleep(0.1)
         assert ("get", URL("https://api.telegram.org/botTOKEN/getUpdates")) in mock.requests
-        await runner.stop(username="user", bot_name="bot")
+        await runner.stop(username="user", bot_id="bot")

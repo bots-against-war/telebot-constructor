@@ -46,9 +46,9 @@
       lowercase: true,
       trim: true,
     });
-    const MAX_BOT_NAME_LEN = 64;
+    const MAX_BOT_ID_LEN = 64;
     const UUID_SUFFIX_LEN = 8;
-    const MAX_TRANSLIT_PREFIX_LEN = MAX_BOT_NAME_LEN - UUID_SUFFIX_LEN - 1;
+    const MAX_TRANSLIT_PREFIX_LEN = MAX_BOT_ID_LEN - UUID_SUFFIX_LEN - 1;
     if (botName.length > MAX_TRANSLIT_PREFIX_LEN) {
       botName = botName.slice(0, MAX_TRANSLIT_PREFIX_LEN);
     }

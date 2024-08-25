@@ -107,7 +107,7 @@ async def test_form_results_api(
     assert resp.status == 200
     print(await resp.json())
     assert mask_recent_timestamps(await resp.json()) == {
-        "bot_name": "mybot",
+        "bot_id": "mybot",
         "display_name": "my test bot",
         "running_version": 0,
         "last_versions": [
@@ -179,7 +179,7 @@ async def test_form_results_api(
     resp = await client.get("/api/info/mybot")
     assert resp.status == 200
     assert mask_recent_timestamps(await resp.json()) == {
-        "bot_name": "mybot",
+        "bot_id": "mybot",
         "display_name": "my test bot",
         "running_version": 0,
         "last_versions": [

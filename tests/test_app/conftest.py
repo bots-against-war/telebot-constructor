@@ -21,12 +21,12 @@ class MockBotRunner(ConstructedBotRunner):
     def __init__(self) -> None:
         self.running: dict[str, dict[str, BotRunner]] = collections.defaultdict(dict)
 
-    async def start(self, username: str, bot_name: str, bot_runner: BotRunner) -> bool:
-        self.running[username][bot_name] = bot_runner
+    async def start(self, username: str, bot_id: str, bot_runner: BotRunner) -> bool:
+        self.running[username][bot_id] = bot_runner
         return True
 
-    async def stop(self, username: str, bot_name: str) -> bool:
-        stopped = self.running[username].pop(bot_name, None)
+    async def stop(self, username: str, bot_id: str) -> bool:
+        stopped = self.running[username].pop(bot_id, None)
         return stopped is not None
 
     async def cleanup(self) -> None:

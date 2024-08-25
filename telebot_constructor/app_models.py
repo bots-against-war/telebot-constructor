@@ -151,7 +151,7 @@ class BotVersionInfo(BaseModel):
 
 
 class BotInfo(BaseModel):
-    bot_name: str  # internal constructor bot name / id
+    bot_id: str  # internal constructor bot id
     display_name: str  # user-facing name
     running_version: Optional[int]  # None = bot not running
     last_versions: list[BotVersionInfo]  # versions, including last and running (if present) versions

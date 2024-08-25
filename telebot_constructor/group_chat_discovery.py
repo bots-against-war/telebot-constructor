@@ -49,20 +49,20 @@ class GroupChatDiscoveryHandler:
         )
         self.telegram_files_downloader = telegram_files_downloader
 
-    def _full_key(self, username: str, bot_name: str) -> str:
-        return f"{username}-{bot_name}"
+    def _full_key(self, username: str, bot_id: str) -> str:
+        return f"{username}-{bot_id}"
 
-    async def start_discovery(self, username: str, bot_name: str) -> None:
-        await self._bots_in_discovery_mode_store.set_flag(self._full_key(username, bot_name))
+    async def start_discovery(self, username: str, bot_id: str) -> None:
+        await self._bots_in_discovery_mode_store.set_flag(self._full_key(username, bot_id))
 
-    async def stop_discovery(self, username: str, bot_name: str) -> None:
-        await self._bots_in_discovery_mode_store.unset_flag(self._full_key(username, bot_name))
+    async def stop_discovery(self, username: str, bot_id: str) -> None:
+        await self._bots_in_discovery_mode_store.unset_flag(self._full_key(username, bot_id))
 
-    async def is_discovering(self, username: str, bot_name: str) -> bool:
-        return await self._bots_in_discovery_mode_store.is_flag_set(self._full_key(username, bot_name))
+    async def is_discovering(self, username: str, bot_id: str) -> bool:
+        return await self._bots_in_discovery_mode_store.is_flag_set(self._full_key(username, bot_id))
 
-    async def save_discovered_chat(self, username: str, bot_name: str, chat_id: AnyChatId) -> None:
-        await self._available_group_chat_ids.add(self._full_key(username, bot_name), chat_id)
+    async def save_discovered_chat(self, username: str, bot_id: str, chat_id: AnyChatId) -> None:
+        await self._available_group_chat_ids.add(self._full_key(username, bot_id), chat_id)
 
     async def get_group_chat(self, bot: AsyncTeleBot, chat_id: AnyChatId) -> Optional[TgGroupChat]:
         prefix = f"{bot.log_marker} (getting info for chat {chat_id}) "
@@ -89,14 +89,14 @@ class GroupChatDiscoveryHandler:
             photo=photo_b64,
         )
 
-    async def validate_discovered_chats(self, username: str, bot_name: str, bot: AsyncTeleBot) -> list[TgGroupChat]:
+    async def validate_discovered_chats(self, username: str, bot_id: str, bot: AsyncTeleBot) -> list[TgGroupChat]:
         """
         Check saved available chats and validate they are still available to the bot (i.e. it was not kicked, group chat
         was not promoted to supergroup, etc); return a list of valid chats as telegram Chat objects
         """
-        prefix = f"{bot_name!r} by {username!r} (validating discovered chats)"
+        prefix = f"{bot_id!r} by {username!r} (validating discovered chats)"
         chats: list[TgGroupChat] = []
-        key = self._full_key(username, bot_name)
+        key = self._full_key(username, bot_id)
         available_chat_ids = await self._available_group_chat_ids.all(key)
         logger.info(prefix + f"Available chat ids: {sorted(available_chat_ids)}")
         for chat_id in available_chat_ids:

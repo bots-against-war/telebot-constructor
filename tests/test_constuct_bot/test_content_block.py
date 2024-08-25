@@ -71,7 +71,7 @@ async def test_single_photo() -> None:
     username = "test-username"
     await secret_store.save_secret(secret_name="token", secret_value="<token>", owner_id=username)
 
-    # calling main constructor function, in prod it is done when starting the bot (see /api/start/{bot_name})
+    # calling main constructor function, in prod it is done when starting the bot (see /api/start/{bot_id})
     bot_runner = await construct_bot(
         username=username,
         bot_id="simple-user-flow-bot",

@@ -79,7 +79,7 @@ async def test_bot_errors_api(
     resp = await client.get("/api/info/mybot")
     assert resp.status == 200
     assert mask_small_time_durations(mask_recent_timestamps(await resp.json())) == {
-        "bot_name": "mybot",
+        "bot_id": "mybot",
         "display_name": "my test bot",
         "running_version": 0,
         "last_versions": [

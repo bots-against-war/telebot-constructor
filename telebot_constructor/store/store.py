@@ -193,7 +193,7 @@ class TelebotConstructorStore:
             return None
 
         return BotInfo(
-            bot_name=bot_id,
+            bot_id=bot_id,
             display_name=display_name,
             running_version=running_version,
             last_versions=[
