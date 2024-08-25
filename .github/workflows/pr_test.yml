@@ -12,10 +12,10 @@ jobs:
       # setup
       - name: Checkout latest version
         uses: actions/checkout@v2
-      - name: Setup Python 3.10
+      - name: Setup Python 3.12
         uses: actions/setup-python@v2
         with:
-          python-version: "3.10"
+          python-version: "3.12"
           architecture: x64
       - name: Setup Poetry
         uses: abatilo/actions-poetry@v2.0.0
@@ -31,29 +31,23 @@ jobs:
         run: npm install
 
       # backend checks
-      - name: Run linter and type checker tests
+      - name: (back) Run linter and type checker tests
         run: poetry run isort . --check &&
           poetry run black . --check &&
           poetry run mypy &&
           poetry run flake8
-      - name: Run unit tests with coverage check
+      - name: (back) Run unit tests with coverage check
         run: |
           poetry run coverage run -m pytest tests -vv &&
           poetry run coverage report
-      - name: Validate that JSON schema is up-to-date
+      - name: (back) Validate JSON schema is up-to-date
         run: poetry run python scripts/models/pydantic2jsonschema.py --check
-      - name: Validate that requirements.txt are up to date
-        run: |
-          poetry export -f requirements.txt --output latest-requirements.txt
-          cmp requirements.txt latest-requirements.txt
-          poetry export --only dev -f requirements.txt --output latest-requirements.dev.txt
-          cmp requirements.dev.txt latest-requirements.dev.txt
 
       # frontend checks
-      - name: Check Prettier formatting
+      - name: (front) Check Prettier formatting
         run: npx prettier --check frontend
       # SvelteUI doesn't work very well with svelte-check and generates a lot of false-positives that can't be ignored :(
       # - name: Run Svelte check
       #   run: npm run check
-      - name: Validate that Typescript data model is up-to-date
+      - name: (front) Validate Typescript data model is up-to-date
         run: node scripts/models/jsonschema2ts.mjs --check

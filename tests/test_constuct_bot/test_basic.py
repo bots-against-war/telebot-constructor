@@ -5,7 +5,11 @@ from telebot_components.redis_utils.emulation import RedisEmulation
 
 from telebot_constructor.bot_config import BotConfig, UserFlowConfig
 from telebot_constructor.construct import construct_bot
-from tests.utils import dummy_form_results_store, dummy_secret_store
+from tests.utils import (
+    dummy_form_results_store,
+    dummy_metrics_store,
+    dummy_secret_store,
+)
 
 EMPTY_USER_FLOW_CONFIG = UserFlowConfig(
     entrypoints=[],
@@ -21,11 +25,12 @@ async def test_construct_empty_bot() -> None:
     await secret_store.save_secret(secret_name="empty-bot-token", secret_value="mock-token", owner_id=username)
     await construct_bot(
         username=username,
-        bot_name="empty-bot-test",
+        bot_id="empty-bot-test",
         bot_config=BotConfig(
             token_secret_name="empty-bot-token", display_name="Test bot", user_flow_config=EMPTY_USER_FLOW_CONFIG
         ),
         form_results_store=dummy_form_results_store(),
+        metrics_store=dummy_metrics_store(),
         secret_store=secret_store,
         redis=redis,
         _bot_factory=MockedAsyncTeleBot,
@@ -37,11 +42,12 @@ async def test_missing_token_secret() -> None:
     with pytest.raises(ValueError):
         await construct_bot(
             username="some-user",
-            bot_name="bot-test",
+            bot_id="bot-test",
             bot_config=BotConfig(
                 token_secret_name="empty-bot-token", display_name="Test bot", user_flow_config=EMPTY_USER_FLOW_CONFIG
             ),
             form_results_store=dummy_form_results_store(),
+            metrics_store=dummy_metrics_store(),
             secret_store=dummy_secret_store(redis),
             redis=redis,
             _bot_factory=MockedAsyncTeleBot,
@@ -58,13 +64,14 @@ async def test_bot_token_validation_failed() -> None:
         with pytest.raises(ValueError, match="Failed to get bot user with getMe, the token is probably invalid"):
             await construct_bot(
                 username=username,
-                bot_name="test",
+                bot_id="test",
                 bot_config=BotConfig(
                     token_secret_name="token",
                     display_name="Test bot",
                     user_flow_config=EMPTY_USER_FLOW_CONFIG,
                 ),
                 form_results_store=dummy_form_results_store(),
+                metrics_store=dummy_metrics_store(),
                 secret_store=secret_store,
                 redis=redis,
             )

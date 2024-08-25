@@ -166,6 +166,7 @@ export type EmojiButtons = boolean;
 export type SupportedLanguages = string[];
 export type LanguageSelectedNextBlockId = string | null;
 export type NextBlockId5 = string | null;
+export type BlockId5 = string;
 export type Blocks = UserFlowBlockConfig[];
 export type X = number;
 export type Y = number;
@@ -209,7 +210,7 @@ export type Username2 = string;
 export type Name6 = string;
 export type DisplayUsername = string | null;
 export type Userpic1 = string | null;
-export type BotName = string;
+export type BotId = string;
 export type DisplayName1 = string;
 export type RunningVersion = number | null;
 export type Version = number;
@@ -235,6 +236,22 @@ export type FormBlockId = string;
 export type Prompt3 = string;
 export type Title1 = string | null;
 export type FormsWithResponses = FormInfoBasic[];
+export type Timestamp5 = number;
+export type BotPrefix = string;
+export type ReceivedAt = number;
+export type UpdateId = number;
+export type UpdateType = string;
+export type HandlerName = string | null;
+export type HandlerTestDurations = number[];
+export type ProcessingDuration = number;
+export type TypeName = string;
+export type Body = string;
+export type UserIdHash = string;
+export type LanguageCode = string | null;
+export type IsForwarded = boolean;
+export type IsReply = boolean;
+export type ContentType = string;
+export type LastErrors = BotError[];
 export type VersionMessage = string | null;
 export type Start = boolean;
 export type DisplayName2 = string | null;
@@ -246,6 +263,7 @@ export type TotalResponses = number;
 export type Results = {
   [k: string]: string | number | number;
 }[];
+export type Errors = BotError[];
 
 /**
  * Temporary class to pack several models into one schema; not used directly by frontend code
@@ -264,6 +282,7 @@ export interface BackendDataModels {
   form_info: FormInfo;
   form_info_basic: FormInfoBasic;
   form_results_page: FormResultsPage;
+  bot_errors_page: BotErrorsPage;
   [k: string]: unknown;
 }
 export interface BotConfig {
@@ -318,6 +337,7 @@ export interface UserFlowBlockConfig {
   menu?: MenuBlock | null;
   form?: FormBlock | null;
   language_select?: LanguageSelectBlock | null;
+  error?: BotErrorBlock | null;
   [k: string]: unknown;
 }
 /**
@@ -510,6 +530,13 @@ export interface LanguageSelectionMenuConfig {
 export interface Propmt {
   [k: string]: string;
 }
+/**
+ * User flow block that raises an exception when the user enters it.
+ */
+export interface BotErrorBlock {
+  block_id: BlockId5;
+  [k: string]: unknown;
+}
 export interface NodeDisplayCoords {
   [k: string]: UserFlowNodePosition;
 }
@@ -581,12 +608,13 @@ export interface LoggedInUser {
   [k: string]: unknown;
 }
 export interface BotInfo {
-  bot_name: BotName;
+  bot_id: BotId;
   display_name: DisplayName1;
   running_version: RunningVersion;
   last_versions: LastVersions;
   last_events: LastEvents;
   forms_with_responses: FormsWithResponses;
+  last_errors: LastErrors;
   [k: string]: unknown;
 }
 export interface BotVersionInfo {
@@ -631,6 +659,44 @@ export interface FormInfoBasic {
   title: Title1;
   [k: string]: unknown;
 }
+export interface BotError {
+  timestamp: Timestamp5;
+  update_metrics: TelegramUpdateMetrics;
+  [k: string]: unknown;
+}
+export interface TelegramUpdateMetrics {
+  bot_prefix: BotPrefix;
+  received_at: ReceivedAt;
+  update_id?: UpdateId;
+  update_type?: UpdateType;
+  handler_name?: HandlerName;
+  handler_metrics?: HandlerMetrics;
+  handler_test_durations?: HandlerTestDurations;
+  processing_duration?: ProcessingDuration;
+  exception_info?: ExceptionInfo;
+  user_info?: UserInfo;
+  message_info?: MessageInfo;
+  [k: string]: unknown;
+}
+export interface HandlerMetrics {
+  [k: string]: unknown;
+}
+export interface ExceptionInfo {
+  type_name: TypeName;
+  body: Body;
+  [k: string]: unknown;
+}
+export interface UserInfo {
+  user_id_hash: UserIdHash;
+  language_code: LanguageCode;
+  [k: string]: unknown;
+}
+export interface MessageInfo {
+  is_forwarded: IsForwarded;
+  is_reply: IsReply;
+  content_type: ContentType;
+  [k: string]: unknown;
+}
 export interface SaveBotConfigVersionPayload {
   config: BotConfig;
   version_message: VersionMessage;
@@ -656,5 +722,9 @@ export interface FieldNames {
 export interface FormResultsPage {
   info: FormInfo;
   results: Results;
+  [k: string]: unknown;
+}
+export interface BotErrorsPage {
+  errors: Errors;
   [k: string]: unknown;
 }

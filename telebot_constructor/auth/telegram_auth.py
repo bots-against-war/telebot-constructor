@@ -152,10 +152,6 @@ class TelegramAuth(Auth):
         app.router.add_post("/telegram-auth/try-login", try_login)
 
         async def request_auth_link(request: web.Request) -> web.Response:
-            """
-            This method is called when user clicks on _____"Send code"_____ button on login page.
-            It provides the user with a link to our auth telegram bot with a unique start param.
-            """
             start_param = secrets.token_hex(16)
             bot_username = await self.get_bot_username()
             access_token = secrets.token_hex(32)

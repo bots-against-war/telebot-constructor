@@ -10,7 +10,7 @@
   import { clone } from "../../utils";
   import { NODE_TITLE } from "../display";
 
-  export let botName: string; // required for admin chat id rendering, and context does not propagate here
+  export let botId: string; // required for admin chat id rendering, and context does not propagate here
   export let config: HumanOperatorBlock;
   export let onConfigUpdate: (newConfig: HumanOperatorBlock) => any;
 
@@ -29,7 +29,7 @@
 <NodeModalBody title={NODE_TITLE.human_operator}>
   <div class={blockSeqClass}>
     <div class={blockClass}>
-      <GroupChatIdSelect label="Админ-чат" {botName} bind:selectedGroupChatId={fhConfig.admin_chat_id} />
+      <GroupChatIdSelect label="Админ-чат" {botId} bind:selectedGroupChatId={fhConfig.admin_chat_id} />
       <Toggle bind:checked={fhConfig.anonimyze_users}>Анонимизировать юзеро:к</Toggle>
       <Toggle bind:checked={fhConfig.forum_topic_per_user}>Отдельная тема на юзер:ку</Toggle>
     </div>

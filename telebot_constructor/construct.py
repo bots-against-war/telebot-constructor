@@ -1,53 +1,68 @@
 import itertools
 import logging
-from typing import Callable, Coroutine, Optional
+from typing import Callable, Coroutine, Optional, Type
 
 from telebot import AsyncTeleBot
+from telebot.metrics import TelegramUpdateMetricsHandler
 from telebot.runner import AuxBotEndpoint, BotRunner
 from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.stores.banned_users import BannedUsersStore
 from telebot_components.utils.secrets import SecretStore
 
 from telebot_constructor.bot_config import BotConfig
+from telebot_constructor.constants import CONSTRUCTOR_PREFIX
 from telebot_constructor.group_chat_discovery import GroupChatDiscoveryHandler
 from telebot_constructor.store.form_results import BotSpecificFormResultsStore
+from telebot_constructor.store.metrics import MetricsStore
 from telebot_constructor.user_flow.types import BotCommandInfo
 from telebot_constructor.utils.rate_limit_retry import rate_limit_retry
 
 logger = logging.getLogger(__name__)
 
-BotFactory = Callable[[str], AsyncTeleBot]
+BotFactory = (
+    Type[AsyncTeleBot] | Callable[..., AsyncTeleBot]
+)  # callable must have the same args as AsyncTeleBot constructor but I can't find the proper typing
 
 
-async def make_raw_bot(
+async def make_bare_bot(
     username: str,
     bot_config: BotConfig,
     secret_store: SecretStore,
+    update_metrics_handler: Optional[TelegramUpdateMetricsHandler] = None,
     _bot_factory: BotFactory = AsyncTeleBot,
 ) -> AsyncTeleBot:
     token = await secret_store.get_secret(secret_name=bot_config.token_secret_name, owner_id=username)
     if token is None:
         raise ValueError(f"Token name {bot_config.token_secret_name!r} does not correspond to a valid secret")
-    return _bot_factory(token)
+    return _bot_factory(token, update_metrics_handler=update_metrics_handler)
 
 
 async def construct_bot(
+    *,
     username: str,
-    bot_name: str,
+    bot_id: str,
     bot_config: BotConfig,
     secret_store: SecretStore,
     form_results_store: BotSpecificFormResultsStore,
+    metrics_store: MetricsStore,
     redis: RedisInterface,
     group_chat_discovery_handler: Optional[GroupChatDiscoveryHandler] = None,
     _bot_factory: BotFactory = AsyncTeleBot,  # used for testing
 ) -> BotRunner:
     """Core bot construction function responsible for turning a config into a functional bot"""
-    bot_prefix = f"{username}-{bot_name}"
-    log_prefix = f"[{username}][{bot_name}] "
+    bot_prefix = f"{CONSTRUCTOR_PREFIX}/{username}/{bot_id}"
+    log_prefix = f"[{username}][{bot_id}] "
     logger.info(log_prefix + "Constructing bot")
 
-    bot = await make_raw_bot(
-        username=username, bot_config=bot_config, secret_store=secret_store, _bot_factory=_bot_factory
+    bot = await make_bare_bot(
+        username=username,
+        bot_config=bot_config,
+        secret_store=secret_store,
+        update_metrics_handler=metrics_store.get_update_metrics_handler(
+            username=username,
+            bot_id=bot_id,
+        ),
+        _bot_factory=_bot_factory,
     )
 
     background_jobs: list[Coroutine[None, None, None]] = []
@@ -102,7 +117,7 @@ async def construct_bot(
                 )
 
     if group_chat_discovery_handler is not None:
-        group_chat_discovery_handler.setup_handlers(username=username, bot_name=bot_name, bot=bot)
+        group_chat_discovery_handler.setup_handlers(username=username, bot_id=bot_id, bot=bot)
 
     return BotRunner(
         bot_prefix=bot_prefix,

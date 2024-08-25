@@ -21,13 +21,13 @@
 
   const openModal = getModalOpener<Modal>();
 
-  export let botName: string;
+  export let botId: string;
   export let position: SvelvetPosition;
 
   let loadedBotUser: TgBotUser | null = null;
 
   async function loadBotUser() {
-    const res = await getBotUser(botName);
+    const res = await getBotUser(botId);
     if (!res.ok) return res;
     loadedBotUser = res.data;
     return res;
@@ -47,7 +47,7 @@
     on:edit={() => {
       if (!loadedBotUser) return;
       openModal(Modal, {
-        botName,
+        botId,
         botUser: loadedBotUser,
         onBotUserUpdated: (newBotUser) => {
           loadedBotUser = newBotUser;

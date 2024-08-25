@@ -20,7 +20,7 @@
   export let config: FormBlock;
   export let position: SvelvetPosition;
   export let isValid = true;
-  export let botName: string;
+  export let botId: string;
 
   const setNewConfig = (newConfig: FormBlock) => {
     config = newConfig;
@@ -28,7 +28,7 @@
   const openEditModal = () =>
     openModal(Modal, {
       config,
-      botName,
+      botId,
       onConfigUpdate: setNewConfig,
     });
 </script>

@@ -10,6 +10,7 @@ from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.stores.generic import KeyFlagStore, KeySetStore
 
 from telebot_constructor.app_models import TgGroupChat, TgGroupChatType
+from telebot_constructor.constants import CONSTRUCTOR_PREFIX
 from telebot_constructor.telegram_files_downloader import TelegramFilesDownloader
 from telebot_constructor.utils import (
     AnyChatId,
@@ -27,7 +28,7 @@ class GroupChatDiscoveryHandler:
     (e.g. to automagically discover admin chats for users)
     """
 
-    STORE_PREFIX = "telebot-constructor-group-chat-discovery"
+    STORE_PREFIX = f"{CONSTRUCTOR_PREFIX}/group-chat-discovery"
 
     def __init__(self, redis: RedisInterface, telegram_files_downloader: TelegramFilesDownloader) -> None:
         # "{username}-{bot name}" -> flag for group chat discovery mode
@@ -48,20 +49,20 @@ class GroupChatDiscoveryHandler:
         )
         self.telegram_files_downloader = telegram_files_downloader
 
-    def _full_key(self, username: str, bot_name: str) -> str:
-        return f"{username}-{bot_name}"
+    def _full_key(self, username: str, bot_id: str) -> str:
+        return f"{username}-{bot_id}"
 
-    async def start_discovery(self, username: str, bot_name: str) -> None:
-        await self._bots_in_discovery_mode_store.set_flag(self._full_key(username, bot_name))
+    async def start_discovery(self, username: str, bot_id: str) -> None:
+        await self._bots_in_discovery_mode_store.set_flag(self._full_key(username, bot_id))
 
-    async def stop_discovery(self, username: str, bot_name: str) -> None:
-        await self._bots_in_discovery_mode_store.unset_flag(self._full_key(username, bot_name))
+    async def stop_discovery(self, username: str, bot_id: str) -> None:
+        await self._bots_in_discovery_mode_store.unset_flag(self._full_key(username, bot_id))
 
-    async def is_discovering(self, username: str, bot_name: str) -> bool:
-        return await self._bots_in_discovery_mode_store.is_flag_set(self._full_key(username, bot_name))
+    async def is_discovering(self, username: str, bot_id: str) -> bool:
+        return await self._bots_in_discovery_mode_store.is_flag_set(self._full_key(username, bot_id))
 
-    async def save_discovered_chat(self, username: str, bot_name: str, chat_id: AnyChatId) -> None:
-        await self._available_group_chat_ids.add(self._full_key(username, bot_name), chat_id)
+    async def save_discovered_chat(self, username: str, bot_id: str, chat_id: AnyChatId) -> None:
+        await self._available_group_chat_ids.add(self._full_key(username, bot_id), chat_id)
 
     async def get_group_chat(self, bot: AsyncTeleBot, chat_id: AnyChatId) -> Optional[TgGroupChat]:
         prefix = f"{bot.log_marker} (getting info for chat {chat_id}) "
@@ -88,14 +89,14 @@ class GroupChatDiscoveryHandler:
             photo=photo_b64,
         )
 
-    async def validate_discovered_chats(self, username: str, bot_name: str, bot: AsyncTeleBot) -> list[TgGroupChat]:
+    async def validate_discovered_chats(self, username: str, bot_id: str, bot: AsyncTeleBot) -> list[TgGroupChat]:
         """
         Check saved available chats and validate they are still available to the bot (i.e. it was not kicked, group chat
         was not promoted to supergroup, etc); return a list of valid chats as telegram Chat objects
         """
-        prefix = f"{bot_name!r} by {username!r} (validating discovered chats)"
+        prefix = f"{bot_id!r} by {username!r} (validating discovered chats)"
         chats: list[TgGroupChat] = []
-        key = self._full_key(username, bot_name)
+        key = self._full_key(username, bot_id)
         available_chat_ids = await self._available_group_chat_ids.all(key)
         logger.info(prefix + f"Available chat ids: {sorted(available_chat_ids)}")
         for chat_id in available_chat_ids:
@@ -107,35 +108,35 @@ class GroupChatDiscoveryHandler:
                 chats.append(chat)
         return chats
 
-    def setup_handlers(self, username: str, bot_name: str, bot: AsyncTeleBot) -> None:
+    def setup_handlers(self, username: str, bot_id: str, bot: AsyncTeleBot) -> None:
         @bot.my_chat_member_handler()
         @non_capturing_handler
         async def discover_group_chats_on_add(cmu: tg.ChatMemberUpdated) -> None:
             if (
                 tg_const.ChatType(cmu.chat.type) is not tg_const.ChatType.private
                 and cmu.new_chat_member.status in {"creator", "administrator", "member", "restricted"}
-                and await self.is_discovering(username, bot_name)
+                and await self.is_discovering(username, bot_id)
             ):
                 logger.info(f"Discovered chat from being added: {cmu.chat.id}")
-                await self.save_discovered_chat(username, bot_name, chat_id=cmu.chat.id)
+                await self.save_discovered_chat(username, bot_id, chat_id=cmu.chat.id)
             if cmu.new_chat_member.status in {"kicked", "left"}:
                 logger.info(f"Undiscovered chat from being kicked: {cmu.chat.id}")
-                await self._available_group_chat_ids.remove(self._full_key(username, bot_name), cmu.chat.id)
+                await self._available_group_chat_ids.remove(self._full_key(username, bot_id), cmu.chat.id)
 
         @bot.message_handler(commands=["discover_chat"])
         @non_capturing_handler
         async def discover_group_chat_on_explicit_cmd(message: tg.Message) -> None:
             if tg_const.ChatType(message.chat.type) is not tg_const.ChatType.private and await self.is_discovering(
-                username, bot_name
+                username, bot_id
             ):
                 logger.info(f"Discovered chat from explicit command: {message.chat.id}")
-                await self.save_discovered_chat(username, bot_name, chat_id=message.chat.id)
+                await self.save_discovered_chat(username, bot_id, chat_id=message.chat.id)
 
         @bot.message_handler(commands=["undiscover_chat"])
         @non_capturing_handler
         async def undiscover_group_chat(message: tg.Message) -> None:
             logger.info(f"Undiscovered chat from explicit command: {message.chat.id}")
-            await self._available_group_chat_ids.remove(self._full_key(username, bot_name), message.chat.id)
+            await self._available_group_chat_ids.remove(self._full_key(username, bot_id), message.chat.id)
 
         @bot.message_handler(
             content_types=[
@@ -148,7 +149,7 @@ class GroupChatDiscoveryHandler:
             if message.migrate_from_chat_id is not None:
                 logger.info(f"Migrate from chat {message.migrate_from_chat_id} message detected, undiscovering")
                 await self._available_group_chat_ids.remove(
-                    self._full_key(username, bot_name),
+                    self._full_key(username, bot_id),
                     message.migrate_from_chat_id,
                 )
             if message.migrate_to_chat_id is not None:
@@ -156,6 +157,6 @@ class GroupChatDiscoveryHandler:
                     f"Migrate to chat {message.migrate_to_chat_id} message detected, undiscovering current chat"
                 )
                 await self._available_group_chat_ids.remove(
-                    self._full_key(username, bot_name),
+                    self._full_key(username, bot_id),
                     message.chat.id,
                 )

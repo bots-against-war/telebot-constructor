@@ -11,7 +11,9 @@ from telebot_components.stores.generic import (
 
 from telebot_constructor.app_models import BotInfo, BotVersionInfo
 from telebot_constructor.bot_config import BotConfig
+from telebot_constructor.constants import CONSTRUCTOR_PREFIX
 from telebot_constructor.store.form_results import FormResultsStore
+from telebot_constructor.store.metrics import MetricsStore
 from telebot_constructor.store.types import (
     BotConfigVersionMetadata,
     BotEvent,
@@ -29,13 +31,11 @@ def set_current_timestamp(data: BotConfigVersionMetadata | BotEvent):
 class TelebotConstructorStore:
     """Main application storage for bot configs and their status"""
 
-    STORE_PREFIX = "telebot-constructor"
-
     def __init__(self, redis: RedisInterface) -> None:
         # username + bot id composite key -> versioned bot config
         self._config_store = KeyVersionedValueStore[BotConfig, BotConfigVersionMetadata](
             name="config",
-            prefix=self.STORE_PREFIX,
+            prefix=CONSTRUCTOR_PREFIX,
             redis=redis,
             snapshot_dumper=lambda config: config.model_dump(mode="json"),
             snapshot_loader=BotConfig.model_validate,
@@ -47,7 +47,7 @@ class TelebotConstructorStore:
         # - "stub" for a stub bot (e.g. for chat discovery)
         self._running_version_store = KeyDictStore[BotVersion](
             name="running-version",
-            prefix=self.STORE_PREFIX,
+            prefix=CONSTRUCTOR_PREFIX,
             redis=redis,
             expiration_time=None,
         )
@@ -55,14 +55,14 @@ class TelebotConstructorStore:
         # username + bot id composite key -> list of events that happened to bot
         self._bot_events_store = KeyListStore[BotEvent](
             name="bot-events",
-            prefix=self.STORE_PREFIX,
+            prefix=CONSTRUCTOR_PREFIX,
             redis=redis,
         )
 
         # username -> bot id -> bot display name
         self._display_names_store = KeyDictStore[str](
             name="display-name",
-            prefix=self.STORE_PREFIX,
+            prefix=CONSTRUCTOR_PREFIX,
             redis=redis,
             expiration_time=None,
             dumper=str,
@@ -70,6 +70,8 @@ class TelebotConstructorStore:
         )
 
         self.form_results = FormResultsStore(redis=redis)
+
+        self.metrics = MetricsStore(redis=redis)
 
     # bot config store CRUD
 
@@ -150,6 +152,8 @@ class TelebotConstructorStore:
     async def load_bot_info(self, username: str, bot_id: str) -> Optional[BotInfo]:
         INCLUDE_LAST_EVENTS = 10
         INCLUDE_LAST_VERSIONS = 10
+        INCLUDE_LAST_ERRORS = 10
+
         next_to_last_version = await self.bot_config_version_count(username, bot_id)
         if next_to_last_version == 0:
             return None
@@ -189,7 +193,7 @@ class TelebotConstructorStore:
             return None
 
         return BotInfo(
-            bot_name=bot_id,
+            bot_id=bot_id,
             display_name=display_name,
             running_version=running_version,
             last_versions=[
@@ -201,4 +205,5 @@ class TelebotConstructorStore:
             ],
             last_events=last_events,
             forms_with_responses=await self.form_results.list_forms(username, bot_id),
+            last_errors=await self.metrics.load_errors(username, bot_id, offset=0, count=INCLUDE_LAST_ERRORS),
         )
