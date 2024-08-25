@@ -7,6 +7,7 @@
   import SortableListInput from "../../components/SortableListInput.svelte";
   import { clone } from "../../utils";
   import { NODE_TITLE } from "../display";
+  import { TELEGRAM_MAX_MESSAGE_LENGTH_CHARS } from "../../../constants";
 
   export let config: MenuBlock;
   export let onConfigUpdate: (newConfig: MenuBlock) => any;
@@ -34,11 +35,19 @@
 </script>
 
 <NodeModalBody title={NODE_TITLE.menu}>
-  <LocalizableTextInput label="Текст" bind:value={editedConfig.menu.text} />
+  <LocalizableTextInput
+    label="Текст"
+    bind:value={editedConfig.menu.text}
+    maxCharacters={TELEGRAM_MAX_MESSAGE_LENGTH_CHARS}
+  />
   <SortableListInput label="Кнопки" bind:options={editedConfig.menu.items} optionConstructor={newMenuItem} />
   <Toggle bind:checked={addBackButton}>Возможность выйти на предыдущий уровень</Toggle>
   {#if addBackButton}
-    <LocalizableTextInput label={'Кнопка "назад"'} bind:value={backButtonLabel} />
+    <LocalizableTextInput
+      label={'Кнопка "назад"'}
+      bind:value={backButtonLabel}
+      maxCharacters={TELEGRAM_MAX_MESSAGE_LENGTH_CHARS}
+    />
   {/if}
   <NodeModalControls on:save={saveConfig} />
 </NodeModalBody>

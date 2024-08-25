@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { FormMessages } from "../../../../api/types";
+  import { TELEGRAM_MAX_MESSAGE_LENGTH_CHARS } from "../../../../constants";
   import LocalizableTextInput from "../../../components/LocalizableTextInput.svelte";
   import { languageConfigStore } from "../../../stores";
   import { formMessageDescription, formMessageName } from "../content";
@@ -26,6 +27,7 @@
         label={formMessageName(key)}
         description={formMessageDescription(key)}
         bind:value={errors[key]}
+        maxCharacters={TELEGRAM_MAX_MESSAGE_LENGTH_CHARS / 2}
       />
     {/if}
   {/each}
@@ -38,6 +40,7 @@
       label={formMessageName(key)}
       description={formMessageDescription(key)}
       bind:value={messages[key]}
+      maxCharacters={TELEGRAM_MAX_MESSAGE_LENGTH_CHARS / 2}
     />
   {/each}
 </div>

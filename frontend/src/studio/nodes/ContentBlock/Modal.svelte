@@ -5,6 +5,7 @@
   import NodeModalBody from "../../components/NodeModalBody.svelte";
   import NodeModalControls from "../../components/NodeModalControls.svelte";
   import { NODE_TITLE } from "../display";
+  import { TELEGRAM_MAX_MESSAGE_LENGTH_CHARS } from "../../../constants";
 
   export let config: ContentBlock;
   export let onConfigUpdate: (newConfig: ContentBlock) => any;
@@ -87,7 +88,11 @@
 </script>
 
 <NodeModalBody title={NODE_TITLE.content}>
-  <LocalizableTextInput label="Текст сообщения" bind:value={editedMessageText} maxCharacters={4096} />
+  <LocalizableTextInput
+    label="Текст сообщения"
+    bind:value={editedMessageText}
+    maxCharacters={TELEGRAM_MAX_MESSAGE_LENGTH_CHARS}
+  />
 
   <div>
     <Label class="pb-2" for="multiple_files">Добавьте одно или несколько изображений</Label>

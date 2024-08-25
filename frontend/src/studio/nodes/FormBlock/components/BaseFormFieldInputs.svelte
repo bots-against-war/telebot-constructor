@@ -6,6 +6,7 @@
   import { languageConfigStore } from "../../../stores";
   import { localizableTextToString } from "../../../utils";
   import { getRandomContent as getRandomFormExampleContent } from "../content";
+  import { TELEGRAM_MAX_MESSAGE_LENGTH_CHARS } from "../../../../constants";
   export let config: BaseFormFieldConfig;
 
   let exampleContent = getRandomFormExampleContent();
@@ -31,6 +32,10 @@
       {config.name}
     </EditableText>
   {/if}
-  <LocalizableTextInput placeholder={exampleContent.prompt} bind:value={config.prompt} />
+  <LocalizableTextInput
+    placeholder={exampleContent.prompt}
+    bind:value={config.prompt}
+    maxCharacters={TELEGRAM_MAX_MESSAGE_LENGTH_CHARS}
+  />
   <Toggle bind:checked={config.is_required} size="small">Обязательное</Toggle>
 </div>
