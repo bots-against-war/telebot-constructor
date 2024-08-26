@@ -34,16 +34,18 @@ from tests.utils import (
     "markdown_text, expected_sent",
     [
         pytest.param(
-            "In all other places characters '_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!' must be escaped with the preceding character '\\\\'.",
+            "In all other places characters '_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', "
+            + "'-', '=', '|', '{', '}', '.', '!' must be escaped with the preceding character '\\\\'.",
             (
-                r"In all other places characters '\_', '\*', '\[', '\]', '\(', '\)', '\~', '\`', '\>', '\#', '\+', '\-', '\=', '\|', '\{', '\}', '\.', '\!' must be escaped with the preceding character '\\'\."
+                r"In all other places characters '\_', '\*', '\[', '\]', '\(', '\)', '\~', '\`', '\>', '\#', '\+', "
+                + r"'\-', '\=', '\|', '\{', '\}', '\.', '\!' must be escaped with the preceding character '\\'\."
                 + "\n"
             ),
             id="auto escaping stuff for telegram",
         ),
         pytest.param(
             "[link with stuff inside!...](https://google.com)",
-            "[link with stuff inside!...](https://google\.com)\n",
+            "[link with stuff inside!...](https://google\\.com)\n",
             id="escaping inside of links",
         ),
     ],
