@@ -20,7 +20,7 @@
 </script>
 
 {#if isEditing}
-  <div class="flex flex-row gap-3 items-baseline">
+  <div class="flex flex-row gap-3 items-baseline flex-1 me-2">
     <Input class="font-semibold py-1" {placeholder} let:props>
       <input bind:this={nameInputEl} {...props} bind:value on:blur={finishEditing} />
     </Input>

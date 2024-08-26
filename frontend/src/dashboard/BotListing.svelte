@@ -12,17 +12,6 @@
 
   export let botInfos: BotInfo[];
 
-  // TEMP
-  botInfos = [
-    ...botInfos,
-    ...botInfos.map((b) => {
-      return { ...b, bot_id: b.bot_id + "1" };
-    }),
-    ...botInfos.map((b) => {
-      return { ...b, bot_id: b.bot_id + "2" };
-    }),
-  ];
-
   const botInfoTimestamp = (bi: BotInfo) => bi.last_events[0]?.timestamp || 0;
   botInfos.sort((b1, b2) => botInfoTimestamp(b1) - botInfoTimestamp(b2));
 
@@ -36,7 +25,7 @@
   <Navbar />
   <PageContent>
     <div class="flex flex-row justify-between items-center mb-4">
-      <Heading tag="h2">Мои боты</Heading>
+      <Heading tag="h3">Мои боты</Heading>
       <Button outline on:click={() => open(CreateBotModal)}>
         <PlusSolid class="w-3 h-3 me-2" />
         Создать

@@ -7,8 +7,8 @@
   export let botUser: TgBotUser;
 </script>
 
-<div class="flex flex-row gap-1 items-start justify-between">
-  <div class="flex flex-row gap-1 items-center">
+<div class="flex flex-row gap-2 items-start justify-between">
+  <div class="flex flex-row gap-2 items-center">
     <Avatar src={botUser.userpic ? `data:image/png;base64,${botUser.userpic}` : undefined} class="w-6 h-6" />
     <span>
       {botUser.name}

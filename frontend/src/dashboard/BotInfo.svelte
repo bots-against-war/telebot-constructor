@@ -1,27 +1,39 @@
 <script lang="ts">
-  import { Alert, Button, Heading, Li, List } from "flowbite-svelte";
+  import { Alert, Button, Heading } from "flowbite-svelte";
+  import { PenSolid, RocketSolid } from "flowbite-svelte-icons";
   import { createEventDispatcher } from "svelte";
   import { deleteBotConfig } from "../api/botConfig";
+  import { updateBotDisplayName } from "../api/botInfo";
   import { getBotUser } from "../api/botUser";
   import { startBot, stopBot } from "../api/lifecycle";
-  import type { BotInfo } from "../api/types";
+  import type { BotInfo, BotVersionInfo } from "../api/types";
   import BotUserBadge from "../components/BotUserBadge.svelte";
+  import BotVersionInfoBadge from "../components/BotVersionInfoBadge.svelte";
   import ErrorBadge from "../components/ErrorBadge.svelte";
+  import JumpingIcon from "../components/JumpingIcon.svelte";
   import Navbar from "../components/Navbar.svelte";
   import Page from "../components/Page.svelte";
   import PageContent from "../components/PageContent.svelte";
-  import Timestamp from "../components/Timestamp.svelte";
   import BreadcrumbHome from "../components/breadcrumbs/BreadcrumbHome.svelte";
   import Breadcrumbs from "../components/breadcrumbs/Breadcrumbs.svelte";
+  import EditableText from "../components/inputs/EditableText.svelte";
   import DataBadge from "../components/internal/DataBadge.svelte";
   import DataBadgeLoader from "../components/internal/DataBadgeLoader.svelte";
-  import { formResultsPagePath, studioPath } from "../routeUtils";
+  import { studioPath } from "../routeUtils";
   import { withConfirmation } from "../utils";
+  import BotInfoCard from "./BotInfoCard.svelte";
 
   export let botId: string;
   export let botInfo: BotInfo;
 
-  let lastVersion = botInfo.last_versions[botInfo.last_versions.length - 1].version;
+  let lastVersionInfo = botInfo.last_versions[botInfo.last_versions.length - 1];
+  let runningVersionInfo: BotVersionInfo | null = null;
+  const matches = botInfo.last_versions.filter((vi) => vi.version === botInfo.running_version);
+  if (matches.length > 0) {
+    runningVersionInfo = matches[0];
+  }
+
+  let editedDisplayName = botInfo.display_name;
 
   let error: string | null = null;
   const dispatch = createEventDispatcher<{ botDeleted: null }>();
@@ -84,26 +96,72 @@
   <Navbar />
   <PageContent>
     <Breadcrumbs><BreadcrumbHome /></Breadcrumbs>
-    <Heading tag="h2">{botInfo.display_name}</Heading>
+    <div class="flex flex-row justify-between items-center">
+      <EditableText bind:value={editedDisplayName} on:edited={() => updateBotDisplayName(botId, editedDisplayName)}>
+        <Heading tag="h3">{editedDisplayName}</Heading>
+      </EditableText>
+      <Button href={studioPath(botId, null)}>
+        <PenSolid class="w-3 h-3 me-3 " />
+        Редактировать
+      </Button>
+    </div>
+    <!-- FIXME: better error handling, but'll do for now -->
     {#if error !== null}
       <Alert color="red">{error}</Alert>
     {/if}
-    <div class="mt-5 pt-3 border-t">
-      <h2 class="text-xl font-bold">Аккаунт</h2>
-      <div class="max-w-[350px]">
-        <DataBadge>
-          {#await botUserPromise}
-            <DataBadgeLoader />
-          {:then botUserResult}
-            {#if botUserResult.ok}
-              <BotUserBadge botUser={botUserResult.data} />
+    <div class="flex flex-row mt-6 gap-5">
+      <div class="flex-1 flex flex-col gap-4">
+        <BotInfoCard moreLinkHref="/TBD-versions" moreLinkTitle="Все версии">
+          <div class="inline-flex items-center text-lg font-bold text-gray-900 pb-3">
+            {#if runningVersionInfo !== null}
+              <JumpingIcon>
+                <RocketSolid class="w-5 h-5 text-primary-600 me-2" />
+              </JumpingIcon>
+              Онлайн
             {:else}
-              <ErrorBadge title="Ошибка загрузки данных о боте" text={botUserResult.error} />
+              Оффлайн
             {/if}
-          {/await}
-        </DataBadge>
+          </div>
+          {#if runningVersionInfo !== null}
+            <BotVersionInfoBadge ver={lastVersionInfo} />
+          {/if}
+          {#if runningVersionInfo === null || runningVersionInfo.version !== lastVersionInfo.version}
+            <div class="flex flex-col gap-1 mb-1">
+              <span>Актуальная</span>
+              <BotVersionInfoBadge ver={lastVersionInfo} />
+            </div>
+          {/if}
+        </BotInfoCard>
+
+        <BotInfoCard title="Аккаунт">
+          <DataBadge>
+            {#await botUserPromise}
+              <DataBadgeLoader />
+            {:then botUserResult}
+              {#if botUserResult.ok}
+                <BotUserBadge botUser={botUserResult.data} />
+              {:else}
+                <ErrorBadge title="Ошибка загрузки данных о боте" text={botUserResult.error} />
+              {/if}
+            {/await}
+          </DataBadge>
+        </BotInfoCard>
+      </div>
+      <div class="flex-1 flex flex-col gap-4">
+        <BotInfoCard title="Статистика">
+          <strong class="text-2xl">🚧👷🏗️🚧</strong>
+          <span>В разработке...</span>
+          <strong class="text-2xl">🚧👷🏗️🚧</strong>
+        </BotInfoCard>
+
+        <BotInfoCard title="Активность">
+          <strong class="text-2xl">🚧👷🏗️🚧</strong>
+          <span>В разработке...</span>
+          <strong class="text-2xl">🚧👷🏗️🚧</strong>
+        </BotInfoCard>
       </div>
     </div>
+    <!-- 
     {#if botInfo.forms_with_responses.length > 0}
       <div class="mt-5 pt-3 border-t">
         <h2 class="text-xl font-bold">Ответы на формы</h2>
@@ -137,7 +195,6 @@
           >
             <div class="absolute w-3 h-3 bg-gray-300 rounded-full mt-2.5 -start-1.5 border border-white" />
             <div class="flex flex-row gap-4 items-center justify-between">
-              <!-- version info -->
               <div class="flex flex-row gap-1 items-baseline">
                 <span>v{verInfo.version + 1}</span>
                 {#if verInfo.metadata.message}
@@ -149,7 +206,6 @@
                   · <Timestamp timestamp={verInfo.metadata.timestamp} timeClass="text-gray-500" />
                 {/if}
               </div>
-              <!-- controls -->
               <div>
                 <Button size="xs" disabled={isLoading} outline on:click={() => publishOrStop(verInfo.version)}>
                   {botInfo.running_version === verInfo.version ? "Остановить" : "Опубликовать"}
@@ -198,6 +254,6 @@
     <div class="mt-5 pt-3 border-t">
       <h2 class="text-xl font-bold">Управление</h2>
       <Button color="red" outline on:click={deleteBotWithConfirmation}>Удалить бота</Button>
-    </div>
+    </div> -->
   </PageContent>
 </Page>
