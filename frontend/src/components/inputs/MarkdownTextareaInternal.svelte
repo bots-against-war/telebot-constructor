@@ -10,7 +10,6 @@
     QuestionCircleOutline,
     QuoteSolid,
     TextSlashOutline,
-    UnderlineSolid,
   } from "flowbite-svelte-icons";
   import { getContext, SvelteComponent } from "svelte";
   import { twMerge } from "tailwind-merge";
@@ -75,16 +74,9 @@
 
 <div class={wrapperClass}>
   <div class={headerClass(true)}>
-    <div class="flex flex-row items-center gap-3">
-      <div class={preview ? "pointer-events-none opacity-40" : ""}>
-        <!--
-        HACK: for some reason all pointer events on the outer div and textarea
-         are forwarded to the first button??? the sole purpose of this dummy
-         hidden button is to absorb these
-        -->
-        <button hidden on:click={console.log}>hi</button>
-
-        {#each toolbarData as [icon, type]}
+    <Toolbar embedded>
+      <ToolbarGroup divClass={preview ? "pointer-events-none opacity-40" : ""}>
+        {#each toolbarData as [icon, type] (type)}
           <ActionIcon
             {icon}
             title={type}
@@ -95,13 +87,14 @@
         {/each}
         <ActionIcon
           icon={QuestionCircleOutline}
+          title="Документация Telegram MarkdownV2"
           iconClass="w-3 h-3 text-gray-600"
           size="xs"
           href="https://github.com/sudoskys/telegramify-markdown?tab=readme-ov-file#use-case"
           target="_blank"
         />
-      </div>
-      <div>
+      </ToolbarGroup>
+      <ToolbarGroup>
         <Toggle size="small" bind:checked={preview}>
           {#if preview}
             <div class="text-red-600 text-sm flex flex-row items-baseline gap-1">
@@ -112,8 +105,8 @@
             <span class="text-gray-600 text-sm">Превью</span>
           {/if}
         </Toggle>
-      </div>
-    </div>
+      </ToolbarGroup>
+    </Toolbar>
   </div>
   <div class={innerWrappedClass}>
     {#if preview}
