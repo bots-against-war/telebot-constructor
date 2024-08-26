@@ -7,7 +7,7 @@ export async function getBotInfo(botId: string): Promise<Result<BotInfo>> {
   return await toDataResult(resp);
 }
 
-export async function listBotInfos(): Promise<Result<{ [key: string]: BotInfo }>> {
-  const resp = await fetch(apiUrl(`/info`));
+export async function listBotInfos(): Promise<Result<BotInfo[]>> {
+  const resp = await fetch(apiUrl(`/info?detailed=false`));
   return await toDataResult(resp);
 }

@@ -10,10 +10,6 @@ export function studioPath(botId: string, version: number | null): string {
   return path;
 }
 
-export function dashboardPath(botId: string | null): string {
-  if (botId) {
-    return `/#${botId}`;
-  } else {
-    return "/";
-  }
+export function dashboardPath(botId: string): string {
+  return `/dashboard/${botId}`;
 }

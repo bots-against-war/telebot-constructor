@@ -149,10 +149,10 @@ class TelebotConstructorStore:
     async def load_bot_display_name(self, username: str, bot_id: str) -> Optional[str]:
         return await self._display_names_store.get_subkey(username, bot_id)
 
-    async def load_bot_info(self, username: str, bot_id: str) -> Optional[BotInfo]:
-        INCLUDE_LAST_EVENTS = 10
-        INCLUDE_LAST_VERSIONS = 10
-        INCLUDE_LAST_ERRORS = 10
+    async def load_bot_info(self, username: str, bot_id: str, detailed: bool) -> Optional[BotInfo]:
+        INCLUDE_LAST_EVENTS = 10 if detailed else 1
+        INCLUDE_LAST_VERSIONS = 10 if detailed else 1
+        INCLUDE_LAST_ERRORS = 10 if detailed else 0
 
         next_to_last_version = await self.bot_config_version_count(username, bot_id)
         if next_to_last_version == 0:
@@ -204,6 +204,10 @@ class TelebotConstructorStore:
                 for version, metadata in zip(range(first_shown_version, next_to_last_version), version_metadata)
             ],
             last_events=last_events,
-            forms_with_responses=await self.form_results.list_forms(username, bot_id),
-            last_errors=await self.metrics.load_errors(username, bot_id, offset=0, count=INCLUDE_LAST_ERRORS),
+            forms_with_responses=(await self.form_results.list_forms(username, bot_id) if detailed else []),
+            last_errors=(
+                await self.metrics.load_errors(username, bot_id, offset=0, count=INCLUDE_LAST_ERRORS)
+                if detailed
+                else []
+            ),
         )

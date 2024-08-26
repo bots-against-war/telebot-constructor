@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Alert, Button, Li, List } from "flowbite-svelte";
+  import { Alert, Button, Heading, Li, List } from "flowbite-svelte";
   import { createEventDispatcher } from "svelte";
   import { deleteBotConfig } from "../api/botConfig";
   import { getBotUser } from "../api/botUser";
@@ -76,7 +76,7 @@
 </script>
 
 <div class="flex flex-col my-20 w-[700px]">
-  <h1 class="text-3xl font-bold">{botInfo.display_name}</h1>
+  <Heading tag="h2">{botInfo.display_name}</Heading>
   {#if error !== null}
     <Alert color="red">{error}</Alert>
   {/if}

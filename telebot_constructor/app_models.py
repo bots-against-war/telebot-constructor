@@ -3,7 +3,7 @@
 import enum
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, TypeAdapter
 from telebot import AsyncTeleBot
 from telebot import types as tg
 
@@ -158,6 +158,9 @@ class BotInfo(BaseModel):
     last_events: list[BotEvent]
     forms_with_responses: list[FormInfoBasic]
     last_errors: list[BotError]
+
+
+BotInfoList = TypeAdapter(list[BotInfo])
 
 
 class SaveBotConfigVersionPayload(BaseModel):

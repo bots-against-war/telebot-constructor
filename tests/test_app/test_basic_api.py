@@ -61,8 +61,8 @@ async def test_bot_config(
     resp = await client.get("/api/info")
     assert resp.status == 200
     resp_json_1 = mask_recent_timestamps(await resp.json())
-    assert resp_json_1 == {
-        "test-bot-1312": {
+    assert resp_json_1 == [
+        {
             "bot_id": "test-bot-1312",
             "display_name": "my bot",
             "running_version": None,
@@ -73,8 +73,8 @@ async def test_bot_config(
             "forms_with_responses": [],
             "last_errors": [],
         }
-    }
-    bot_created_event = resp_json_1[bot_id]["last_events"][0]  # type: ignore
+    ]
+    bot_created_event = resp_json_1[0]["last_events"][0]  # type: ignore
 
     # starting bot
     resp = await client.post(f"/api/start/{bot_id}", json={"version": 0})
@@ -84,8 +84,8 @@ async def test_bot_config(
     resp = await client.get("/api/info")
     assert resp.status == 200
     resp_json_2 = mask_recent_timestamps(await resp.json())
-    assert resp_json_2 == {
-        "test-bot-1312": {
+    assert resp_json_2 == [
+        {
             "bot_id": "test-bot-1312",
             "display_name": "my bot",
             "running_version": 0,
@@ -97,13 +97,13 @@ async def test_bot_config(
             "forms_with_responses": [],
             "last_errors": [],
         }
-    }
-    bot_started_event = resp_json_2[bot_id]["last_events"][1]  # type: ignore
+    ]
+    bot_started_event = resp_json_2[0]["last_events"][1]  # type: ignore
 
     # checking same info but with a bot-specific endpoint
     resp = await client.get(f"/api/info/{bot_id}")
     assert resp.status == 200
-    assert mask_recent_timestamps(await resp.json()) == resp_json_2[bot_id]  # type: ignore
+    assert mask_recent_timestamps(await resp.json()) == resp_json_2[0]  # type: ignore
 
     # update display name and check it's changed in the info
     resp = await client.put(f"/api/display-name/{bot_id}", json={"display_name": "changed display name"})

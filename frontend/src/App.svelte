@@ -1,11 +1,12 @@
 <script lang="ts">
-  import { links, Route, Router } from "svelte-routing";
   import { setContext } from "svelte";
+  import { links, Route, Router } from "svelte-routing";
   import Modal from "svelte-simple-modal";
-  import DashboardLoader from "./dashboard/DashboardLoader.svelte";
+  import BotInfoLoader from "./dashboard/BotInfoLoader.svelte";
+  import BotListingLoader from "./dashboard/BotListingLoader.svelte";
+  import FormLoader from "./forms/FormLoader.svelte";
   import GlobalStateProvider from "./GlobalStateProvider.svelte";
   import StudioLoader from "./studio/StudioLoader.svelte";
-  import FormLoader from "./forms/FormLoader.svelte";
 
   // Global icon settings for flowbite-icons
   const iconCtx = {
@@ -21,7 +22,10 @@
     <div use:links>
       <Router>
         <Route path="/">
-          <DashboardLoader />
+          <BotListingLoader />
+        </Route>
+        <Route path="/dashboard/:botId" let:params>
+          <BotInfoLoader botId={params.botId} />
         </Route>
         <Route path="/studio/:botId" let:params>
           <StudioLoader botId={params.botId} />

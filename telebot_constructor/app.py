@@ -21,6 +21,7 @@ from telebot_components.utils.secrets import SecretStore
 
 from telebot_constructor.app_models import (
     BotErrorsPage,
+    BotInfoList,
     BotTokenPayload,
     FormResultsPage,
     LoggedInUser,
@@ -508,7 +509,7 @@ class TelebotConstructorApp:
             """
             username = await self.authenticate(request)
             bot_id = self.parse_bot_id(request)
-            info = await self.store.load_bot_info(username, bot_id)
+            info = await self.store.load_bot_info(username, bot_id, detailed=True)
             if info is None:
                 raise web.HTTPNotFound(reason="Bot id not found")
             else:
@@ -526,19 +527,25 @@ class TelebotConstructorApp:
                     description: List of all bots name and their statuses
             """
             username = await self.authenticate(request)
+            detailed = request.query.get("detailed", "true").lower() != "false"
             bot_ids = await self.store.list_bot_ids(username)
             logger.info(f"Bots owned by {username}: {bot_ids}")
-            maybe_bot_infos = {bot_id: await self.store.load_bot_info(username, bot_id) for bot_id in bot_ids}
-            bot_infos = {bot_id: info for bot_id, info in maybe_bot_infos.items() if info is not None}
+            maybe_bot_infos = [
+                await self.store.load_bot_info(
+                    username,
+                    bot_id,
+                    detailed=detailed,
+                )
+                for bot_id in bot_ids
+            ]
+            bot_infos = [bi for bi in maybe_bot_infos if bi is not None]
             if len(maybe_bot_infos) != len(bot_infos):
-                missing_info_bot_ids = set(maybe_bot_infos.keys()).difference(bot_infos.keys())
+                missing_info_bot_ids = [bot_id for bot_id, info in zip(bot_ids, maybe_bot_infos) if info is None]
                 logger.error(
                     "Failed to construct bot infos for some of the user's bots, will ignore them: "
                     + f"{missing_info_bot_ids}"
                 )
-            return web.json_response(
-                data={name: bot_info.model_dump(mode="json") for name, bot_info in bot_infos.items()}
-            )
+            return web.json_response(body=BotInfoList.dump_json(bot_infos))
 
         # endregion
         ##################################################################################

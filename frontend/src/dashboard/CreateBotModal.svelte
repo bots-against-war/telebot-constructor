@@ -1,16 +1,16 @@
 <script lang="ts">
-  import { Button, Li, List, Spinner } from "flowbite-svelte";
+  import { Button, Li, List } from "flowbite-svelte";
   import { slugify } from "transliteration";
   import { saveBotConfig } from "../api/botConfig";
   import { getBotInfo } from "../api/botInfo";
   import type { BotConfig, BotInfo } from "../api/types";
   import { validateBotToken } from "../api/validation";
+  import ButtonLoadingSpinner from "../components/ButtonLoadingSpinner.svelte";
   import ErrorBadge from "../components/ErrorBadge.svelte";
   import PasswordInput from "../components/inputs/PasswordInput.svelte";
   import TextInput from "../components/inputs/TextInput.svelte";
   import { BOT_INFO_NODE_ID, DEFAULT_START_COMMAND_ENTRYPOINT_ID } from "../constants";
   import { createBotTokenSecret, getError, getModalCloser, unwrap } from "../utils";
-  import ButtonLoadingSpinner from "../components/ButtonLoadingSpinner.svelte";
 
   export let newBotCallback: (botId: string, info: BotInfo) => void;
 
@@ -132,10 +132,11 @@
   {#if error !== null}
     <ErrorBadge title={errorTitle || "Ошибка"} text={error} />
   {/if}
-  <div class="save-button">
+  <div>
     <Button on:click={createNewBot}>
       <ButtonLoadingSpinner loading={isCreating} />
       Создать
     </Button>
+    <Button outline on:click={closeModal}>Отмена</Button>
   </div>
 </div>
