@@ -51,6 +51,7 @@
     ]
   },
   "dependencies": {
-    "@svackages/truncate": "^1.0.0"
+    "@svackages/truncate": "^1.0.0",
+    "marked": "^14.1.0"
   }
 }

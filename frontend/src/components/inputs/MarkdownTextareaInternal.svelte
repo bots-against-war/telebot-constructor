@@ -3,10 +3,12 @@
   import { Toggle, Toolbar, ToolbarGroup } from "flowbite-svelte";
   import {
     BoldSolid,
+    EyeSlashSolid,
     ItalicSolid,
     LinkSolid,
     QuestionCircleOutline,
     QuoteSolid,
+    TextSlashOutline,
     UnderlineSolid,
   } from "flowbite-svelte-icons";
   import { getContext, SvelteComponent } from "svelte";
@@ -66,7 +68,8 @@
     [ItalicSolid, "italic"],
     [QuoteSolid, "blockquote"],
     [LinkSolid, "link"],
-    // TODO: strikethrough + spoiler
+    [TextSlashOutline, "strikethrough"],
+    [EyeSlashSolid, "spoiler"],
   ];
 </script>
 
