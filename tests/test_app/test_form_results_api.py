@@ -236,6 +236,15 @@ async def test_form_results_api(
                 "form-field-2": "Second answer by user #3",
             },
         ],
+        "bot_info": {
+            "bot_id": "mybot",
+            "display_name": "my test bot",
+            "forms_with_responses": [],
+            "last_errors": [],
+            "last_events": [{"event": "started", "timestamp": RECENT_TIMESTAMP, "username": "no-auth", "version": 0}],
+            "last_versions": [{"metadata": {"message": "init", "timestamp": RECENT_TIMESTAMP}, "version": 0}],
+            "running_version": 0,
+        },
     }
 
     # update form title to something custom
@@ -261,4 +270,13 @@ async def test_form_results_api(
                 "form-field-2": "Second answer by user #2",
             },
         ],
+        "bot_info": {
+            "bot_id": "mybot",
+            "display_name": "my test bot",
+            "forms_with_responses": [],
+            "last_errors": [],
+            "last_events": [{"event": "started", "timestamp": RECENT_TIMESTAMP, "username": "no-auth", "version": 0}],
+            "last_versions": [{"metadata": {"message": "init", "timestamp": RECENT_TIMESTAMP}, "version": 0}],
+            "running_version": 0,
+        },
     }
