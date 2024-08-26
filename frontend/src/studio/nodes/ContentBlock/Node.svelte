@@ -12,6 +12,7 @@
   import { DEFAULT_NODE_PROPS } from "../nodeProps";
   import { validateContentBlock } from "../nodeValidators";
   import Modal from "./Modal.svelte";
+  import truncate from "@svackages/truncate";
 
   const openModal = getModalOpener();
 
@@ -42,7 +43,11 @@
     on:edit={openEditModal}
   >
     {#if config.contents.length > 0 && config.contents[0].text}
-      <LocalizableText text={config.contents[0].text?.text} />
+      {#key config.contents[0].text?.text}
+        <div class="max-h-[80px]" use:truncate>
+          <LocalizableText text={config.contents[0].text?.text} />
+        </div>
+      {/key}
     {/if}
   </NodeContent>
   <OutputAnchorsBox>

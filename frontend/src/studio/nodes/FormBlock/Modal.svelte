@@ -13,6 +13,7 @@
   import FormResultExportOptions from "./components/FormResultExportOptions.svelte";
   import { getRandomFormStartMessage } from "./content";
   import { updateWithPrefilled, type FormErrorMessages } from "./prefill";
+  import { TELEGRAM_MAX_MESSAGE_LENGTH_CHARS } from "../../../constants";
 
   export let config: FormBlock;
   export let botId: string;
@@ -78,6 +79,7 @@
           <LocalizableTextInput
             placeholder={getRandomFormStartMessage()}
             bind:value={editedConfig.messages.form_start}
+            maxCharacters={TELEGRAM_MAX_MESSAGE_LENGTH_CHARS}
           />
         </div>
         <FormBranch isMovableUp={false} isMovableDown={false} bind:branch={topLevelBranch} />

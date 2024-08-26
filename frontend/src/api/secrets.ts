@@ -1,4 +1,4 @@
-import { toTrivialResult, type Result, ok, err, toDataResult } from "../utils";
+import { toTrivialResult, type Result, toDataResult } from "../utils";
 import { apiUrl } from "./config";
 
 export async function listSecrets(): Promise<Result<string[], string>> {

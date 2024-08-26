@@ -17,7 +17,7 @@
 </script>
 
 <GlobalStateProvider>
-  <Modal closeButton={false}>
+  <Modal closeButton={false} styleWindow={{ borderRadius: "0" }} closeOnOuterClick={false} closeOnEsc={false}>
     <div use:links>
       <Router>
         <Route path="/">
