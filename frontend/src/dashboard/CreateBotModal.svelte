@@ -1,18 +1,17 @@
 <script lang="ts">
   import { Button, Li, List } from "flowbite-svelte";
+  import { navigate } from "svelte-routing";
   import { slugify } from "transliteration";
   import { saveBotConfig } from "../api/botConfig";
-  import { getBotInfo } from "../api/botInfo";
-  import type { BotConfig, BotInfo } from "../api/types";
+  import type { BotConfig } from "../api/types";
   import { validateBotToken } from "../api/validation";
   import ButtonLoadingSpinner from "../components/ButtonLoadingSpinner.svelte";
   import ErrorBadge from "../components/ErrorBadge.svelte";
   import PasswordInput from "../components/inputs/PasswordInput.svelte";
   import TextInput from "../components/inputs/TextInput.svelte";
   import { BOT_INFO_NODE_ID, DEFAULT_START_COMMAND_ENTRYPOINT_ID } from "../constants";
+  import { dashboardPath } from "../routeUtils";
   import { createBotTokenSecret, getError, getModalCloser, unwrap } from "../utils";
-
-  export let newBotCallback: (botId: string, info: BotInfo) => void;
 
   const closeModal = getModalCloser();
 
@@ -93,10 +92,7 @@
 
     if (res1.ok) {
       error = null;
-      const botInfo = unwrap(await getBotInfo(botId));
-      isCreating = false;
-      newBotCallback(botId, botInfo);
-      closeModal();
+      navigate(dashboardPath(botId));
     } else if (!res1.ok) {
       isCreating = false;
       errorTitle = "Ошибка сохранения";

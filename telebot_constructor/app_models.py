@@ -175,6 +175,7 @@ class StartBotPayload(BaseModel):
 
 
 class FormResultsPage(BaseModel):
+    bot_info: BotInfo
     info: FormInfo
     results: list[FormResult]
 

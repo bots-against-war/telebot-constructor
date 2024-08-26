@@ -1143,6 +1143,9 @@
     },
     "FormResultsPage": {
       "properties": {
+        "bot_info": {
+          "$ref": "#/$defs/BotInfo"
+        },
         "info": {
           "$ref": "#/$defs/FormInfo"
         },
@@ -1168,6 +1171,7 @@
         }
       },
       "required": [
+        "bot_info",
         "info",
         "results"
       ],

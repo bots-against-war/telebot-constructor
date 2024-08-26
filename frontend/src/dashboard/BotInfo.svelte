@@ -7,7 +7,12 @@
   import type { BotInfo } from "../api/types";
   import BotUserBadge from "../components/BotUserBadge.svelte";
   import ErrorBadge from "../components/ErrorBadge.svelte";
+  import Navbar from "../components/Navbar.svelte";
+  import Page from "../components/Page.svelte";
+  import PageContent from "../components/PageContent.svelte";
   import Timestamp from "../components/Timestamp.svelte";
+  import BreadcrumbHome from "../components/breadcrumbs/BreadcrumbHome.svelte";
+  import Breadcrumbs from "../components/breadcrumbs/Breadcrumbs.svelte";
   import DataBadge from "../components/internal/DataBadge.svelte";
   import DataBadgeLoader from "../components/internal/DataBadgeLoader.svelte";
   import { formResultsPagePath, studioPath } from "../routeUtils";
@@ -75,120 +80,124 @@
   const botUserPromise = getBotUser(botId);
 </script>
 
-<div class="flex flex-col my-20 w-[700px]">
-  <Heading tag="h2">{botInfo.display_name}</Heading>
-  {#if error !== null}
-    <Alert color="red">{error}</Alert>
-  {/if}
-  <div class="mt-5 pt-3 border-t">
-    <h2 class="text-xl font-bold">Аккаунт</h2>
-    <div class="max-w-[350px]">
-      <DataBadge>
-        {#await botUserPromise}
-          <DataBadgeLoader />
-        {:then botUserResult}
-          {#if botUserResult.ok}
-            <BotUserBadge botUser={botUserResult.data} />
-          {:else}
-            <ErrorBadge title="Ошибка загрузки данных о боте" text={botUserResult.error} />
-          {/if}
-        {/await}
-      </DataBadge>
-    </div>
-  </div>
-  {#if botInfo.forms_with_responses.length > 0}
+<Page>
+  <Navbar />
+  <PageContent>
+    <Breadcrumbs><BreadcrumbHome /></Breadcrumbs>
+    <Heading tag="h2">{botInfo.display_name}</Heading>
+    {#if error !== null}
+      <Alert color="red">{error}</Alert>
+    {/if}
     <div class="mt-5 pt-3 border-t">
-      <h2 class="text-xl font-bold">Ответы на формы</h2>
-      <List>
-        {#each botInfo.forms_with_responses as formInfo}
-          <Li>
-            <div class=" inline-flex flex-row gap-2 items-baseline">
-              <span>
-                {#if formInfo.title}
-                  {formInfo.title}
-                {:else}
-                  "{formInfo.prompt}"
-                {/if}
-              </span>
-              <Button size="xs" outline href={formResultsPagePath(botId, formInfo.form_block_id)}>Ответы</Button>
-            </div>
-          </Li>
-        {/each}
-      </List>
+      <h2 class="text-xl font-bold">Аккаунт</h2>
+      <div class="max-w-[350px]">
+        <DataBadge>
+          {#await botUserPromise}
+            <DataBadgeLoader />
+          {:then botUserResult}
+            {#if botUserResult.ok}
+              <BotUserBadge botUser={botUserResult.data} />
+            {:else}
+              <ErrorBadge title="Ошибка загрузки данных о боте" text={botUserResult.error} />
+            {/if}
+          {/await}
+        </DataBadge>
+      </div>
     </div>
-  {/if}
-  <div class="mt-5 pt-3 border-t">
-    <h2 class="text-xl font-bold">Версии</h2>
-    <ol class="relative border-s border-gray-200 mt-2">
-      {#each botInfo.last_versions.toReversed() as verInfo (verInfo.version)}
-        <li
-          class={"mb-2 ms-2 p-2 rounded-md border-2 " +
-            (verInfo.version === botInfo.running_version
-              ? "bg-blue-100 border-blue-300 border-2"
-              : "border-transparent")}
-        >
-          <div class="absolute w-3 h-3 bg-gray-300 rounded-full mt-2.5 -start-1.5 border border-white" />
-          <div class="flex flex-row gap-4 items-center justify-between">
-            <!-- version info -->
-            <div class="flex flex-row gap-1 items-baseline">
-              <span>v{verInfo.version + 1}</span>
-              {#if verInfo.metadata.message}
-                <span class="font-bold">
-                  {verInfo.metadata.message}
+    {#if botInfo.forms_with_responses.length > 0}
+      <div class="mt-5 pt-3 border-t">
+        <h2 class="text-xl font-bold">Ответы на формы</h2>
+        <List>
+          {#each botInfo.forms_with_responses as formInfo}
+            <Li>
+              <div class=" inline-flex flex-row gap-2 items-baseline">
+                <span>
+                  {#if formInfo.title}
+                    {formInfo.title}
+                  {:else}
+                    "{formInfo.prompt}"
+                  {/if}
+                </span>
+                <Button size="xs" outline href={formResultsPagePath(botId, formInfo.form_block_id)}>Ответы</Button>
+              </div>
+            </Li>
+          {/each}
+        </List>
+      </div>
+    {/if}
+    <div class="mt-5 pt-3 border-t">
+      <h2 class="text-xl font-bold">Версии</h2>
+      <ol class="relative border-s border-gray-200 mt-2">
+        {#each botInfo.last_versions.toReversed() as verInfo (verInfo.version)}
+          <li
+            class={"mb-2 ms-2 p-2 rounded-md border-2 " +
+              (verInfo.version === botInfo.running_version
+                ? "bg-blue-100 border-blue-300 border-2"
+                : "border-transparent")}
+          >
+            <div class="absolute w-3 h-3 bg-gray-300 rounded-full mt-2.5 -start-1.5 border border-white" />
+            <div class="flex flex-row gap-4 items-center justify-between">
+              <!-- version info -->
+              <div class="flex flex-row gap-1 items-baseline">
+                <span>v{verInfo.version + 1}</span>
+                {#if verInfo.metadata.message}
+                  <span class="font-bold">
+                    {verInfo.metadata.message}
+                  </span>
+                {/if}
+                {#if verInfo.metadata.timestamp}
+                  · <Timestamp timestamp={verInfo.metadata.timestamp} timeClass="text-gray-500" />
+                {/if}
+              </div>
+              <!-- controls -->
+              <div>
+                <Button size="xs" disabled={isLoading} outline on:click={() => publishOrStop(verInfo.version)}>
+                  {botInfo.running_version === verInfo.version ? "Остановить" : "Опубликовать"}
+                </Button>
+                <Button
+                  size="xs"
+                  outline
+                  href={studioPath(botId, verInfo.version === lastVersion ? null : verInfo.version)}
+                >
+                  {lastVersion === verInfo.version ? "Редактировать" : "Посмотреть"}
+                </Button>
+              </div>
+            </div>
+          </li>
+        {/each}
+      </ol>
+      <div class="text-gray-400">TBD: полный список версий</div>
+    </div>
+    <div class="mt-5 pt-3 border-t">
+      <h2 class="text-xl font-bold">Активность</h2>
+      <ol class="relative border-s border-gray-200 mt-2">
+        {#each botInfo.last_events.toReversed() as event (event.timestamp)}
+          <li class="mb-1 ms-2 p-1">
+            <div class="absolute w-2 h-2 bg-gray-300 rounded-full mt-1.5 -start-1 border border-white" />
+            <div class="flex flex-row gap-2 items-baseline">
+              {#if event.event}
+                <span>
+                  {#if event.event === "started"}
+                    опубликована {typeof event.version === "number" ? `v${event.version + 1}` : "версия-заглушка"}
+                  {:else if event.event === "edited"}
+                    создана v{event.new_version + 1}
+                  {:else if event.event === "stopped"}
+                    бот остановлен
+                  {/if}
                 </span>
               {/if}
-              {#if verInfo.metadata.timestamp}
-                · <Timestamp timestamp={verInfo.metadata.timestamp} timeClass="text-gray-500" />
+              {#if event.timestamp}
+                · <Timestamp timestamp={event.timestamp} timeClass="text-gray-500" />
               {/if}
             </div>
-            <!-- controls -->
-            <div>
-              <Button size="xs" disabled={isLoading} outline on:click={() => publishOrStop(verInfo.version)}>
-                {botInfo.running_version === verInfo.version ? "Остановить" : "Опубликовать"}
-              </Button>
-              <Button
-                size="xs"
-                outline
-                href={studioPath(botId, verInfo.version === lastVersion ? null : verInfo.version)}
-              >
-                {lastVersion === verInfo.version ? "Редактировать" : "Посмотреть"}
-              </Button>
-            </div>
-          </div>
-        </li>
-      {/each}
-    </ol>
-    <div class="text-gray-400">TBD: полный список версий</div>
-  </div>
-  <div class="mt-5 pt-3 border-t">
-    <h2 class="text-xl font-bold">Активность</h2>
-    <ol class="relative border-s border-gray-200 mt-2">
-      {#each botInfo.last_events.toReversed() as event (event.timestamp)}
-        <li class="mb-1 ms-2 p-1">
-          <div class="absolute w-2 h-2 bg-gray-300 rounded-full mt-1.5 -start-1 border border-white" />
-          <div class="flex flex-row gap-2 items-baseline">
-            {#if event.event}
-              <span>
-                {#if event.event === "started"}
-                  опубликована {typeof event.version === "number" ? `v${event.version + 1}` : "версия-заглушка"}
-                {:else if event.event === "edited"}
-                  создана v{event.new_version + 1}
-                {:else if event.event === "stopped"}
-                  бот остановлен
-                {/if}
-              </span>
-            {/if}
-            {#if event.timestamp}
-              · <Timestamp timestamp={event.timestamp} timeClass="text-gray-500" />
-            {/if}
-          </div>
-        </li>
-      {/each}
-    </ol>
-    <div class="text-gray-400">TBD: полный лог активности</div>
-  </div>
-  <div class="mt-5 pt-3 border-t">
-    <h2 class="text-xl font-bold">Управление</h2>
-    <Button color="red" outline on:click={deleteBotWithConfirmation}>Удалить бота</Button>
-  </div>
-</div>
+          </li>
+        {/each}
+      </ol>
+      <div class="text-gray-400">TBD: полный лог активности</div>
+    </div>
+    <div class="mt-5 pt-3 border-t">
+      <h2 class="text-xl font-bold">Управление</h2>
+      <Button color="red" outline on:click={deleteBotWithConfirmation}>Удалить бота</Button>
+    </div>
+  </PageContent>
+</Page>

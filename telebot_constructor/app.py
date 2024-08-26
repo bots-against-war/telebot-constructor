@@ -563,19 +563,23 @@ class TelebotConstructorApp:
                     description: OK
             """
             username = await self.authenticate(request)
-            form_id = GlobalFormId(
+            bot_id = self.parse_bot_id(request)
+            global_form_id = GlobalFormId(
                 username=username,
-                bot_id=self.parse_bot_id(request),
+                bot_id=bot_id,
                 form_block_id=self.parse_path_part(request, "form_block_id"),
             )
             offset = self.parse_query_param_int(request, "offset", min_=0, max_=None) or 0
             count = self.parse_query_param_int(request, "count", min_=0, max_=100) or 20
-            form_info = await self.store.form_results.load_form_info(form_id)
+            bot_info = await self.store.load_bot_info(username=username, bot_id=bot_id, detailed=False)
+            if not bot_info:
+                raise web.HTTPNotFound(reason="Bot not found")
+            form_info = await self.store.form_results.load_form_info(global_form_id)
             if not form_info:
                 raise web.HTTPNotFound(reason="Form not found")
-            form_results = await self.store.form_results.load_page(form_id, offset=offset, count=count)
+            form_results = await self.store.form_results.load_page(global_form_id, offset=offset, count=count)
             return web.json_response(
-                text=FormResultsPage(info=form_info, results=form_results).model_dump_json(),
+                text=FormResultsPage(bot_info=bot_info, info=form_info, results=form_results).model_dump_json(),
             )
 
         @routes.put("/api/forms/{bot_id}/{form_block_id}/title")

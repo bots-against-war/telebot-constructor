@@ -13,3 +13,7 @@ export function studioPath(botId: string, version: number | null): string {
 export function dashboardPath(botId: string): string {
   return `/dashboard/${botId}`;
 }
+
+export function botListingPath(): string {
+  return "/";
+}

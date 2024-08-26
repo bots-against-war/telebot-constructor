@@ -720,6 +720,7 @@ export interface FieldNames {
   [k: string]: string;
 }
 export interface FormResultsPage {
+  bot_info: BotInfo;
   info: FormInfo;
   results: Results;
   [k: string]: unknown;

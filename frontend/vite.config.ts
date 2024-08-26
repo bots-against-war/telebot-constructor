@@ -10,7 +10,7 @@ const versionEnvVars = ["GIT_COMMIT_ID", "HEROKU_SLUG_COMMIT"];
 const versions = versionEnvVars.map((ev) => process.env[ev]).filter((v) => v);
 if (versions.length > 0) {
   console.warn("Found version in env var");
-  version = versions[0];
+  version = versions[0].slice(0, 16);
 }
 console.log(`Building with version "${version}"`);
 

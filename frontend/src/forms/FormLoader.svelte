@@ -18,7 +18,7 @@
 {#await loadFormResultsOrFail()}
   <LoadingScreen />
 {:then formResultsPage}
-  <Form {botId} {formResultsPage} offset={DEFAULT_OFFSET} count={DEFAULT_COUNT} />
+  <Form {formResultsPage} offset={DEFAULT_OFFSET} count={DEFAULT_COUNT} />
 {:catch error}
   <FatalError {error} />
 {/await}
