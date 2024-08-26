@@ -10,6 +10,7 @@
   import NodeModalControls from "../../components/NodeModalControls.svelte";
   import { languageConfigStore } from "../../stores";
   import { NODE_TITLE } from "../display";
+  import { TELEGRAM_MAX_MESSAGE_LENGTH_CHARS } from "../../../constants";
 
   export let config: LanguageSelectBlock;
   export let onConfigUpdate: (newConfig: LanguageSelectBlock) => any;
@@ -125,6 +126,7 @@
           supportedLanguageCodes: supportedLanguageDataList.map((ld) => ld.code),
           defaultLanguageCode: defaultLanguage.code,
         }}
+        maxCharacters={TELEGRAM_MAX_MESSAGE_LENGTH_CHARS}
       />
     {/if}
   {/key}

@@ -4,18 +4,25 @@
   import Language from "../../components/Language.svelte";
   import InputWrapper from "../../components/inputs/InputWrapper.svelte";
   import TextInput from "../../components/inputs/TextInput.svelte";
-  import Textarea from "../../components/inputs/Textarea.svelte";
   import type { LocalizableText } from "../../types";
   import type { LanguageConfig } from "../stores";
   import LanguageMenu from "./LanguageMenu.svelte";
+  import Textarea from "../../components/inputs/Textarea.svelte";
+
+  export let langConfig: LanguageConfig | null;
+  export let value: LocalizableText;
 
   export let label: string | undefined = undefined;
   export let description: string | null = null;
   export let placeholder: string | null = null;
-  export let value: LocalizableText;
-  export let langConfig: LanguageConfig | null;
   export let isLongText: boolean = true;
   export let required: boolean = false;
+
+  export let maxCharacters: number | null = null;
+  export let textareaRows: number = 2;
+  export let preventExceedingMaxLength: boolean = false;
+
+  export let markdown: boolean = false;
 
   const INTERNAL_DEBUG_LOG = false;
   function internalDebug(msg: string) {
@@ -45,7 +52,6 @@
       internalDebug(`missingSupportedLangs = ${JSON.stringify(missingSupportedLangs)}`);
       const emptyLocalizations = Object.fromEntries(missingSupportedLangs.map((lang) => [lang, ""]));
       const existingLocalizations = Object.fromEntries(
-        // @ts-expect-error
         Object.entries(value).filter(([langCode]) => langConfig.supportedLanguageCodes.includes(langCode)),
       );
       value = { ...existingLocalizations, ...emptyLocalizations };
@@ -58,9 +64,19 @@
 
 {#if !langConfig && typeof value === "string"}
   {#if isLongText}
-    <Textarea {required} {label} {description} {placeholder} bind:value />
+    <Textarea
+      {required}
+      {label}
+      {description}
+      {placeholder}
+      bind:value
+      rows={textareaRows}
+      maxLength={maxCharacters}
+      {preventExceedingMaxLength}
+      {markdown}
+    />
   {:else}
-    <TextInput {required} {label} {description} {placeholder} bind:value />
+    <TextInput {required} {label} {description} {placeholder} bind:value maxLength={maxCharacters} />
   {/if}
 {:else if langConfig && langConfig.supportedLanguageCodes.length > 0 && typeof value !== "string" && selectedLang}
   <InputWrapper label={label || ""} {description}>
@@ -79,14 +95,22 @@
                 {/if}
                 <Language {language} fullName tooltip={false} />
               </div>
-              <Textarea label={undefined} {placeholder} bind:value={value[language]} />
+              <Textarea
+                label={undefined}
+                {placeholder}
+                bind:value={value[language]}
+                rows={textareaRows}
+                maxLength={maxCharacters}
+                {preventExceedingMaxLength}
+                {markdown}
+              />
             </TabItem>
           {/each}
         </Tabs>
       </div>
     {:else}
       <div class="flex flex-row gap-1 items-baseline">
-        <TextInput label={undefined} bind:value={value[selectedLang]} />
+        <TextInput label={undefined} bind:value={value[selectedLang]} maxLength={maxCharacters} />
         <LanguageMenu bind:selectedLang />
       </div>
     {/if}

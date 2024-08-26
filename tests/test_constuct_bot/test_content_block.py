@@ -1,6 +1,7 @@
 import base64
 import time
 
+import pytest
 from telebot import types as tg
 from telebot.test_util import MockedAsyncTeleBot
 from telebot_components.redis_utils.emulation import RedisEmulation
@@ -27,6 +28,101 @@ from tests.utils import (
     dummy_secret_store,
     tg_update_message_to_bot,
 )
+
+
+@pytest.mark.parametrize(
+    "markdown_text, expected_sent",
+    [
+        pytest.param(
+            "In all other places characters '_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', "
+            + "'-', '=', '|', '{', '}', '.', '!' must be escaped with the preceding character '\\\\'.",
+            (
+                r"In all other places characters '\_', '\*', '\[', '\]', '\(', '\)', '\~', '\`', '\>', '\#', '\+', "
+                + r"'\-', '\=', '\|', '\{', '\}', '\.', '\!' must be escaped with the preceding character '\\'\."
+                + "\n"
+            ),
+            id="auto escaping stuff for telegram",
+        ),
+        pytest.param(
+            "[link with stuff inside!...](https://google.com)",
+            "[link with stuff inside!...](https://google\\.com)\n",
+            id="escaping inside of links",
+        ),
+    ],
+)
+async def test_markdown_text(markdown_text: str, expected_sent: str) -> None:
+    bot_config = BotConfig(
+        token_secret_name="token",
+        display_name="testing 1 2",
+        user_flow_config=UserFlowConfig(
+            entrypoints=[
+                UserFlowEntryPointConfig(
+                    command=CommandEntryPoint(
+                        entrypoint_id="command-1",
+                        command="start",
+                        next_block_id="content-1",
+                        short_description="start cmd",
+                    ),
+                )
+            ],
+            blocks=[
+                UserFlowBlockConfig(
+                    content=ContentBlock(
+                        block_id="content-1",
+                        contents=[
+                            Content(
+                                text=ContentText(
+                                    text=markdown_text,
+                                    markup=ContentTextMarkup.MARKDOWN,
+                                ),
+                                attachments=[],
+                            )
+                        ],
+                        next_block_id=None,
+                    ),
+                ),
+            ],
+            node_display_coords={},
+        ),
+    )
+
+    redis = RedisEmulation()
+    secret_store = dummy_secret_store(redis)
+
+    username = "test"
+    await secret_store.save_secret(secret_name="token", secret_value="<token>", owner_id=username)
+
+    bot_runner = await construct_bot(
+        username=username,
+        bot_id="simple-user-flow-bot",
+        bot_config=bot_config,
+        form_results_store=dummy_form_results_store(),
+        metrics_store=dummy_metrics_store(),
+        secret_store=secret_store,
+        redis=redis,
+        _bot_factory=MockedAsyncTeleBot,
+    )
+
+    bot = bot_runner.bot
+    assert isinstance(bot, MockedAsyncTeleBot)
+    bot.method_calls.clear()
+
+    await bot.process_new_updates([tg_update_message_to_bot(user_id=1234, first_name="User", text="/start")])
+
+    assert len(bot.method_calls) == 1
+    print(bot.method_calls["send_message"][0].kwargs["text"])
+    print(expected_sent)
+    assert_method_call_kwargs_include(
+        bot.method_calls["send_message"],
+        [
+            {
+                "text": expected_sent,
+                "chat_id": 1234,
+                "parse_mode": "MarkdownV2",
+            },
+        ],
+    )
+    bot.method_calls.clear()
 
 
 async def test_single_photo() -> None:

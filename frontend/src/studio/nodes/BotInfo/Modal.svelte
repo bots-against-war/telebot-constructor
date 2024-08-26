@@ -53,6 +53,7 @@
     required={false}
     bind:value={botUser.short_description}
     maxLength={MAX_BOT_SHORT_DESCRIPTION_LEN}
+    preventExceedingMaxLength
   />
   <Textarea
     label="Что может делать этот бот?"
@@ -60,6 +61,7 @@
     required={false}
     bind:value={botUser.description}
     maxLength={MAX_BOT_DESCRIPTION_LEN}
+    preventExceedingMaxLength
   />
   {#if updateError !== null}
     <ErrorBadge title="Ошибка сохранения деталей бота" text={updateError} />

@@ -9,6 +9,7 @@
   import NodeModalControls from "../../components/NodeModalControls.svelte";
   import { clone } from "../../utils";
   import { NODE_TITLE } from "../display";
+  import { TELEGRAM_MAX_MESSAGE_LENGTH_CHARS } from "../../../constants";
 
   export let botId: string; // required for admin chat id rendering, and context does not propagate here
   export let config: HumanOperatorBlock;
@@ -40,12 +41,14 @@
         label="Ответ на успешно принятое сообщение"
         placeholder="Спасибо, мы вам скоро ответим!"
         bind:value={fhConfig.messages_to_user.forwarded_to_admin_ok}
+        maxCharacters={TELEGRAM_MAX_MESSAGE_LENGTH_CHARS}
       />
       <LocalizableTextInput
         label="Предупреждение, что сообщений слишком много"
         description="(см. Ограничение на кол-во сообщений в минуту)"
         placeholder="Не присылайте больше N сообщений в минуту!"
         bind:value={fhConfig.messages_to_user.throttling}
+        maxCharacters={TELEGRAM_MAX_MESSAGE_LENGTH_CHARS}
       />
     </div>
 

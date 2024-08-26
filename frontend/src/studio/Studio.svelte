@@ -314,12 +314,12 @@
   </div>
   <Svelvet
     TD
-    controls
     fitView={botConfig.user_flow_config.blocks.length + botConfig.user_flow_config.entrypoints.length >= 1}
     edge={DeletableEdge}
     editable={false}
     minimap={false}
     enableAllHotkeys={false}
+    controls={false}
     {customMouseDownHandler}
     customCssCursor={tentativeNode ? "crosshair" : null}
   >
@@ -444,7 +444,7 @@
     transform: translate(-50%, -140%);
     /* mimicking node styles */
     background-color: white;
-    border-radius: 10px;
+    border-radius: 0;
     border: solid 1px rgb(206, 212, 218);
     padding: 8px;
   }

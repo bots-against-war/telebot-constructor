@@ -7,6 +7,6 @@ export const DEFAULT_NODE_PROPS: ComponentProps<Node> = {
   borderColor: "rgb(206, 212, 218)",
   // @ts-ignore
   borderWidth: "1px",
-  borderRadius: 10,
+  borderRadius: 0,
   editable: false,
 };

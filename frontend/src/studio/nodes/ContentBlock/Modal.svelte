@@ -1,6 +1,8 @@
 <script lang="ts">
-  import { Fileupload, Helper, Label, Listgroup, ListgroupItem } from "flowbite-svelte";
+  import { Fileupload, Helper, Listgroup } from "flowbite-svelte";
   import type { Attachments, ContentBlock, ContentBlockContentAttachment } from "../../../api/types";
+  import InputWrapper from "../../../components/inputs/InputWrapper.svelte";
+  import { TELEGRAM_MAX_MESSAGE_LENGTH_CHARS } from "../../../constants";
   import LocalizableTextInput from "../../components/LocalizableTextInput.svelte";
   import NodeModalBody from "../../components/NodeModalBody.svelte";
   import NodeModalControls from "../../components/NodeModalControls.svelte";
@@ -14,7 +16,7 @@
 
   async function updateConfig(): Promise<void> {
     const attachments = await serializeAttachments();
-    config.contents = [{ text: { text: editedMessageText, markup: "none" }, attachments }];
+    config.contents = [{ text: { text: editedMessageText, markup: "markdown" }, attachments }];
     onConfigUpdate(config);
   }
 
@@ -87,21 +89,24 @@
 </script>
 
 <NodeModalBody title={NODE_TITLE.content}>
-  <LocalizableTextInput label="Текст сообщения" bind:value={editedMessageText} />
-
-  <div>
-    <Label class="pb-2" for="multiple_files">Добавьте одно или несколько изображений</Label>
+  <LocalizableTextInput
+    label="Текст сообщения"
+    bind:value={editedMessageText}
+    maxCharacters={TELEGRAM_MAX_MESSAGE_LENGTH_CHARS}
+    textareaRows={10}
+    markdown
+  />
+  <InputWrapper label="Приложения" required={false}>
     <Fileupload id="multiple_files" class="mb-2" multiple bind:files accept="image/*" />
-    <Helper>PNG, JPG, SVG, WEBP or GIF.</Helper>
-    <Listgroup items={filenames} let:item class="mt-2">
-      {#if item}
-        {item}
-      {:else}
-        <ListgroupItem>No files</ListgroupItem>
-      {/if}
-    </Listgroup>
-  </div>
-
+    <Helper>PNG, JPG, SVG, WEBP, GIF</Helper>
+    {#if filenames}
+      <Listgroup items={filenames} let:item class="mt-2">
+        {#if item}
+          {item}
+        {/if}
+      </Listgroup>
+    {/if}
+  </InputWrapper>
   <NodeModalControls on:save={updateConfig} />
 </NodeModalBody>
 
