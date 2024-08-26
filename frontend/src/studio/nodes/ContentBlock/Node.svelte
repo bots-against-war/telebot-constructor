@@ -43,9 +43,11 @@
     on:edit={openEditModal}
   >
     {#if config.contents.length > 0 && config.contents[0].text}
-      <div class="max-h-[80px]" use:truncate>
-        <LocalizableText text={config.contents[0].text?.text} />
-      </div>
+      {#key config.contents[0].text?.text}
+        <div class="max-h-[80px]" use:truncate>
+          <LocalizableText text={config.contents[0].text?.text} />
+        </div>
+      {/key}
     {/if}
   </NodeContent>
   <OutputAnchorsBox>

@@ -18,9 +18,11 @@
   export let isLongText: boolean = true;
   export let required: boolean = false;
 
-  export let textareaRows: number = 2;
   export let maxCharacters: number | null = null;
+  export let textareaRows: number = 2;
   export let preventExceedingMaxLength: boolean = false;
+
+  export let markdown: boolean = false;
 
   const INTERNAL_DEBUG_LOG = false;
   function internalDebug(msg: string) {
@@ -71,6 +73,7 @@
       rows={textareaRows}
       maxLength={maxCharacters}
       {preventExceedingMaxLength}
+      {markdown}
     />
   {:else}
     <TextInput {required} {label} {description} {placeholder} bind:value maxLength={maxCharacters} />
@@ -99,6 +102,7 @@
                 rows={textareaRows}
                 maxLength={maxCharacters}
                 {preventExceedingMaxLength}
+                {markdown}
               />
             </TabItem>
           {/each}

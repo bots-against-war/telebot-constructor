@@ -6,6 +6,7 @@ import logging
 import re
 from typing import Any, Optional
 
+import telegramify_markdown  # type: ignore
 from pydantic import BaseModel
 from telebot import types as tg
 from telebot_components.language import any_text_to_str, vaildate_singlelang_text
@@ -45,6 +46,23 @@ class ContentTextMarkup(enum.Enum):
 class ContentText(BaseModel):
     text: LocalizableText
     markup: ContentTextMarkup
+
+    _preprocessed_text: LocalizableText | None = None
+
+    @property
+    def preprocessed(self) -> LocalizableText:
+        return self._preprocessed_text or self.text
+
+    def model_post_init(self, __context: Any) -> None:
+        if self.markup is ContentTextMarkup.MARKDOWN:
+            # we store texts in more or less vanilla markdown, but telegram
+            # requires somem extra processing
+            if isinstance(self.text, str):
+                self._preprocessed_text = telegramify_markdown.markdownify(self.text)
+            else:
+                self._preprocessed_text = {
+                    lang: telegramify_markdown.markdownify(translation) for lang, translation in self.text.items()
+                }
 
 
 class ContentBlockContentAttachment(ExactlyOneNonNullFieldModel):
@@ -141,7 +159,7 @@ class ContentBlock(UserFlowBlock):
                 if content.text is not None:
                     await context.bot.send_message(
                         chat_id=chat_id,
-                        text=any_text_to_str(content.text.text, language),
+                        text=any_text_to_str(content.text.preprocessed, language),
                         parse_mode=parse_mode,
                         reply_markup=tg.ReplyKeyboardRemove(),
                     )

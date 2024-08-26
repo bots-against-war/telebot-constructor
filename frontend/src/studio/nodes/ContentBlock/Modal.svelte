@@ -15,7 +15,7 @@
 
   async function updateConfig(): Promise<void> {
     const attachments = await serializeAttachments();
-    config.contents = [{ text: { text: editedMessageText, markup: "none" }, attachments }];
+    config.contents = [{ text: { text: editedMessageText, markup: "markdown" }, attachments }];
     onConfigUpdate(config);
   }
 
@@ -93,6 +93,7 @@
     bind:value={editedMessageText}
     maxCharacters={TELEGRAM_MAX_MESSAGE_LENGTH_CHARS}
     textareaRows={5}
+    markdown
   />
 
   <div>
