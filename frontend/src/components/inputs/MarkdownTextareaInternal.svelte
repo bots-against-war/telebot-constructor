@@ -3,6 +3,7 @@
   import { Toggle, Toolbar, ToolbarGroup } from "flowbite-svelte";
   import {
     BoldSolid,
+    ExclamationCircleOutline,
     EyeSlashSolid,
     ItalicSolid,
     LinkSolid,
@@ -15,11 +16,10 @@
   import { twMerge } from "tailwind-merge";
   import type { Newable } from "ts-essentials";
   import ActionIcon from "../ActionIcon.svelte";
-  import { makeMarkdownEntity, type MarkdownEntityType } from "./markdown_utils";
+  import { makeMarkdownEntity, renderPreview, type MarkdownEntityType } from "./markdown_utils";
 
   export let value: string;
-  export let wrappedClass =
-    "block w-full text-sm border-0 px-0 bg-inherit dark:bg-inherit focus:outline-none focus:ring-0";
+  export let wrappedClass = "block w-full text-sm border-0 px-0 bg-inherit dark:bg-inherit";
   export let innerWrappedClass = "py-2 px-4 bg-white dark:bg-gray-800";
 
   const background = getContext("background");
@@ -75,13 +75,15 @@
 
 <div class={wrapperClass}>
   <div class={headerClass(true)}>
-    <Toolbar embedded>
-      <ToolbarGroup>
-        <Toggle size="small" bind:checked={preview}>
-          <span class="text-gray-600 text-sm">Превью</span>
-        </Toggle>
-      </ToolbarGroup>
-      <ToolbarGroup>
+    <div class="flex flex-row items-center gap-3">
+      <div class={preview ? "pointer-events-none opacity-40" : ""}>
+        <!--
+        HACK: for some reason all pointer events on the outer div and textarea
+         are forwarded to the first button??? the sole purpose of this dummy
+         hidden button is to absorb these
+        -->
+        <button hidden on:click={console.log}>hi</button>
+
         {#each toolbarData as [icon, type]}
           <ActionIcon
             {icon}
@@ -98,28 +100,44 @@
           href="https://github.com/sudoskys/telegramify-markdown?tab=readme-ov-file#use-case"
           target="_blank"
         />
-      </ToolbarGroup>
-    </Toolbar>
+      </div>
+      <div>
+        <Toggle size="small" bind:checked={preview}>
+          {#if preview}
+            <div class="text-red-600 text-sm flex flex-row items-baseline gap-1">
+              <ExclamationCircleOutline />
+              <span>Может быть неточным</span>
+            </div>
+          {:else}
+            <span class="text-gray-600 text-sm">Превью</span>
+          {/if}
+        </Toggle>
+      </div>
+    </div>
   </div>
   <div class={innerWrappedClass}>
-    <textarea
-      bind:value
-      on:blur
-      on:change
-      on:click
-      on:contextmenu
-      on:focus
-      on:input
-      on:keydown
-      on:keypress
-      on:keyup
-      on:mouseenter
-      on:mouseleave
-      on:mouseover
-      on:paste
-      {...$$restProps}
-      class={textareaClass}
-      bind:this={markdownTextarea}
-    />
+    {#if preview}
+      <div class="preview">{@html renderPreview(value)}</div>
+    {:else}
+      <textarea
+        bind:value
+        on:blur
+        on:change
+        on:click
+        on:contextmenu
+        on:focus
+        on:input
+        on:keydown
+        on:keypress
+        on:keyup
+        on:mouseenter
+        on:mouseleave
+        on:mouseover
+        on:paste
+        {...$$restProps}
+        class={textareaClass}
+        bind:this={markdownTextarea}
+      />
+    {/if}
   </div>
 </div>

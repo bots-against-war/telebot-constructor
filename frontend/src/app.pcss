@@ -30,3 +30,17 @@ body {
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
 }
+
+// for markdown preview in content block
+
+span.md-preview-spoiler {
+  color: transparent;
+  text-shadow: 0 0 12px black;
+  user-select: none;
+}
+
+span.md-preview-spoiler:hover {
+  background-color: inherit;
+  text-shadow: none;
+  color: inherit;
+}

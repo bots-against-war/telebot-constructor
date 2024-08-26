@@ -1,11 +1,12 @@
 <script lang="ts">
-  import { Fileupload, Helper, Label, Listgroup, ListgroupItem } from "flowbite-svelte";
+  import { Fileupload, Helper, Listgroup } from "flowbite-svelte";
   import type { Attachments, ContentBlock, ContentBlockContentAttachment } from "../../../api/types";
+  import InputWrapper from "../../../components/inputs/InputWrapper.svelte";
+  import { TELEGRAM_MAX_MESSAGE_LENGTH_CHARS } from "../../../constants";
   import LocalizableTextInput from "../../components/LocalizableTextInput.svelte";
   import NodeModalBody from "../../components/NodeModalBody.svelte";
   import NodeModalControls from "../../components/NodeModalControls.svelte";
   import { NODE_TITLE } from "../display";
-  import { TELEGRAM_MAX_MESSAGE_LENGTH_CHARS } from "../../../constants";
 
   export let config: ContentBlock;
   export let onConfigUpdate: (newConfig: ContentBlock) => any;
@@ -92,14 +93,12 @@
     label="Текст сообщения"
     bind:value={editedMessageText}
     maxCharacters={TELEGRAM_MAX_MESSAGE_LENGTH_CHARS}
-    textareaRows={5}
+    textareaRows={10}
     markdown
   />
-
-  <div>
-    <Label class="pb-2" for="multiple_files">Добавьте одно или несколько изображений</Label>
+  <InputWrapper label="Приложения" required={false}>
     <Fileupload id="multiple_files" class="mb-2" multiple bind:files accept="image/*" />
-    <Helper>PNG, JPG, SVG, WEBP or GIF.</Helper>
+    <Helper>PNG, JPG, SVG, WEBP, GIF</Helper>
     {#if filenames}
       <Listgroup items={filenames} let:item class="mt-2">
         {#if item}
@@ -107,8 +106,7 @@
         {/if}
       </Listgroup>
     {/if}
-  </div>
-
+  </InputWrapper>
   <NodeModalControls on:save={updateConfig} />
 </NodeModalBody>
 
