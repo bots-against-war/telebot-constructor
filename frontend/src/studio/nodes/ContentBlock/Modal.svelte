@@ -92,19 +92,20 @@
     label="Текст сообщения"
     bind:value={editedMessageText}
     maxCharacters={TELEGRAM_MAX_MESSAGE_LENGTH_CHARS}
+    textareaRows={5}
   />
 
   <div>
     <Label class="pb-2" for="multiple_files">Добавьте одно или несколько изображений</Label>
     <Fileupload id="multiple_files" class="mb-2" multiple bind:files accept="image/*" />
     <Helper>PNG, JPG, SVG, WEBP or GIF.</Helper>
-    <Listgroup items={filenames} let:item class="mt-2">
-      {#if item}
-        {item}
-      {:else}
-        <ListgroupItem>No files</ListgroupItem>
-      {/if}
-    </Listgroup>
+    {#if filenames}
+      <Listgroup items={filenames} let:item class="mt-2">
+        {#if item}
+          {item}
+        {/if}
+      </Listgroup>
+    {/if}
   </div>
 
   <NodeModalControls on:save={updateConfig} />

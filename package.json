@@ -49,5 +49,8 @@
     "plugins": [
       "prettier-plugin-svelte"
     ]
+  },
+  "dependencies": {
+    "@svackages/truncate": "^1.0.0"
   }
 }

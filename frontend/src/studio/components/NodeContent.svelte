@@ -39,7 +39,7 @@
 
 <div class="node-content-container">
   <div
-    class="flex flex-row gap-2 justify-between items-center p-2 border-b-2"
+    class="flex flex-row gap-2 justify-between items-center p-2"
     style="background-color: {colorOverride || headerColor(NODE_HUE[key])}; border-radius: 0"
   >
     <div class="flex items-center gap-2">
@@ -84,7 +84,7 @@
   div.node-content-container {
     width: 250px;
     /* this is quick and dirty, better solution for overflowing blocks needed */
-    max-height: 250px;
+    max-height: 150px;
     text-overflow: ellipsis;
     overflow-y: hidden;
   }

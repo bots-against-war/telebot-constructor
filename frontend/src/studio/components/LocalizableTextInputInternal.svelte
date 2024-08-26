@@ -17,7 +17,10 @@
   export let placeholder: string | null = null;
   export let isLongText: boolean = true;
   export let required: boolean = false;
+
+  export let textareaRows: number = 2;
   export let maxCharacters: number | null = null;
+  export let preventExceedingMaxLength: boolean = false;
 
   const INTERNAL_DEBUG_LOG = false;
   function internalDebug(msg: string) {
@@ -59,7 +62,16 @@
 
 {#if !langConfig && typeof value === "string"}
   {#if isLongText}
-    <Textarea {required} {label} {description} {placeholder} bind:value maxLength={maxCharacters} />
+    <Textarea
+      {required}
+      {label}
+      {description}
+      {placeholder}
+      bind:value
+      rows={textareaRows}
+      maxLength={maxCharacters}
+      {preventExceedingMaxLength}
+    />
   {:else}
     <TextInput {required} {label} {description} {placeholder} bind:value maxLength={maxCharacters} />
   {/if}
@@ -80,7 +92,14 @@
                 {/if}
                 <Language {language} fullName tooltip={false} />
               </div>
-              <Textarea label={undefined} {placeholder} bind:value={value[language]} maxLength={maxCharacters} />
+              <Textarea
+                label={undefined}
+                {placeholder}
+                bind:value={value[language]}
+                rows={textareaRows}
+                maxLength={maxCharacters}
+                {preventExceedingMaxLength}
+              />
             </TabItem>
           {/each}
         </Tabs>
