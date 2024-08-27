@@ -32,7 +32,7 @@
       </Button>
     </div>
     {#each botInfos as botInfo (botInfo.bot_id)}
-      <div class="border-gray-300 border-b last:border-none px-3 py-4 hover:bg-gray-100">
+      <div class="border-primary-300 border-b last:border-none px-3 py-4 hover:bg-primary-100">
         <a href={dashboardPath(botInfo.bot_id)} class="flex flex-row justify-between">
           <span class="font-bold text-xl">{botInfo.display_name}</span>
           <div class="text-gray-500">

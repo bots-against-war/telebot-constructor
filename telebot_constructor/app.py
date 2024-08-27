@@ -889,12 +889,10 @@ class TelebotConstructorApp:
             )
 
         @routes.get("/")
-        async def index(request: web.Request) -> web.Response:
-            username = await self.auth.authenticate_request(request)
-            if username is None:
-                return await self.auth.unauthenticated_client_response(request, static_files_dir=self.static_files_dir)
+        @routes.get("")
+        async def landing_page(request: web.Request) -> web.Response:
             return web.Response(
-                body=static_file_content(self.static_files_dir / "index.html"),
+                body=static_file_content(self.static_files_dir / "landing.html"),
                 content_type="text/html",
             )
 
@@ -912,8 +910,18 @@ class TelebotConstructorApp:
                     content_type=mime_type,
                 )
             else:
-                # falling back to index page to support client-side routing
-                return await index(request)
+                # if not static file -- must be an app route, so authenticate and serve
+                # either login or app page; in the latter case, client-side routing kicks
+                # in
+                username = await self.auth.authenticate_request(request)
+                if username is None:
+                    return await self.auth.unauthenticated_client_response(
+                        request, static_files_dir=self.static_files_dir
+                    )
+                return web.Response(
+                    body=static_file_content(self.static_files_dir / "index.html"),
+                    content_type="text/html",
+                )
 
         # endregion
         ##################################################################################

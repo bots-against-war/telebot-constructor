@@ -23,7 +23,7 @@ export function dashboardPath(botId: string): string {
 }
 
 export function botListingPath(): string {
-  return "/";
+  return "/bots";
 }
 
 export function versionsPagePath(botId: string): string {

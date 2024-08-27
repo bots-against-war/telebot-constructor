@@ -4,8 +4,8 @@
   import { loggedInUserStore } from "../globalStateStores";
 </script>
 
-<Navbar fluid={true} color="primary">
-  <NavBrand href="/">
+<Navbar fluid={true} color="primary" shadow>
+  <NavBrand href="/" target="_blank">
     <img src={logo} class="h-10" alt="Telebot constructor Logo" />
   </NavBrand>
   <slot>

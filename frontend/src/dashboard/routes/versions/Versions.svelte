@@ -68,8 +68,8 @@
   const publishBot = (verNo: number) => {
     open(ConfirmationModal, {
       text:
-        `Опубликовать v${verNo}` +
-        (botInfo.running_version !== null ? ` вместо v${botInfo.running_version}` : "") +
+        `Опубликовать v${verNo + 1}` +
+        (botInfo.running_version !== null ? ` вместо v${botInfo.running_version + 1}` : "") +
         "?",
       onConfirm: async () => {
         const resp = await startBot(botInfo.bot_id, { version: verNo });
