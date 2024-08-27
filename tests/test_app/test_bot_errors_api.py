@@ -116,6 +116,7 @@ async def test_bot_errors_api(
             }
             for _ in range(10)
         ],
+        "admin_chat_ids": [],
     }
 
     # calling the bot errors api to get the full list

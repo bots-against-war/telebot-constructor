@@ -72,6 +72,7 @@ async def test_bot_config(
             ],
             "forms_with_responses": [],
             "last_errors": [],
+            "admin_chat_ids": [],
         }
     ]
     bot_created_event = resp_json_1[0]["last_events"][0]  # type: ignore
@@ -96,6 +97,7 @@ async def test_bot_config(
             ],
             "forms_with_responses": [],
             "last_errors": [],
+            "admin_chat_ids": [],
         }
     ]
     bot_started_event = resp_json_2[0]["last_events"][1]  # type: ignore
@@ -176,6 +178,7 @@ async def test_bot_config(
         ],
         "forms_with_responses": [],
         "last_errors": [],
+        "admin_chat_ids": [],
     }
     bot_edited_event, bot_stopped_event, bot_started_again_event = resp_json_3["last_events"][2:]  # type: ignore
 
@@ -205,6 +208,7 @@ async def test_bot_config(
         ],
         "forms_with_responses": [],
         "last_errors": [],
+        "admin_chat_ids": [],
     }
 
     # let's delete this bot for good
@@ -216,3 +220,90 @@ async def test_bot_config(
     resp = await client.get(f"/api/info/{bot_id}")
     assert resp.status == 404
     assert await resp.text() == "404: Bot id not found"
+
+
+async def test_admin_chat_ids(
+    constructor_app: tuple[TelebotConstructorApp, aiohttp.web.Application],
+    aiohttp_client: AiohttpClient,
+) -> None:
+    _, web_app = constructor_app
+    client = await aiohttp_client(web_app)
+
+    # saving secret
+    bot_id = "test-bot"
+    resp = await client.post("/api/secrets/test-1312-token", data="token")
+    assert resp.status == 200
+
+    # saving first version of bot config
+    bot_config_1 = {
+        "token_secret_name": "test-1312-token",
+        "user_flow_config": {
+            "entrypoints": [
+                {
+                    "command": {
+                        "entrypoint_id": "default-start-command",
+                        "command": "start",
+                        "next_block_id": "human-operator-block",
+                    },
+                }
+            ],
+            "blocks": [
+                {
+                    "human_operator": {
+                        "block_id": "human-operator-block",
+                        "catch_all": False,
+                        "feedback_handler_config": {
+                            "admin_chat_id": 987654321,
+                            "forum_topic_per_user": False,
+                            "anonimyze_users": False,
+                            "max_messages_per_minute": 10,
+                            "messages_to_user": {
+                                "forwarded_to_admin_ok": "ok",
+                                "throttling": "nope",
+                            },
+                            "messages_to_admin": {
+                                "copied_to_user_ok": "ok",
+                                "deleted_message_ok": "deleted",
+                                "can_not_delete_message": "not deleted :(",
+                            },
+                            "hashtags_in_admin_chat": False,
+                            "unanswered_hashtag": None,
+                            "hashtag_message_rarer_than": None,
+                            "message_log_to_admin_chat": True,
+                        },
+                    },
+                },
+            ],
+            "node_display_coords": {},
+        },
+        "display_name": None,
+    }
+    resp = await client.post(
+        f"/api/config/{bot_id}",
+        json={
+            "config": bot_config_1,
+            "start": False,
+            "version_message": "init message",
+            "display_name": "my bot",
+        },
+    )
+    assert resp.status == 201
+
+    # checking basic bot info
+    resp = await client.get("/api/info")
+    assert resp.status == 200
+    resp_json_1 = mask_recent_timestamps(await resp.json())
+    assert resp_json_1 == [
+        {
+            "bot_id": "test-bot",
+            "display_name": "my bot",
+            "running_version": None,
+            "last_versions": [{"version": 0, "metadata": {"timestamp": RECENT_TIMESTAMP, "message": "init message"}}],
+            "last_events": [
+                {"timestamp": RECENT_TIMESTAMP, "username": "no-auth", "event": "edited", "new_version": 0}
+            ],
+            "forms_with_responses": [],
+            "last_errors": [],
+            "admin_chat_ids": [987654321],
+        }
+    ]

@@ -284,6 +284,20 @@
           },
           "title": "Last Errors",
           "type": "array"
+        },
+        "admin_chat_ids": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ]
+          },
+          "title": "Admin Chat Ids",
+          "type": "array"
         }
       },
       "required": [
@@ -293,7 +307,8 @@
         "last_versions",
         "last_events",
         "forms_with_responses",
-        "last_errors"
+        "last_errors",
+        "admin_chat_ids"
       ],
       "title": "BotInfo",
       "type": "object"

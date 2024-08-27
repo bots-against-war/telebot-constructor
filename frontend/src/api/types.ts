@@ -253,6 +253,7 @@ export type IsForwarded = boolean;
 export type IsReply = boolean;
 export type ContentType = string;
 export type LastErrors = BotError[];
+export type AdminChatIds = (string | number)[];
 export type VersionMessage = string | null;
 export type Start = boolean;
 export type DisplayName2 = string | null;
@@ -616,6 +617,7 @@ export interface BotInfo {
   last_events: LastEvents;
   forms_with_responses: FormsWithResponses;
   last_errors: LastErrors;
+  admin_chat_ids: AdminChatIds;
   [k: string]: unknown;
 }
 export interface BotVersionInfo {

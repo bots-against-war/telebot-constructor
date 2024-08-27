@@ -154,11 +154,25 @@ class TelebotConstructorStore:
         INCLUDE_LAST_VERSIONS = 10 if detailed else 1
         INCLUDE_LAST_ERRORS = 10 if detailed else 0
 
-        next_to_last_version = await self.bot_config_version_count(username, bot_id)
-        if next_to_last_version == 0:
-            return None
+        running_version = await self.get_bot_running_version(username, bot_id)
+        if running_version == "stub":
+            running_version = None
 
-        display_name = await self.load_bot_display_name(username, bot_id) or bot_id
+        version_count = await self.bot_config_version_count(username, bot_id)
+        if version_count == 0:
+            return None
+        min_version = version_count - INCLUDE_LAST_VERSIONS
+        if running_version is not None:
+            min_version = min(min_version, running_version - 3)
+        min_version = max(min_version, 0)
+
+        admin_chat_ids: list[str | int] = []
+        if detailed and (config := await self.load_bot_config(username, bot_id, version=running_version or -1)):
+            admin_chat_ids = [
+                b.human_operator.feedback_handler_config.admin_chat_id
+                for b in config.user_flow_config.blocks
+                if b.human_operator is not None
+            ]
 
         last_events = await self._bot_events_store.tail(
             key=self._composite_key(username, bot_id), start=-INCLUDE_LAST_EVENTS
@@ -166,42 +180,31 @@ class TelebotConstructorStore:
         if not last_events:
             return None
 
-        running_version = await self.get_bot_running_version(username, bot_id)
-        if running_version == "stub":
-            running_version = None
-
-        # by default show 30 last versions
-        first_shown_version = next_to_last_version - INCLUDE_LAST_VERSIONS
-        # or, including running version and its close ancestors
-        if running_version is not None:
-            first_shown_version = min(first_shown_version, running_version - 3)
-        first_shown_version = max(first_shown_version, 0)
-
         version_metadata = [
             v.meta
             for v in await self._config_store.load_raw_versions(
                 self._composite_key(username, bot_id),
-                start_version=first_shown_version,
+                start_version=min_version,
             )
             if v.meta is not None  # this should always be true because we always set metadata
         ]
-        if len(version_metadata) != next_to_last_version - first_shown_version:
+        if len(version_metadata) != version_count - min_version:
             logger.error(
                 f"[{username}][{bot_id}] Version metadata list has unexpected length: "
-                + f"{len(version_metadata) = }, {next_to_last_version = }, {first_shown_version = }"
+                + f"{len(version_metadata) = }, {version_count = }, {min_version = }"
             )
             return None
 
         return BotInfo(
             bot_id=bot_id,
-            display_name=display_name,
+            display_name=await self.load_bot_display_name(username, bot_id) or bot_id,
             running_version=running_version,
             last_versions=[
                 BotVersionInfo(
                     version=version,
                     metadata=metadata,
                 )
-                for version, metadata in zip(range(first_shown_version, next_to_last_version), version_metadata)
+                for version, metadata in zip(range(min_version, version_count), version_metadata)
             ],
             last_events=last_events,
             forms_with_responses=(await self.form_results.list_forms(username, bot_id) if detailed else []),
@@ -210,4 +213,5 @@ class TelebotConstructorStore:
                 if detailed
                 else []
             ),
+            admin_chat_ids=admin_chat_ids,
         )

@@ -125,6 +125,7 @@ async def test_form_results_api(
         ],
         "forms_with_responses": [],
         "last_errors": [],
+        "admin_chat_ids": [],
     }
 
     assert isinstance(constructor.runner, MockBotRunner)
@@ -204,6 +205,7 @@ async def test_form_results_api(
             }
         ],
         "last_errors": [],
+        "admin_chat_ids": [],
     }
 
     # finally, calling the form results api to get user's responses
@@ -245,6 +247,7 @@ async def test_form_results_api(
             "last_events": [{"event": "started", "timestamp": RECENT_TIMESTAMP, "username": "no-auth", "version": 0}],
             "last_versions": [{"metadata": {"message": "init", "timestamp": RECENT_TIMESTAMP}, "version": 0}],
             "running_version": 0,
+            "admin_chat_ids": [],
         },
     }
 
@@ -279,5 +282,6 @@ async def test_form_results_api(
             "last_events": [{"event": "started", "timestamp": RECENT_TIMESTAMP, "username": "no-auth", "version": 0}],
             "last_versions": [{"metadata": {"message": "init", "timestamp": RECENT_TIMESTAMP}, "version": 0}],
             "running_version": 0,
+            "admin_chat_ids": [],
         },
     }
