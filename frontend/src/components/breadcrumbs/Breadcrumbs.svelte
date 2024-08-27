@@ -3,7 +3,9 @@
   import Delimiter from "./Delimiter.svelte";
 </script>
 
-<Breadcrumb>
-  <slot />
-  <Delimiter />
-</Breadcrumb>
+<div class="mb-2">
+  <Breadcrumb>
+    <slot />
+    <Delimiter />
+  </Breadcrumb>
+</div>

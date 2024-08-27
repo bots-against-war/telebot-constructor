@@ -65,7 +65,7 @@
       <BreadcrumbHome />
       <BreadcrumbDashboard {botInfo} />
     </Breadcrumbs>
-    <div class="my-2 text-left">
+    <div class="mb-2 text-left">
       <EditableText
         bind:value={editedTitle}
         on:edited={() => updateFormTitle(botInfo.bot_id, formResultsPage.info.form_block_id, editedTitle)}
