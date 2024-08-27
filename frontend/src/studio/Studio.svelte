@@ -286,7 +286,7 @@
   <div class="navbar-container">
     <Navbar>
       <div class="flex gap-2">
-        <Heading tag="h2" class="mr-2 max-w-96 text-ellipsis">
+        <Heading tag="h3" class="mr-2 max-w-96 text-nowrap text-ellipsis overflow-clip" title={botConfig.display_name}>
           {botConfig.display_name}
         </Heading>
         {#if readonly || !configValidationResult.ok || !isConfigModified}

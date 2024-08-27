@@ -29,8 +29,6 @@
   }
 
   let editedDisplayName = botInfo.display_name;
-
-  let error: string | null = null;
 </script>
 
 <Page>
@@ -43,13 +41,9 @@
       </EditableText>
       <Button href={studioPath(botId, null)}>
         <strong>Конструктор</strong>
-        <ArrowRightOutline class="w-4 h-4 ml-3" strokeWidth="3" />
+        <ArrowRightOutline class="w-5 h-5 ml-2" strokeWidth="3" />
       </Button>
     </div>
-    <!-- FIXME: better error handling, but'll do for now -->
-    {#if error !== null}
-      <Alert color="red">{error}</Alert>
-    {/if}
     <div class="flex flex-row mt-6 gap-5">
       <div class="flex-1 flex flex-col gap-4">
         <BotInfoCard moreLinkHref={versionsPagePath(botId)} moreLinkTitle="Все версии">
@@ -67,7 +61,7 @@
                 <strong>Работает</strong>
               {:else}
                 <RocketSolid class="w-5 h-5" />
-                Остановлен
+                <strong>Остановлен</strong>
               {/if}
             </div>
           </div>

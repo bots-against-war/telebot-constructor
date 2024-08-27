@@ -20,9 +20,9 @@
 
   // Global icon settings for flowbite-icons
   const iconCtx = {
-    size: "xs",
-    width: 15,
-    strokeWidth: "2.5",
+    size: "md",
+    width: 20,
+    strokeWidth: "2",
   };
   setContext("iconCtx", iconCtx);
 </script>

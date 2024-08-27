@@ -22,7 +22,7 @@
   export let innerWrappedClass = "py-2 px-4 bg-white dark:bg-gray-800";
 
   const background = getContext("background");
-  let wrapperClass;
+  let wrapperClass: string;
   $: wrapperClass = twMerge(
     "w-full rounded-lg",
     background ? "bg-white dark:bg-gray-800" : "bg-gray-50 dark:bg-gray-700",
