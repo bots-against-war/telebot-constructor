@@ -159,7 +159,7 @@
         {#if botInfo.forms_with_responses.length > 0}
           <BotInfoCard title="Ответы">
             {#each botInfo.forms_with_responses as formInfo}
-              <div class="border-gray-300 border-b last:border-none px-3 py-4 hover:bg-gray-100">
+              <div class="border-gray-300 border-l border-b last:border-b-0 px-3 py-4 hover:bg-gray-100">
                 <a href={formResultsPagePath(botId, formInfo.form_block_id)} class="flex flex-row justify-between">
                   <span>
                     {#if formInfo.title}
@@ -176,6 +176,8 @@
             {/each}
           </BotInfoCard>
         {/if}
+
+        <BotInfoCard title="Управление" moreLinkTitle="Перейти" moreLinkHref="/TBD-settings"></BotInfoCard>
       </div>
       <div class="flex-1 flex flex-col gap-4">
         <BotInfoCard title="Статистика">
