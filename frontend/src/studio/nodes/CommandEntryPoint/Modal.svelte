@@ -1,12 +1,12 @@
 <script lang="ts">
   import { ButtonGroup, Input, InputAddon } from "flowbite-svelte";
   import type { CommandEntryPoint } from "../../../api/types";
+  import SlashIcon from "../../../components/icons/SlashIcon.svelte";
   import InputWrapper from "../../../components/inputs/InputWrapper.svelte";
   import TextInput from "../../../components/inputs/TextInput.svelte";
   import NodeModalBody from "../../components/NodeModalBody.svelte";
   import NodeModalControls from "../../components/NodeModalControls.svelte";
   import { NODE_TITLE } from "../display";
-  import SlashIcon from "./SlashIcon.svelte";
 
   export let config: CommandEntryPoint;
   export let onConfigUpdate: (newConfig: CommandEntryPoint) => any;

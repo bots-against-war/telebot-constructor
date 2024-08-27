@@ -9,7 +9,7 @@
 
   // TODO: configurable from query params
   const DEFAULT_OFFSET = 0;
-  const DEFAULT_COUNT = 30;
+  const DEFAULT_COUNT = 20;
   const loadFormResultsOrFail = async () => unwrap(await getBotVersionsPage(botId, DEFAULT_OFFSET, DEFAULT_COUNT));
 </script>
 

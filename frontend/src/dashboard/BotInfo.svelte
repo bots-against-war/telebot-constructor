@@ -1,10 +1,9 @@
 <script lang="ts">
   import { Alert, Button, Heading } from "flowbite-svelte";
   import { ArrowRightOutline, RocketSolid } from "flowbite-svelte-icons";
-  import { createEventDispatcher } from "svelte";
+  import { navigate } from "svelte-routing";
   import { deleteBotConfig } from "../api/botConfig";
   import { updateBotDisplayName } from "../api/botInfo";
-  import { startBot, stopBot } from "../api/lifecycle";
   import type { BotInfo, BotVersionInfo } from "../api/types";
   import BotUserBadge from "../components/BotUserBadge.svelte";
   import BotVersionInfoBadge from "../components/BotVersionInfoBadge.svelte";
@@ -16,7 +15,7 @@
   import BreadcrumbHome from "../components/breadcrumbs/BreadcrumbHome.svelte";
   import Breadcrumbs from "../components/breadcrumbs/Breadcrumbs.svelte";
   import EditableText from "../components/inputs/EditableText.svelte";
-  import { formResultsPagePath, studioPath, versionsPagePath } from "../routeUtils";
+  import { botListingPath, formResultsPagePath, studioPath, versionsPagePath } from "../routeUtils";
   import { withConfirmation } from "../utils";
   import BotInfoCard from "./BotInfoCard.svelte";
   import BotEventList from "./components/BotEventList.svelte";
@@ -34,56 +33,13 @@
   let editedDisplayName = botInfo.display_name;
 
   let error: string | null = null;
-  const dispatch = createEventDispatcher<{ botDeleted: null }>();
-
-  let isLoading = false;
-
-  async function publishOrStop(version: number) {
-    isLoading = true;
-    if (version !== botInfo.running_version) {
-      // optimistically update events, this should be mostly accurate
-      if (botInfo.running_version !== null) {
-        botInfo.last_events.push({ event: "stopped", timestamp: new Date().getTime() / 1000, username: "" });
-      }
-      const resp = await startBot(botId, { version });
-      // optimistically update events, this should be mostly accurate
-      botInfo.last_events.push({
-        event: "started",
-        timestamp: new Date().getTime() / 1000,
-        username: "",
-        version: version,
-      });
-      isLoading = false;
-      if (resp.ok) {
-        botInfo.running_version = version;
-      } else {
-        error = `Ошибка при запуске бота: ${resp.error}`;
-        botInfo.running_version = null;
-      }
-    } else {
-      const resp = await stopBot(botId);
-      botInfo.last_events.push({ event: "stopped", timestamp: new Date().getTime() / 1000, username: "" });
-      isLoading = false;
-      if (resp.ok) {
-        botInfo.running_version = null;
-      } else {
-        error = `Ошибка при остановке бота: ${resp.error}`;
-      }
-    }
-  }
-
-  async function deleteBot() {
-    const resp = await deleteBotConfig(botId);
-    if (resp.ok) {
-      dispatch("botDeleted");
-    } else {
-      error = `Failed to delete: ${resp.error}`;
-    }
-  }
 
   const deleteBotWithConfirmation = withConfirmation(
-    "Вы уверены, что хотите удалить бота? Это действие дельзя отменить.",
-    () => deleteBot(),
+    "Вы уверены, что хотите удалить бота? Это действие дельзя отменить!",
+    async () => {
+      deleteBotConfig(botId);
+      navigate(botListingPath());
+    },
     "Удалить",
   );
 </script>
@@ -97,7 +53,7 @@
         <Heading tag="h3">{editedDisplayName}</Heading>
       </EditableText>
       <Button href={studioPath(botId, null)}>
-        Конструктор
+        <strong>Конструктор</strong>
         <ArrowRightOutline class="w-4 h-4 ml-3" strokeWidth="3" />
       </Button>
     </div>
@@ -119,7 +75,7 @@
                 <JumpingIcon>
                   <RocketSolid class="w-5 h-5" />
                 </JumpingIcon>
-                Работает
+                <strong>Работает</strong>
               {:else}
                 <RocketSolid class="w-5 h-5" />
                 Остановлен

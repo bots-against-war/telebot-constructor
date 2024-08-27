@@ -1,4 +1,7 @@
 function encodePathPart(part: any): any {
+  if (typeof part !== "string") {
+    return part;
+  }
   // :identifier is a syntax used to render templates for svelte-simple-routing
   return part.at(0) === ":" ? part : encodeURIComponent(part);
 }

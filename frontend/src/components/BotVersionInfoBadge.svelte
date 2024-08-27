@@ -4,16 +4,21 @@
   import Timestamp from "./Timestamp.svelte";
 
   export let ver: BotVersionInfo;
+  export let carded: boolean = true;
 </script>
 
-<div class="p-1 border-gray-200 border bg-gray-100">
+<div class="p-1 ${carded ? 'border-gray-200 border bg-gray-100' : ''}">
   <div>
-    <strong>v{ver.version}</strong>
+    <strong>v{ver.version + 1}</strong>
     {#if ver.metadata.timestamp}
       · <Timestamp timestamp={ver.metadata.timestamp} timeClass="text-gray-500" />
     {/if}
   </div>
   {#if ver.metadata.message}
-    <p use:truncate class="text-gray-600 text-sm max-h-4">{ver.metadata.message}</p>
+    {#if carded}
+      <p use:truncate class="text-gray-600 text-sm max-h-4">{ver.metadata.message}</p>
+    {:else}
+      <p class="text-gray-600 text-sm">{ver.metadata.message}</p>
+    {/if}
   {/if}
 </div>

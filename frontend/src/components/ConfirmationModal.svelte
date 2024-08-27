@@ -20,9 +20,9 @@
 
 <div class="flex flex-col gap-4">
   <p>{text}</p>
-  <div>
-    <Button on:click={closeModal}>Отмена</Button>
-    <Button color="red" outline on:click={confirm}>
+  <div class="flex flex-row items-center gap-2">
+    <Button on:click={closeModal} disabled={isConfirming}>Отмена</Button>
+    <Button color="red" outline on:click={confirm} disabled={isConfirming}>
       <ButtonLoadingSpinner loading={isConfirming} />
       {confirmButtonLabel}
     </Button>
