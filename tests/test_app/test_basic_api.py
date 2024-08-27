@@ -199,7 +199,6 @@ async def test_bot_config(
             {"version": 1, "metadata": {"timestamp": RECENT_TIMESTAMP, "message": "bot config update"}},
         ],
         "last_events": [
-            bot_created_event,
             bot_started_event,
             bot_edited_event,
             bot_stopped_event,

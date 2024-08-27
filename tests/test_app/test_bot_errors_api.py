@@ -114,7 +114,7 @@ async def test_bot_errors_api(
                     "received_at": RECENT_TIMESTAMP,
                 },
             }
-            for _ in range(10)
+            for _ in range(5)
         ],
         "admin_chat_ids": [],
     }
