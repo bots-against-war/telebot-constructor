@@ -35,8 +35,8 @@
       <div class="border-gray-300 border-b last:border-none px-3 py-4 hover:bg-gray-100">
         <a href={dashboardPath(botInfo.bot_id)} class="flex flex-row justify-between">
           <span class="font-bold text-xl">{botInfo.display_name}</span>
-          <div>
-            <span class="text-gray-500">v{botInfo.last_versions[0].version}</span>
+          <div class="text-gray-500">
+            <span>v{botInfo.last_versions[0].version}</span>
             ·
             <Timestamp timestamp={botInfoTimestamp(botInfo)} timeClass="text-gray-500" />
           </div>

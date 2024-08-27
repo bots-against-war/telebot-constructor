@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { Alert, Button, Heading } from "flowbite-svelte";
-  import { PenSolid, RocketSolid } from "flowbite-svelte-icons";
+  import { Alert, Button, Heading, Li, List } from "flowbite-svelte";
+  import { ArrowRightSolid, PenSolid, RocketSolid } from "flowbite-svelte-icons";
   import { createEventDispatcher } from "svelte";
   import { deleteBotConfig } from "../api/botConfig";
   import { updateBotDisplayName } from "../api/botInfo";
@@ -19,7 +19,7 @@
   import EditableText from "../components/inputs/EditableText.svelte";
   import DataBadge from "../components/internal/DataBadge.svelte";
   import DataBadgeLoader from "../components/internal/DataBadgeLoader.svelte";
-  import { studioPath } from "../routeUtils";
+  import { formResultsPagePath, studioPath } from "../routeUtils";
   import { withConfirmation } from "../utils";
   import BotInfoCard from "./BotInfoCard.svelte";
 
@@ -101,8 +101,8 @@
         <Heading tag="h3">{editedDisplayName}</Heading>
       </EditableText>
       <Button href={studioPath(botId, null)}>
-        <PenSolid class="w-3 h-3 me-3 " />
-        Редактировать
+        Конструктор
+        <ArrowRightSolid class="w-3 h-3 ml-3 " />
       </Button>
     </div>
     <!-- FIXME: better error handling, but'll do for now -->
@@ -112,22 +112,33 @@
     <div class="flex flex-row mt-6 gap-5">
       <div class="flex-1 flex flex-col gap-4">
         <BotInfoCard moreLinkHref="/TBD-versions" moreLinkTitle="Все версии">
-          <div class="inline-flex items-center text-lg font-bold text-gray-900 pb-3">
-            {#if runningVersionInfo !== null}
-              <JumpingIcon>
-                <RocketSolid class="w-5 h-5 text-primary-600 me-2" />
-              </JumpingIcon>
-              Онлайн
-            {:else}
-              Оффлайн
-            {/if}
+          <div class="flex items-center justify-between pb-3 w-full">
+            <span class="text-lg font-bold text-gray-900">Статус</span>
+            <div
+              class="flex items-center gap-2 px-3 py-2 border {runningVersionInfo !== null
+                ? 'text-green-600'
+                : 'text-gray-900'}"
+            >
+              {#if runningVersionInfo !== null}
+                <JumpingIcon>
+                  <RocketSolid class="w-5 h-5" />
+                </JumpingIcon>
+                Работает
+              {:else}
+                <RocketSolid class="w-5 h-5" />
+                Остановлен
+              {/if}
+            </div>
           </div>
           {#if runningVersionInfo !== null}
-            <BotVersionInfoBadge ver={lastVersionInfo} />
+            <div class="flex flex-col gap-1 mb-1">
+              <span>Запущена</span>
+              <BotVersionInfoBadge ver={runningVersionInfo} />
+            </div>
           {/if}
           {#if runningVersionInfo === null || runningVersionInfo.version !== lastVersionInfo.version}
             <div class="flex flex-col gap-1 mb-1">
-              <span>Актуальная</span>
+              <span>Последняя</span>
               <BotVersionInfoBadge ver={lastVersionInfo} />
             </div>
           {/if}
@@ -146,6 +157,31 @@
             {/await}
           </DataBadge>
         </BotInfoCard>
+
+        {#if botInfo.forms_with_responses.length > 0}
+          <!-- <div class="mt-5 pt-3 border-t">
+            <h2 class="text-xl font-bold">Ответы на формы</h2>
+            
+          </div> -->
+          <BotInfoCard title="Ответы">
+            {#each botInfo.forms_with_responses as formInfo}
+              <div class="border-gray-300 border-b last:border-none px-3 py-4 hover:bg-gray-100">
+                <a href={formResultsPagePath(botId, formInfo.form_block_id)} class="flex flex-row justify-between">
+                  <span>
+                    {#if formInfo.title}
+                      {formInfo.title}
+                    {:else}
+                      "{formInfo.prompt}"
+                    {/if}
+                  </span>
+                  <span class="text-gray-500 text-nowrap">
+                    {formInfo.total_responses} отв.
+                  </span>
+                </a>
+              </div>
+            {/each}
+          </BotInfoCard>
+        {/if}
       </div>
       <div class="flex-1 flex flex-col gap-4">
         <BotInfoCard title="Статистика">
@@ -162,27 +198,7 @@
       </div>
     </div>
     <!-- 
-    {#if botInfo.forms_with_responses.length > 0}
-      <div class="mt-5 pt-3 border-t">
-        <h2 class="text-xl font-bold">Ответы на формы</h2>
-        <List>
-          {#each botInfo.forms_with_responses as formInfo}
-            <Li>
-              <div class=" inline-flex flex-row gap-2 items-baseline">
-                <span>
-                  {#if formInfo.title}
-                    {formInfo.title}
-                  {:else}
-                    "{formInfo.prompt}"
-                  {/if}
-                </span>
-                <Button size="xs" outline href={formResultsPagePath(botId, formInfo.form_block_id)}>Ответы</Button>
-              </div>
-            </Li>
-          {/each}
-        </List>
-      </div>
-    {/if}
+    
     <div class="mt-5 pt-3 border-t">
       <h2 class="text-xl font-bold">Версии</h2>
       <ol class="relative border-s border-gray-200 mt-2">

@@ -200,6 +200,7 @@ async def test_form_results_api(
                 "form_block_id": "form-block-123",
                 "prompt": "Hello welcome to the form testing bot",
                 "title": None,
+                "total_responses": 3,
             }
         ],
         "last_errors": [],

@@ -42,11 +42,11 @@ class FormInfoBasic(BaseModel):
     form_block_id: str
     prompt: str
     title: str | None
+    total_responses: int
 
 
 class FormInfo(FormInfoBasic):
     field_names: dict[FieldId, str]
-    total_responses: int
 
 
 class FormResultsStore:
@@ -139,6 +139,7 @@ class FormResultsStore:
                 form_block_id=global_form_id.form_block_id,
                 prompt=cast(str, prompt),  # see check above
                 title=title,
+                total_responses=await self._results_store.length(global_form_id.as_key()),
             )
             for global_form_id, prompt, title in zip(global_form_ids, prompts, titles)
         ]

@@ -906,24 +906,24 @@
           ],
           "title": "Title"
         },
+        "total_responses": {
+          "title": "Total Responses",
+          "type": "integer"
+        },
         "field_names": {
           "additionalProperties": {
             "type": "string"
           },
           "title": "Field Names",
           "type": "object"
-        },
-        "total_responses": {
-          "title": "Total Responses",
-          "type": "integer"
         }
       },
       "required": [
         "form_block_id",
         "prompt",
         "title",
-        "field_names",
-        "total_responses"
+        "total_responses",
+        "field_names"
       ],
       "title": "FormInfo",
       "type": "object"
@@ -948,12 +948,17 @@
             }
           ],
           "title": "Title"
+        },
+        "total_responses": {
+          "title": "Total Responses",
+          "type": "integer"
         }
       },
       "required": [
         "form_block_id",
         "prompt",
-        "title"
+        "title",
+        "total_responses"
       ],
       "title": "FormInfoBasic",
       "type": "object"
