@@ -4,7 +4,6 @@
   import { createEventDispatcher } from "svelte";
   import { deleteBotConfig } from "../api/botConfig";
   import { updateBotDisplayName } from "../api/botInfo";
-  import { getBotUser } from "../api/botUser";
   import { startBot, stopBot } from "../api/lifecycle";
   import type { BotInfo, BotVersionInfo } from "../api/types";
   import BotUserBadge from "../components/BotUserBadge.svelte";
@@ -87,21 +86,19 @@
     () => deleteBot(),
     "Удалить",
   );
-
-  const botUserPromise = getBotUser(botId);
 </script>
 
 <Page>
   <Navbar />
   <PageContent>
     <Breadcrumbs><BreadcrumbHome /></Breadcrumbs>
-    <div class="flex flex-row justify-between items-center">
+    <div class="flex flex-row justify-between items-start gap-2">
       <EditableText bind:value={editedDisplayName} on:edited={() => updateBotDisplayName(botId, editedDisplayName)}>
         <Heading tag="h3">{editedDisplayName}</Heading>
       </EditableText>
       <Button href={studioPath(botId, null)}>
         Конструктор
-        <ArrowRightOutline class="w-3 h-3 ml-3 " />
+        <ArrowRightOutline class="w-4 h-4 ml-3" strokeWidth="3" />
       </Button>
     </div>
     <!-- FIXME: better error handling, but'll do for now -->
@@ -131,13 +128,17 @@
           </div>
           {#if runningVersionInfo !== null}
             <div class="flex flex-col gap-1 mb-1">
-              <span>Запущена версия</span>
+              <span>Запущена версия:</span>
               <BotVersionInfoBadge ver={runningVersionInfo} />
             </div>
           {/if}
           {#if runningVersionInfo === null || runningVersionInfo.version !== lastVersionInfo.version}
             <div class="flex flex-col gap-1 mb-1">
-              <span>Последняя версия TBD</span>
+              <span>
+                Последняя версия {#if runningVersionInfo !== null}
+                  (<strong>+{lastVersionInfo.version - runningVersionInfo.version}</strong>)
+                {/if}
+              </span>
               <BotVersionInfoBadge ver={lastVersionInfo} />
             </div>
           {/if}
@@ -183,12 +184,16 @@
       <div class="flex-1 flex flex-col gap-4">
         <BotInfoCard title="Статистика">
           <strong class="text-2xl">🚧👷🏗️🚧</strong>
-          <span>В разработке...</span>
-          <strong class="text-2xl">🚧👷🏗️🚧</strong>
+          <span>В разработке</span>
         </BotInfoCard>
 
         <BotInfoCard title="Активность" moreLinkTitle="Вся активность" moreLinkHref="/TBD-settings">
-          <BotEventList events={botInfo.last_events} limit={5} />
+          <BotEventList events={botInfo.last_events} />
+        </BotInfoCard>
+
+        <BotInfoCard title="Ошибки бота">
+          <strong class="text-2xl">🚧👷🏗️🚧</strong>
+          <span>В разработке</span>
         </BotInfoCard>
       </div>
     </div>

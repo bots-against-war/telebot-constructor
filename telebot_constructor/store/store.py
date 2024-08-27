@@ -150,9 +150,9 @@ class TelebotConstructorStore:
         return await self._display_names_store.get_subkey(username, bot_id)
 
     async def load_bot_info(self, username: str, bot_id: str, detailed: bool) -> Optional[BotInfo]:
-        INCLUDE_LAST_EVENTS = 10 if detailed else 1
-        INCLUDE_LAST_VERSIONS = 10 if detailed else 1
-        INCLUDE_LAST_ERRORS = 10 if detailed else 0
+        INCLUDE_LAST_EVENTS = 5 if detailed else 1
+        INCLUDE_LAST_VERSIONS = 3 if detailed else 1
+        INCLUDE_LAST_ERRORS = 5 if detailed else 0
 
         running_version = await self.get_bot_running_version(username, bot_id)
         if running_version == "stub":
