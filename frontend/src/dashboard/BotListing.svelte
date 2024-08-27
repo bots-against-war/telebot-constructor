@@ -13,7 +13,7 @@
   export let botInfos: BotInfo[];
 
   const botInfoTimestamp = (bi: BotInfo) => bi.last_events[0]?.timestamp || 0;
-  botInfos.sort((b1, b2) => botInfoTimestamp(b1) - botInfoTimestamp(b2));
+  botInfos.sort((b1, b2) => botInfoTimestamp(b2) - botInfoTimestamp(b1));
 
   const open = getModalOpener();
   if (botInfos.length === 0) {
@@ -36,7 +36,7 @@
         <a href={dashboardPath(botInfo.bot_id)} class="flex flex-row justify-between">
           <span class="font-bold text-xl">{botInfo.display_name}</span>
           <div class="text-gray-500">
-            <span>v{botInfo.last_versions[0].version}</span>
+            <span>v{botInfo.last_versions[botInfo.last_versions.length - 1].version}</span>
             ·
             <Timestamp timestamp={botInfoTimestamp(botInfo)} timeClass="text-gray-500" />
           </div>

@@ -168,11 +168,20 @@ class TelebotConstructorStore:
 
         admin_chat_ids: list[str | int] = []
         if detailed and (config := await self.load_bot_config(username, bot_id, version=running_version or -1)):
-            admin_chat_ids = [
+            admin_chat_ids.extend(
                 b.human_operator.feedback_handler_config.admin_chat_id
                 for b in config.user_flow_config.blocks
                 if b.human_operator is not None
-            ]
+            )
+            admin_chat_ids.extend(
+                b.form.results_export.to_chat.chat_id
+                for b in config.user_flow_config.blocks
+                if (
+                    b.form is not None
+                    and b.form.results_export.to_chat is not None
+                    and not b.form.results_export.to_chat.via_feedback_handler
+                )
+            )
 
         last_events = await self._bot_events_store.tail(
             key=self._composite_key(username, bot_id), start=-INCLUDE_LAST_EVENTS

@@ -20,6 +20,7 @@
   import { formResultsPagePath, studioPath } from "../routeUtils";
   import { withConfirmation } from "../utils";
   import BotInfoCard from "./BotInfoCard.svelte";
+  import BotEventList from "./components/BotEventList.svelte";
 
   export let botId: string;
   export let botInfo: BotInfo;
@@ -130,13 +131,13 @@
           </div>
           {#if runningVersionInfo !== null}
             <div class="flex flex-col gap-1 mb-1">
-              <span>Запущена</span>
+              <span>Запущена версия</span>
               <BotVersionInfoBadge ver={runningVersionInfo} />
             </div>
           {/if}
           {#if runningVersionInfo === null || runningVersionInfo.version !== lastVersionInfo.version}
             <div class="flex flex-col gap-1 mb-1">
-              <span>Последняя</span>
+              <span>Последняя версия TBD</span>
               <BotVersionInfoBadge ver={lastVersionInfo} />
             </div>
           {/if}
@@ -147,7 +148,7 @@
         </BotInfoCard>
 
         {#if botInfo.admin_chat_ids.length > 0}
-          <BotInfoCard title="Админ-чаты">
+          <BotInfoCard title="Рабочие чаты">
             <div class="flex flex-col gap-2">
               {#each botInfo.admin_chat_ids as admin_chat_id}
                 <GroupChatBadge {botId} chatId={admin_chat_id} />
@@ -157,7 +158,7 @@
         {/if}
 
         {#if botInfo.forms_with_responses.length > 0}
-          <BotInfoCard title="Ответы">
+          <BotInfoCard title="Ответы на формы">
             {#each botInfo.forms_with_responses as formInfo}
               <div class="border-gray-300 border-l border-b last:border-b-0 px-3 py-4 hover:bg-gray-100">
                 <a href={formResultsPagePath(botId, formInfo.form_block_id)} class="flex flex-row justify-between">
@@ -169,7 +170,7 @@
                     {/if}
                   </span>
                   <span class="text-gray-500 text-nowrap">
-                    {formInfo.total_responses} отв.
+                    Ответы ({formInfo.total_responses})
                   </span>
                 </a>
               </div>
@@ -186,10 +187,8 @@
           <strong class="text-2xl">🚧👷🏗️🚧</strong>
         </BotInfoCard>
 
-        <BotInfoCard title="Активность">
-          <strong class="text-2xl">🚧👷🏗️🚧</strong>
-          <span>В разработке...</span>
-          <strong class="text-2xl">🚧👷🏗️🚧</strong>
+        <BotInfoCard title="Активность" moreLinkTitle="Вся активность" moreLinkHref="/TBD-settings">
+          <BotEventList events={botInfo.last_events} limit={5} />
         </BotInfoCard>
       </div>
     </div>
@@ -262,10 +261,6 @@
         {/each}
       </ol>
       <div class="text-gray-400">TBD: полный лог активности</div>
-    </div>
-    <div class="mt-5 pt-3 border-t">
-      <h2 class="text-xl font-bold">Управление</h2>
-      <Button color="red" outline on:click={deleteBotWithConfirmation}>Удалить бота</Button>
     </div> -->
   </PageContent>
 </Page>
