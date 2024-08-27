@@ -284,6 +284,20 @@
           },
           "title": "Last Errors",
           "type": "array"
+        },
+        "admin_chat_ids": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ]
+          },
+          "title": "Admin Chat Ids",
+          "type": "array"
         }
       },
       "required": [
@@ -293,7 +307,8 @@
         "last_versions",
         "last_events",
         "forms_with_responses",
-        "last_errors"
+        "last_errors",
+        "admin_chat_ids"
       ],
       "title": "BotInfo",
       "type": "object"
@@ -381,6 +396,31 @@
         "metadata"
       ],
       "title": "BotVersionInfo",
+      "type": "object"
+    },
+    "BotVersionsPage": {
+      "properties": {
+        "bot_info": {
+          "$ref": "#/$defs/BotInfo"
+        },
+        "versions": {
+          "items": {
+            "$ref": "#/$defs/BotVersionInfo"
+          },
+          "title": "Versions",
+          "type": "array"
+        },
+        "total_versions": {
+          "title": "Total Versions",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "bot_info",
+        "versions",
+        "total_versions"
+      ],
+      "title": "BotVersionsPage",
       "type": "object"
     },
     "BranchingFormMemberConfig": {
@@ -906,24 +946,24 @@
           ],
           "title": "Title"
         },
+        "total_responses": {
+          "title": "Total Responses",
+          "type": "integer"
+        },
         "field_names": {
           "additionalProperties": {
             "type": "string"
           },
           "title": "Field Names",
           "type": "object"
-        },
-        "total_responses": {
-          "title": "Total Responses",
-          "type": "integer"
         }
       },
       "required": [
         "form_block_id",
         "prompt",
         "title",
-        "field_names",
-        "total_responses"
+        "total_responses",
+        "field_names"
       ],
       "title": "FormInfo",
       "type": "object"
@@ -948,12 +988,17 @@
             }
           ],
           "title": "Title"
+        },
+        "total_responses": {
+          "title": "Total Responses",
+          "type": "integer"
         }
       },
       "required": [
         "form_block_id",
         "prompt",
-        "title"
+        "title",
+        "total_responses"
       ],
       "title": "FormInfoBasic",
       "type": "object"
@@ -1143,6 +1188,9 @@
     },
     "FormResultsPage": {
       "properties": {
+        "bot_info": {
+          "$ref": "#/$defs/BotInfo"
+        },
         "info": {
           "$ref": "#/$defs/FormInfo"
         },
@@ -1168,6 +1216,7 @@
         }
       },
       "required": [
+        "bot_info",
         "info",
         "results"
       ],
@@ -2323,6 +2372,9 @@
     },
     "bot_errors_page": {
       "$ref": "#/$defs/BotErrorsPage"
+    },
+    "bot_versions_page": {
+      "$ref": "#/$defs/BotVersionsPage"
     }
   },
   "required": [
@@ -2339,7 +2391,8 @@
     "form_info",
     "form_info_basic",
     "form_results_page",
-    "bot_errors_page"
+    "bot_errors_page",
+    "bot_versions_page"
   ],
   "title": "BackendDataModels",
   "type": "object"

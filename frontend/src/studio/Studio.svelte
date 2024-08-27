@@ -319,7 +319,8 @@
     editable={false}
     minimap={false}
     enableAllHotkeys={false}
-    controls={false}
+    controls
+    trackpadPan
     {customMouseDownHandler}
     customCssCursor={tentativeNode ? "crosshair" : null}
   >

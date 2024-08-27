@@ -1,3 +1,4 @@
+import itertools
 import logging
 import time
 from typing import AsyncGenerator, Optional
@@ -149,16 +150,39 @@ class TelebotConstructorStore:
     async def load_bot_display_name(self, username: str, bot_id: str) -> Optional[str]:
         return await self._display_names_store.get_subkey(username, bot_id)
 
-    async def load_bot_info(self, username: str, bot_id: str) -> Optional[BotInfo]:
-        INCLUDE_LAST_EVENTS = 10
-        INCLUDE_LAST_VERSIONS = 10
-        INCLUDE_LAST_ERRORS = 10
+    async def load_bot_info(self, username: str, bot_id: str, detailed: bool) -> Optional[BotInfo]:
+        INCLUDE_LAST_EVENTS = 5 if detailed else 1
+        INCLUDE_LAST_VERSIONS = 3 if detailed else 1
+        INCLUDE_LAST_ERRORS = 5 if detailed else 0
 
-        next_to_last_version = await self.bot_config_version_count(username, bot_id)
-        if next_to_last_version == 0:
+        running_version = await self.get_bot_running_version(username, bot_id)
+        if running_version == "stub":
+            running_version = None
+
+        version_count = await self.bot_config_version_count(username, bot_id)
+        if version_count == 0:
             return None
+        min_version = version_count - INCLUDE_LAST_VERSIONS
+        if running_version is not None:
+            min_version = min(min_version, running_version - 3)
+        min_version = max(min_version, 0)
 
-        display_name = await self.load_bot_display_name(username, bot_id) or bot_id
+        admin_chat_ids: list[str | int] = []
+        if detailed and (config := await self.load_bot_config(username, bot_id, version=running_version or -1)):
+            admin_chat_ids.extend(
+                b.human_operator.feedback_handler_config.admin_chat_id
+                for b in config.user_flow_config.blocks
+                if b.human_operator is not None
+            )
+            admin_chat_ids.extend(
+                b.form.results_export.to_chat.chat_id
+                for b in config.user_flow_config.blocks
+                if (
+                    b.form is not None
+                    and b.form.results_export.to_chat is not None
+                    and not b.form.results_export.to_chat.via_feedback_handler
+                )
+            )
 
         last_events = await self._bot_events_store.tail(
             key=self._composite_key(username, bot_id), start=-INCLUDE_LAST_EVENTS
@@ -166,44 +190,52 @@ class TelebotConstructorStore:
         if not last_events:
             return None
 
-        running_version = await self.get_bot_running_version(username, bot_id)
-        if running_version == "stub":
-            running_version = None
-
-        # by default show 30 last versions
-        first_shown_version = next_to_last_version - INCLUDE_LAST_VERSIONS
-        # or, including running version and its close ancestors
-        if running_version is not None:
-            first_shown_version = min(first_shown_version, running_version - 3)
-        first_shown_version = max(first_shown_version, 0)
-
-        version_metadata = [
-            v.meta
-            for v in await self._config_store.load_raw_versions(
-                self._composite_key(username, bot_id),
-                start_version=first_shown_version,
-            )
-            if v.meta is not None  # this should always be true because we always set metadata
-        ]
-        if len(version_metadata) != next_to_last_version - first_shown_version:
-            logger.error(
-                f"[{username}][{bot_id}] Version metadata list has unexpected length: "
-                + f"{len(version_metadata) = }, {next_to_last_version = }, {first_shown_version = }"
-            )
-            return None
-
         return BotInfo(
             bot_id=bot_id,
-            display_name=display_name,
+            display_name=await self.load_bot_display_name(username, bot_id) or bot_id,
             running_version=running_version,
-            last_versions=[
-                BotVersionInfo(
-                    version=version,
-                    metadata=metadata,
-                )
-                for version, metadata in zip(range(first_shown_version, next_to_last_version), version_metadata)
-            ],
+            last_versions=await self.load_version_info(
+                username,
+                bot_id,
+                start_version=min_version,
+                end_version=None,
+            ),
             last_events=last_events,
-            forms_with_responses=await self.form_results.list_forms(username, bot_id),
-            last_errors=await self.metrics.load_errors(username, bot_id, offset=0, count=INCLUDE_LAST_ERRORS),
+            forms_with_responses=(await self.form_results.list_forms(username, bot_id) if detailed else []),
+            last_errors=(
+                await self.metrics.load_errors(username, bot_id, offset=0, count=INCLUDE_LAST_ERRORS)
+                if detailed
+                else []
+            ),
+            admin_chat_ids=admin_chat_ids,
         )
+
+    async def load_version_info(
+        self, username: str, bot_id: str, start_version: int, end_version: int | None
+    ) -> list[BotVersionInfo]:
+        if start_version < 0 or (end_version is not None and end_version < 0):
+            total = await self.bot_config_version_count(username, bot_id)
+            if start_version < 0:
+                start_version = max(total + start_version, 0)
+            if end_version is not None and end_version < 0:
+                end_version = max(total + end_version, 0)
+        logger.info(f"Loading version info from {start_version} to {end_version}")
+        key = self._composite_key(username, bot_id)
+        raw_versions = (
+            await self._config_store.load_raw_versions(key, start_version=start_version)
+            if end_version is None
+            else (await self._config_store._version_store.slice(key, start=start_version, end=end_version) or [])
+        )
+        version_metadata = [v.meta for v in raw_versions if v.meta is not None]
+        if len(version_metadata) != len(raw_versions):
+            logger.error(
+                f"[{username}][{bot_id}] Version metadata list has unexpected length: "
+                + f"{len(version_metadata) = }, {len(raw_versions) = }"
+            )
+        return [
+            BotVersionInfo(
+                version=version,
+                metadata=metadata,
+            )
+            for version, metadata in zip(itertools.count(start_version), version_metadata)
+        ]

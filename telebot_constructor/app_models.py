@@ -3,7 +3,7 @@
 import enum
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, TypeAdapter
 from telebot import AsyncTeleBot
 from telebot import types as tg
 
@@ -146,7 +146,7 @@ class UpdateBotDisplayNamePayload(BaseModel):
 
 
 class BotVersionInfo(BaseModel):
-    version: int
+    version: int  # zero-based index of a version
     metadata: BotConfigVersionMetadata
 
 
@@ -158,6 +158,10 @@ class BotInfo(BaseModel):
     last_events: list[BotEvent]
     forms_with_responses: list[FormInfoBasic]
     last_errors: list[BotError]
+    admin_chat_ids: list[str | int]
+
+
+BotInfoList = TypeAdapter(list[BotInfo])
 
 
 class SaveBotConfigVersionPayload(BaseModel):
@@ -172,9 +176,16 @@ class StartBotPayload(BaseModel):
 
 
 class FormResultsPage(BaseModel):
+    bot_info: BotInfo
     info: FormInfo
     results: list[FormResult]
 
 
 class BotErrorsPage(BaseModel):
     errors: list[BotError]
+
+
+class BotVersionsPage(BaseModel):
+    bot_info: BotInfo
+    versions: list[BotVersionInfo]
+    total_versions: int

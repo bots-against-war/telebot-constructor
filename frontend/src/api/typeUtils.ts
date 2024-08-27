@@ -1,9 +1,19 @@
 import type {
+  BotDeletedEvent,
+  BotEditedEvent,
+  BotStartedEvent,
+  BotStoppedEvent,
   BranchingFormMemberConfig,
   FormFieldConfig,
   UserFlowBlockConfig,
   UserFlowEntryPointConfig,
 } from "./types";
+
+export type AnyBotEvent = BotStoppedEvent | BotDeletedEvent | BotStartedEvent | BotEditedEvent;
+
+export function botEventTimestamp(e: AnyBotEvent): number {
+  return e.timestamp || 0;
+}
 
 export function getBlockConcreteConfig(c: UserFlowBlockConfig) {
   return c.content || c.human_operator || c.menu || c.form || c.language_select;

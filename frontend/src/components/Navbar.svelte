@@ -6,7 +6,7 @@
 
 <Navbar fluid={true} color="primary">
   <NavBrand href="/">
-    <img src={logo} class="h-15" alt="Telebot constructor Logo" />
+    <img src={logo} class="h-10" alt="Telebot constructor Logo" />
   </NavBrand>
   <slot>
     <Avatar

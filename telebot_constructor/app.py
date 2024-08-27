@@ -21,7 +21,9 @@ from telebot_components.utils.secrets import SecretStore
 
 from telebot_constructor.app_models import (
     BotErrorsPage,
+    BotInfoList,
     BotTokenPayload,
+    BotVersionsPage,
     FormResultsPage,
     LoggedInUser,
     SaveBotConfigVersionPayload,
@@ -59,6 +61,7 @@ from telebot_constructor.telegram_files_downloader import (
     InmemoryCacheTelegramFilesDownloader,
     TelegramFilesDownloader,
 )
+from telebot_constructor.utils import page_params_to_redis_indices
 
 logger = logging.getLogger(__name__)
 
@@ -172,6 +175,12 @@ class TelebotConstructorApp:
 
     def parse_version_query_param(self, request: web.Request) -> Optional[int]:
         return self.parse_query_param_int(request, "version", min_=None, max_=None)
+
+    def parse_offset_count_params(self, request: web.Request, max_count: int, default_count: int) -> tuple[int, int]:
+        return (
+            (self.parse_query_param_int(request, "offset", min_=0, max_=None) or 0),
+            (self.parse_query_param_int(request, "count", min_=0, max_=max_count) or default_count),
+        )
 
     # endregion
 
@@ -508,7 +517,7 @@ class TelebotConstructorApp:
             """
             username = await self.authenticate(request)
             bot_id = self.parse_bot_id(request)
-            info = await self.store.load_bot_info(username, bot_id)
+            info = await self.store.load_bot_info(username, bot_id, detailed=True)
             if info is None:
                 raise web.HTTPNotFound(reason="Bot id not found")
             else:
@@ -526,19 +535,45 @@ class TelebotConstructorApp:
                     description: List of all bots name and their statuses
             """
             username = await self.authenticate(request)
+            detailed = request.query.get("detailed", "true").lower() != "false"
             bot_ids = await self.store.list_bot_ids(username)
             logger.info(f"Bots owned by {username}: {bot_ids}")
-            maybe_bot_infos = {bot_id: await self.store.load_bot_info(username, bot_id) for bot_id in bot_ids}
-            bot_infos = {bot_id: info for bot_id, info in maybe_bot_infos.items() if info is not None}
+            maybe_bot_infos = [
+                await self.store.load_bot_info(
+                    username,
+                    bot_id,
+                    detailed=detailed,
+                )
+                for bot_id in bot_ids
+            ]
+            bot_infos = [bi for bi in maybe_bot_infos if bi is not None]
             if len(maybe_bot_infos) != len(bot_infos):
-                missing_info_bot_ids = set(maybe_bot_infos.keys()).difference(bot_infos.keys())
+                missing_info_bot_ids = [bot_id for bot_id, info in zip(bot_ids, maybe_bot_infos) if info is None]
                 logger.error(
                     "Failed to construct bot infos for some of the user's bots, will ignore them: "
                     + f"{missing_info_bot_ids}"
                 )
-            return web.json_response(
-                data={name: bot_info.model_dump(mode="json") for name, bot_info in bot_infos.items()}
-            )
+            return web.json_response(body=BotInfoList.dump_json(bot_infos))
+
+        @routes.get("/api/info/{bot_id}/versions")
+        async def get_bot_versions_page(request: web.Request) -> web.Response:
+            username = await self.authenticate(request)
+            bot_id = self.parse_bot_id(request)
+            offset, count = self.parse_offset_count_params(request, max_count=100, default_count=20)
+            bot_info = await self.store.load_bot_info(username, bot_id, detailed=False)
+            if bot_info:
+                start, end = page_params_to_redis_indices(offset, count)
+                return web.json_response(
+                    text=BotVersionsPage(
+                        bot_info=bot_info,
+                        versions=await self.store.load_version_info(
+                            username, bot_id, start_version=start, end_version=end
+                        ),
+                        total_versions=await self.store.bot_config_version_count(username, bot_id),
+                    ).model_dump_json()
+                )
+            else:
+                raise web.HTTPNotFound(reason="Bot id not found")
 
         # endregion
         ##################################################################################
@@ -556,19 +591,22 @@ class TelebotConstructorApp:
                     description: OK
             """
             username = await self.authenticate(request)
-            form_id = GlobalFormId(
+            bot_id = self.parse_bot_id(request)
+            global_form_id = GlobalFormId(
                 username=username,
-                bot_id=self.parse_bot_id(request),
+                bot_id=bot_id,
                 form_block_id=self.parse_path_part(request, "form_block_id"),
             )
-            offset = self.parse_query_param_int(request, "offset", min_=0, max_=None) or 0
-            count = self.parse_query_param_int(request, "count", min_=0, max_=100) or 20
-            form_info = await self.store.form_results.load_form_info(form_id)
+            offset, count = self.parse_offset_count_params(request, max_count=100, default_count=20)
+            bot_info = await self.store.load_bot_info(username=username, bot_id=bot_id, detailed=False)
+            if not bot_info:
+                raise web.HTTPNotFound(reason="Bot not found")
+            form_info = await self.store.form_results.load_form_info(global_form_id)
             if not form_info:
                 raise web.HTTPNotFound(reason="Form not found")
-            form_results = await self.store.form_results.load_page(form_id, offset=offset, count=count)
+            form_results = await self.store.form_results.load_page(global_form_id, offset=offset, count=count)
             return web.json_response(
-                text=FormResultsPage(info=form_info, results=form_results).model_dump_json(),
+                text=FormResultsPage(bot_info=bot_info, info=form_info, results=form_results).model_dump_json(),
             )
 
         @routes.put("/api/forms/{bot_id}/{form_block_id}/title")
@@ -613,8 +651,7 @@ class TelebotConstructorApp:
             """
             username = await self.authenticate(request)
             bot_id = self.parse_bot_id(request, "bot_id")
-            offset = self.parse_query_param_int(request, "offset", min_=0, max_=None) or 0
-            count = self.parse_query_param_int(request, "count", min_=0, max_=100) or 20
+            offset, count = self.parse_offset_count_params(request, max_count=100, default_count=20)
             errors = await self.store.metrics.load_errors(username, bot_id, offset, count)
             return web.json_response(text=BotErrorsPage(errors=errors).model_dump_json())
 

@@ -2,11 +2,11 @@
 <script lang="ts">
   import { Toggle, Toolbar, ToolbarGroup } from "flowbite-svelte";
   import {
-    BoldSolid,
     ExclamationCircleOutline,
     EyeSlashSolid,
-    ItalicSolid,
-    LinkSolid,
+    LetterBoldOutline,
+    LetterItalicOutline,
+    LinkOutline,
     QuestionCircleOutline,
     QuoteSolid,
     TextSlashOutline,
@@ -63,10 +63,10 @@
   }
 
   const toolbarData: [Newable<SvelteComponent>, MarkdownEntityType][] = [
-    [BoldSolid, "bold"],
-    [ItalicSolid, "italic"],
+    [LetterBoldOutline, "bold"],
+    [LetterItalicOutline, "italic"],
     [QuoteSolid, "blockquote"],
-    [LinkSolid, "link"],
+    [LinkOutline, "link"],
     [TextSlashOutline, "strikethrough"],
     [EyeSlashSolid, "spoiler"],
   ];

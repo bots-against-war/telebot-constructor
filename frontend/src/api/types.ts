@@ -235,6 +235,7 @@ export type LastEvents = (BotStoppedEvent | BotDeletedEvent | BotStartedEvent | 
 export type FormBlockId = string;
 export type Prompt3 = string;
 export type Title1 = string | null;
+export type TotalResponses = number;
 export type FormsWithResponses = FormInfoBasic[];
 export type Timestamp5 = number;
 export type BotPrefix = string;
@@ -252,6 +253,7 @@ export type IsForwarded = boolean;
 export type IsReply = boolean;
 export type ContentType = string;
 export type LastErrors = BotError[];
+export type AdminChatIds = (string | number)[];
 export type VersionMessage = string | null;
 export type Start = boolean;
 export type DisplayName2 = string | null;
@@ -259,11 +261,13 @@ export type Version2 = number;
 export type FormBlockId1 = string;
 export type Prompt4 = string;
 export type Title2 = string | null;
-export type TotalResponses = number;
+export type TotalResponses1 = number;
 export type Results = {
   [k: string]: string | number | number;
 }[];
 export type Errors = BotError[];
+export type Versions = BotVersionInfo[];
+export type TotalVersions = number;
 
 /**
  * Temporary class to pack several models into one schema; not used directly by frontend code
@@ -283,6 +287,7 @@ export interface BackendDataModels {
   form_info_basic: FormInfoBasic;
   form_results_page: FormResultsPage;
   bot_errors_page: BotErrorsPage;
+  bot_versions_page: BotVersionsPage;
   [k: string]: unknown;
 }
 export interface BotConfig {
@@ -615,6 +620,7 @@ export interface BotInfo {
   last_events: LastEvents;
   forms_with_responses: FormsWithResponses;
   last_errors: LastErrors;
+  admin_chat_ids: AdminChatIds;
   [k: string]: unknown;
 }
 export interface BotVersionInfo {
@@ -657,6 +663,7 @@ export interface FormInfoBasic {
   form_block_id: FormBlockId;
   prompt: Prompt3;
   title: Title1;
+  total_responses: TotalResponses;
   [k: string]: unknown;
 }
 export interface BotError {
@@ -712,19 +719,26 @@ export interface FormInfo {
   form_block_id: FormBlockId1;
   prompt: Prompt4;
   title: Title2;
+  total_responses: TotalResponses1;
   field_names: FieldNames;
-  total_responses: TotalResponses;
   [k: string]: unknown;
 }
 export interface FieldNames {
   [k: string]: string;
 }
 export interface FormResultsPage {
+  bot_info: BotInfo;
   info: FormInfo;
   results: Results;
   [k: string]: unknown;
 }
 export interface BotErrorsPage {
   errors: Errors;
+  [k: string]: unknown;
+}
+export interface BotVersionsPage {
+  bot_info: BotInfo;
+  versions: Versions;
+  total_versions: TotalVersions;
   [k: string]: unknown;
 }

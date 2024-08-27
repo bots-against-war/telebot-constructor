@@ -1,11 +1,14 @@
 <script lang="ts">
-  import { links, Route, Router } from "svelte-routing";
   import { setContext } from "svelte";
+  import { links, Route, Router } from "svelte-routing";
   import Modal from "svelte-simple-modal";
-  import DashboardLoader from "./dashboard/DashboardLoader.svelte";
+  import BotInfoLoader from "./dashboard/BotInfoLoader.svelte";
+  import BotListingLoader from "./dashboard/BotListingLoader.svelte";
+  import FormLoader from "./forms/FormLoader.svelte";
   import GlobalStateProvider from "./GlobalStateProvider.svelte";
   import StudioLoader from "./studio/StudioLoader.svelte";
-  import FormLoader from "./forms/FormLoader.svelte";
+  import VersionsLoader from "./dashboard/routes/versions/VersionsLoader.svelte";
+  import { botListingPath, dashboardPath, formResultsPagePath, studioPath, versionsPagePath } from "./routeUtils";
 
   // Global icon settings for flowbite-icons
   const iconCtx = {
@@ -20,13 +23,19 @@
   <Modal closeButton={false} styleWindow={{ borderRadius: "0" }} closeOnOuterClick={false} closeOnEsc={false}>
     <div use:links>
       <Router>
-        <Route path="/">
-          <DashboardLoader />
+        <Route path={botListingPath()}>
+          <BotListingLoader />
         </Route>
-        <Route path="/studio/:botId" let:params>
+        <Route path={dashboardPath(":botId")} let:params>
+          <BotInfoLoader botId={params.botId} />
+        </Route>
+        <Route path={studioPath(":botId", null)} let:params>
           <StudioLoader botId={params.botId} />
         </Route>
-        <Route path="/forms/:botId/:formBlockId" let:params>
+        <Route path={versionsPagePath(":botId")} let:params>
+          <VersionsLoader botId={params.botId} />
+        </Route>
+        <Route path={formResultsPagePath(":botId", ":formBlockId")} let:params>
           <FormLoader botId={params.botId} formBlockId={params.formBlockId} />
         </Route>
       </Router>

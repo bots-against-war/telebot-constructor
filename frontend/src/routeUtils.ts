@@ -1,19 +1,28 @@
+function encodePathPart(part: any): any {
+  // :identifier is a syntax used to render templates for svelte-simple-routing
+  return part.at(0) === ":" ? part : encodeURIComponent(part);
+}
+
 export function formResultsPagePath(botId: string, formBlockId: string): string {
-  return `/forms/${encodeURIComponent(botId)}/${encodeURIComponent(formBlockId)}`;
+  return `/forms/${encodePathPart(botId)}/${encodePathPart(formBlockId)}`;
 }
 
 export function studioPath(botId: string, version: number | null): string {
-  let path = `/studio/${encodeURIComponent(botId)}`;
+  let path = `/studio/${encodePathPart(botId)}`;
   if (version !== null) {
-    path += `?version=${encodeURIComponent(version)}`;
+    path += `?version=${encodePathPart(version)}`;
   }
   return path;
 }
 
-export function dashboardPath(botId: string | null): string {
-  if (botId) {
-    return `/#${botId}`;
-  } else {
-    return "/";
-  }
+export function dashboardPath(botId: string): string {
+  return `/dashboard/${encodePathPart(botId)}`;
+}
+
+export function botListingPath(): string {
+  return "/";
+}
+
+export function versionsPagePath(botId: string): string {
+  return `/versions/${encodePathPart(botId)}`;
 }

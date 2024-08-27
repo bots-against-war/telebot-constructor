@@ -3,15 +3,15 @@
   import FatalError from "../components/FatalError.svelte";
   import LoadingScreen from "../components/LoadingScreen.svelte";
   import { unwrap } from "../utils.js";
-  import Dashboard from "./Dashboard.svelte";
+  import BotListing from "./BotListing.svelte";
 
-  const loadBotInfo = async () => unwrap(await listBotInfos());
+  const loadBotList = async () => unwrap(await listBotInfos());
 </script>
 
-{#await loadBotInfo()}
+{#await loadBotList()}
   <LoadingScreen />
-{:then botInfos}
-  <Dashboard {botInfos} />
+{:then list}
+  <BotListing botInfos={list} />
 {:catch error}
   <FatalError {error} />
 {/await}

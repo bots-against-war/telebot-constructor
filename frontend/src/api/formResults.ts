@@ -1,6 +1,7 @@
 import { toDataResult, toTrivialResult, type Result } from "../utils";
 import { apiUrl } from "./config";
 import type { FormResultsPage } from "./types";
+import { paginationQuery } from "./utils";
 
 const encode = encodeURIComponent;
 
@@ -11,9 +12,7 @@ export async function loadFormResults(
   count: number,
 ): Promise<Result<FormResultsPage>> {
   const resp = await fetch(
-    apiUrl(
-      `/forms/${encode(botId)}/${encode(formBlockId)}/responses` + `?offset=${encode(offset)}&count=${encode(count)}`,
-    ),
+    apiUrl(`/forms/${encode(botId)}/${encode(formBlockId)}/responses?${paginationQuery(offset, count)}`),
   );
   return await toDataResult(resp);
 }

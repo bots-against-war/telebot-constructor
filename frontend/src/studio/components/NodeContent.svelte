@@ -34,7 +34,7 @@
     isValid = configValidationResult.ok;
   }
 
-  let showMoreActionsIconId = `show-more-actions-${id}`;
+  const showMoreActionsIconId = `show-more-actions-${id}`;
 </script>
 
 <div class="node-content-container">
