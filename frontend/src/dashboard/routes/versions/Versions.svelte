@@ -12,6 +12,7 @@
   export let page: BotVersionsPage;
   export let offset: number;
   export let count: number;
+  console.log(page);
 </script>
 
 <Page>

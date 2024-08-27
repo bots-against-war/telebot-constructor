@@ -213,6 +213,13 @@ class TelebotConstructorStore:
     async def load_version_info(
         self, username: str, bot_id: str, start_version: int, end_version: int | None
     ) -> list[BotVersionInfo]:
+        if start_version < 0 or (end_version is not None and end_version < 0):
+            total = await self.bot_config_version_count(username, bot_id)
+            if start_version < 0:
+                start_version = max(total + start_version, 0)
+            if end_version is not None and end_version < 0:
+                end_version = max(total + end_version, 0)
+        logger.info(f"Loading version info from {start_version} to {end_version}")
         key = self._composite_key(username, bot_id)
         raw_versions = (
             await self._config_store.load_raw_versions(key, start_version=start_version)

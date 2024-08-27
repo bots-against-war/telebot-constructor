@@ -12,8 +12,6 @@
   export let botId: string;
   export let tgBotUser: TgBotUser | null = null;
 
-  // const botUserPromise = getBotUser(botId);
-
   let botUserPromise: Promise<Result<TgBotUser>>;
   const LOCALSTORAGE_KEY = `botUserData/${botId}`;
 

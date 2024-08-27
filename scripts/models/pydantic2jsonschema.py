@@ -13,6 +13,7 @@ from pydantic.json_schema import GenerateJsonSchema, JsonSchemaValue
 from telebot_constructor.app_models import (
     BotErrorsPage,
     BotInfo,
+    BotVersionsPage,
     FormInfo,
     FormInfoBasic,
     FormResultsPage,
@@ -22,7 +23,6 @@ from telebot_constructor.app_models import (
     TgBotUser,
     TgBotUserUpdate,
     TgGroupChat,
-    BotVersionsPage,
 )
 from telebot_constructor.bot_config import BotConfig
 from telebot_constructor.user_flow.blocks.form import BaseFormFieldConfig

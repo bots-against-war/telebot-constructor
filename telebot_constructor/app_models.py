@@ -146,7 +146,7 @@ class UpdateBotDisplayNamePayload(BaseModel):
 
 
 class BotVersionInfo(BaseModel):
-    version: int
+    version: int  # zero-based index of a version
     metadata: BotConfigVersionMetadata
 
 
