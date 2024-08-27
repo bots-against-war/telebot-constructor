@@ -7,10 +7,10 @@
   </head>
   <body>
     <header>
-      <div style="margin-bottom: 2rem;">
+      <div style="margin-bottom: 2rem">
         <svg width="100" height="100" viewBox="0 0 58 58" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <line y1="28" x2="58" y2="28" stroke="#1C1C1C" stroke-width="2" />
-          <line x1="28" y1="58" x2="28" stroke="#1C1C1C" stroke-width="2" />
+          <line y1="28" x2="58" y2="28" stroke="#1C1C1C" stroke-width="3" />
+          <line x1="28" y1="58" x2="28" stroke="#1C1C1C" stroke-width="3" />
           <path
             d="M14.2949 6.78125V21H11.8633V6.78125H14.2949ZM18.7578 6.78125V8.73438H7.43945V6.78125H18.7578Z"
             fill="#1C1C1C"
@@ -61,7 +61,8 @@
     </section>
 
     <footer>
-      <p>© 2024 Telebot Constructor</p>
+      <a href="https://github.com/bots-against-war/telebot-constructor" target="_blank"> Github </a>
+      <a href="https://t.me/bots_against_war_bot" target="_blank"> Связаться с нами </a>
     </footer>
   </body>
 </html>
@@ -83,6 +84,9 @@
     color: #333;
     margin: 0;
     padding: 0;
+  }
+  svg {
+    filter: drop-shadow(2px 2px 2px rgb(110, 110, 110));
   }
   header {
     text-align: center;
@@ -153,13 +157,21 @@
   footer {
     background-color: #71717a;
     color: #ffffff;
-    text-align: center;
     position: relative;
     bottom: 0;
     width: 100%;
     padding: 0.3rem 0;
+    display: flex;
+    flex-direction: row;
+    gap: 2rem;
+    justify-content: center;
   }
-  footer p {
+  footer a {
     margin: 0;
+    text-decoration: none;
+    color: inherit;
+  }
+  footer a:hover {
+    text-decoration: underline;
   }
 </style>
