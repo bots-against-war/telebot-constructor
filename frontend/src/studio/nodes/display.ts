@@ -1,7 +1,7 @@
 import {
   ClipboardSolid,
   CodeForkSolid,
-  CodeSolid,
+  CodeOutline,
   GlobeSolid,
   InfoCircleSolid,
   NewspaperSolid,
@@ -64,7 +64,7 @@ export const NODE_TITLE: { [key in NodeTypeKey]: string } = {
 };
 
 export const NODE_ICON: { [key in NodeTypeKey]: Newable<SvelteComponent> } = {
-  command: CodeSolid,
+  command: CodeOutline,
   content: NewspaperSolid,
   human_operator: UserHeadsetSolid,
   language_select: GlobeSolid,

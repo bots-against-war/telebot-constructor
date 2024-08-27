@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { Alert, Button, Heading, Li, List } from "flowbite-svelte";
-  import { ArrowRightSolid, PenSolid, RocketSolid } from "flowbite-svelte-icons";
+  import { Alert, Button, Heading } from "flowbite-svelte";
+  import { ArrowRightOutline, RocketSolid } from "flowbite-svelte-icons";
   import { createEventDispatcher } from "svelte";
   import { deleteBotConfig } from "../api/botConfig";
   import { updateBotDisplayName } from "../api/botInfo";
@@ -9,7 +9,7 @@
   import type { BotInfo, BotVersionInfo } from "../api/types";
   import BotUserBadge from "../components/BotUserBadge.svelte";
   import BotVersionInfoBadge from "../components/BotVersionInfoBadge.svelte";
-  import ErrorBadge from "../components/ErrorBadge.svelte";
+  import GroupChatBadge from "../components/GroupChatBadge.svelte";
   import JumpingIcon from "../components/JumpingIcon.svelte";
   import Navbar from "../components/Navbar.svelte";
   import Page from "../components/Page.svelte";
@@ -17,8 +17,6 @@
   import BreadcrumbHome from "../components/breadcrumbs/BreadcrumbHome.svelte";
   import Breadcrumbs from "../components/breadcrumbs/Breadcrumbs.svelte";
   import EditableText from "../components/inputs/EditableText.svelte";
-  import DataBadge from "../components/internal/DataBadge.svelte";
-  import DataBadgeLoader from "../components/internal/DataBadgeLoader.svelte";
   import { formResultsPagePath, studioPath } from "../routeUtils";
   import { withConfirmation } from "../utils";
   import BotInfoCard from "./BotInfoCard.svelte";
@@ -102,7 +100,7 @@
       </EditableText>
       <Button href={studioPath(botId, null)}>
         Конструктор
-        <ArrowRightSolid class="w-3 h-3 ml-3 " />
+        <ArrowRightOutline class="w-3 h-3 ml-3 " />
       </Button>
     </div>
     <!-- FIXME: better error handling, but'll do for now -->
@@ -145,24 +143,20 @@
         </BotInfoCard>
 
         <BotInfoCard title="Аккаунт">
-          <DataBadge>
-            {#await botUserPromise}
-              <DataBadgeLoader />
-            {:then botUserResult}
-              {#if botUserResult.ok}
-                <BotUserBadge botUser={botUserResult.data} />
-              {:else}
-                <ErrorBadge title="Ошибка загрузки данных о боте" text={botUserResult.error} />
-              {/if}
-            {/await}
-          </DataBadge>
+          <BotUserBadge {botId} />
         </BotInfoCard>
 
+        {#if botInfo.admin_chat_ids.length > 0}
+          <BotInfoCard title="Админ-чаты">
+            <div class="flex flex-col gap-2">
+              {#each botInfo.admin_chat_ids as admin_chat_id}
+                <GroupChatBadge {botId} chatId={admin_chat_id} />
+              {/each}
+            </div>
+          </BotInfoCard>
+        {/if}
+
         {#if botInfo.forms_with_responses.length > 0}
-          <!-- <div class="mt-5 pt-3 border-t">
-            <h2 class="text-xl font-bold">Ответы на формы</h2>
-            
-          </div> -->
           <BotInfoCard title="Ответы">
             {#each botInfo.forms_with_responses as formInfo}
               <div class="border-gray-300 border-b last:border-none px-3 py-4 hover:bg-gray-100">

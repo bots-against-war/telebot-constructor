@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Button, Heading } from "flowbite-svelte";
-  import { PlusSolid } from "flowbite-svelte-icons";
+  import { PlusOutline } from "flowbite-svelte-icons";
   import { type BotInfo } from "../api/types";
   import Navbar from "../components/Navbar.svelte";
   import Page from "../components/Page.svelte";
@@ -27,7 +27,7 @@
     <div class="flex flex-row justify-between items-center mb-4">
       <Heading tag="h3">Мои боты</Heading>
       <Button outline on:click={() => open(CreateBotModal)}>
-        <PlusSolid class="w-3 h-3 me-2" />
+        <PlusOutline class="w-3 h-3 me-2" />
         Создать
       </Button>
     </div>
