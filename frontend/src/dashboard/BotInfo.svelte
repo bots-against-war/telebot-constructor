@@ -84,7 +84,7 @@
           </div>
           {#if runningVersionInfo !== null}
             <div class="flex flex-col gap-1 mb-1">
-              <span>Запущена версия:</span>
+              <span>Запущена версия</span>
               <BotVersionInfoBadge ver={runningVersionInfo} />
             </div>
           {/if}
@@ -143,7 +143,9 @@
           <span>В разработке</span>
         </BotInfoCard>
 
-        <BotInfoCard title="Активность" moreLinkTitle="Вся активность" moreLinkHref="/TBD-settings">
+        <!-- TODO: full activity page -->
+        <!-- <BotInfoCard title="Активность" moreLinkTitle="Вся активность" moreLinkHref="/TBD-settings"> -->
+        <BotInfoCard title="Активность">
           <BotEventList events={botInfo.last_events} />
         </BotInfoCard>
 

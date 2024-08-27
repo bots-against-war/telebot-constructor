@@ -59,8 +59,10 @@
   }
   // END OF PAGER LOGIC
 
-  const isRunning = (ver: BotVersionInfo) => ver.version === botInfo.running_version;
-  const isLast = (ver: BotVersionInfo) => ver.version === totalVersions - 1;
+  let lastVersion: number;
+  $: {
+    lastVersion = totalVersions - 1;
+  }
 
   const open = getModalOpener();
   const publishBot = (verNo: number) => {
@@ -73,6 +75,7 @@
         const resp = await startBot(botInfo.bot_id, { version: verNo });
         if (resp.ok) {
           botInfo.running_version = verNo;
+          console.log(botInfo);
         } else {
           alert(`Ошибка при запуске бота: ${resp.error}`);
           botInfo.running_version = null;
@@ -123,7 +126,7 @@
     <ol class="relative border-s border-gray-200 mt-2">
       {#each versions.toReversed() as ver (ver.version)}
         <li class="mb-2 ms-3 p-2">
-          {#if isRunning(ver)}
+          {#if ver.version === botInfo.running_version}
             <div class="absolute w-8 h-8 mt-1 -start-4 text-green-600">
               <RocketSolid class="w-8 h-8" />
             </div>
@@ -135,13 +138,17 @@
               <BotVersionInfoBadge {ver} carded={false} />
             </div>
             <div class="flex flex-row gap-1 items-baseline">
-              {#if isRunning(ver)}
+              {#if ver.version === botInfo.running_version}
                 <Button size="xs" outline color="red" on:click={stopPuslishedBot}>Остановить</Button>
               {:else}
                 <Button size="xs" outline color="primary" on:click={() => publishBot(ver.version)}>Опубликовать</Button>
               {/if}
-              <Button size="xs" outline href={studioPath(botInfo.bot_id, isLast(ver) ? null : ver.version)}>
-                {isLast(ver) ? "Редактировать" : "Посмотреть"}
+              <Button
+                size="xs"
+                outline
+                href={studioPath(botInfo.bot_id, ver.version === lastVersion ? null : ver.version)}
+              >
+                {ver.version === lastVersion ? "Редактировать" : "Посмотреть"}
               </Button>
             </div>
           </div>

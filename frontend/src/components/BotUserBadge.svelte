@@ -68,7 +68,7 @@
           </span>
         </div>
         <ActionIcon id={actionsIconId} icon={DotsHorizontalOutline} />
-        <Popover triggeredBy={"#" + actionsIconId} placement="right-start" defaultClass="">
+        <Popover triggeredBy={"#" + actionsIconId} placement="right-start" defaultClass="" class="z-10">
           <Listgroup active class="text-sm border-none">
             <ListgroupItem
               on:click={() => {

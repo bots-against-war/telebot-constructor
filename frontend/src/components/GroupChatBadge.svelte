@@ -89,10 +89,6 @@
                 <RefreshOutline class="w-3 h-3 text-gray-700" />
                 Обновить
               </ListgroupItem>
-              <!-- <ListgroupItem on:click={() => dispatch("delete", id)} class="gap-2">
-                <ArrowUpRightFromSquareOutline class="w-3 h-3 text-gray-700" />
-                Перейти
-              </ListgroupItem> -->
             </Listgroup>
           </Popover>
         </div>
