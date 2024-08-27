@@ -183,3 +183,9 @@ class FormResultsPage(BaseModel):
 
 class BotErrorsPage(BaseModel):
     errors: list[BotError]
+
+
+class BotVersionsPage(BaseModel):
+    bot_info: BotInfo
+    versions: list[BotVersionInfo]
+    total_versions: int

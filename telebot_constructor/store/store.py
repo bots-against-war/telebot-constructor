@@ -1,3 +1,4 @@
+import itertools
 import logging
 import time
 from typing import AsyncGenerator, Optional
@@ -189,32 +190,16 @@ class TelebotConstructorStore:
         if not last_events:
             return None
 
-        version_metadata = [
-            v.meta
-            for v in await self._config_store.load_raw_versions(
-                self._composite_key(username, bot_id),
-                start_version=min_version,
-            )
-            if v.meta is not None  # this should always be true because we always set metadata
-        ]
-        if len(version_metadata) != version_count - min_version:
-            logger.error(
-                f"[{username}][{bot_id}] Version metadata list has unexpected length: "
-                + f"{len(version_metadata) = }, {version_count = }, {min_version = }"
-            )
-            return None
-
         return BotInfo(
             bot_id=bot_id,
             display_name=await self.load_bot_display_name(username, bot_id) or bot_id,
             running_version=running_version,
-            last_versions=[
-                BotVersionInfo(
-                    version=version,
-                    metadata=metadata,
-                )
-                for version, metadata in zip(range(min_version, version_count), version_metadata)
-            ],
+            last_versions=await self.load_version_info(
+                username,
+                bot_id,
+                start_version=min_version,
+                end_version=None,
+            ),
             last_events=last_events,
             forms_with_responses=(await self.form_results.list_forms(username, bot_id) if detailed else []),
             last_errors=(
@@ -224,3 +209,26 @@ class TelebotConstructorStore:
             ),
             admin_chat_ids=admin_chat_ids,
         )
+
+    async def load_version_info(
+        self, username: str, bot_id: str, start_version: int, end_version: int | None
+    ) -> list[BotVersionInfo]:
+        key = self._composite_key(username, bot_id)
+        raw_versions = (
+            await self._config_store.load_raw_versions(key, start_version=start_version)
+            if end_version is None
+            else (await self._config_store._version_store.slice(key, start=start_version, end=end_version) or [])
+        )
+        version_metadata = [v.meta for v in raw_versions if v.meta is not None]
+        if len(version_metadata) != len(raw_versions):
+            logger.error(
+                f"[{username}][{bot_id}] Version metadata list has unexpected length: "
+                + f"{len(version_metadata) = }, {len(raw_versions) = }"
+            )
+        return [
+            BotVersionInfo(
+                version=version,
+                metadata=metadata,
+            )
+            for version, metadata in zip(itertools.count(start_version), version_metadata)
+        ]

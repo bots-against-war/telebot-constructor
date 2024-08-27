@@ -17,3 +17,7 @@ export function dashboardPath(botId: string): string {
 export function botListingPath(): string {
   return "/";
 }
+
+export function versionsPagePath(botId: string): string {
+  return `/versions/${botId}`;
+}

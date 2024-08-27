@@ -16,7 +16,7 @@
   import BreadcrumbHome from "../components/breadcrumbs/BreadcrumbHome.svelte";
   import Breadcrumbs from "../components/breadcrumbs/Breadcrumbs.svelte";
   import EditableText from "../components/inputs/EditableText.svelte";
-  import { formResultsPagePath, studioPath } from "../routeUtils";
+  import { formResultsPagePath, studioPath, versionsPagePath } from "../routeUtils";
   import { withConfirmation } from "../utils";
   import BotInfoCard from "./BotInfoCard.svelte";
   import BotEventList from "./components/BotEventList.svelte";
@@ -107,7 +107,7 @@
     {/if}
     <div class="flex flex-row mt-6 gap-5">
       <div class="flex-1 flex flex-col gap-4">
-        <BotInfoCard moreLinkHref="/TBD-versions" moreLinkTitle="Все версии">
+        <BotInfoCard moreLinkHref={versionsPagePath(botId)} moreLinkTitle="Все версии">
           <div class="flex items-center justify-between pb-3 w-full">
             <span class="text-lg font-bold text-gray-900">Статус</span>
             <div

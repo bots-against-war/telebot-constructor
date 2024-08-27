@@ -266,6 +266,8 @@ export type Results = {
   [k: string]: string | number | number;
 }[];
 export type Errors = BotError[];
+export type Versions = BotVersionInfo[];
+export type TotalVersions = number;
 
 /**
  * Temporary class to pack several models into one schema; not used directly by frontend code
@@ -285,6 +287,7 @@ export interface BackendDataModels {
   form_info_basic: FormInfoBasic;
   form_results_page: FormResultsPage;
   bot_errors_page: BotErrorsPage;
+  bot_versions_page: BotVersionsPage;
   [k: string]: unknown;
 }
 export interface BotConfig {
@@ -731,5 +734,11 @@ export interface FormResultsPage {
 }
 export interface BotErrorsPage {
   errors: Errors;
+  [k: string]: unknown;
+}
+export interface BotVersionsPage {
+  bot_info: BotInfo;
+  versions: Versions;
+  total_versions: TotalVersions;
   [k: string]: unknown;
 }

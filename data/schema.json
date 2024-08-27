@@ -398,6 +398,31 @@
       "title": "BotVersionInfo",
       "type": "object"
     },
+    "BotVersionsPage": {
+      "properties": {
+        "bot_info": {
+          "$ref": "#/$defs/BotInfo"
+        },
+        "versions": {
+          "items": {
+            "$ref": "#/$defs/BotVersionInfo"
+          },
+          "title": "Versions",
+          "type": "array"
+        },
+        "total_versions": {
+          "title": "Total Versions",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "bot_info",
+        "versions",
+        "total_versions"
+      ],
+      "title": "BotVersionsPage",
+      "type": "object"
+    },
     "BranchingFormMemberConfig": {
       "properties": {
         "field": {
@@ -2347,6 +2372,9 @@
     },
     "bot_errors_page": {
       "$ref": "#/$defs/BotErrorsPage"
+    },
+    "bot_versions_page": {
+      "$ref": "#/$defs/BotVersionsPage"
     }
   },
   "required": [
@@ -2363,7 +2391,8 @@
     "form_info",
     "form_info_basic",
     "form_results_page",
-    "bot_errors_page"
+    "bot_errors_page",
+    "bot_versions_page"
   ],
   "title": "BackendDataModels",
   "type": "object"
