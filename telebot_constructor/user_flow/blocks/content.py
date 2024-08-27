@@ -110,7 +110,7 @@ class ContentBlock(UserFlowBlock):
             # checking for too long captions (too long texts are split automatically by telebot library)
             # limit is 1024 symbols, see docs: https://core.telegram.org/bots/api#inputmediaphoto
             # note that we are here conservative as we includes e.g. HTML markup in the symbol bugdet
-            if c.attachments and c.text is not None and len(c.text.text) > 1024:
+            if c.attachments and c.text is not None and len(c.text.preprocessed) > 1024:
                 # splitting long text and attachments into separate units
                 contents_validated.append(Content(text=c.text, attachments=[]))
                 c = Content(text=None, attachments=c.attachments)
@@ -172,7 +172,7 @@ class ContentBlock(UserFlowBlock):
                     message = await context.bot.send_photo(
                         chat_id=chat_id,
                         photo=file_id if file_id is not None else decode_b64_data_url(attachment.image),
-                        caption=any_text_to_str(content.text.text, language) if content.text is not None else None,
+                        caption=any_text_to_str(content.text.preprocessed, language) if content.text is not None else None,
                         parse_mode=parse_mode if content.text is not None else None,
                         reply_markup=tg.ReplyKeyboardRemove(),
                     )
@@ -203,7 +203,7 @@ class ContentBlock(UserFlowBlock):
                 ]
                 # for media groups, text content is put to first media's caption
                 if content.text is not None:
-                    media[0].caption = any_text_to_str(content.text.text, language)
+                    media[0].caption = any_text_to_str(content.text.preprocessed, language)
                     media[0].parse_mode = parse_mode
                     # NOTE: reply markup is not available for media groups, so we don't send it
 
@@ -251,9 +251,9 @@ class ContentBlock(UserFlowBlock):
             if c.text is None:
                 continue
             if self._language_store is not None:
-                self._language_store.validate_multilang(c.text.text)
+                self._language_store.validate_multilang(c.text.preprocessed)
             else:
-                vaildate_singlelang_text(c.text.text)
+                vaildate_singlelang_text(c.text.preprocessed)
 
         return SetupResult.empty()
 
