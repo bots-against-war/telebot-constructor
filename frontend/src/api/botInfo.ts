@@ -8,6 +8,11 @@ export async function getBotInfo(botId: string): Promise<Result<BotInfo>> {
   return await toDataResult(resp);
 }
 
+export async function getBotInfoShort(botId: string): Promise<Result<BotInfo>> {
+  const resp = await fetch(apiUrl(`/info/${encodeURIComponent(botId)}?detailed=false`));
+  return await toDataResult(resp);
+}
+
 export async function listBotInfos(): Promise<Result<BotInfo[]>> {
   const resp = await fetch(apiUrl(`/info?detailed=false`));
   return await toDataResult(resp);

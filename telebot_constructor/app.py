@@ -182,6 +182,15 @@ class TelebotConstructorApp:
             (self.parse_query_param_int(request, "count", min_=0, max_=max_count) or default_count),
         )
 
+    def parse_query_param_bool(self, request: web.Request, name: str, default: bool) -> bool:
+        flag = request.query.get(name)
+        if flag is None:
+            return default
+        elif default is True:
+            return flag.lower() not in {"false", "0"}
+        else:
+            return flag.lower() in {"true", "1"}
+
     # endregion
 
     # region: bot helpers
@@ -517,7 +526,11 @@ class TelebotConstructorApp:
             """
             username = await self.authenticate(request)
             bot_id = self.parse_bot_id(request)
-            info = await self.store.load_bot_info(username, bot_id, detailed=True)
+            info = await self.store.load_bot_info(
+                username,
+                bot_id,
+                detailed=self.parse_query_param_bool(request, "detailed", default=True),
+            )
             if info is None:
                 raise web.HTTPNotFound(reason="Bot id not found")
             else:
@@ -535,14 +548,13 @@ class TelebotConstructorApp:
                     description: List of all bots name and their statuses
             """
             username = await self.authenticate(request)
-            detailed = request.query.get("detailed", "true").lower() != "false"
             bot_ids = await self.store.list_bot_ids(username)
             logger.info(f"Bots owned by {username}: {bot_ids}")
             maybe_bot_infos = [
                 await self.store.load_bot_info(
                     username,
                     bot_id,
-                    detailed=detailed,
+                    detailed=self.parse_query_param_bool(request, "detailed", default=True),
                 )
                 for bot_id in bot_ids
             ]

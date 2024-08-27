@@ -29,3 +29,7 @@ export function botListingPath(): string {
 export function versionsPagePath(botId: string): string {
   return `/versions/${encodePathPart(botId)}`;
 }
+
+export function settingsPath(botId: string): string {
+  return `/settings/${encodePathPart(botId)}`;
+}

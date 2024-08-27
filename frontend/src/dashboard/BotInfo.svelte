@@ -1,8 +1,6 @@
 <script lang="ts">
   import { Alert, Button, Heading } from "flowbite-svelte";
   import { ArrowRightOutline, RocketSolid } from "flowbite-svelte-icons";
-  import { navigate } from "svelte-routing";
-  import { deleteBotConfig } from "../api/botConfig";
   import { updateBotDisplayName } from "../api/botInfo";
   import type { BotInfo, BotVersionInfo } from "../api/types";
   import BotUserBadge from "../components/BotUserBadge.svelte";
@@ -15,13 +13,13 @@
   import BreadcrumbHome from "../components/breadcrumbs/BreadcrumbHome.svelte";
   import Breadcrumbs from "../components/breadcrumbs/Breadcrumbs.svelte";
   import EditableText from "../components/inputs/EditableText.svelte";
-  import { botListingPath, formResultsPagePath, studioPath, versionsPagePath } from "../routeUtils";
-  import { withConfirmation } from "../utils";
+  import { formResultsPagePath, settingsPath, studioPath, versionsPagePath } from "../routeUtils";
   import BotInfoCard from "./BotInfoCard.svelte";
   import BotEventList from "./components/BotEventList.svelte";
 
-  export let botId: string;
   export let botInfo: BotInfo;
+
+  const botId = botInfo.bot_id;
 
   let lastVersionInfo = botInfo.last_versions[botInfo.last_versions.length - 1];
   let runningVersionInfo: BotVersionInfo | null = null;
@@ -33,15 +31,6 @@
   let editedDisplayName = botInfo.display_name;
 
   let error: string | null = null;
-
-  const deleteBotWithConfirmation = withConfirmation(
-    "Вы уверены, что хотите удалить бота? Это действие дельзя отменить!",
-    async () => {
-      deleteBotConfig(botId);
-      navigate(botListingPath());
-    },
-    "Удалить",
-  );
 </script>
 
 <Page>
@@ -135,7 +124,7 @@
           </BotInfoCard>
         {/if}
 
-        <BotInfoCard title="Управление" moreLinkTitle="Перейти" moreLinkHref="/TBD-settings"></BotInfoCard>
+        <BotInfoCard title="Управление" moreLinkTitle="Перейти" moreLinkHref={settingsPath(botId)}></BotInfoCard>
       </div>
       <div class="flex-1 flex flex-col gap-4">
         <BotInfoCard title="Статистика">
@@ -144,7 +133,7 @@
         </BotInfoCard>
 
         <!-- TODO: full activity page -->
-        <!-- <BotInfoCard title="Активность" moreLinkTitle="Вся активность" moreLinkHref="/TBD-settings"> -->
+        <!-- <BotInfoCard title="Активность" moreLinkTitle="Вся активность" moreLinkHref="/activity-TBD"> -->
         <BotInfoCard title="Активность">
           <BotEventList events={botInfo.last_events} />
         </BotInfoCard>

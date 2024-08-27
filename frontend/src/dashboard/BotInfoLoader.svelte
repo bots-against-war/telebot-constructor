@@ -13,7 +13,7 @@
 {#await loadBotInfo()}
   <LoadingScreen />
 {:then botInfo}
-  <BotInfoScreen {botId} {botInfo} />
+  <BotInfoScreen {botInfo} />
 {:catch error}
   <FatalError {error} />
 {/await}
