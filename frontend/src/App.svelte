@@ -4,17 +4,17 @@
   import Modal from "svelte-simple-modal";
   import BotInfoLoader from "./dashboard/BotInfoLoader.svelte";
   import BotListingLoader from "./dashboard/BotListingLoader.svelte";
-  import FormLoader from "./forms/FormLoader.svelte";
-  import GlobalStateProvider from "./GlobalStateProvider.svelte";
-  import StudioLoader from "./studio/StudioLoader.svelte";
+  import FormLoader from "./dashboard/routes/forms/FormLoader.svelte";
   import VersionsLoader from "./dashboard/routes/versions/VersionsLoader.svelte";
+  import GlobalStateProvider from "./GlobalStateProvider.svelte";
   import { botListingPath, dashboardPath, formResultsPagePath, studioPath, versionsPagePath } from "./routeUtils";
+  import StudioLoader from "./studio/StudioLoader.svelte";
 
   // Global icon settings for flowbite-icons
   const iconCtx = {
     size: "xs",
     width: 15,
-    strokeWidth: "1",
+    strokeWidth: "2.5",
   };
   setContext("iconCtx", iconCtx);
 </script>

@@ -1,18 +1,18 @@
 <script lang="ts">
   import { Heading, Table, TableBody, TableBodyCell, TableBodyRow, TableHead, TableHeadCell } from "flowbite-svelte";
   import { ChevronLeftOutline, ChevronRightOutline } from "flowbite-svelte-icons";
-  import { loadFormResults, updateFormTitle } from "../api/formResults";
-  import type { FormResultsPage } from "../api/types";
-  import ActionIcon from "../components/ActionIcon.svelte";
-  import Navbar from "../components/Navbar.svelte";
-  import Page from "../components/Page.svelte";
-  import PageContent from "../components/PageContent.svelte";
-  import Timestamp from "../components/Timestamp.svelte";
-  import BreadcrumbDashboard from "../components/breadcrumbs/BreadcrumbDashboard.svelte";
-  import BreadcrumbHome from "../components/breadcrumbs/BreadcrumbHome.svelte";
-  import Breadcrumbs from "../components/breadcrumbs/Breadcrumbs.svelte";
-  import EditableText from "../components/inputs/EditableText.svelte";
-  import { getError } from "../utils";
+  import { loadFormResults, updateFormTitle } from "../../../api/formResults";
+  import type { FormResultsPage } from "../../../api/types";
+  import ActionIcon from "../../../components/ActionIcon.svelte";
+  import Navbar from "../../../components/Navbar.svelte";
+  import Page from "../../../components/Page.svelte";
+  import PageContent from "../../../components/PageContent.svelte";
+  import Timestamp from "../../../components/Timestamp.svelte";
+  import BreadcrumbDashboard from "../../../components/breadcrumbs/BreadcrumbDashboard.svelte";
+  import BreadcrumbHome from "../../../components/breadcrumbs/BreadcrumbHome.svelte";
+  import Breadcrumbs from "../../../components/breadcrumbs/Breadcrumbs.svelte";
+  import EditableText from "../../../components/inputs/EditableText.svelte";
+  import { getError } from "../../../utils";
 
   export let formResultsPage: FormResultsPage;
   export let offset: number;
