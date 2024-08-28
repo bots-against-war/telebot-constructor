@@ -93,6 +93,7 @@
     if (res1.ok) {
       error = null;
       navigate(dashboardPath(botId));
+      closeModal();
     } else if (!res1.ok) {
       isCreating = false;
       errorTitle = "Ошибка сохранения";

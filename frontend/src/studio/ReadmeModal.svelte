@@ -175,7 +175,7 @@
       </P>
     </TabItem>
 
-    <TabItem open title="Блоки">
+    <TabItem title="Блоки">
       <Heading tag="h4" class={headingClass}>Блоки</Heading>
       <Heading tag="h5"><BlockNameInline key={NodeTypeKey.info} /></Heading>
       <P class={pClass}>Общая информация о боте, включая имя и описание.</P>

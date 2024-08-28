@@ -1,5 +1,6 @@
 import type { CommandEntryPoint, UserFlowConfig } from "../api/types";
 import { DEFAULT_START_COMMAND_ENTRYPOINT_ID } from "../constants";
+import { PLACEHOLDER_GROUP_CHAT_ID } from "./nodes/defaultConfigs";
 import { NodeTypeKey } from "./nodes/display";
 import { boundingBox, generateNodeId, NodeKind } from "./utils";
 
@@ -47,6 +48,148 @@ export function contentOnlyTemplate(): Template {
       next_block_id: null,
       scope: "private",
     },
+  };
+}
+
+export function basicShowcaseTemplate(): Template {
+  const menuBlockId = generateNodeId(NodeKind.block, NodeTypeKey.menu);
+  const contentAboutBlockId = generateNodeId(NodeKind.block, NodeTypeKey.content);
+  const contentQuestionBlockId = generateNodeId(NodeKind.block, NodeTypeKey.content);
+  const operatorBlockId = generateNodeId(NodeKind.block, NodeTypeKey.human_operator);
+  return {
+    config: {
+      entrypoints: [],
+      blocks: [
+        {
+          content: null,
+          human_operator: null,
+          menu: {
+            block_id: menuBlockId,
+            menu: {
+              text: "Привет! Спасибо, что обратились к нам. Какой у вас вопрос? ",
+              items: [
+                {
+                  label: "Адрес",
+                  submenu: null,
+                  next_block_id: contentAboutBlockId,
+                  link_url: null,
+                },
+                {
+                  label: "Вопрос",
+                  submenu: null,
+                  next_block_id: contentQuestionBlockId,
+                  link_url: null,
+                },
+              ],
+              config: {
+                mechanism: "inline_buttons",
+                back_label: null,
+                lock_after_termination: false,
+              },
+            },
+          },
+          form: null,
+          language_select: null,
+          error: null,
+        },
+        {
+          content: {
+            block_id: contentAboutBlockId,
+            contents: [
+              {
+                text: {
+                  text: "Проспект Мира, 16",
+                  markup: "markdown",
+                },
+                attachments: [],
+              },
+            ],
+            next_block_id: null,
+          },
+          human_operator: null,
+          menu: null,
+          form: null,
+          language_select: null,
+          error: null,
+        },
+        {
+          content: {
+            block_id: contentQuestionBlockId,
+            contents: [
+              {
+                text: {
+                  text: "Привет! Спасибо, что обратились к нам. Какой у вас вопрос? ",
+                  markup: "markdown",
+                },
+                attachments: [],
+              },
+            ],
+            next_block_id: operatorBlockId,
+          },
+          human_operator: null,
+          menu: null,
+          form: null,
+          language_select: null,
+          error: null,
+        },
+        {
+          content: null,
+          human_operator: {
+            block_id: operatorBlockId,
+            catch_all: false,
+            feedback_handler_config: {
+              admin_chat_id: PLACEHOLDER_GROUP_CHAT_ID,
+              forum_topic_per_user: false,
+              anonimyze_users: true,
+              max_messages_per_minute: 20,
+              messages_to_user: {
+                forwarded_to_admin_ok: "Спасибо, мы вам скоро ответим!",
+                throttling: "Не присылайте больше {} сообщений в минуту!",
+              },
+              messages_to_admin: {
+                copied_to_user_ok: "Передано!",
+                deleted_message_ok: "Message deleted from chat with user",
+                can_not_delete_message: "Can't delete message from chat with user",
+              },
+              hashtags_in_admin_chat: false,
+              unanswered_hashtag: null,
+              hashtag_message_rarer_than: null,
+              message_log_to_admin_chat: true,
+            },
+          },
+          menu: null,
+          form: null,
+          language_select: null,
+          error: null,
+        },
+      ],
+      node_display_coords: {
+        [menuBlockId]: {
+          x: 0,
+          y: 220,
+        },
+        [contentAboutBlockId]: {
+          x: -250,
+          y: 450,
+        },
+        [contentQuestionBlockId]: {
+          x: 250,
+          y: 400,
+        },
+        [operatorBlockId]: {
+          x: 250,
+          y: 600,
+        },
+      },
+    },
+    customStartCmd: {
+      entrypoint_id: generateNodeId(NodeKind.entrypoint, NodeTypeKey.command),
+      command: "begin",
+      next_block_id: null,
+      scope: "private",
+      short_description: null,
+    },
+    entryBlockId: menuBlockId,
   };
 }
 
