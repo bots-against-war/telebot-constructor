@@ -166,14 +166,14 @@ export function basicShowcaseTemplate(): Template {
       node_display_coords: {
         [menuBlockId]: {
           x: 0,
-          y: 220,
+          y: 200,
         },
         [contentAboutBlockId]: {
-          x: -250,
-          y: 450,
+          x: -200,
+          y: 400,
         },
         [contentQuestionBlockId]: {
-          x: 250,
+          x: 200,
           y: 400,
         },
         [operatorBlockId]: {

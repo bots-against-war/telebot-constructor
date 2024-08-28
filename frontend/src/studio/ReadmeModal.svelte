@@ -15,9 +15,13 @@
     TableHeadCell,
     Tabs,
   } from "flowbite-svelte";
+  import { getModalCloser } from "../utils";
   import BlockNameInline from "./components/BlockNameInline.svelte";
   import { NodeTypeKey } from "./nodes/display";
 
+  export let onShowcaseTemplate: () => void;
+
+  const close = getModalCloser();
   const pClass = "mb-3";
   const headingClass = "mt-10 first:mt-0 mb-4";
 
@@ -68,7 +72,12 @@
       <Heading tag="h4" class={headingClass}>
         <div class="flex flex-row justify-between items-center">
           Как это работает?
-          <Button on:click={() => alert("TBD")}>Открыть шаблон</Button>
+          <Button
+            on:click={() => {
+              onShowcaseTemplate();
+              close();
+            }}>Открыть шаблон</Button
+          >
         </div>
       </Heading>
       <P class={pClass}>

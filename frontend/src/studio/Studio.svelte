@@ -43,7 +43,7 @@
     generateNodeId,
     type TentativeNode,
   } from "./utils";
-  import { applyTemplate, type Template } from "./templates";
+  import { applyTemplate, basicShowcaseTemplate, type Template } from "./templates";
 
   export let botId: string;
   export let botConfig: BotConfig;
@@ -271,7 +271,12 @@
     tentativeNodeMouseFollowerElement.style.top = e.pageY + "px";
   }
 
-  const openReadmeModal = () => open(ReadmeModal, {}, INFO_MODAL_OPTIONS);
+  const openReadmeModal = () =>
+    open(
+      ReadmeModal,
+      { onShowcaseTemplate: () => applyTempalateToConfig(basicShowcaseTemplate()) },
+      INFO_MODAL_OPTIONS,
+    );
   const README_SHOWN_LS_KEY = "readmeShown";
   if (localStorage.getItem(README_SHOWN_LS_KEY) === null) {
     localStorage.setItem(README_SHOWN_LS_KEY, "yea");
