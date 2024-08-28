@@ -40,17 +40,17 @@ export function getNodeTypeKey(config: UserFlowBlockConfig | UserFlowEntryPointC
 }
 
 export const NODE_HUE: { [key in NodeTypeKey]: number } = {
-  command: 280,
-  content: 25,
-  human_operator: 345,
-  language_select: 220,
-  menu: 120,
-  form: 67,
+  command: 270.5,
+  content: 26,
+  human_operator: 330,
+  language_select: 195.5,
+  menu: 80,
+  form: 48,
   info: 0, // = white
 };
 
 export function headerColor(hue: number): string {
-  return `hsl(${hue}, 70%, 70%)`;
+  return `hsl(${hue}, 85%, 70%)`;
 }
 
 export const NODE_TITLE: { [key in NodeTypeKey]: string } = {
