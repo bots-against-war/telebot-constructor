@@ -23,8 +23,6 @@
     editedConfig.members = topLevelBranch.members;
     // inserting global error values back into form fields
 
-    console.log(editedConfig);
-    console.log(formErrorMessages);
     for (const fieldConfig of flattenedFormFields(editedConfig.members)) {
       if (fieldConfig.plain_text) {
         fieldConfig.plain_text.empty_text_error_msg = formErrorMessages.empty_text_error_msg || "";

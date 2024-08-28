@@ -3,7 +3,7 @@
   import ErrorBadge from "./ErrorBadge.svelte";
 
   export let error: any;
-  console.log("Fatal error catched: ", error);
+  console.error("Fatal error: ", error);
 </script>
 
 <Centered>

@@ -18,7 +18,7 @@
   const urlReadonly = urlParams.get("readonly");
   const readonly = urlReadonly === "true" ? true : urlReadonly === "false" ? false : version !== null; // by default, set readonly for non-last versions
 
-  console.log(`Loading studio for bot id = ${botId}, version = ${version}, readonly = ${readonly}`);
+  console.debug(`Loading studio for bot id, version, readonly:`, botId, version, readonly);
 
   async function getBotConfig(botId: string): Promise<BotConfig> {
     const loadBotConfigResult = await loadBotConfig(botId, version);

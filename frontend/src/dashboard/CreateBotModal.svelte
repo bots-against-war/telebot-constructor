@@ -52,7 +52,7 @@
       botId = botId.slice(0, MAX_TRANSLIT_PREFIX_LEN);
     }
     botId += "-" + crypto.randomUUID().slice(0, UUID_SUFFIX_LEN);
-    console.log("Generated bot id", botId);
+    console.debug("Generated bot id", botId);
 
     let newTokenSecretRes = await createBotTokenSecret(botId, botToken);
     let newTokenSaveErr = getError(newTokenSecretRes);

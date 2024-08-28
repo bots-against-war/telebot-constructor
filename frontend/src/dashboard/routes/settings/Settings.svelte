@@ -14,7 +14,6 @@
   import { withConfirmation } from "../../../utils";
 
   export let botInfo: BotInfo;
-  console.log(botInfo);
 
   const stopRunningBot = withConfirmation(
     "Вы уверены что хотите бота? Он перестанет реагировать на команды и отвечать " +

@@ -98,7 +98,7 @@
               // @ts-expect-error
               discoverChatsPollingIntervalId = setInterval(() => {
                 if (isDiscoveringAdminChats) {
-                  console.log("Updating available group chats list");
+                  console.debug("Updating available group chats list");
                   availableGroupChatsPromise = getAvailableGroupChats(botId);
                 } else if (discoverChatsPollingIntervalId !== null) {
                   clearInterval(discoverChatsPollingIntervalId);

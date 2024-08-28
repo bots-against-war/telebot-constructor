@@ -33,8 +33,7 @@
     if (true || Object.keys(getPrefilledMessages()).length === 0) {
       const res = await fetchPrefilledMessages();
       if (res.ok) {
-        console.log("Loaded prefilled messages, will save to localStorage");
-        console.log(res);
+        console.debug("Loaded prefilled messages, will save to localStorage", res);
         savePrefilledMessages(res.data);
       } else {
         console.error(`Failed to load prefilled messages: ${res.error}`);

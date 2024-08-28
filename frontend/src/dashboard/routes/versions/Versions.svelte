@@ -75,7 +75,6 @@
         const resp = await startBot(botInfo.bot_id, { version: verNo });
         if (resp.ok) {
           botInfo.running_version = verNo;
-          console.log(botInfo);
         } else {
           alert(`Ошибка при запуске бота: ${resp.error}`);
           botInfo.running_version = null;

@@ -76,7 +76,6 @@
       supportedLanguageDataList &&
       (!defaultLanguage || !supportedLanguageDataList.map(getCode).includes(defaultLanguage.code))
     ) {
-      // console.log("resetting default language to the first supported");
       defaultLanguage = supportedLanguageDataList[0];
     }
     supportedLanguageDataListUpdatedCounter += 1;
