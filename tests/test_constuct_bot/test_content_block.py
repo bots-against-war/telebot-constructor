@@ -48,6 +48,11 @@ from tests.utils import (
             "[link with stuff inside!...](https://google\\.com)\n",
             id="escaping inside of links",
         ),
+        pytest.param(
+            "some text...\n\n>block quote\n>oh it's multiline!\n>    and has a > symbol",
+            "some text\\.\\.\\.\n>block quote\n>oh it's multiline\\!\n>and has a \\> symbol\n",
+            id="block quote",
+        ),
     ],
 )
 async def test_markdown_text(markdown_text: str, expected_sent: str) -> None:
@@ -110,8 +115,8 @@ async def test_markdown_text(markdown_text: str, expected_sent: str) -> None:
     await bot.process_new_updates([tg_update_message_to_bot(user_id=1234, first_name="User", text="/start")])
 
     assert len(bot.method_calls) == 1
-    print(bot.method_calls["send_message"][0].kwargs["text"])
-    print(expected_sent)
+    sent_text = bot.method_calls["send_message"][0].kwargs["text"]
+    assert sent_text == expected_sent
     assert_method_call_kwargs_include(
         bot.method_calls["send_message"],
         [

@@ -1,16 +1,19 @@
 <script lang="ts">
   import { Button, Heading, Spinner, Tooltip } from "flowbite-svelte";
+  import { QuestionCircleOutline } from "flowbite-svelte-icons";
   import { navigate } from "svelte-routing";
   import { Svelvet } from "svelvet";
   import { saveBotConfig } from "../api/botConfig";
   import { getBlockId, getEntrypointId } from "../api/typeUtils";
   import type { BotConfig, UserFlowEntryPointConfig } from "../api/types";
   import Navbar from "../components/Navbar.svelte";
+  import GridPlusColored from "../components/icons/GridPlusColored.svelte";
   import { BOT_INFO_NODE_ID } from "../constants";
   import { dashboardPath } from "../routeUtils";
   import { INFO_MODAL_OPTIONS, err, getError, getModalOpener, ok, withConfirmation, type Result } from "../utils";
   import ReadmeModal from "./ReadmeModal.svelte";
   import SaveConfigModal from "./SaveConfigModal.svelte";
+  import TemplatesModal from "./TemplatesModal.svelte";
   import AddNodeButton from "./components/AddNodeButton.svelte";
   import DeletableEdge from "./components/DeletableEdge.svelte";
   import StudioSidePandel from "./components/StudioSidePanel.svelte";
@@ -40,7 +43,7 @@
     generateNodeId,
     type TentativeNode,
   } from "./utils";
-  import { QuestionCircleOutline } from "flowbite-svelte-icons";
+  import { applyTemplate, type Template } from "./templates";
 
   export let botId: string;
   export let botConfig: BotConfig;
@@ -69,41 +72,41 @@
   }
 
   // saving bot config copy on every update for ctrl+Z functionality
-  const botConfigEditHistory: BotConfig[] = [];
-  const EDIT_HISTORY_LENGTH = 30;
-  let lastEditSavedAt: number | null = null;
-  $: {
-    const configClone = clone(botConfig);
-    const now = Date.now();
-    if (botConfigEditHistory.length > 0 && (lastEditSavedAt === null || now - lastEditSavedAt < 100)) {
-      console.debug("Overwriting the last change in edit history with ", configClone);
-      botConfigEditHistory[botConfigEditHistory.length - 1] = configClone;
-    } else {
-      console.debug("Pushing bot config to edit history: ", configClone);
-      botConfigEditHistory.push(configClone);
-      if (botConfigEditHistory.length > EDIT_HISTORY_LENGTH) {
-        botConfigEditHistory.splice(0, botConfigEditHistory.length - EDIT_HISTORY_LENGTH);
-      }
-      lastEditSavedAt = now;
-    }
-  }
+  // const botConfigEditHistory: BotConfig[] = [];
+  // const EDIT_HISTORY_LENGTH = 30;
+  // let lastEditSavedAt: number | null = null;
+  // $: {
+  //   const configClone = clone(botConfig);
+  //   const now = Date.now();
+  //   if (botConfigEditHistory.length > 0 && (lastEditSavedAt === null || now - lastEditSavedAt < 100)) {
+  //     console.debug("Overwriting the last change in edit history with ", configClone);
+  //     botConfigEditHistory[botConfigEditHistory.length - 1] = configClone;
+  //   } else {
+  //     console.debug("Pushing bot config to edit history: ", configClone);
+  //     botConfigEditHistory.push(configClone);
+  //     if (botConfigEditHistory.length > EDIT_HISTORY_LENGTH) {
+  //       botConfigEditHistory.splice(0, botConfigEditHistory.length - EDIT_HISTORY_LENGTH);
+  //     }
+  //     lastEditSavedAt = now;
+  //   }
+  // }
 
-  function undo() {
-    if (botConfigEditHistory.length < 2) {
-      console.debug("Already at the last change, nothing to undo");
-      return;
-    }
-    console.debug("Undoing the last change...");
-    botConfigEditHistory.pop();
-    const prevBotConfig = botConfigEditHistory.pop();
-    if (prevBotConfig) {
-      prevBotConfig.user_flow_config.node_display_coords = filterNodeDisplayCoords(
-        { ...prevBotConfig.user_flow_config.node_display_coords, ...nodeDisplayCoords },
-        prevBotConfig,
-      );
-      botConfig = prevBotConfig;
-    }
-  }
+  // function undo() {
+  //   if (botConfigEditHistory.length < 2) {
+  //     console.debug("Already at the last change, nothing to undo");
+  //     return;
+  //   }
+  //   console.debug("Undoing the last change...");
+  //   botConfigEditHistory.pop();
+  //   const prevBotConfig = botConfigEditHistory.pop();
+  //   if (prevBotConfig) {
+  //     prevBotConfig.user_flow_config.node_display_coords = filterNodeDisplayCoords(
+  //       { ...prevBotConfig.user_flow_config.node_display_coords, ...nodeDisplayCoords },
+  //       prevBotConfig,
+  //     );
+  //     botConfig = prevBotConfig;
+  //   }
+  // }
 
   // setting the initial language config based on whether bot config includes language select block
   let languageSelectBlockFound = false;
@@ -218,7 +221,7 @@
     ) {
       configValidationResult = err("Проблема в одном или нескольких блоках");
     }
-    const occurrenceCounts = botConfig.user_flow_config.entrypoints
+    const commandCounter = botConfig.user_flow_config.entrypoints
       .map((ep) => ep.command?.command)
       .filter((cmd) => cmd !== undefined)
       .reduce((acc: { [k: string]: number }, cmd) => {
@@ -226,12 +229,15 @@
         return acc;
       }, {});
 
-    if (Object.values(occurrenceCounts).some((v) => v > 1)) {
+    if (Object.values(commandCounter).some((v) => v > 1)) {
       configValidationResult = err("Бот содержит повторяющиеся /команды");
+    }
+    if (botConfig.user_flow_config.blocks.map((b) => b.language_select).filter((ls) => ls).length > 1) {
+      configValidationResult = err("Бот содержит больше одного блока выбора языка");
     }
   }
 
-  // node saving function with "in progress" state
+  // config saving function with "in progress" state
   let isSavingBotConfig = false;
   async function saveCurrentBotConfig(versionMessage: string | null, start: boolean) {
     if (readonly) return;
@@ -272,23 +278,30 @@
     localStorage.setItem(README_SHOWN_LS_KEY, "yea");
     openReadmeModal();
   }
+
+  let forceReloadCounter = 0;
+  const applyTempalateToConfig = (template: Template) => {
+    console.log("Applying template:", template);
+    botConfig.user_flow_config = applyTemplate(botConfig.user_flow_config, template);
+    forceReloadCounter += 1;
+  };
 </script>
 
 <svelte:window
   on:mousemove={handleMouseMove}
   on:keydown={(e) => {
-    if (
-      e.target &&
-      // @ts-expect-error
-      e.target.tagName !== "TEXTAREA" &&
-      // @ts-expect-error
-      e.target.tagName !== "INPUT" &&
-      !e.repeat &&
-      (e.metaKey || e.ctrlKey) &&
-      e.code === "KeyZ"
-    ) {
-      undo();
-    }
+    // if (
+    //   e.target &&
+    //   // @ts-expect-error
+    //   e.target.tagName !== "TEXTAREA" &&
+    //   // @ts-expect-error
+    //   e.target.tagName !== "INPUT" &&
+    //   !e.repeat &&
+    //   (e.metaKey || e.ctrlKey) &&
+    //   e.code === "KeyZ"
+    // ) {
+    //   undo();
+    // }
   }}
 />
 <div class="svelvet-container">
@@ -321,107 +334,144 @@
       </div>
     </Navbar>
   </div>
-  <Svelvet
-    TD
-    fitView={botConfig.user_flow_config.blocks.length + botConfig.user_flow_config.entrypoints.length >= 1}
-    edge={DeletableEdge}
-    editable={false}
-    minimap={false}
-    enableAllHotkeys={false}
-    controls
-    trackpadPan
-    {customMouseDownHandler}
-    customCssCursor={tentativeNode ? "crosshair" : null}
-  >
-    <BotInfoNode {botId} bind:position={nodeDisplayCoords[BOT_INFO_NODE_ID]} />
-    {#each botConfig.user_flow_config.entrypoints as entrypoint (getEntrypointId(entrypoint))}
-      {#if entrypoint.command}
-        <CommandEntryPointNode
-          on:delete={deleteNode}
-          bind:config={entrypoint.command}
-          bind:position={nodeDisplayCoords[entrypoint.command.entrypoint_id]}
-          bind:isValid={isNodeValid[entrypoint.command.entrypoint_id]}
-        />
-      {/if}
-    {/each}
-    {#each botConfig.user_flow_config.blocks as block (getBlockId(block))}
-      {#if block.content}
-        <ContentBlockNode
-          on:delete={deleteNode}
-          on:clone={cloneNode}
-          bind:config={block.content}
-          bind:position={nodeDisplayCoords[block.content.block_id]}
-          bind:isValid={isNodeValid[block.content.block_id]}
-        />
-      {:else if block.human_operator}
-        <HumanOperatorNode
-          {botId}
-          on:delete={deleteNode}
-          on:clone={cloneNode}
-          bind:config={block.human_operator}
-          bind:position={nodeDisplayCoords[block.human_operator.block_id]}
-          bind:isValid={isNodeValid[block.human_operator.block_id]}
-        />
-      {:else if block.language_select}
-        <LanguageSelectNode
-          on:delete={(e) => {
-            deleteNode(e);
-            languageConfigStore.set(null);
-          }}
-          bind:config={block.language_select}
-          bind:position={nodeDisplayCoords[block.language_select.block_id]}
-          bind:isValid={isNodeValid[block.language_select.block_id]}
-        />
-      {:else if block.menu}
-        <MenuNode
-          on:delete={deleteNode}
-          on:clone={cloneNode}
-          bind:config={block.menu}
-          bind:position={nodeDisplayCoords[block.menu.block_id]}
-          bind:isValid={isNodeValid[block.menu.block_id]}
-        />
-      {:else if block.form}
-        <FormNode
-          {botId}
-          on:delete={deleteNode}
-          on:clone={cloneNode}
-          bind:config={block.form}
-          bind:position={nodeDisplayCoords[block.form.block_id]}
-          bind:isValid={isNodeValid[block.form.block_id]}
-        />
-      {/if}
-    {/each}
-  </Svelvet>
+  {#key forceReloadCounter}
+    <Svelvet
+      TD
+      fitView
+      edge={DeletableEdge}
+      editable={false}
+      minimap={false}
+      enableAllHotkeys={false}
+      controls
+      trackpadPan
+      {customMouseDownHandler}
+      customCssCursor={tentativeNode ? "crosshair" : null}
+    >
+      <BotInfoNode {botId} bind:position={nodeDisplayCoords[BOT_INFO_NODE_ID]} />
+      {#each botConfig.user_flow_config.entrypoints as entrypoint (getEntrypointId(entrypoint))}
+        {#if entrypoint.command}
+          <CommandEntryPointNode
+            on:delete={deleteNode}
+            bind:config={entrypoint.command}
+            bind:position={nodeDisplayCoords[entrypoint.command.entrypoint_id]}
+            bind:isValid={isNodeValid[entrypoint.command.entrypoint_id]}
+          />
+        {/if}
+      {/each}
+      {#each botConfig.user_flow_config.blocks as block (getBlockId(block))}
+        {#if block.content}
+          <ContentBlockNode
+            on:delete={deleteNode}
+            on:clone={cloneNode}
+            bind:config={block.content}
+            bind:position={nodeDisplayCoords[block.content.block_id]}
+            bind:isValid={isNodeValid[block.content.block_id]}
+          />
+        {:else if block.human_operator}
+          <HumanOperatorNode
+            {botId}
+            on:delete={deleteNode}
+            on:clone={cloneNode}
+            bind:config={block.human_operator}
+            bind:position={nodeDisplayCoords[block.human_operator.block_id]}
+            bind:isValid={isNodeValid[block.human_operator.block_id]}
+          />
+        {:else if block.language_select}
+          <LanguageSelectNode
+            on:delete={(e) => {
+              deleteNode(e);
+              languageConfigStore.set(null);
+            }}
+            bind:config={block.language_select}
+            bind:position={nodeDisplayCoords[block.language_select.block_id]}
+            bind:isValid={isNodeValid[block.language_select.block_id]}
+          />
+        {:else if block.menu}
+          <MenuNode
+            on:delete={deleteNode}
+            on:clone={cloneNode}
+            bind:config={block.menu}
+            bind:position={nodeDisplayCoords[block.menu.block_id]}
+            bind:isValid={isNodeValid[block.menu.block_id]}
+          />
+        {:else if block.form}
+          <FormNode
+            {botId}
+            on:delete={deleteNode}
+            on:clone={cloneNode}
+            bind:config={block.form}
+            bind:position={nodeDisplayCoords[block.form.block_id]}
+            bind:isValid={isNodeValid[block.form.block_id]}
+          />
+        {/if}
+      {/each}
+    </Svelvet>
+  {/key}
   <StudioSidePandel>
-    <div class="flex flex-col gap-3">
-      <AddNodeButton
-        key={NodeTypeKey.command}
-        on:click={nodeFactory(NodeKind.entrypoint, NodeTypeKey.command, defaultCommandEntrypoint)}
-      />
-      <AddNodeButton
-        key={NodeTypeKey.content}
-        on:click={nodeFactory(NodeKind.block, NodeTypeKey.content, defaultContentBlockConfig)}
-      />
-      <AddNodeButton
-        key={NodeTypeKey.human_operator}
-        on:click={nodeFactory(NodeKind.block, NodeTypeKey.human_operator, defaultHumanOperatorBlockConfig)}
-      />
-      <AddNodeButton
-        key={NodeTypeKey.language_select}
-        on:click={nodeFactory(NodeKind.block, NodeTypeKey.language_select, defaultLanguageSelectBlockConfig)}
-      />
-      <AddNodeButton
-        key={NodeTypeKey.menu}
-        on:click={nodeFactory(NodeKind.block, NodeTypeKey.menu, defaultMenuBlockConfig)}
-      />
-      <AddNodeButton
-        key={NodeTypeKey.form}
-        on:click={nodeFactory(NodeKind.block, NodeTypeKey.form, defaultFormBlockConfig)}
-      />
-      <Button on:click={openReadmeModal}>
-        <QuestionCircleOutline class="w-4 h-4 mr-2" />
-        Инструкции
-      </Button>
+    <div>
+      <div class="flex flex-col gap-2">
+        <AddNodeButton
+          key={NodeTypeKey.command}
+          on:click={nodeFactory(NodeKind.entrypoint, NodeTypeKey.command, defaultCommandEntrypoint)}
+        />
+        <AddNodeButton
+          key={NodeTypeKey.content}
+          on:click={nodeFactory(NodeKind.block, NodeTypeKey.content, defaultContentBlockConfig)}
+        />
+        <AddNodeButton
+          key={NodeTypeKey.human_operator}
+          on:click={nodeFactory(NodeKind.block, NodeTypeKey.human_operator, defaultHumanOperatorBlockConfig)}
+        />
+        <AddNodeButton
+          key={NodeTypeKey.language_select}
+          on:click={nodeFactory(NodeKind.block, NodeTypeKey.language_select, defaultLanguageSelectBlockConfig)}
+        />
+        <AddNodeButton
+          key={NodeTypeKey.menu}
+          on:click={nodeFactory(NodeKind.block, NodeTypeKey.menu, defaultMenuBlockConfig)}
+        />
+        <AddNodeButton
+          key={NodeTypeKey.form}
+          disabled={languageSelectBlockFound}
+          on:click={nodeFactory(NodeKind.block, NodeTypeKey.form, defaultFormBlockConfig)}
+        />
+      </div>
+
+      <div class="flex flex-col gap-2 pt-3 mt-3 border-t border-gray-200">
+        <button
+          on:click={() =>
+            open(
+              TemplatesModal,
+              {
+                templateSelectedCallback: applyTempalateToConfig,
+              },
+              INFO_MODAL_OPTIONS,
+            )}
+          class="border border-gray-500 flex flex-row items-center justify-start p-0 rounded-lg w-auto"
+        >
+          <div class="w-10 h-10 flex justify-center items-center border-r border-r-gray-500">
+            <GridPlusColored
+              class="w-7 h-7"
+              colors={[
+                headerColor(NODE_HUE[NodeTypeKey.command]),
+                headerColor(NODE_HUE[NodeTypeKey.language_select]),
+                headerColor(NODE_HUE[NodeTypeKey.menu]),
+              ]}
+            />
+          </div>
+          <span class="px-3"> Шаблоны </span>
+        </button>
+
+        <button
+          on:click={openReadmeModal}
+          class="border border-gray-500 flex flex-row items-center justify-start p-0 rounded-lg w-auto"
+        >
+          <div class="w-10 h-10 flex justify-center items-center border-r border-r-gray-500">
+            <QuestionCircleOutline class="w-5 h-5" />
+          </div>
+          <span class="px-3"> Инструкции </span>
+        </button>
+      </div>
     </div>
   </StudioSidePandel>
   {#if tentativeNode}

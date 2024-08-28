@@ -6,7 +6,6 @@ import logging
 import re
 from typing import Any, Optional
 
-import telegramify_markdown  # type: ignore
 from pydantic import BaseModel
 from telebot import types as tg
 from telebot_components.language import any_text_to_str, vaildate_singlelang_text
@@ -19,7 +18,11 @@ from telebot_constructor.user_flow.types import (
     UserFlowContext,
     UserFlowSetupContext,
 )
-from telebot_constructor.utils import iter_batches, without_nones
+from telebot_constructor.utils import (
+    iter_batches,
+    preprocess_markdown_for_telegram,
+    without_nones,
+)
 from telebot_constructor.utils.pydantic import (
     ExactlyOneNonNullFieldModel,
     LocalizableText,
@@ -58,10 +61,10 @@ class ContentText(BaseModel):
             # we store texts in more or less vanilla markdown, but telegram
             # requires somem extra processing
             if isinstance(self.text, str):
-                self._preprocessed_text = telegramify_markdown.markdownify(self.text)
+                self._preprocessed_text = preprocess_markdown_for_telegram(self.text)
             else:
                 self._preprocessed_text = {
-                    lang: telegramify_markdown.markdownify(translation) for lang, translation in self.text.items()
+                    lang: preprocess_markdown_for_telegram(translation) for lang, translation in self.text.items()
                 }
 
 

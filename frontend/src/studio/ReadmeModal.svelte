@@ -15,8 +15,8 @@
     TableHeadCell,
     Tabs,
   } from "flowbite-svelte";
-  import { NODE_TITLE, NodeTypeKey } from "./nodes/display";
   import BlockNameInline from "./components/BlockNameInline.svelte";
+  import { NodeTypeKey } from "./nodes/display";
 
   const pClass = "mb-3";
   const headingClass = "mt-10 first:mt-0 mb-4";

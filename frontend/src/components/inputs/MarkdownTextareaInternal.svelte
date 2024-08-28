@@ -97,7 +97,7 @@
       <ToolbarGroup>
         <Toggle size="small" bind:checked={preview}>
           {#if preview}
-            <div class="text-red-600 text-sm flex flex-row items-baseline gap-1">
+            <div class="text-red-600 text-sm flex flex-row items-center gap-1">
               <ExclamationCircleOutline />
               <span>Может быть неточным</span>
             </div>
@@ -110,7 +110,7 @@
   </div>
   <div class={innerWrappedClass}>
     {#if preview}
-      <div class="preview">{@html renderPreview(value)}</div>
+      <div class="md-preview">{@html renderPreview(value)}</div>
     {:else}
       <textarea
         bind:value

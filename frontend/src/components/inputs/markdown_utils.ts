@@ -60,13 +60,8 @@ const telegramSpoiler: TokenizerAndRendererExtension = {
 };
 
 const customRenderer: RendererObject = {
-  blockquote({ tokens }): string {
-    return `<blockquote style="margin: 0.5rem 0; padding: 0.5rem 0; padding-left: 0.5rem; border-left: 1px lightgray solid;">
-      ${this.parser.parse(tokens)}
-    </blockquote>`;
-  },
   link({ tokens, href }): string {
-    return `<a href="${href}" style="text-decoration: underline; color: #2e7ca9;" target="_blank">${this.parser.parseInline(tokens)}</a>`;
+    return `<a href="${href}" target="_blank">${this.parser.parseInline(tokens)}</a>`;
   },
 };
 

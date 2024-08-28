@@ -124,3 +124,29 @@ export function filterNodeDisplayCoords(coords: NodeDisplayCoords, config: BotCo
     ),
   );
 }
+
+export interface BoundingBox {
+  xMin: number;
+  xMax: number;
+  yMin: number;
+  yMax: number;
+}
+
+export function boundingBox(coords: NodeDisplayCoords): BoundingBox {
+  if (Object.entries(coords).length) {
+    return {
+      xMax: 0,
+      xMin: 0,
+      yMax: 0,
+      yMin: 0,
+    };
+  }
+  const xCoords = Object.values(coords).map(({ x }) => x);
+  const yCoords = Object.values(coords).map(({ y }) => y);
+  return {
+    xMax: Math.max.apply(xCoords),
+    xMin: Math.min.apply(xCoords),
+    yMax: Math.max.apply(yCoords),
+    yMin: Math.min.apply(yCoords),
+  };
+}
