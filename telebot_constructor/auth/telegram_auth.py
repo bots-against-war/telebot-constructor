@@ -4,6 +4,7 @@ import secrets
 from pathlib import Path
 from typing import Optional
 
+
 from aiohttp import hdrs, web
 from pydantic import BaseModel
 from telebot import AsyncTeleBot
@@ -171,8 +172,17 @@ class TelegramAuth(Auth):
             access_token = await self.access_token_by_start_param.load(start_param)
             if access_token is None:
                 return
+            user = message.from_user
             tg_user_data = await TelegramUserData.from_user(self.bot, message.from_user)
             await self.tg_user_data_by_access_code_store.save(access_token, tg_user_data)
-            await self.bot.reply_to(message, text="🔓🔓🔓")
+
+            formatted_user = user.full_name
+            if user.username:
+                formatted_user += f" @{user.username}"
+            await self.bot.reply_to(
+                message,
+                text=f"Вы авторизованы как <b>{formatted_user}</b>! Можно вернуться в конструктор.",
+                parse_mode="HTML",
+            )
 
         return BotRunner(bot_prefix="telegram-auth-bot", bot=self.bot, background_jobs=[])

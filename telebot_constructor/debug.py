@@ -6,6 +6,9 @@ from aiohttp.typedefs import Handler
 
 DEBUG = bool(os.getenv("TELEBOT_CONSTRUCTOR_DEBUG"))
 
+if DEBUG:
+    print("DEBUG MODE ON")
+
 # useful for testing loading screens on frontend
 SLEEP_BEFORE_REQUEST = float(os.environ.get("TELEBOT_CONSTRUCTOR_SLEEP_BEFORE_REQUEST", "0"))
 
