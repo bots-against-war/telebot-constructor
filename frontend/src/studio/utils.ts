@@ -132,8 +132,8 @@ export interface BoundingBox {
   yMax: number;
 }
 
-export function boundingBox(coords: NodeDisplayCoords): BoundingBox {
-  if (Object.entries(coords).length) {
+export function boundingBox(coords: NodeDisplayCoords, width: number, height: number): BoundingBox {
+  if (Object.entries(coords).length == 0) {
     return {
       xMax: 0,
       xMin: 0,
@@ -144,9 +144,9 @@ export function boundingBox(coords: NodeDisplayCoords): BoundingBox {
   const xCoords = Object.values(coords).map(({ x }) => x);
   const yCoords = Object.values(coords).map(({ y }) => y);
   return {
-    xMax: Math.max.apply(xCoords),
-    xMin: Math.min.apply(xCoords),
-    yMax: Math.max.apply(yCoords),
-    yMin: Math.min.apply(yCoords),
+    xMax: Math.max.apply(null, xCoords) + width / 2,
+    xMin: Math.min.apply(null, xCoords) - width / 2,
+    yMax: Math.max.apply(null, yCoords) + height / 2,
+    yMin: Math.min.apply(null, yCoords) - height / 2,
   };
 }

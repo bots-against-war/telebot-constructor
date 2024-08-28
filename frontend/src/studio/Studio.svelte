@@ -63,8 +63,7 @@
   $: {
     botConfig; // trigger svelte's reactivity by mentioning the value we're reacting to
     configReactivityTriggeredCount += 1;
-  }
-  $: {
+    console.debug("bot config reactivity triggered!");
     if (configReactivityTriggeredCount > 2) {
       // dont know why it's 2 but it just works...
       isConfigModified = true;
@@ -281,8 +280,13 @@
 
   let forceReloadCounter = 0;
   const applyTempalateToConfig = (template: Template) => {
-    console.log("Applying template:", template);
+    console.debug("Applying template:", template);
+    // since we're storing node display coords separately, we need to patch
+    // them back into the config here
+    botConfig.user_flow_config.node_display_coords = nodeDisplayCoords;
     botConfig.user_flow_config = applyTemplate(botConfig.user_flow_config, template);
+    nodeDisplayCoords = botConfig.user_flow_config.node_display_coords;
+    isConfigModified = true;
     forceReloadCounter += 1;
   };
 </script>

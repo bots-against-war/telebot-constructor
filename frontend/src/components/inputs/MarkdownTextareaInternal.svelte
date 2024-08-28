@@ -80,19 +80,19 @@
           <ActionIcon
             {icon}
             title={type}
-            iconClass="w-3 h-3 text-gray-600"
+            iconClass="w-4 h-4 text-gray-600"
             size="xs"
             on:click={() => addMarkup(type)}
           />
         {/each}
-        <ActionIcon
+        <!-- <ActionIcon
           icon={QuestionCircleOutline}
           title="Документация Telegram MarkdownV2"
           iconClass="w-3 h-3 text-gray-600"
           size="xs"
           href="https://github.com/sudoskys/telegramify-markdown?tab=readme-ov-file#use-case"
           target="_blank"
-        />
+        /> -->
       </ToolbarGroup>
       <ToolbarGroup>
         <Toggle size="small" bind:checked={preview}>
