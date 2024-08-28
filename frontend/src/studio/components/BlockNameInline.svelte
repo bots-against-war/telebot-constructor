@@ -4,6 +4,6 @@
   export let key: NodeTypeKey;
 </script>
 
-<strong class="px-0.5 py-0.25 rounded-none" style="background-color: {headerColor(NODE_HUE[key])}"
+<strong class="px-1 py-0.25 rounded-none" style="background-color: {headerColor(NODE_HUE[key])}"
   >{NODE_TITLE[key]}</strong
 >

@@ -40,8 +40,8 @@
       <P class={pClass}>
         <div class="w-full flex flex-col gap-3">
           <strong>Пользователь начинает работу с ботом</strong>
-          <div class="bubble right" style="font-family:'Courier New', Courier, monospace; font-weight: bold;">
-            /start
+          <div class="bubble right">
+            <code>/start</code>
           </div>
           <div class="bubble left">
             Привет! Спасибо, что обратились к нам. Чем мы можем помочь?
@@ -82,7 +82,8 @@
               <TableBodyCell {tdClass}>Пользователь переходит по ссылке на бот и нажимает кнопку "Старт"</TableBodyCell>
               <TableBodyCell {tdClass}>
                 Блоки <BlockNameInline key={NodeTypeKey.info} /> и
-                <BlockNameInline key={NodeTypeKey.command} /> – это стартовые блоки, обеспечивающие запуск взаимодействия
+                <BlockNameInline key={NodeTypeKey.command} /> <strong>/start</strong> – это стартовые блоки, обеспечивающие
+                запуск взаимодействия
               </TableBodyCell>
             </TableBodyRow>
             <TableBodyRow>
@@ -171,6 +172,48 @@
           <Li>Имеют ограниченный доступ к сообщениям в группах по умолчанию</Li>
           <Li>Не могут загружать и скачивать файлы размером более 20 Мб</Li>
         </List>
+      </P>
+    </TabItem>
+
+    <TabItem open title="Блоки">
+      <Heading tag="h4" class={headingClass}>Блоки</Heading>
+      <Heading tag="h5"><BlockNameInline key={NodeTypeKey.info} /></Heading>
+      <P class={pClass}>Общая информация о боте, включая имя и описание.</P>
+
+      <Heading tag="h5"><BlockNameInline key={NodeTypeKey.command} /></Heading>
+      <P class={pClass}>
+        Способ входа в любую ветку логики бота – срабатывает, когда пользователь присылает команду, и запускает
+        соответствующую ветку логики в любое время, независимо от предыдущих шагов.
+      </P>
+      <P class={pClass}>
+        Главная команда <code>/start</code> определена для любого бота. Другие команды необязательны, но вы можете
+        настроить их для ключевых действий в вашем боте, например: получить помощь (<code>/help</code>), подать заявку
+        на волонтёрство (<code>/apply</code>), сделать пожертвование (<code>/donate</code>) и другие.
+      </P>
+
+      <Heading tag="h5"><BlockNameInline key={NodeTypeKey.content} /></Heading>
+      <P class={pClass}>Отправка текствовых сообщений и картинок.</P>
+
+      <Heading tag="h5"><BlockNameInline key={NodeTypeKey.human_operator} /></Heading>
+      <P class={pClass}>
+        Переключение чат-бота на живое общение с операторами бота, которые остаются анонимными. Есть возможность
+        сохранения анонимности и для пользователей.
+      </P>
+
+      <Heading tag="h5"><BlockNameInline key={NodeTypeKey.language_select} /></Heading>
+      <P class={pClass}>
+        Выбор языка бота с помощью меню. Вы определяете список доступных языков – все тексты в бота должны быть
+        локализованы на них.
+      </P>
+
+      <Heading tag="h5"><BlockNameInline key={NodeTypeKey.menu} /></Heading>
+      <P class={pClass}>Многоуровневое ветвление с помощью выбора из заданных вариантов.</P>
+
+      <Heading tag="h5"><BlockNameInline key={NodeTypeKey.form} /></Heading>
+      <P class={pClass}>
+        Аналог Google Forms или Airtable, но внутри вашего бота: задайте список вопросов (со свободным ответом или с
+        выбором вариантов), а бот пришлёт их пользователю в нужном порядке. Ответы на формы можно прислать в ваш рабочий
+        чат и/или сохранить в память бота, где их можно будет посмотреть в дашборде.
       </P>
     </TabItem>
 

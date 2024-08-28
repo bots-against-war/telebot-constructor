@@ -50,7 +50,7 @@ export const NODE_HUE: { [key in NodeTypeKey]: number | "white" } = {
 };
 
 export function headerColor(hue: number | "white"): string {
-  if (hue === "white") return "white";
+  if (hue === "white") return "hsl(0, 0%, 90%)";
   return `hsl(${hue}, 70%, 70%)`;
 }
 
