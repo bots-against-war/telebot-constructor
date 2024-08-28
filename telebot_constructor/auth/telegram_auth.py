@@ -4,7 +4,6 @@ import secrets
 from pathlib import Path
 from typing import Optional
 
-
 from aiohttp import hdrs, web
 from pydantic import BaseModel
 from telebot import AsyncTeleBot

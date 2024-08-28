@@ -172,7 +172,9 @@ class ContentBlock(UserFlowBlock):
                     message = await context.bot.send_photo(
                         chat_id=chat_id,
                         photo=file_id if file_id is not None else decode_b64_data_url(attachment.image),
-                        caption=any_text_to_str(content.text.preprocessed, language) if content.text is not None else None,
+                        caption=(
+                            any_text_to_str(content.text.preprocessed, language) if content.text is not None else None
+                        ),
                         parse_mode=parse_mode if content.text is not None else None,
                         reply_markup=tg.ReplyKeyboardRemove(),
                     )

@@ -84,8 +84,7 @@
   div.node-content-container {
     width: 250px;
     /* this is quick and dirty, better solution for overflowing blocks needed */
-    max-height: 150px;
-    text-overflow: ellipsis;
+    max-height: 200px;
     overflow-y: hidden;
   }
 </style>

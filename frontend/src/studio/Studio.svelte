@@ -7,7 +7,9 @@
   import type { BotConfig, UserFlowEntryPointConfig } from "../api/types";
   import Navbar from "../components/Navbar.svelte";
   import { BOT_INFO_NODE_ID } from "../constants";
-  import { err, getError, getModalOpener, ok, withConfirmation, type Result } from "../utils";
+  import { dashboardPath } from "../routeUtils";
+  import { INFO_MODAL_OPTIONS, err, getError, getModalOpener, ok, withConfirmation, type Result } from "../utils";
+  import ReadmeModal from "./ReadmeModal.svelte";
   import SaveConfigModal from "./SaveConfigModal.svelte";
   import AddNodeButton from "./components/AddNodeButton.svelte";
   import DeletableEdge from "./components/DeletableEdge.svelte";
@@ -38,7 +40,6 @@
     generateNodeId,
     type TentativeNode,
   } from "./utils";
-  import { dashboardPath } from "../routeUtils";
 
   export let botId: string;
   export let botConfig: BotConfig;
@@ -263,6 +264,13 @@
     tentativeNodeMouseFollowerElement.style.left = e.pageX + "px";
     tentativeNodeMouseFollowerElement.style.top = e.pageY + "px";
   }
+
+  const openReadmeModal = () => open(ReadmeModal, {}, INFO_MODAL_OPTIONS);
+  const README_SHOWN_LS_KEY = "readmeShown";
+  if (localStorage.getItem(README_SHOWN_LS_KEY) === null) {
+    localStorage.setItem(README_SHOWN_LS_KEY, "yea");
+    openReadmeModal();
+  }
 </script>
 
 <svelte:window
@@ -409,6 +417,7 @@
         key={NodeTypeKey.form}
         on:click={nodeFactory(NodeKind.block, NodeTypeKey.form, defaultFormBlockConfig)}
       />
+      <Button on:click={openReadmeModal}>Инструкции</Button>
     </div>
   </StudioSidePandel>
   {#if tentativeNode}

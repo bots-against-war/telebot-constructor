@@ -59,6 +59,7 @@ export function mean(data: number[]): number {
 export function getModalOpener<C extends SvelteComponent>(): (
   modalCompClass: Newable<C>,
   props?: ComponentProps<C>,
+  options?: any,
 ) => void {
   // @ts-expect-error
   const { open } = getContext("simple-modal");
@@ -71,6 +72,12 @@ export function getModalCloser(): () => void {
   const { close } = getContext("simple-modal");
   return close;
 }
+
+export const INFO_MODAL_OPTIONS = {
+  closeButton: true,
+  closeOnEsc: true,
+  closeOnOuterClick: true,
+};
 
 export async function createBotTokenSecret(botId: string, token: string): Promise<Result<string, string>> {
   let secretName = botId + "-token-" + crypto.randomUUID().slice(0, 8);

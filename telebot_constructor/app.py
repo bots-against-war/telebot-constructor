@@ -13,7 +13,7 @@ from aiohttp import web
 from aiohttp_swagger import setup_swagger  # type: ignore
 from telebot import AsyncTeleBot
 from telebot.runner import BotRunner
-from telebot.util import create_error_logging_task, log_error
+from telebot.util import create_error_logging_task
 from telebot.webhook import WebhookApp
 from telebot_components.language import LanguageData
 from telebot_components.redis_utils.interface import RedisInterface
@@ -226,14 +226,21 @@ class TelebotConstructorApp:
             _bot_factory=self._bot_factory,
         )
 
+    def _log_prefix(self, username: str, bot_id: str, version: BotVersion | None = None) -> str:
+        prefix = f"[{username}][{bot_id}]"
+        if version is not None:
+            prefix += f"[ver {version}]"
+        return prefix
+
     async def stop_bot(self, username: str, bot_id: str) -> bool:
+        log_prefix = self._log_prefix(username, bot_id)
         if await self.runner.stop(username, bot_id):
-            logger.info(f"[{username}][{bot_id}] Stopped bot")
+            logger.info(f"{log_prefix} Stopped bot")
             await self.store.set_bot_not_running(username, bot_id)
             await self.store.save_event(username, bot_id, event=BotStoppedEvent(username=username, event="stopped"))
             return True
         else:
-            logger.info(f"[{username}][{bot_id}] Attempted to stop a bot but it was not running")
+            logger.info(f"{log_prefix} Bot is not running")
             return False
 
     async def start_bot(
@@ -244,7 +251,7 @@ class TelebotConstructorApp:
     ) -> None:
         """Start a specific version of the bot; this method should be initiated by a user"""
         bot_config = await self.load_bot_config(username, bot_id, version)
-        log_prefix = f"[{username}][{bot_id}]"
+        log_prefix = self._log_prefix(username, bot_id, version)
         logger.info(f"{log_prefix} (Re)starting bot")
         await self.stop_bot(username, bot_id)
         try:
@@ -254,10 +261,12 @@ class TelebotConstructorApp:
                 bot_config=bot_config,
             )
         except Exception as e:
-            logger.info(f"{log_prefix} Error constructing bot", exc_info=True)
+            logger.exception(f"{log_prefix} Error constructing bot")
+            await self.store.set_bot_not_running(username, bot_id)
             raise web.HTTPBadRequest(reason=str(e))
         if not await self.runner.start(username=username, bot_id=bot_id, bot_runner=bot_runner):
-            logger.info(f"{log_prefix} Bot failed to start")
+            await self.store.set_bot_not_running(username, bot_id)
+            logger.error(f"{log_prefix} Bot failed to start")
             raise web.HTTPInternalServerError(reason="Failed to start bot")
         logger.info(f"{log_prefix} Bot started OK!")
         await self.store.set_bot_running_version(username, bot_id, version=version)
@@ -940,21 +949,27 @@ class TelebotConstructorApp:
     def start_stored_bots_in_background(self) -> None:
         async def _start_stored_bots() -> None:
             logger.info("Starting stored bots...")
-            count = 0
+            total_bots = 0
+            started_bots = 0
             async for username, bot_id, version in self.store.iter_running_bot_versions():
-                count += 1
-                log_name = f"{bot_id!r} (owned by {username!r}, ver {version})"
-                logger.debug(f"Starting {log_name} (#{count})")
-                with log_error(marker=f"Starting stored bot {log_name}", logger_=logger):
+                total_bots += 1
+                log_prefix = self._log_prefix(username, bot_id, version)
+                logger.debug(f"{log_prefix} Starting stored bot (#{total_bots})")
+                try:
                     bot_config = await self.store.load_bot_config(username, bot_id, version)
                     if bot_config is None:
-                        logger.error(f"{log_name} is running but has no config")
-                        await self.store.set_bot_not_running(username, bot_id)
-                        continue
+                        raise RuntimeError("Bot is running bot no config found")
                     bot_runner = await self._construct_bot(username, bot_id, bot_config)
                     if not await self.runner.start(username=username, bot_id=bot_id, bot_runner=bot_runner):
-                        logger.error(f"{log_name} failed to start")
-            logger.info(f"Started {count} stored bots")
+                        raise RuntimeError("Failed to start bot")
+                    started_bots += 1
+                except Exception:
+                    logger.exception(f"{log_prefix} Error starting stored bot")
+                    try:
+                        await self.store.set_bot_not_running(username, bot_id)
+                    except Exception:
+                        logger.exception(f"{log_prefix} Failed to mark bot as non-running after failed startup")
+            logger.info(f"Started {started_bots}/{total_bots} bots in total")
 
         self._start_stored_bots_task = create_error_logging_task(_start_stored_bots(), name="Start stored bots")
 

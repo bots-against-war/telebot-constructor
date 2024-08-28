@@ -15,18 +15,19 @@ async def test_serve_index(
 
     resp = await client.get("/")
     assert resp.status == 404
-    assert re.match(r"^404: Static path /.*/index\.html does not exist$", await resp.text("utf-8"))
+    assert re.match(r"^404: Static path /.*/landing\.html does not exist$", await resp.text("utf-8"))
 
-    (constructor.static_files_dir / "index.html").write_text("hello world")
+    (constructor.static_files_dir / "landing.html").write_text("landing page")
+    (constructor.static_files_dir / "index.html").write_text("constructor app")
 
     resp = await client.get("/")
     assert resp.status == 200
-    assert await resp.text("utf-8") == "hello world"
+    assert await resp.text("utf-8") == "landing page"
     assert resp.content_type == "text/html"
 
     resp = await client.get("/whatever/weird/path/we/use/in/client/side/routing")
     assert resp.status == 200
-    assert await resp.text("utf-8") == "hello world"
+    assert await resp.text("utf-8") == "constructor app"
     assert resp.content_type == "text/html"
 
 
