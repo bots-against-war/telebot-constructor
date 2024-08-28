@@ -28,7 +28,13 @@
 </script>
 
 <GlobalStateProvider>
-  <Modal closeButton={false} styleWindow={{ borderRadius: "0" }} closeOnOuterClick={false} closeOnEsc={false}>
+  <Modal
+    closeButton={false}
+    styleWindow={{ borderRadius: "0" }}
+    closeOnOuterClick={false}
+    closeOnEsc={false}
+    styleCloseButton={{ borderRadius: "0" }}
+  >
     <div use:links>
       <Router>
         <Route path={botListingPath()}>

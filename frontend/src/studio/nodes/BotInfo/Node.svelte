@@ -24,7 +24,6 @@
   <NodeContent
     {id}
     key={NodeTypeKey.info}
-    colorOverride="white"
     deletable={false}
     clonable={false}
     on:edit={() => {

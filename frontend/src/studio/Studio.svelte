@@ -40,6 +40,7 @@
     generateNodeId,
     type TentativeNode,
   } from "./utils";
+  import { QuestionCircleOutline } from "flowbite-svelte-icons";
 
   export let botId: string;
   export let botConfig: BotConfig;
@@ -417,7 +418,10 @@
         key={NodeTypeKey.form}
         on:click={nodeFactory(NodeKind.block, NodeTypeKey.form, defaultFormBlockConfig)}
       />
-      <Button on:click={openReadmeModal}>Инструкции</Button>
+      <Button on:click={openReadmeModal}>
+        <QuestionCircleOutline class="w-4 h-4 mr-2" />
+        Инструкции
+      </Button>
     </div>
   </StudioSidePandel>
   {#if tentativeNode}

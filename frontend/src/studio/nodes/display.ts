@@ -39,18 +39,19 @@ export function getNodeTypeKey(config: UserFlowBlockConfig | UserFlowEntryPointC
   }
 }
 
-export const NODE_HUE: { [key in NodeTypeKey]: number } = {
+export const NODE_HUE: { [key in NodeTypeKey]: number | "white" } = {
   command: 270.5,
   content: 26,
   human_operator: 330,
   language_select: 195.5,
   menu: 80,
   form: 48,
-  info: 0, // = white
+  info: "white", // = white
 };
 
-export function headerColor(hue: number): string {
-  return `hsl(${hue}, 85%, 70%)`;
+export function headerColor(hue: number | "white"): string {
+  if (hue === "white") return "white";
+  return `hsl(${hue}, 70%, 70%)`;
 }
 
 export const NODE_TITLE: { [key in NodeTypeKey]: string } = {

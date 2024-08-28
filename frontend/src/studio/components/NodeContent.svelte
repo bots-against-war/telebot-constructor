@@ -39,8 +39,8 @@
 
 <div class="node-content-container">
   <div
-    class="flex flex-row gap-2 justify-between items-center p-2"
-    style="background-color: {colorOverride || headerColor(NODE_HUE[key])}; border-radius: 0"
+    class="flex flex-row gap-2 justify-between items-center p-2 rounded-none"
+    style="background-color: {colorOverride || headerColor(NODE_HUE[key])}"
   >
     <div class="flex items-center gap-2">
       <svelte:component this={NODE_ICON[key]} class="w-4 h-4" />
