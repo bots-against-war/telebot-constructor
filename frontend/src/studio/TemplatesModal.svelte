@@ -1,7 +1,13 @@
 <script lang="ts">
   import { Button, Heading, P } from "flowbite-svelte";
   import { getModalCloser } from "../utils";
-  import { basicShowcaseTemplate, contentOnlyTemplate, formsTemplate, type Template } from "./templates";
+  import {
+    basicShowcaseTemplate,
+    contentOnlyTemplate,
+    formsTemplate,
+    multilangTemplate,
+    type Template,
+  } from "./templates";
 
   const close = getModalCloser();
 
@@ -23,7 +29,7 @@
       title: "Анкеты приюта",
       description: "Бот для сбора заявок от пользователей в двух сценариях.",
     },
-    { factory: contentOnlyTemplate, title: "Шаблон 4", description: "Описание шаблона" },
+    { factory: multilangTemplate, title: "Бот-полиглот", description: "Делится информацией на нескольких языках." },
   ];
 </script>
 

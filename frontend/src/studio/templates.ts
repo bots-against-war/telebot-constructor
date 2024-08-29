@@ -731,3 +731,80 @@ export function formsTemplate(): Template {
     },
   };
 }
+
+export function multilangTemplate(): Template {
+  const langSelectBlockId = generateNodeId(NodeKind.block, NodeTypeKey.language_select);
+  const contentBlockId = generateNodeId(NodeKind.block, NodeTypeKey.content);
+  return {
+    customStartCmd: {
+      entrypoint_id: generateNodeId(NodeKind.entrypoint, NodeTypeKey.command),
+      command: "form",
+      next_block_id: null,
+      scope: "private",
+      short_description: null,
+    },
+    entryBlockId: langSelectBlockId,
+    config: {
+      entrypoints: [],
+      blocks: [
+        {
+          content: null,
+          human_operator: null,
+          menu: null,
+          form: null,
+          language_select: {
+            block_id: langSelectBlockId,
+            menu_config: {
+              propmt: {
+                ru: "Добрый день! На каком языке вам удобно общаться? ",
+                en: "Hello! Which language would you prefer to use?",
+                uz: "Salom! Qaysi tilda muloqot qilishni afzal ko'rasiz?",
+              },
+              is_blocking: false,
+              emoji_buttons: true,
+            },
+            supported_languages: ["ru", "en", "uz"],
+            default_language: "ru",
+            language_selected_next_block_id: null,
+            next_block_id: contentBlockId,
+          },
+          error: null,
+        },
+        {
+          content: {
+            block_id: contentBlockId,
+            contents: [
+              {
+                text: {
+                  text: {
+                    ru: "Спасибо, что обратились к нам. Мы работаем ежедневно с 10 до 17. За помощью приходите к нам в офис по адресу: проспект Мира, 16.",
+                    en: "Thank you for reaching out to us. We are open daily from 10 AM to 5 PM. For assistance, please visit our office at 16 Mira Avenue.",
+                    uz: "Biz bilan bog'langaningiz uchun rahmat. Biz har kuni soat 10:00 dan 17:00 gacha ishlaymiz. Yordam olish uchun Mir prospekti, 16-manzilda joylashgan ofisimizga keling.",
+                  },
+                  markup: "markdown",
+                },
+                attachments: [],
+              },
+            ],
+            next_block_id: null,
+          },
+          human_operator: null,
+          menu: null,
+          form: null,
+          language_select: null,
+          error: null,
+        },
+      ],
+      node_display_coords: {
+        [langSelectBlockId]: {
+          x: 0,
+          y: 150,
+        },
+        [contentBlockId]: {
+          x: -100,
+          y: 300,
+        },
+      },
+    },
+  };
+}

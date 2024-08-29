@@ -108,18 +108,24 @@
   // }
 
   // setting the initial language config based on whether bot config includes language select block
-  let languageSelectBlockFound = false;
-  for (const block of botConfig.user_flow_config.blocks) {
-    if (block.language_select) {
-      languageSelectBlockFound = true;
-      languageConfigStore.set({
-        supportedLanguageCodes: block.language_select.supported_languages,
-        defaultLanguageCode: block.language_select.default_language,
-      });
+  let isBotMultilang = false;
+  $: {
+    let foundLanguageField = false;
+    for (const block of botConfig.user_flow_config.blocks) {
+      if (block.language_select) {
+        foundLanguageField = true;
+        if (block.language_select.supported_languages.length > 0) {
+          languageConfigStore.set({
+            supportedLanguageCodes: block.language_select.supported_languages,
+            defaultLanguageCode: block.language_select.default_language,
+          });
+        }
+      }
     }
-  }
-  if (!languageSelectBlockFound) {
-    languageConfigStore.set(null);
+    if (!foundLanguageField) {
+      languageConfigStore.set(null);
+    }
+    isBotMultilang = foundLanguageField;
   }
 
   // node deletion callback
@@ -290,6 +296,7 @@
     // them back into the config here
     botConfig.user_flow_config.node_display_coords = nodeDisplayCoords;
     botConfig.user_flow_config = applyTemplate(botConfig.user_flow_config, template);
+    // TODO: update langs if needed!!!
     nodeDisplayCoords = botConfig.user_flow_config.node_display_coords;
     isConfigModified = true;
     forceReloadCounter += 1;
@@ -433,6 +440,7 @@
         />
         <AddNodeButton
           key={NodeTypeKey.language_select}
+          disabled={isBotMultilang}
           on:click={nodeFactory(NodeKind.block, NodeTypeKey.language_select, defaultLanguageSelectBlockConfig)}
         />
         <AddNodeButton
@@ -441,7 +449,6 @@
         />
         <AddNodeButton
           key={NodeTypeKey.form}
-          disabled={languageSelectBlockFound}
           on:click={nodeFactory(NodeKind.block, NodeTypeKey.form, defaultFormBlockConfig)}
         />
       </div>
