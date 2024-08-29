@@ -6,6 +6,7 @@
     contentOnlyTemplate,
     formsTemplate,
     multilangTemplate,
+    festivalBotTemplate,
     type Template,
   } from "./templates";
 
@@ -30,6 +31,7 @@
       description: "Бот для сбора заявок от пользователей в двух сценариях.",
     },
     { factory: multilangTemplate, title: "Бот-полиглот", description: "Делится информацией на нескольких языках." },
+    { factory: festivalBotTemplate, title: "Фестивальный бот", description: " Дает подсказки на множество вопросов." },
   ];
 </script>
 

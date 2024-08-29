@@ -808,3 +808,297 @@ export function multilangTemplate(): Template {
     },
   };
 }
+
+export function festivalBotTemplate(): Template {
+  const menuBlockId1 = generateNodeId(NodeKind.block, NodeTypeKey.menu);
+  const menuBlockId2 = generateNodeId(NodeKind.block, NodeTypeKey.menu);
+  const contentBlockId1 = generateNodeId(NodeKind.block, NodeTypeKey.content);
+  const contentBlockId3 = generateNodeId(NodeKind.block, NodeTypeKey.content);
+  const contentBlockId2 = generateNodeId(NodeKind.block, NodeTypeKey.content);
+  const contentBlockId4 = generateNodeId(NodeKind.block, NodeTypeKey.content);
+  const contentBlockId5 = generateNodeId(NodeKind.block, NodeTypeKey.content);
+  const contentBlockId7 = generateNodeId(NodeKind.block, NodeTypeKey.content);
+  const contentBlockId6 = generateNodeId(NodeKind.block, NodeTypeKey.content);
+
+  return {
+    customStartCmd: {
+      entrypoint_id: generateNodeId(NodeKind.entrypoint, NodeTypeKey.command),
+      command: "menu",
+      next_block_id: null,
+      scope: "private",
+      short_description: null,
+    },
+    entryBlockId: menuBlockId1,
+    config: {
+      entrypoints: [],
+      blocks: [
+        {
+          content: null,
+          human_operator: null,
+          menu: {
+            block_id: menuBlockId1,
+            menu: {
+              text: "Добрый день! Мы ждем вас на фестивале тихой музыки. 1-2 января в библиотеках Центрального района. ",
+              items: [
+                {
+                  label: "Программа 1 января",
+                  submenu: null,
+                  next_block_id: contentBlockId1,
+                  link_url: null,
+                },
+                {
+                  label: "Программа 2 января",
+                  submenu: null,
+                  next_block_id: contentBlockId2,
+                  link_url: null,
+                },
+                {
+                  label: "Билеты ",
+                  submenu: null,
+                  next_block_id: contentBlockId3,
+                  link_url: null,
+                },
+                {
+                  label: "Принять участие",
+                  submenu: null,
+                  next_block_id: menuBlockId2,
+                  link_url: null,
+                },
+              ],
+              config: {
+                mechanism: "inline_buttons",
+                back_label: "Назад",
+                lock_after_termination: false,
+              },
+            },
+          },
+          form: null,
+          language_select: null,
+          error: null,
+        },
+        {
+          content: {
+            block_id: contentBlockId1,
+            contents: [
+              {
+                text: {
+                  text: "1 января\n\n- 10:00 Концерт 1 (Библиотека 1) \n- 12:00 Концерт 2 (Библиотека 2)\n- 14:00 Концерт 3 (Библиотека 1)\n- 16:00 Концерт 4 (Библиотека 2)\n- 18:00 Концерт 5 (Библиотека 3) ",
+                  markup: "markdown",
+                },
+                attachments: [],
+              },
+            ],
+            next_block_id: null,
+          },
+          human_operator: null,
+          menu: null,
+          form: null,
+          language_select: null,
+          error: null,
+        },
+        {
+          content: null,
+          human_operator: null,
+          menu: {
+            block_id: contentBlockId3,
+            menu: {
+              text: "Билеты на фестиваль бесплатные. Количество мест ограничено, поэтому мы просим вас заранее зарегистрироваться. ",
+              items: [
+                {
+                  label: "1 января",
+                  submenu: null,
+                  next_block_id: contentBlockId4,
+                  link_url: null,
+                },
+                {
+                  label: "2 января",
+                  submenu: null,
+                  next_block_id: contentBlockId5,
+                  link_url: null,
+                },
+              ],
+              config: {
+                mechanism: "inline_buttons",
+                back_label: "⬅️",
+                lock_after_termination: false,
+              },
+            },
+          },
+          form: null,
+          language_select: null,
+          error: null,
+        },
+        {
+          content: null,
+          human_operator: null,
+          menu: {
+            block_id: menuBlockId2,
+            menu: {
+              text: "В какой роли вы хотите принять участие в фестивале? ",
+              items: [
+                {
+                  label: "Музыкант",
+                  submenu: null,
+                  next_block_id: contentBlockId6,
+                  link_url: null,
+                },
+                {
+                  label: "Лектор",
+                  submenu: null,
+                  next_block_id: contentBlockId7,
+                  link_url: null,
+                },
+              ],
+              config: {
+                mechanism: "inline_buttons",
+                back_label: "⬅️",
+                lock_after_termination: false,
+              },
+            },
+          },
+          form: null,
+          language_select: null,
+          error: null,
+        },
+        {
+          content: {
+            block_id: contentBlockId2,
+            contents: [
+              {
+                text: {
+                  text: "2 января\n\n- 10:00 Концерт 1 (Библиотека 1)\n- 12:00 Концерт 2 (Библиотека 2)\n- 14:00 Концерт 3 (Библиотека 1)\n- 16:00 Концерт 4 (Библиотека 2)\n- 18:00 Концерт 5 (Библиотека 3)",
+                  markup: "markdown",
+                },
+                attachments: [],
+              },
+            ],
+            next_block_id: null,
+          },
+          human_operator: null,
+          menu: null,
+          form: null,
+          language_select: null,
+          error: null,
+        },
+        {
+          content: {
+            block_id: contentBlockId4,
+            contents: [
+              {
+                text: {
+                  text: "Ждем вас! Ссылка для регистрации на все мероприятия 1 января: ",
+                  markup: "markdown",
+                },
+                attachments: [],
+              },
+            ],
+            next_block_id: null,
+          },
+          human_operator: null,
+          menu: null,
+          form: null,
+          language_select: null,
+          error: null,
+        },
+        {
+          content: {
+            block_id: contentBlockId5,
+            contents: [
+              {
+                text: {
+                  text: "Ждем вас! Ссылка для регистрации на все мероприятия 2 января: ",
+                  markup: "markdown",
+                },
+                attachments: [],
+              },
+            ],
+            next_block_id: null,
+          },
+          human_operator: null,
+          menu: null,
+          form: null,
+          language_select: null,
+          error: null,
+        },
+        {
+          content: {
+            block_id: contentBlockId7,
+            contents: [
+              {
+                text: {
+                  text: "Пожалуйста, отправьте примеры ваших выступлений нам на почту: ",
+                  markup: "markdown",
+                },
+                attachments: [],
+              },
+            ],
+            next_block_id: null,
+          },
+          human_operator: null,
+          menu: null,
+          form: null,
+          language_select: null,
+          error: null,
+        },
+        {
+          content: {
+            block_id: contentBlockId6,
+            contents: [
+              {
+                text: {
+                  text: "К сожалению, музыкальная программа этого года сформирована. Приходите к нам слушателями. ",
+                  markup: "markdown",
+                },
+                attachments: [],
+              },
+            ],
+            next_block_id: null,
+          },
+          human_operator: null,
+          menu: null,
+          form: null,
+          language_select: null,
+          error: null,
+        },
+      ],
+      node_display_coords: {
+        [menuBlockId1]: {
+          x: 0,
+          y: 150,
+        },
+        [contentBlockId1]: {
+          x: -450,
+          y: 600,
+        },
+        [contentBlockId3]: {
+          x: 400,
+          y: 600,
+        },
+        [menuBlockId2]: {
+          x: 1000,
+          y: 600,
+        },
+        [contentBlockId2]: {
+          x: -50,
+          y: 600,
+        },
+        [contentBlockId4]: {
+          x: 100,
+          y: 1000,
+        },
+        [contentBlockId5]: {
+          x: 500,
+          y: 1000,
+        },
+        [contentBlockId7]: {
+          x: 1200,
+          y: 1000,
+        },
+        [contentBlockId6]: {
+          x: 850,
+          y: 1000,
+        },
+      },
+    },
+  };
+}
