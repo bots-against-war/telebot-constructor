@@ -4,7 +4,7 @@
   import type { SvelvetPosition } from "../../../types";
   import { getModalOpener } from "../../../utils";
   import InputAnchor from "../../components/InputAnchor.svelte";
-  import LocalizableText from "../../components/LocalizableText.svelte";
+  import LocalizableText from "../../components/LocalizableTextPreview.svelte";
   import NodeContent from "../../components/NodeContent.svelte";
   import OutputAnchor from "../../components/OutputAnchor.svelte";
   import OutputAnchorsBox from "../../components/OutputAnchorsBox.svelte";
@@ -43,11 +43,7 @@
     on:edit={openEditModal}
   >
     {#if config.contents.length > 0 && config.contents[0].text}
-      {#key config.contents[0].text?.text}
-        <div class="max-h-[80px]" use:truncate>
-          <LocalizableText text={config.contents[0].text?.text} />
-        </div>
-      {/key}
+      <LocalizableText text={config.contents[0].text?.text} maxHeightPx={80} />
     {/if}
   </NodeContent>
   <OutputAnchorsBox>

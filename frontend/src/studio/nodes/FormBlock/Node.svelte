@@ -14,6 +14,7 @@
   import Modal from "./Modal.svelte";
   import { Li, List } from "flowbite-svelte";
   import { getBaseFormFieldConfig } from "./utils";
+  import LocalizableText from "../../components/LocalizableTextPreview.svelte";
 
   const openModal = getModalOpener();
 
@@ -46,7 +47,7 @@
     on:edit={openEditModal}
   >
     <div class="flex flex-col">
-      <span>{config.messages.form_start} </span>
+      <LocalizableText text={config.messages.form_start} maxHeightPx={80} />
       <List>
         {#each flattenedFormFields(config.members) as field}
           <Li>{getBaseFormFieldConfig(field).name}</Li>

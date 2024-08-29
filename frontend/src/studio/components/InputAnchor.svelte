@@ -5,7 +5,7 @@
 </script>
 
 <div class="anchor-container" class:dummy>
-  <Anchor direction="north" multiple={!dummy} input locked={dummy} nodeConnect />
+  <Anchor direction="north" multiple={!dummy} input locked={dummy} />
 </div>
 
 <style>

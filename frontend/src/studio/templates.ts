@@ -738,7 +738,7 @@ export function multilangTemplate(): Template {
   return {
     customStartCmd: {
       entrypoint_id: generateNodeId(NodeKind.entrypoint, NodeTypeKey.command),
-      command: "form",
+      command: "begin",
       next_block_id: null,
       scope: "private",
       short_description: null,

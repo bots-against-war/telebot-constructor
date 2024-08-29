@@ -4,8 +4,10 @@
   import type { LocalizableText } from "../../types";
   import { languageConfigStore } from "../stores";
   import LanguageMenu from "./LanguageMenu.svelte";
+  import truncate from "@svackages/truncate";
 
   export let text: LocalizableText;
+  export let maxHeightPx: number;
 
   let selectedLang = $languageConfigStore === null ? null : $languageConfigStore.defaultLanguageCode;
 
@@ -22,10 +24,18 @@
 </script>
 
 {#if $languageConfigStore === null && typeof text === "string"}
-  <p>{text}</p>
+  {#key text}
+    <div class="max-h-[{maxHeightPx}px]" use:truncate>
+      <p>{text}</p>
+    </div>
+  {/key}
 {:else if $languageConfigStore !== null && typeof text === "object"}
   <div class="flex flex-row items-start justify-between gap-1">
-    <p>{text[selectedLang || ""] || ""}</p>
+    {#key [text, selectedLang]}
+      <div class="max-h-[{maxHeightPx}px]" use:truncate>
+        <p>{text[selectedLang || ""] || ""}</p>
+      </div>
+    {/key}
     <LanguageMenu bind:selectedLang />
   </div>
 {:else}

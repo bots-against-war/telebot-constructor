@@ -4,7 +4,7 @@
   import type { SvelvetPosition } from "../../../types";
   import { getModalOpener } from "../../../utils";
   import InputAnchor from "../../components/InputAnchor.svelte";
-  import LocalizableText from "../../components/LocalizableText.svelte";
+  import LocalizableText from "../../components/LocalizableTextPreview.svelte";
   import NodeContent from "../../components/NodeContent.svelte";
   import OutputAnchor from "../../components/OutputAnchor.svelte";
   import OutputAnchorsBox from "../../components/OutputAnchorsBox.svelte";
@@ -43,7 +43,7 @@
     on:clone
     on:edit={openEditModal}
   >
-    <LocalizableText text={config.menu.text} />
+    <LocalizableText text={config.menu.text} maxHeightPx={100} />
   </NodeContent>
   <OutputAnchorsBox>
     {#each config.menu.items as item (item.label)}

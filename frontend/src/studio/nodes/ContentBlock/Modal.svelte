@@ -109,6 +109,3 @@
   </InputWrapper>
   <NodeModalControls on:save={updateConfig} />
 </NodeModalBody>
-
-<style>
-</style>

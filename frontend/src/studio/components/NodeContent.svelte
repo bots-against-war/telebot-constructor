@@ -84,7 +84,7 @@
   div.node-content-container {
     width: 250px;
     /* this is quick and dirty, better solution for overflowing blocks needed */
-    max-height: 200px;
+    max-height: 250px;
     overflow-y: hidden;
   }
 </style>
