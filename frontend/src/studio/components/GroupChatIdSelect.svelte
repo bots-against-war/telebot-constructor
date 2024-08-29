@@ -1,51 +1,86 @@
 <script lang="ts">
-  import { Accordion, AccordionItem, Button, Li, List, Spinner } from "flowbite-svelte";
+  import { Accordion, AccordionItem, Spinner } from "flowbite-svelte";
   import { CloseOutline, PenOutline } from "flowbite-svelte-icons";
   import { onDestroy } from "svelte";
   import { getAvailableGroupChats, startGroupChatDiscovery, stopGroupChatDiscovery } from "../../api/groupChats";
   import type { TgGroupChat } from "../../api/types";
-  import ButtonLoadingSpinner from "../../components/ButtonLoadingSpinner.svelte";
   import ErrorBadge from "../../components/AlertBadge.svelte";
   import GroupChatBadge from "../../components/GroupChatBadge.svelte";
-  import { ok, type Result } from "../../utils";
   import { PLACEHOLDER_GROUP_CHAT_ID } from "../nodes/defaultConfigs";
 
   export let label: string;
   export let botId: string;
   export let selectedGroupChatId: number | string;
 
-  let showGroupChatSelect = selectedGroupChatId === PLACEHOLDER_GROUP_CHAT_ID;
+  // auto-open if not selected initially
+  let isOpen = selectedGroupChatId === PLACEHOLDER_GROUP_CHAT_ID;
 
-  let availableGroupChatsPromise: Promise<Result<TgGroupChat[]>> = new Promise((resolve, _) => resolve(ok([])));
-
-  $: {
-    if (showGroupChatSelect) {
-      availableGroupChatsPromise = getAvailableGroupChats(botId);
+  let chatsLoadError: string | null = null;
+  let availableChats: TgGroupChat[] = [];
+  async function loadAvailableGroupChats() {
+    const res = await getAvailableGroupChats(botId);
+    if (res.ok) {
+      chatsLoadError = null;
+      availableChats = res.data;
     } else {
-      // on any close of the accordion we make sure to stop the discovery
-      stopAdminChatDiscovery();
+      chatsLoadError = res.error;
+      availableChats = [];
+      console.error("Error retrieving available group chats: ", res.error);
     }
   }
 
-  async function stopAdminChatDiscovery() {
-    if (!isDiscoveringAdminChats) {
-      return;
+  let availableGroupChatsLoadedPromise: Promise<void> = new Promise((resolve, _) => resolve());
+
+  $: {
+    if (isOpen) {
+      availableGroupChatsLoadedPromise = loadAvailableGroupChats();
+      startScanning();
+    } else {
+      // on any close of the accordion we make sure to stop the discovery
+      stopScanning();
     }
+  }
+  let isScannning = false;
+  let discoverChatsPollingIntervalId: number | null = null;
+  let stopChatDiscoveryAfterTimeoutId: number | null = null;
+  async function stopScanning() {
+    if (!isScannning) return;
     discoverChatsPollingIntervalId !== null ? clearInterval(discoverChatsPollingIntervalId) : null;
     stopChatDiscoveryAfterTimeoutId !== null ? clearTimeout(stopChatDiscoveryAfterTimeoutId) : null;
     await stopGroupChatDiscovery(botId);
-    isDiscoveringAdminChats = false;
+    isScannning = false;
   }
+  async function startScanning() {
+    if (isScannning) return;
+    isScannning = true;
+    await startGroupChatDiscovery(botId);
 
-  let isDiscoveringAdminChats = false;
-  let discoverChatsPollingIntervalId: number | null = null;
-  let stopChatDiscoveryAfterTimeoutId: number | null = null;
-  onDestroy(stopAdminChatDiscovery);
+    // update available group list each 5 seconds
+    // @ts-expect-error
+    discoverChatsPollingIntervalId = setInterval(async () => {
+      if (isScannning) {
+        console.debug("Updating available group chats list");
+        await loadAvailableGroupChats();
+      } else if (discoverChatsPollingIntervalId !== null) {
+        clearInterval(discoverChatsPollingIntervalId);
+      }
+    }, 5 * 1000);
+    // auto-stop discovery after 10 minutes
+    // @ts-expect-error
+    stopChatDiscoveryAfterTimeoutId = setTimeout(stopScanning, 10 * 60 * 1000);
+  }
+  onDestroy(stopScanning);
+
+  const chatLabel = (chat: TgGroupChat) => `group-chat-${chat.id}`;
 </script>
 
 <Accordion flush>
-  <AccordionItem bind:open={showGroupChatSelect} paddingFlush="py-3">
-    <div slot="header" class="flex flex-col gap-2 text-gray-900">
+  <AccordionItem
+    bind:open={isOpen}
+    paddingFlush="py-2"
+    class="flex items-center justify-between w-full font-medium text-left border-gray-200"
+  >
+    <div slot="header" class="flex flex-row gap-3 text-gray-900 items-center">
       <span class="font-bold">{label}</span>
       {#if selectedGroupChatId !== PLACEHOLDER_GROUP_CHAT_ID}
         <GroupChatBadge {botId} chatId={selectedGroupChatId} />
@@ -59,74 +94,43 @@
     </div>
 
     <!-- accordion body -->
-    <div class="flex flex-col gap-2 my-1">
-      {#await availableGroupChatsPromise}
+    <div class="my-1 text-sm font-medium text-gray-900">
+      <slot name="description" />
+      {#await availableGroupChatsLoadedPromise}
         <Spinner />
-      {:then availableGroupChatsPromiseResult}
-        {#if availableGroupChatsPromiseResult.ok}
-          <span>Доступные чаты</span>
-          {#each availableGroupChatsPromiseResult.data as availableGroupChat}
-            <div class="flex items-center gap-1">
-              <input
-                type="radio"
-                id={`group-chat-${availableGroupChat.id}`}
-                bind:group={selectedGroupChatId}
-                on:change={async () => {
-                  showGroupChatSelect = false;
-                  await stopAdminChatDiscovery();
-                }}
-                value={availableGroupChat.id}
-              />
-              <label for={`group-chat-${availableGroupChat.id}`}>
-                <GroupChatBadge {botId} chatId={availableGroupChat.id} chatData={availableGroupChat} />
-              </label>
-            </div>
-          {/each}
+      {:then}
+        {#if chatsLoadError !== null}
+          <ErrorBadge title="Не получилось загрузить доступные чаты" text={chatsLoadError} />
         {:else}
-          <ErrorBadge title="Не получилось загрузить доступные чаты" text={availableGroupChatsPromiseResult.error} />
+          <div>
+            <div class="mb-2 font-bold">Доступные чаты</div>
+            <div class="flex flex-col gap-2">
+              {#each availableChats as chat (chat.id)}
+                <div class="flex flex-row items-center gap-2">
+                  <input
+                    type="radio"
+                    id={chatLabel(chat)}
+                    bind:group={selectedGroupChatId}
+                    on:change={async () => {
+                      isOpen = false;
+                    }}
+                    value={chat.id}
+                  />
+                  <label for={chatLabel(chat)}>
+                    <GroupChatBadge {botId} chatId={chat.id} chatData={chat} />
+                  </label>
+                </div>
+              {/each}
+            </div>
+            {#if isScannning}
+              <p class="mt-3">
+                <Spinner size={4} class="mr-2" />
+                Поиск...
+              </p>
+            {/if}
+          </div>
         {/if}
       {/await}
-      <div class="flex flex-col gap-2">
-        <div class="flex flew-row gap-2">
-          <Button
-            size="xs"
-            on:click={async () => {
-              isDiscoveringAdminChats = true;
-              await startGroupChatDiscovery(botId);
-
-              // update available group list each 5 seconds
-              // @ts-expect-error
-              discoverChatsPollingIntervalId = setInterval(() => {
-                if (isDiscoveringAdminChats) {
-                  console.debug("Updating available group chats list");
-                  availableGroupChatsPromise = getAvailableGroupChats(botId);
-                } else if (discoverChatsPollingIntervalId !== null) {
-                  clearInterval(discoverChatsPollingIntervalId);
-                }
-              }, 5 * 1000);
-
-              // auto-stop discovery after 10 minutes
-              // @ts-expect-error
-              stopChatDiscoveryAfterTimeoutId = setTimeout(stopAdminChatDiscovery, 10 * 60 * 1000);
-            }}
-          >
-            <ButtonLoadingSpinner loading={isDiscoveringAdminChats} />
-            Сканировать
-          </Button>
-          {#if isDiscoveringAdminChats}
-            <Button outline size="xs" on:click={stopAdminChatDiscovery}>Остановить</Button>
-          {/if}
-        </div>
-        {#if isDiscoveringAdminChats}
-          <!-- TODO: better instructions -->
-          <List>
-            <Li>В режиме сканирования добавьте бота в ваш чат, и он автоматически добавит его в список.</Li>
-            <Li>
-              Если бот уже в чате, используйте команду <code>/discover_chat</code>.
-            </Li>
-          </List>
-        {/if}
-      </div>
     </div>
   </AccordionItem>
 </Accordion>

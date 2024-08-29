@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Accordion, AccordionItem, Heading, NumberInput, Toggle } from "flowbite-svelte";
+  import { Accordion, AccordionItem, Heading, Li, List, NumberInput, P, Toggle } from "flowbite-svelte";
   import type { HumanOperatorBlock } from "../../../api/types";
   import InputWrapper from "../../../components/inputs/InputWrapper.svelte";
   import TextInput from "../../../components/inputs/TextInput.svelte";
@@ -10,6 +10,7 @@
   import { clone } from "../../utils";
   import { NODE_TITLE } from "../display";
   import { TELEGRAM_MAX_MESSAGE_LENGTH_CHARS } from "../../../constants";
+  import BotUserBadge from "../../../components/BotUserBadge.svelte";
 
   export let botId: string; // required for admin chat id rendering, and context does not propagate here
   export let config: HumanOperatorBlock;
@@ -30,7 +31,34 @@
 <NodeModalBody title={NODE_TITLE.human_operator}>
   <div class={blockSeqClass}>
     <div class="flex flex-col gap-4">
-      <GroupChatIdSelect label="Рабочий чат" {botId} bind:selectedGroupChatId={fhConfig.admin_chat_id} />
+      <GroupChatIdSelect label="Рабочий чат" {botId} bind:selectedGroupChatId={fhConfig.admin_chat_id}>
+        <div slot="description">
+          <p>
+            Рабочий, или админ-чат — это специальный чат, через который вы будете общаться с пользователь:ницами. Бот
+            будет копировать их сообщения и передавать ваши ответы. Подробные инструкции по его работе доступны внутри
+            самого чата по команде <code>/help</code>.
+          </p>
+          <details class="my-2">
+            <summary> Как создать рабочий чат? </summary>
+            <List tag="ol">
+              <Li>
+                Откройте Telegram и добавьте вашего бота (<BotUserBadge {botId} inline let:user
+                  ><code>@{user.username}</code></BotUserBadge
+                >) в новую или существующую группу
+              </Li>
+              <Li>
+                Перейдите в настройки (Settings) группы. В разделе "История чата" (Chat History) выберите "Доступна"
+                (Visible). Это необходимо для активации чата в конструкторе
+              </Li>
+              <Li>Вернитесь в конструктор и выберите созданный чат</Li>
+              <Li>
+                Если чат не виден в списке, вернитесь в Telegram, убедитесь, что бот добавлен в чат, и отправьте команду
+                <BotUserBadge {botId} inline let:user><code>/discover_chat@{user.username}</code></BotUserBadge>
+              </Li>
+            </List>
+          </details>
+        </div>
+      </GroupChatIdSelect>
       <Toggle bind:checked={fhConfig.anonimyze_users}>Анонимизировать пользователь:ниц</Toggle>
       <Toggle bind:checked={fhConfig.forum_topic_per_user}>Отдельная тема на пользователь:ницу</Toggle>
 
@@ -42,8 +70,8 @@
       />
     </div>
 
-    <Accordion>
-      <AccordionItem paddingDefault="p-3" class="rounded-none">
+    <Accordion flush>
+      <AccordionItem paddingDefault="p-3" flush>
         <span slot="header">Дополнительные настройки</span>
         <div class={blockSeqClass}>
           <div class={blockClass}>

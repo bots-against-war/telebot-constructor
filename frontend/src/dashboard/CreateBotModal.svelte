@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Button, Li, List } from "flowbite-svelte";
+  import { A, Button, Li, List } from "flowbite-svelte";
   import { navigate } from "svelte-routing";
   import { slugify } from "transliteration";
   import { saveBotConfig } from "../api/botConfig";
@@ -119,10 +119,10 @@
     <svelte:fragment slot="description">
       <p>Для создания бота:</p>
       <List class="mb-2 marker:text-gray-600">
-        <Li>зайдите в Телеграм и через поиск найдите @BotFather</Li>
-        <Li>введите команду /newbot</Li>
-        <Li>дайте боту имя и @username</Li>
-        <Li>скопируйте токен вашего бота из сообщения BotFather</Li>
+        <Li>Зайдите в специального Telegram-бота <A href="https://t.me/BotFather">@BotFather</A></Li>
+        <Li>Введите команду <code>/newbot</code></Li>
+        <Li>Дайте боту имя и @username</Li>
+        <Li>Скопируйте токен вашего бота из сообщения BotFather</Li>
       </List>
     </svelte:fragment>
   </PasswordInput>

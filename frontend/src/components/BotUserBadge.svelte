@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Avatar, Listgroup, ListgroupItem, Popover } from "flowbite-svelte";
+  import { Avatar, Listgroup, ListgroupItem, Popover, Spinner } from "flowbite-svelte";
   import { ArrowUpRightFromSquareOutline, DotsHorizontalOutline, RefreshOutline } from "flowbite-svelte-icons";
   import { getBotUser } from "../api/botUser";
   import type { TgBotUser } from "../api/types";
@@ -11,6 +11,7 @@
 
   export let botId: string;
   export let tgBotUser: TgBotUser | null = null;
+  export let inline: boolean = false;
 
   let botUserPromise: Promise<Result<TgBotUser>>;
   const LOCALSTORAGE_KEY = `botUserData/${botId}`;
@@ -51,47 +52,59 @@
   const actionsIconId = `tguser-action-icon-${botId}`;
 </script>
 
-<DataBadge>
+{#if inline}
   {#await botUserPromise}
-    <DataBadgeLoader />
+    <Spinner size={3} />
   {:then res}
     {#if res.ok}
-      <div class="flex flex-row gap-2 items-start justify-between">
-        <div class="flex flex-row gap-2 items-center">
-          <Avatar src={res.data.userpic ? `data:image/png;base64,${res.data.userpic}` : undefined} class="w-6 h-6" />
-          <span>
-            {res.data.name}
-            <br />
-            <span class="text-gray-500 break-all">
-              @{res.data.username}
-            </span>
-          </span>
-        </div>
-        <ActionIcon id={actionsIconId} icon={DotsHorizontalOutline} />
-        <Popover triggeredBy={"#" + actionsIconId} placement="right-start" defaultClass="" class="z-10">
-          <Listgroup active class="text-sm border-none">
-            <ListgroupItem
-              on:click={() => {
-                botUserPromise = loadAndCache();
-              }}
-              class="gap-2"
-            >
-              <RefreshOutline class="w-3 h-3 text-gray-700" />
-              Обновить
-            </ListgroupItem>
-            <ListgroupItem
-              href={`https://t.me/${res.data.username}`}
-              class="gap-2 flex items-center"
-              attrs={{ target: "_blank" }}
-            >
-              <ArrowUpRightFromSquareOutline class="w-3 h-3 text-gray-700" />
-              Перейти
-            </ListgroupItem>
-          </Listgroup>
-        </Popover>
-      </div>
+      <slot user={res.data} />
     {:else}
       <ErrorBadge title="Ошибка загрузки данных о боте" text={res.error} />
     {/if}
   {/await}
-</DataBadge>
+{:else}
+  <DataBadge>
+    {#await botUserPromise}
+      <DataBadgeLoader />
+    {:then res}
+      {#if res.ok}
+        <div class="flex flex-row gap-2 items-start justify-between">
+          <div class="flex flex-row gap-2 items-center">
+            <Avatar src={res.data.userpic ? `data:image/png;base64,${res.data.userpic}` : undefined} class="w-6 h-6" />
+            <span>
+              {res.data.name}
+              <br />
+              <span class="text-gray-500 break-all">
+                @{res.data.username}
+              </span>
+            </span>
+          </div>
+          <ActionIcon id={actionsIconId} icon={DotsHorizontalOutline} />
+          <Popover triggeredBy={"#" + actionsIconId} placement="right-start" defaultClass="" class="z-10">
+            <Listgroup active class="text-sm border-none">
+              <ListgroupItem
+                on:click={() => {
+                  botUserPromise = loadAndCache();
+                }}
+                class="gap-2"
+              >
+                <RefreshOutline class="w-3 h-3 text-gray-700" />
+                Обновить
+              </ListgroupItem>
+              <ListgroupItem
+                href={`https://t.me/${res.data.username}`}
+                class="gap-2 flex items-center"
+                attrs={{ target: "_blank" }}
+              >
+                <ArrowUpRightFromSquareOutline class="w-3 h-3 text-gray-700" />
+                Перейти
+              </ListgroupItem>
+            </Listgroup>
+          </Popover>
+        </div>
+      {:else}
+        <ErrorBadge title="Ошибка загрузки данных о боте" text={res.error} />
+      {/if}
+    {/await}
+  </DataBadge>
+{/if}

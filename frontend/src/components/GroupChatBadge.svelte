@@ -18,7 +18,7 @@
   export let chatData: TgGroupChat | null = null; // null = get from localstorage or load, if not there
 
   let renderedChatDataPromise: Promise<Result<TgGroupChat>>;
-  const LOCALSTORAGE_KEY = `chatData/${chatId}`;
+  let LOCALSTORAGE_KEY: string;
 
   function saveToLocalstorage(chatData: TgGroupChat) {
     localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(chatData));
@@ -39,6 +39,7 @@
   $: {
     // NOTE: this reactive block is needed because we're fetching/loading from localStorage stuff based on chatId,
     // not rendering it directly
+    LOCALSTORAGE_KEY = `chatData/${chatId}`;
 
     if (chatData !== null) {
       saveToLocalstorage(chatData);
@@ -53,7 +54,7 @@
     }
   }
 
-  const actionsIconId = `group-chat-badge-actions-icon-${chatId}`;
+  const actionsIconId = `group-chat-badge-actions-icon-${chatId}-${crypto.randomUUID()}`;
 </script>
 
 <DataBadge>
@@ -62,7 +63,7 @@
       <DataBadgeLoader />
     {:then chatRes}
       {#if chatRes.ok}
-        <div class="w-full flex flex-row gap-2 items-start justify-between">
+        <div class="w-full flex flex-row gap-2 items-center justify-between">
           <div class="flex flex-row gap-2 items-center">
             <Avatar
               src={chatRes.data.photo ? `data:image/png;base64,${chatRes.data.photo}` : undefined}
