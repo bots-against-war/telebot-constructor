@@ -20,5 +20,6 @@
 </script>
 
 <InputWrapper {label} {description} {error} {required}>
+  <slot name="description" slot="description" />
   <Input class={styleClass} {required} {placeholder} bind:value color={error ? "red" : undefined} {disabled} />
 </InputWrapper>

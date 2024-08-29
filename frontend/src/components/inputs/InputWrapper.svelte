@@ -16,14 +16,15 @@
       <span class="ml-1 text-red-700 font-bold">*</span>
     {/if}
   {/if}
+  {#if description !== null}
+    <p class="text-gray-600">
+      {description}
+    </p>
+  {/if}
   {#if $$slots.description}
     <div class="text-gray-600">
       <slot name="description" />
     </div>
-  {:else if description !== null}
-    <p class="text-gray-600">
-      {description}
-    </p>
   {/if}
   <slot {inputId} />
   {#if typeof error == "string"}

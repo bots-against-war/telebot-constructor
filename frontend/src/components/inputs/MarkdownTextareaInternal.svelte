@@ -62,37 +62,43 @@
     }, 100);
   }
 
-  const toolbarData: [Newable<SvelteComponent>, MarkdownEntityType][] = [
-    [LetterBoldOutline, "bold"],
-    [LetterItalicOutline, "italic"],
-    [QuoteSolid, "blockquote"],
-    [LinkOutline, "link"],
-    [TextSlashOutline, "strikethrough"],
-    [EyeSlashSolid, "spoiler"],
+  const toolbarData: [Newable<SvelteComponent>, MarkdownEntityType, string][] = [
+    [LetterBoldOutline, "bold", "Жирный"],
+    [LetterItalicOutline, "italic", "Курсив"],
+    [QuoteSolid, "blockquote", "Цитата"],
+    [LinkOutline, "link", "Ссылка"],
+    [TextSlashOutline, "strikethrough", "Зачеркнутый"],
+    [EyeSlashSolid, "spoiler", "Спойлер"],
   ];
+
+  let isDetailed = false;
 </script>
 
 <div class={wrapperClass}>
   <div class={headerClass(true)}>
     <Toolbar embedded>
       <ToolbarGroup divClass={preview ? "pointer-events-none opacity-40" : ""}>
-        {#each toolbarData as [icon, type] (type)}
-          <ActionIcon
-            {icon}
-            title={type}
-            iconClass="w-4 h-4 text-gray-600"
-            size="xs"
-            on:click={() => addMarkup(type)}
-          />
+        {#each toolbarData as [icon, type, caption] (type)}
+          <ActionIcon {icon} title={type} iconClass="w-4 h-4 text-gray-600" size="xs" on:click={() => addMarkup(type)}>
+            {#if isDetailed}
+              <span class="text-xs ml-1">{caption}</span>
+            {/if}
+          </ActionIcon>
         {/each}
-        <!-- <ActionIcon
+        <ActionIcon
           icon={QuestionCircleOutline}
-          title="Документация Telegram MarkdownV2"
-          iconClass="w-3 h-3 text-gray-600"
+          title="Режим подсказок"
+          iconClass="w-4 h-4 text-gray-600"
           size="xs"
-          href="https://github.com/sudoskys/telegramify-markdown?tab=readme-ov-file#use-case"
-          target="_blank"
-        /> -->
+          on:click={() => {
+            isDetailed = !isDetailed;
+          }}
+        ></ActionIcon>
+        {#if isDetailed}
+          <div class="text-xs ml-1 mt-2 text-gray-700">
+            Для применения разметки выделите участок текста и нажмите на соответствующую кнопку
+          </div>
+        {/if}
       </ToolbarGroup>
       <ToolbarGroup>
         <Toggle size="small" bind:checked={preview}>

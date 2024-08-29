@@ -7,6 +7,7 @@
   import NodeModalBody from "../../components/NodeModalBody.svelte";
   import NodeModalControls from "../../components/NodeModalControls.svelte";
   import { NODE_TITLE } from "../display";
+  import InlineCollapsible from "../../../components/InlineCollapsible.svelte";
 
   export let config: CommandEntryPoint;
   export let onConfigUpdate: (newConfig: CommandEntryPoint) => any;
@@ -40,11 +41,14 @@
       <Input bind:value={command} disabled={isStartCmd} class="font-mono !text-lg pl-3" />
     </ButtonGroup>
   </InputWrapper>
-  <TextInput
-    label="Описание"
-    description="Находится в меню рядом с полем ввода сообщения, или как подсказка при наборе “/”."
-    required={false}
-    bind:value={descr}
-  />
+  <TextInput label="Описание" required={false} bind:value={descr}>
+    <InlineCollapsible slot="description">
+      Для меню рядом с полем ввода сообщения или подсказки при наборе "<code>/</code>".
+      <span slot="expanded">
+        В многоязычных ботах это описание не переводится – советуем писать на самом популярном языке или несколько
+        вариантов в одну строчку. Например: <code>/help</code> – "помощь" или "помощь/pomoc/assistere".
+      </span>
+    </InlineCollapsible>
+  </TextInput>
   <NodeModalControls saveable={commandError === undefined} on:save={updateConfig} />
 </NodeModalBody>

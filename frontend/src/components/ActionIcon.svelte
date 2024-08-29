@@ -12,4 +12,5 @@
 
 <Button {...$$restProps} outline class={buttonClass} {size} on:click {href} target="_blank">
   <svelte:component this={icon} class={iconClass} />
+  <slot />
 </Button>

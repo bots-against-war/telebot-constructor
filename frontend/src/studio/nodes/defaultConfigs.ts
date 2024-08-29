@@ -18,7 +18,9 @@ export function defaultContentBlockConfig(id: string): UserFlowBlockConfig {
   return {
     content: {
       block_id: id,
-      contents: [{ text: { text: "Hello, I'm bot!", markup: "none" }, attachments: [] }],
+      contents: [
+        { text: { text: "Привет! Это команда конструктора. Чем можем помочь?", markup: "markdown" }, attachments: [] },
+      ],
       next_block_id: null,
     },
   };
@@ -35,15 +37,15 @@ export function defaultHumanOperatorBlockConfig(id: string): UserFlowBlockConfig
         admin_chat_id: PLACEHOLDER_GROUP_CHAT_ID,
         forum_topic_per_user: false,
         anonimyze_users: true,
-        max_messages_per_minute: 20,
+        max_messages_per_minute: 10,
         messages_to_user: {
           forwarded_to_admin_ok: "",
           throttling: "",
         },
         messages_to_admin: {
-          copied_to_user_ok: "Copied to user",
-          deleted_message_ok: "Message deleted from chat with user",
-          can_not_delete_message: "Can't delete message from chat with user",
+          copied_to_user_ok: "Отправлено!",
+          deleted_message_ok: "Сообщение удалено из чата с пользователем!",
+          can_not_delete_message: "Не удалось удалить сообщение из чата с пользователем...",
         },
         hashtags_in_admin_chat: false,
         hashtag_message_rarer_than: null,
