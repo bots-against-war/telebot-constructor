@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Accordion, AccordionItem, Spinner } from "flowbite-svelte";
-  import { CloseOutline, PenOutline } from "flowbite-svelte-icons";
+  import { CloseOutline, ExclamationCircleOutline, PenOutline } from "flowbite-svelte-icons";
   import { onDestroy } from "svelte";
   import { getAvailableGroupChats, startGroupChatDiscovery, stopGroupChatDiscovery } from "../../api/groupChats";
   import type { TgGroupChat } from "../../api/types";
@@ -11,6 +11,7 @@
   export let label: string;
   export let botId: string;
   export let selectedGroupChatId: number | string;
+  export let forbidNonSupergroups: boolean = true;
 
   // auto-open if not selected initially
   let isOpen = selectedGroupChatId === PLACEHOLDER_GROUP_CHAT_ID;
@@ -115,8 +116,15 @@
                       isOpen = false;
                     }}
                     value={chat.id}
+                    disabled={forbidNonSupergroups && chat.type === "group"}
                   />
-                  <label for={chatLabel(chat)}>
+                  {#if forbidNonSupergroups && chat.type === "group"}
+                    <ExclamationCircleOutline color="red" />
+                  {/if}
+                  <label
+                    for={chatLabel(chat)}
+                    class={forbidNonSupergroups && chat.type === "group" ? "opacity-50" : ""}
+                  >
                     <GroupChatBadge {botId} chatId={chat.id} chatData={chat} />
                   </label>
                 </div>
