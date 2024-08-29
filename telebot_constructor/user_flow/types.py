@@ -1,3 +1,4 @@
+import dataclasses
 from dataclasses import dataclass
 from typing import Awaitable, Callable, Coroutine, Optional
 
@@ -36,6 +37,8 @@ class UserFlowContext:
     chat: Optional[tg.Chat]
     user: tg.User
     last_update_content: Optional[service_types.UpdateContent]
+
+    visited_block_ids: set[str] = dataclasses.field(default_factory=set)
 
     @classmethod
     def from_setup_context(

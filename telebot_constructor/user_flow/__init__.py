@@ -101,6 +101,9 @@ class UserFlow:
         return self._active_block_id_store
 
     async def _enter_block(self, id: UserFlowBlockId, context: UserFlowContext) -> None:
+        if id in context.visited_block_ids:  # prevent infinite loops in the user flow
+            raise RuntimeError(f"Likely loop in user flow, attempted to enter the block twice: {id}")
+        context.visited_block_ids.add(id)
         if await context.banned_users_store.is_banned(context.user.id):
             return
         block = self.block_by_id.get(id)
