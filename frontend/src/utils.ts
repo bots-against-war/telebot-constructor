@@ -3,6 +3,7 @@ import { type SvelteComponent } from "svelte";
 import type { Newable } from "ts-essentials";
 import { saveSecret } from "./api/secrets";
 import ConfirmationModal from "./components/ConfirmationModal.svelte";
+import { writable } from "svelte/store";
 
 // rust-like result type with convenience functions
 

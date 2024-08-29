@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { A } from "flowbite-svelte";
   import { setContext } from "svelte";
   import { links, Route, Router } from "svelte-routing";
   import Modal from "svelte-simple-modal";
@@ -54,6 +55,13 @@
         </Route>
         <Route path={formResultsPagePath(":botId", ":formBlockId")} let:params>
           <FormLoader botId={params.botId} formBlockId={params.formBlockId} />
+        </Route>
+        <Route>
+          <div class="w-full h-screen flex flex-col items-center justify-center">
+            <div>
+              404: No such page... <A href={botListingPath()}>back to bot listing</A>
+            </div>
+          </div>
         </Route>
       </Router>
     </div>

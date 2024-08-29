@@ -34,16 +34,15 @@
   } from "./nodes/defaultConfigs";
   import { NODE_HUE, NODE_ICON, NODE_TITLE, NodeTypeKey, headerColor } from "./nodes/display";
   import { languageConfigStore, type LanguageConfig } from "./stores";
+  import { applyTemplate, basicShowcaseTemplate, type Template } from "./templates";
   import {
     NodeKind,
-    clone,
     cloneBlockConfig,
     cloneEntrypointConfig,
     filterNodeDisplayCoords,
     generateNodeId,
     type TentativeNode,
   } from "./utils";
-  import { applyTemplate, basicShowcaseTemplate, type Template } from "./templates";
 
   export let botId: string;
   export let botConfig: BotConfig;
@@ -320,6 +319,7 @@
     // }
   }}
 />
+
 <div class="svelvet-container">
   <div class="navbar-container">
     <Navbar>
