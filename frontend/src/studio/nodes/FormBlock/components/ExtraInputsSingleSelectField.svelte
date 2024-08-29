@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { SingleSelectFormFieldConfig } from "../../../../api/types";
   import SortableListInput from "../../../components/SortableListInput.svelte";
+  import { generateOptionId } from "../utils";
 
   export let config: SingleSelectFormFieldConfig;
 </script>
@@ -10,7 +11,7 @@
     label="Варианты"
     bind:options={config.options}
     optionConstructor={() => {
-      return { id: `opt-${crypto.randomUUID()}`, label: "" };
+      return { id: generateOptionId(), label: "" };
     }}
   />
 </div>

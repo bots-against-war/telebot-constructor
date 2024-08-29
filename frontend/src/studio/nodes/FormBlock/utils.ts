@@ -19,6 +19,10 @@ export function generateFormFieldId(): string {
   return `form_field_${crypto.randomUUID()}`;
 }
 
+export function generateOptionId(): string {
+  return `opt-${crypto.randomUUID()}`;
+}
+
 export function getDefaultBaseFormFieldConfig(): BaseFormFieldConfig {
   return {
     id: generateFormFieldId(),

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Button, Heading, P } from "flowbite-svelte";
   import { getModalCloser } from "../utils";
-  import { basicShowcaseTemplate, contentOnlyTemplate, type Template } from "./templates";
+  import { basicShowcaseTemplate, contentOnlyTemplate, formsTemplate, type Template } from "./templates";
 
   const close = getModalCloser();
 
@@ -16,9 +16,9 @@
     {
       factory: contentOnlyTemplate,
       title: "Инфо-бот",
-      description: 'Пример использования сложной разметки в блоке "Контент"',
+      description: 'Пример использования сложной разметки в блоке "Контент".',
     },
-    { factory: contentOnlyTemplate, title: "Шаблон 3", description: "Описание шаблона" },
+    { factory: formsTemplate, title: "Анкеты приюта", description: "Бот собирает заявки от пользователей." },
     { factory: contentOnlyTemplate, title: "Шаблон 4", description: "Описание шаблона" },
   ];
 </script>

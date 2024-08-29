@@ -4,6 +4,7 @@ import type {
   BotStartedEvent,
   BotStoppedEvent,
   BranchingFormMemberConfig,
+  FormBranchConfig,
   FormFieldConfig,
   UserFlowBlockConfig,
   UserFlowEntryPointConfig,
@@ -51,4 +52,15 @@ export function flattenedFormFields(members: BranchingFormMemberConfig[]): FormF
     }
   }
   return fields;
+}
+
+export function flattenedFormBranches(members: BranchingFormMemberConfig[]): FormBranchConfig[] {
+  const res: FormBranchConfig[] = [];
+  for (const m of members) {
+    if (m.branch) {
+      res.push(m.branch);
+      res.push(...flattenedFormBranches(m.branch.members));
+    }
+  }
+  return res;
 }

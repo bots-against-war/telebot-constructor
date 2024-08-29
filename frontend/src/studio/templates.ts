@@ -1,13 +1,58 @@
 import type { CommandEntryPoint, UserFlowConfig } from "../api/types";
 import { DEFAULT_START_COMMAND_ENTRYPOINT_ID } from "../constants";
-import { PLACEHOLDER_GROUP_CHAT_ID } from "./nodes/defaultConfigs";
+import { generateFormName, PLACEHOLDER_GROUP_CHAT_ID } from "./nodes/defaultConfigs";
 import { NodeTypeKey } from "./nodes/display";
+import { generateFormFieldId, generateOptionId } from "./nodes/FormBlock/utils";
 import { boundingBox, generateNodeId, NodeKind } from "./utils";
 
 export interface Template {
   config: UserFlowConfig;
   entryBlockId: string;
   customStartCmd: CommandEntryPoint;
+}
+
+export function applyTemplate(config: UserFlowConfig, template: Template): UserFlowConfig {
+  const startCommand = config.entrypoints.find(
+    (ep) => ep.command?.entrypoint_id === DEFAULT_START_COMMAND_ENTRYPOINT_ID,
+  )?.command;
+  if (!startCommand) {
+    throw "Start command not found in the config!";
+  }
+
+  config.entrypoints.push(...template.config.entrypoints);
+  config.blocks.push(...template.config.blocks);
+  if (startCommand.next_block_id === null) {
+    startCommand.next_block_id = template.entryBlockId;
+    config.node_display_coords = { ...config.node_display_coords, ...template.config.node_display_coords };
+  } else {
+    template.customStartCmd.next_block_id = template.entryBlockId;
+    template.config.node_display_coords[template.customStartCmd.entrypoint_id] = { x: 0, y: 0 };
+
+    config.entrypoints.push({ command: template.customStartCmd });
+    const existingBbox = boundingBox(config.node_display_coords, 250, 200);
+    const templateBbox = boundingBox(template.config.node_display_coords, 250, 200);
+
+    // we want to move only in x direction for simplicity
+    console.debug("existing bbox", existingBbox);
+    console.debug("template bbox", templateBbox);
+    let xOffset = 0;
+    if (!(existingBbox.yMax < templateBbox.yMin || existingBbox.yMin > templateBbox.yMax)) {
+      // there's an intersection along y axis
+      const xMargin = 30;
+      const xDeltaRight = Math.max(existingBbox.xMax - templateBbox.xMin, 0.0);
+      const xDeltaLeft = Math.max(templateBbox.xMax - existingBbox.xMin, 0.0);
+      console.debug("delta right", xDeltaRight, "delta left", xDeltaLeft);
+      xOffset = xDeltaRight < xDeltaLeft ? xDeltaRight + xMargin : -xDeltaLeft - xMargin;
+      console.debug("offset", xOffset);
+    }
+    config.node_display_coords = {
+      ...config.node_display_coords,
+      ...Object.fromEntries(
+        Object.entries(template.config.node_display_coords).map(([key, { x, y }]) => [key, { x: x + xOffset, y }]),
+      ),
+    };
+  }
+  return config;
 }
 
 export function contentOnlyTemplate(): Template {
@@ -193,46 +238,496 @@ export function basicShowcaseTemplate(): Template {
   };
 }
 
-export function applyTemplate(config: UserFlowConfig, template: Template): UserFlowConfig {
-  const startCommand = config.entrypoints.find(
-    (ep) => ep.command?.entrypoint_id === DEFAULT_START_COMMAND_ENTRYPOINT_ID,
-  )?.command;
-  if (!startCommand) {
-    throw "Start command not found in the config!";
-  }
+export function formsTemplate(): Template {
+  const contentBlockId1 = generateNodeId(NodeKind.block, NodeTypeKey.content);
+  const menuBlockId1 = generateNodeId(NodeKind.block, NodeTypeKey.menu);
+  const formBlockId1 = generateNodeId(NodeKind.block, NodeTypeKey.form);
+  const contentBlockId2 = generateNodeId(NodeKind.block, NodeTypeKey.content);
+  const contentBlockId3 = generateNodeId(NodeKind.block, NodeTypeKey.content);
+  const formBlockId2 = generateNodeId(NodeKind.block, NodeTypeKey.form);
+  const contentBlockId4 = generateNodeId(NodeKind.block, NodeTypeKey.content);
+  const contentBlockId5 = generateNodeId(NodeKind.block, NodeTypeKey.content);
 
-  config.entrypoints.push(...template.config.entrypoints);
-  config.blocks.push(...template.config.blocks);
-  if (startCommand.next_block_id === null) {
-    startCommand.next_block_id = template.entryBlockId;
-    config.node_display_coords = { ...config.node_display_coords, ...template.config.node_display_coords };
-  } else {
-    template.customStartCmd.next_block_id = template.entryBlockId;
-    template.config.node_display_coords[template.customStartCmd.entrypoint_id] = { x: 0, y: 0 };
+  const formName1 = generateFormName();
+  const formName2 = generateFormName();
 
-    config.entrypoints.push({ command: template.customStartCmd });
-    const existingBbox = boundingBox(config.node_display_coords, 250, 200);
-    const templateBbox = boundingBox(template.config.node_display_coords, 250, 200);
+  const formFieldId1 = generateFormFieldId();
+  const formFieldId2 = generateFormFieldId();
+  const formFieldId3 = generateFormFieldId();
+  const formFieldId4 = generateFormFieldId();
+  const formFieldId5 = generateFormFieldId();
+  const formFieldId6 = generateFormFieldId();
+  const formFieldId7 = generateFormFieldId();
+  const formFieldId8 = generateFormFieldId();
+  const formFieldId9 = generateFormFieldId();
+  const formFieldId10 = generateFormFieldId();
+  const formFieldId11 = generateFormFieldId();
 
-    // we want to move only in x direction for simplicity
-    console.debug("existing bbox", existingBbox);
-    console.debug("template bbox", templateBbox);
-    let xOffset = 0;
-    if (!(existingBbox.yMax < templateBbox.yMin || existingBbox.yMin > templateBbox.yMax)) {
-      // there's an intersection along y axis
-      const xMargin = 30;
-      const xDeltaRight = Math.max(existingBbox.xMax - templateBbox.xMin, 0.0);
-      const xDeltaLeft = Math.max(templateBbox.xMax - existingBbox.xMin, 0.0);
-      console.debug("delta right", xDeltaRight, "delta left", xDeltaLeft);
-      xOffset = xDeltaRight < xDeltaLeft ? xDeltaRight + xMargin : -xDeltaLeft - xMargin;
-      console.debug("offset", xOffset);
-    }
-    config.node_display_coords = {
-      ...config.node_display_coords,
-      ...Object.fromEntries(
-        Object.entries(template.config.node_display_coords).map(([key, { x, y }]) => [key, { x: x + xOffset, y }]),
-      ),
-    };
-  }
-  return config;
+  const optionId1 = generateOptionId();
+  const optionId2 = generateOptionId();
+  const optionId3 = generateOptionId();
+  const optionId4 = generateOptionId();
+
+  return {
+    customStartCmd: {
+      entrypoint_id: generateNodeId(NodeKind.entrypoint, NodeTypeKey.command),
+      command: "form",
+      next_block_id: null,
+      scope: "private",
+      short_description: null,
+    },
+    entryBlockId: contentBlockId1,
+    config: {
+      entrypoints: [],
+      blocks: [
+        {
+          content: {
+            block_id: contentBlockId1,
+            contents: [
+              {
+                text: {
+                  text: 'Добрый день! Это чат-бот приюта для кошек "Дом". Здесь вы сможете подать заявку, чтобы передать питомцев в приют или взять их домой. ',
+                  markup: "markdown",
+                },
+                attachments: [],
+              },
+            ],
+            next_block_id: menuBlockId1,
+          },
+          human_operator: null,
+          menu: null,
+          form: null,
+          language_select: null,
+          error: null,
+        },
+        {
+          content: null,
+          human_operator: null,
+          menu: {
+            block_id: menuBlockId1,
+            menu: {
+              text: "Что вас интересует?",
+              items: [
+                {
+                  label: "Передать питомца",
+                  submenu: null,
+                  next_block_id: formBlockId1,
+                  link_url: null,
+                },
+                {
+                  label: "Взять питомца",
+                  submenu: null,
+                  next_block_id: formBlockId2,
+                  link_url: null,
+                },
+              ],
+              config: {
+                mechanism: "inline_buttons",
+                back_label: null,
+                lock_after_termination: false,
+              },
+            },
+          },
+          form: null,
+          language_select: null,
+          error: null,
+        },
+        {
+          content: null,
+          human_operator: null,
+          menu: null,
+          form: {
+            block_id: formBlockId1,
+            form_name: formName1,
+            members: [
+              {
+                field: {
+                  plain_text: {
+                    id: formFieldId1,
+                    name: "Имя",
+                    prompt: "Как вас зовут? ",
+                    is_required: true,
+                    result_formatting: "auto",
+                    is_long_text: false,
+                    empty_text_error_msg: "Ответ не может быть пустым.",
+                  },
+                  single_select: null,
+                },
+                branch: null,
+              },
+              {
+                field: {
+                  plain_text: {
+                    id: formFieldId2,
+                    name: "Контакт",
+                    prompt: "Как с вами связаться? ",
+                    is_required: true,
+                    result_formatting: "auto",
+                    is_long_text: false,
+                    empty_text_error_msg: "Ответ не может быть пустым.",
+                  },
+                  single_select: null,
+                },
+                branch: null,
+              },
+              {
+                field: {
+                  plain_text: null,
+                  single_select: {
+                    id: formFieldId3,
+                    name: "Питомец",
+                    prompt: "Вы хотите передать в приют:",
+                    is_required: true,
+                    result_formatting: "auto",
+                    options: [
+                      {
+                        id: optionId1,
+                        label: "Кошка/Кот",
+                      },
+                      {
+                        id: optionId2,
+                        label: "Другой питомец",
+                      },
+                    ],
+                    invalid_enum_error_msg:
+                      "Ответ должен быть одним из предложенных в меню вариантов. Если вы не видите меню, нажмите на кнопку с 4 точками рядом с полем ввода.",
+                  },
+                },
+                branch: null,
+              },
+              {
+                field: null,
+                branch: {
+                  members: [
+                    {
+                      field: {
+                        plain_text: {
+                          id: formFieldId4,
+                          name: "Описание",
+                          prompt:
+                            "Опишите питомца (имя, возраст, вес, порода, цвет шерсти и глаз, заболевания, истории из жизни и другое). ",
+                          is_required: true,
+                          result_formatting: "auto",
+                          is_long_text: false,
+                          empty_text_error_msg: "Ответ не может быть пустым.",
+                        },
+                        single_select: null,
+                      },
+                      branch: null,
+                    },
+                  ],
+                  condition_match_value: optionId1,
+                },
+              },
+              {
+                field: null,
+                branch: {
+                  members: [
+                    {
+                      field: {
+                        plain_text: {
+                          id: formFieldId5,
+                          name: "Другие животные",
+                          prompt:
+                            "Мы принимаем только кошек и котов, но если вы опишите ваше животное, возможно мы сможем подсказать к кому обратиться. ",
+                          is_required: true,
+                          result_formatting: "auto",
+                          is_long_text: false,
+                          empty_text_error_msg: "Ответ не может быть пустым.",
+                        },
+                        single_select: null,
+                      },
+                      branch: null,
+                    },
+                  ],
+                  condition_match_value: optionId2,
+                },
+              },
+            ],
+            messages: {
+              form_start: "Пожалуйста, заполните форму и мы свяжемся с вами в ближайшие дни. Спасибо! ",
+              cancel_command_is: "/cancel — отменить заполнение формы.",
+              field_is_skippable: "/skip — пропустить поле.",
+              field_is_not_skippable: "Это поле нельзя пропустить!",
+              please_enter_correct_value: "Пожалуйста, исправьте значение.",
+              unsupported_command: "Команда не поддерживается! При заполнении формы доступны команды: /skip, /cancel",
+            },
+            results_export: {
+              user_attribution: "full",
+              echo_to_user: true,
+              to_chat: null,
+              to_store: true,
+              is_anonymous: null,
+            },
+            form_completed_next_block_id: contentBlockId2,
+            form_cancelled_next_block_id: contentBlockId3,
+          },
+          language_select: null,
+          error: null,
+        },
+        {
+          content: {
+            block_id: contentBlockId2,
+            contents: [
+              {
+                text: {
+                  text: "Спасибо за ваши ответы! ",
+                  markup: "markdown",
+                },
+                attachments: [],
+              },
+            ],
+            next_block_id: null,
+          },
+          human_operator: null,
+          menu: null,
+          form: null,
+          language_select: null,
+          error: null,
+        },
+        {
+          content: {
+            block_id: contentBlockId3,
+            contents: [
+              {
+                text: {
+                  text: "Вы всегда можете вернуться к заполнению формы. Спасибо! ",
+                  markup: "markdown",
+                },
+                attachments: [],
+              },
+            ],
+            next_block_id: null,
+          },
+          human_operator: null,
+          menu: null,
+          form: null,
+          language_select: null,
+          error: null,
+        },
+        {
+          content: null,
+          human_operator: null,
+          menu: null,
+          form: {
+            block_id: formBlockId2,
+            form_name: formName2,
+            members: [
+              {
+                field: {
+                  plain_text: {
+                    id: formFieldId6,
+                    name: "Имя",
+                    prompt: "Как вас зовут? ",
+                    is_required: true,
+                    result_formatting: "auto",
+                    is_long_text: false,
+                    empty_text_error_msg: "Ответ не может быть пустым.",
+                  },
+                  single_select: null,
+                },
+                branch: null,
+              },
+              {
+                field: {
+                  plain_text: {
+                    id: formFieldId7,
+                    name: "Контакт",
+                    prompt: "Как с вами связаться? ",
+                    is_required: true,
+                    result_formatting: "auto",
+                    is_long_text: false,
+                    empty_text_error_msg: "Ответ не может быть пустым.",
+                  },
+                  single_select: null,
+                },
+                branch: null,
+              },
+              {
+                field: {
+                  plain_text: null,
+                  single_select: {
+                    id: formFieldId8,
+                    name: "Питомец",
+                    prompt: "Вы хотите взять из приюта:",
+                    is_required: true,
+                    result_formatting: "auto",
+                    options: [
+                      {
+                        id: optionId3,
+                        label: "Кошка/Кот",
+                      },
+                      {
+                        id: optionId4,
+                        label: "Другой питомец",
+                      },
+                    ],
+                    invalid_enum_error_msg:
+                      "Ответ должен быть одним из предложенных в меню вариантов. Если вы не видите меню, нажмите на кнопку с 4 точками рядом с полем ввода.",
+                  },
+                },
+                branch: null,
+              },
+              {
+                field: null,
+                branch: {
+                  members: [
+                    {
+                      field: {
+                        plain_text: {
+                          id: formFieldId9,
+                          name: "Описание",
+                          prompt: "Опишите питомца, которого вы хотели бы взять. ",
+                          is_required: true,
+                          result_formatting: "auto",
+                          is_long_text: false,
+                          empty_text_error_msg: "Ответ не может быть пустым.",
+                        },
+                        single_select: null,
+                      },
+                      branch: null,
+                    },
+                    {
+                      field: {
+                        plain_text: {
+                          id: formFieldId10,
+                          name: "Домашние условия ",
+                          prompt:
+                            "Опишите ваши домашние условия для питомца (другие животные, дети, квартира/дом и другое). ",
+                          is_required: true,
+                          result_formatting: "auto",
+                          is_long_text: false,
+                          empty_text_error_msg: "Ответ не может быть пустым.",
+                        },
+                        single_select: null,
+                      },
+                      branch: null,
+                    },
+                  ],
+                  condition_match_value: optionId3,
+                },
+              },
+              {
+                field: null,
+                branch: {
+                  members: [
+                    {
+                      field: {
+                        plain_text: {
+                          id: formFieldId11,
+                          name: "Другое животное",
+                          prompt:
+                            "Мы занимаемся только кошками, но если вы опишите животное, которое ищите, возможно мы сможем подсказать к кому обратиться. ",
+                          is_required: true,
+                          result_formatting: "auto",
+                          is_long_text: false,
+                          empty_text_error_msg: "Ответ не может быть пустым.",
+                        },
+                        single_select: null,
+                      },
+                      branch: null,
+                    },
+                  ],
+                  condition_match_value: optionId4,
+                },
+              },
+            ],
+            messages: {
+              form_start: "Пожалуйста, заполните форму и мы свяжемся с вами в ближайшие дни. Спасибо! ",
+              cancel_command_is: "/cancel — отменить заполнение формы.",
+              field_is_skippable: "/skip — пропустить поле.",
+              field_is_not_skippable: "Это поле нельзя пропустить!",
+              please_enter_correct_value: "Пожалуйста, исправьте значение.",
+              unsupported_command: "Команда не поддерживается! При заполнении формы доступны команды: /skip, /cancel",
+            },
+            results_export: {
+              user_attribution: "full",
+              echo_to_user: true,
+              to_chat: null,
+              to_store: true,
+              is_anonymous: null,
+            },
+            form_completed_next_block_id: contentBlockId4,
+            form_cancelled_next_block_id: contentBlockId5,
+          },
+          language_select: null,
+          error: null,
+        },
+        {
+          content: {
+            block_id: contentBlockId4,
+            contents: [
+              {
+                text: {
+                  text: "Спасибо за ваши ответы! ",
+                  markup: "markdown",
+                },
+                attachments: [],
+              },
+            ],
+            next_block_id: null,
+          },
+          human_operator: null,
+          menu: null,
+          form: null,
+          language_select: null,
+          error: null,
+        },
+        {
+          content: {
+            block_id: contentBlockId5,
+            contents: [
+              {
+                text: {
+                  text: "Вы всегда можете вернуться к заполнению формы. Спасибо! ",
+                  markup: "markdown",
+                },
+                attachments: [],
+              },
+            ],
+            next_block_id: null,
+          },
+          human_operator: null,
+          menu: null,
+          form: null,
+          language_select: null,
+          error: null,
+        },
+      ],
+      node_display_coords: {
+        [contentBlockId1]: {
+          x: 0,
+          y: 150,
+        },
+        [menuBlockId1]: {
+          x: 0,
+          y: 450,
+        },
+        [formBlockId1]: {
+          x: -450,
+          y: 700,
+        },
+        [contentBlockId2]: {
+          x: -600,
+          y: 1000,
+        },
+        [contentBlockId3]: {
+          x: -270,
+          y: 1000,
+        },
+        [formBlockId2]: {
+          x: 150,
+          y: 700,
+        },
+        [contentBlockId4]: {
+          x: 40,
+          y: 1000,
+        },
+        [contentBlockId5]: {
+          x: 400,
+          y: 1000,
+        },
+      },
+    },
+  };
 }

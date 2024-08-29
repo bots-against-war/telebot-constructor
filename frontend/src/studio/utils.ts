@@ -1,8 +1,14 @@
-import { getBlockId, getEntrypointConcreteConfig, getEntrypointId } from "../api/typeUtils";
+import {
+  flattenedFormBranches,
+  flattenedFormFields,
+  getBlockId,
+  getEntrypointConcreteConfig,
+  getEntrypointId,
+} from "../api/typeUtils";
 import type { BotConfig, NodeDisplayCoords, UserFlowBlockConfig, UserFlowEntryPointConfig } from "../api/types";
 import { BOT_INFO_NODE_ID } from "../constants";
 import type { LocalizableText } from "../types";
-import { generateFormFieldId, getBaseFormFieldConfig } from "./nodes/FormBlock/utils";
+import { generateFormFieldId, generateOptionId, getBaseFormFieldConfig } from "./nodes/FormBlock/utils";
 import { generateFormName } from "./nodes/defaultConfigs";
 import { NodeTypeKey, getNodeTypeKey } from "./nodes/display";
 import type { LanguageConfig } from "./stores";
@@ -89,10 +95,26 @@ export function cloneBlockConfig(c: UserFlowBlockConfig): TentativeNode {
     config.form.form_completed_next_block_id = null;
     // form names must be unique within one bot
     config.form.form_name = generateFormName();
-    // re-generating form fields' ids
-    config.form.members.forEach((m) => {
-      if (!m.field) return;
-      getBaseFormFieldConfig(m.field).id = generateFormFieldId();
+
+    // re-generating form fields' ids and option ids
+    // opt ids must be regenerated consistently between options and branches
+    const optIdMapping: Record<string, string> = {};
+    flattenedFormFields(config.form.members).forEach((field) => {
+      getBaseFormFieldConfig(field).id = generateFormFieldId();
+      if (field.single_select) {
+        field.single_select.options.forEach((opt) => {
+          const newOptId = generateOptionId();
+          optIdMapping[opt.id] = generateOptionId();
+          opt.id = newOptId;
+        });
+      }
+    });
+    flattenedFormBranches(config.form.members).forEach((branch) => {
+      const oldOptId = branch.condition_match_value;
+      if (oldOptId) {
+        const newOptId = optIdMapping[oldOptId];
+        branch.condition_match_value = newOptId;
+      }
     });
   } else if (config.human_operator) {
     config.human_operator.block_id = id;
