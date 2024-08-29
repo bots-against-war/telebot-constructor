@@ -11,7 +11,7 @@
   export let label: string;
   export let botId: string;
   export let selectedGroupChatId: number | string;
-  export let forbidNonSupergroups: boolean = true;
+  export let forbidLegacyGroups: boolean = true;
 
   // auto-open if not selected initially
   let isOpen = selectedGroupChatId === PLACEHOLDER_GROUP_CHAT_ID;
@@ -81,8 +81,8 @@
     paddingFlush="py-2"
     class="flex items-center justify-between w-full font-medium text-left border-gray-200"
   >
-    <div slot="header" class="flex flex-row gap-3 text-gray-900 items-center">
-      <span class="font-bold">{label}</span>
+    <div slot="header" class="text-gray-900 text-sm">
+      <div class="font-bold mb-2">{label}</div>
       {#if selectedGroupChatId !== PLACEHOLDER_GROUP_CHAT_ID}
         <GroupChatBadge {botId} chatId={selectedGroupChatId} />
       {/if}
@@ -116,9 +116,9 @@
                       isOpen = false;
                     }}
                     value={chat.id}
-                    disabled={forbidNonSupergroups && chat.type === "group"}
+                    disabled={forbidLegacyGroups && chat.type === "group"}
                   />
-                  {#if forbidNonSupergroups && chat.type === "group"}
+                  {#if forbidLegacyGroups && chat.type === "group"}
                     <ExclamationCircleOutline
                       color="red"
                       title={{
@@ -127,10 +127,7 @@
                       }}
                     />
                   {/if}
-                  <label
-                    for={chatLabel(chat)}
-                    class={forbidNonSupergroups && chat.type === "group" ? "opacity-50" : ""}
-                  >
+                  <label for={chatLabel(chat)} class={forbidLegacyGroups && chat.type === "group" ? "opacity-50" : ""}>
                     <GroupChatBadge {botId} chatId={chat.id} chatData={chat} />
                   </label>
                 </div>
