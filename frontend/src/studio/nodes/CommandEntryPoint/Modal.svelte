@@ -42,7 +42,7 @@
   </InputWrapper>
   <TextInput
     label="Описание"
-    description={"Для нативном меню и подсказок при наборе"}
+    description="Находится в меню рядом с полем ввода сообщения, или как подсказка при наборе “/”."
     required={false}
     bind:value={descr}
   />

@@ -5,7 +5,7 @@
   import type { TgBotUser } from "../api/types";
   import { ok, type Result } from "../utils";
   import ActionIcon from "./ActionIcon.svelte";
-  import ErrorBadge from "./ErrorBadge.svelte";
+  import ErrorBadge from "./AlertBadge.svelte";
   import DataBadge from "./internal/DataBadge.svelte";
   import DataBadgeLoader from "./internal/DataBadgeLoader.svelte";
 

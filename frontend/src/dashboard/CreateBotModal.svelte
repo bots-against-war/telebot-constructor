@@ -6,7 +6,7 @@
   import type { BotConfig } from "../api/types";
   import { validateBotToken } from "../api/validation";
   import ButtonLoadingSpinner from "../components/ButtonLoadingSpinner.svelte";
-  import ErrorBadge from "../components/ErrorBadge.svelte";
+  import ErrorBadge from "../components/AlertBadge.svelte";
   import PasswordInput from "../components/inputs/PasswordInput.svelte";
   import TextInput from "../components/inputs/TextInput.svelte";
   import { BOT_INFO_NODE_ID, DEFAULT_START_COMMAND_ENTRYPOINT_ID } from "../constants";

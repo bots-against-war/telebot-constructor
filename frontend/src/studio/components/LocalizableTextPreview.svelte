@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onDestroy } from "svelte";
-  import ErrorBadge from "../../components/ErrorBadge.svelte";
+  import ErrorBadge from "../../components/AlertBadge.svelte";
   import type { LocalizableText } from "../../types";
   import { languageConfigStore } from "../stores";
   import LanguageMenu from "./LanguageMenu.svelte";

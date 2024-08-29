@@ -7,7 +7,7 @@
   import { DotsHorizontalOutline, RefreshOutline } from "flowbite-svelte-icons";
   import { getGroupChatData } from "../api/groupChats";
   import type { TgGroupChat } from "../api/types";
-  import ErrorBadge from "../components/ErrorBadge.svelte";
+  import ErrorBadge from "./AlertBadge.svelte";
   import { ok, type Result } from "../utils";
   import ActionIcon from "./ActionIcon.svelte";
   import DataBadge from "./internal/DataBadge.svelte";

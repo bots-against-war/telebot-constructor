@@ -3,7 +3,7 @@
   import type { LanguageData } from "../api/types";
   import { availableLanguagesStore, lookupLanguage } from "../globalStateStores";
   import type { Result } from "../utils";
-  import ErrorBadge from "./ErrorBadge.svelte";
+  import ErrorBadge from "./AlertBadge.svelte";
   import LanguageDataComponent from "./LanguageData.svelte";
 
   export let language: string;

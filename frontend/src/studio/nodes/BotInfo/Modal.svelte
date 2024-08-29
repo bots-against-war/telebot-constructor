@@ -2,7 +2,7 @@
   import { Avatar } from "flowbite-svelte";
   import { getBotUser, updateBotUser } from "../../../api/botUser";
   import type { TgBotUser } from "../../../api/types";
-  import ErrorBadge from "../../../components/ErrorBadge.svelte";
+  import ErrorBadge from "../../../components/AlertBadge.svelte";
   import Textarea from "../../../components/inputs/Textarea.svelte";
   import TextInput from "../../../components/inputs/TextInput.svelte";
   import LoadingScreen from "../../../components/LoadingScreen.svelte";
@@ -78,6 +78,7 @@
       {#if updateError !== null}
         <ErrorBadge title="Ошибка сохранения деталей бота" text={updateError} />
       {/if}
+      <ErrorBadge color="yellow" text="Изменения будут применены мгновенно!" />
       <NodeModalControls on:save={saveBotUser} autoClose={false} />
     {:else}
       <ErrorBadge title="INTERNAL ERROR" text="INTERNAL ERROR" />

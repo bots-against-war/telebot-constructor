@@ -5,7 +5,7 @@
   import { getAvailableGroupChats, startGroupChatDiscovery, stopGroupChatDiscovery } from "../../api/groupChats";
   import type { TgGroupChat } from "../../api/types";
   import ButtonLoadingSpinner from "../../components/ButtonLoadingSpinner.svelte";
-  import ErrorBadge from "../../components/ErrorBadge.svelte";
+  import ErrorBadge from "../../components/AlertBadge.svelte";
   import GroupChatBadge from "../../components/GroupChatBadge.svelte";
   import { ok, type Result } from "../../utils";
   import { PLACEHOLDER_GROUP_CHAT_ID } from "../nodes/defaultConfigs";

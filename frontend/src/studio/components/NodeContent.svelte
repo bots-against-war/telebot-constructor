@@ -7,7 +7,7 @@
   import { DotsHorizontalOutline, FileCopyOutline, PenOutline, TrashBinOutline } from "flowbite-svelte-icons";
   import { createEventDispatcher } from "svelte";
   import ActionIcon from "../../components/ActionIcon.svelte";
-  import ErrorBadge from "../../components/ErrorBadge.svelte";
+  import ErrorBadge from "../../components/AlertBadge.svelte";
   import { ok, type Result } from "../../utils";
   import { NODE_HUE, NODE_ICON, NODE_TITLE, headerColor, type NodeTypeKey } from "../nodes/display";
   import type { ValidationError } from "../nodes/nodeValidators";
