@@ -90,7 +90,7 @@
       <TableHead>
         <TableHeadCell>Время</TableHeadCell>
         {#if dataHasUsers}
-          <TableHeadCell>Юзер:ка</TableHeadCell>
+          <TableHeadCell>Пользователь:ница</TableHeadCell>
         {/if}
         {#each fieldIds as fieldId}
           <TableHeadCell>{formResultsPage.info.field_names[fieldId] || fieldId}</TableHeadCell>

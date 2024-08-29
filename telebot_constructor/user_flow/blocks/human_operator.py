@@ -139,19 +139,19 @@ class HumanOperatorBlock(UserFlowBlock):
             aux_endpoints=await self._feedback_handler.aux_endpoints(),
             bot_commands=[
                 BotCommandInfo(
-                    command=tg.BotCommand(command="help", description="помощь по использованию админ-чата"),
+                    command=tg.BotCommand(command="help", description="помощь по использованию рабочего чата"),
                     scope=admin_chat_cmd_scope,
                 ),
                 BotCommandInfo(
-                    command=tg.BotCommand(command="undo", description="отменить отправку сообщения юзер:ке"),
+                    command=tg.BotCommand(command="undo", description="отменить отправку сообщения пользователь:нице"),
                     scope=admin_chat_cmd_scope,
                 ),
                 BotCommandInfo(
-                    command=tg.BotCommand(command="ban", description="забанить юзер:ку"),
+                    command=tg.BotCommand(command="ban", description="забанить пользователь:ницу"),
                     scope=admin_chat_cmd_scope,
                 ),
                 BotCommandInfo(
-                    command=tg.BotCommand(command="log", description="история сообщений с юзер:кой"),
+                    command=tg.BotCommand(command="log", description="история сообщений с пользователь:ницей"),
                     scope=admin_chat_cmd_scope,
                 ),
             ],

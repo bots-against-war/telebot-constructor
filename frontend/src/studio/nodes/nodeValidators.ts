@@ -87,7 +87,7 @@ export function validateHumanOperatorBlock(
   const results: Result<null, ValidationError>[] = [];
 
   if (config.feedback_handler_config.admin_chat_id === PLACEHOLDER_GROUP_CHAT_ID) {
-    results.push(err({ error: "Не выбран админ-чат" }));
+    results.push(err({ error: "Не выбран рабочий чат" }));
   }
   results.push(
     validateLocalizableText(

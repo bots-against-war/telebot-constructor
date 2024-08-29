@@ -29,67 +29,66 @@
 
 <NodeModalBody title={NODE_TITLE.human_operator}>
   <div class={blockSeqClass}>
-    <div class={blockClass}>
-      <GroupChatIdSelect label="Админ-чат" {botId} bind:selectedGroupChatId={fhConfig.admin_chat_id} />
-      <Toggle bind:checked={fhConfig.anonimyze_users}>Анонимизировать юзеро:к</Toggle>
-      <Toggle bind:checked={fhConfig.forum_topic_per_user}>Отдельная тема на юзер:ку</Toggle>
-    </div>
+    <div class="flex flex-col gap-4">
+      <GroupChatIdSelect label="Рабочий чат" {botId} bind:selectedGroupChatId={fhConfig.admin_chat_id} />
+      <Toggle bind:checked={fhConfig.anonimyze_users}>Анонимизировать пользователь:ниц</Toggle>
+      <Toggle bind:checked={fhConfig.forum_topic_per_user}>Отдельная тема на пользователь:ницу</Toggle>
 
-    <div class={blockClass}>
-      <Heading tag="h6">Сообщения для юзер:ок</Heading>
       <LocalizableTextInput
-        label="Ответ на успешно принятое сообщение"
+        label="Ответ на принятое сообщение"
         placeholder="Спасибо, мы вам скоро ответим!"
         bind:value={fhConfig.messages_to_user.forwarded_to_admin_ok}
-        maxCharacters={TELEGRAM_MAX_MESSAGE_LENGTH_CHARS}
-      />
-      <LocalizableTextInput
-        label="Предупреждение, что сообщений слишком много"
-        description="(см. Ограничение на кол-во сообщений в минуту)"
-        placeholder="Не присылайте больше N сообщений в минуту!"
-        bind:value={fhConfig.messages_to_user.throttling}
         maxCharacters={TELEGRAM_MAX_MESSAGE_LENGTH_CHARS}
       />
     </div>
 
     <Accordion>
-      <AccordionItem paddingDefault="p-3">
-        <span slot="header">Дополнительно</span>
+      <AccordionItem paddingDefault="p-3" class="rounded-none">
+        <span slot="header">Дополнительные настройки</span>
         <div class={blockSeqClass}>
           <div class={blockClass}>
             <Heading tag="h6">Сообщения для админ:ок</Heading>
             <TextInput
+              label="Уведомление о том, что ответ админ:ки передан пользователь:нице"
               placeholder="Сообщение переслано!"
-              label="Уведомление о том, что ответ админки передан юзерке"
               bind:value={fhConfig.messages_to_admin.copied_to_user_ok}
             />
             <TextInput
-              placeholder="Сообщение удалено из чата бота и юзерки!"
-              label="Уведомление о том, что сообщение юзерке успешно удалено по команде /undo"
+              label="Уведомление о том, что сообщение пользователь:нице успешно удалено по команде /undo"
+              placeholder="Сообщение удалено из чата бота и пользователь:ницы!"
               bind:value={fhConfig.messages_to_admin.deleted_message_ok}
             />
             <TextInput
-              placeholder="Не получилось удалить сообщение :(!"
               label="Уведомление о том, что сообщение не удалось удалить"
+              placeholder="Не получилось удалить сообщение :(!"
               bind:value={fhConfig.messages_to_admin.can_not_delete_message}
             />
           </div>
           <div class={blockClass}>
-            <Heading tag="h6">Другое</Heading>
+            <Heading tag="h6">Анти-спам</Heading>
             <InputWrapper
-              label="Сколько сообщений в минуту может писать пользовательница."
-              description="После превышения будет софтбан."
+              label="Сколько сообщений в минуту может писать пользователь:ница"
+              description={'После превышения будет примененён временный "мягкий бан"'}
             >
               <NumberInput bind:value={fhConfig.max_messages_per_minute} min={1} max={60} step={1} type="number" />
             </InputWrapper>
-            <Toggle bind:checked={fhConfig.hashtags_in_admin_chat}>Хештеги в админ-чате</Toggle>
+
+            <LocalizableTextInput
+              label="Предупреждение о превышении"
+              placeholder={"Не присылайте больше {} сообщений в минуту!"}
+              bind:value={fhConfig.messages_to_user.throttling}
+              maxCharacters={TELEGRAM_MAX_MESSAGE_LENGTH_CHARS}
+            />
+
+            <!-- seems like we don't really need hashtags hehe -->
+            <!-- <Toggle bind:checked={fhConfig.hashtags_in_admin_chat}>Хештеги в рабочем чате</Toggle>
             {#if fhConfig.hashtags_in_admin_chat}
               <TextInput
                 placeholder="#неотвечено"
                 label="Текст хештега, который навешивается на новые, неотвеченные сообщения"
                 bind:value={unanswered}
               />
-            {/if}
+            {/if} -->
           </div>
         </div>
       </AccordionItem>
