@@ -119,7 +119,13 @@
                     disabled={forbidNonSupergroups && chat.type === "group"}
                   />
                   {#if forbidNonSupergroups && chat.type === "group"}
-                    <ExclamationCircleOutline color="red" />
+                    <ExclamationCircleOutline
+                      color="red"
+                      title={{
+                        id: "non-supergroup chat is forbidden",
+                        title: "Чат не подходит для использования в боте, его нужно активировать",
+                      }}
+                    />
                   {/if}
                   <label
                     for={chatLabel(chat)}
