@@ -18,7 +18,11 @@
       title: "Инфо-бот",
       description: 'Пример использования сложной разметки в блоке "Контент".',
     },
-    { factory: formsTemplate, title: "Анкеты приюта", description: "Бот собирает заявки от пользователей." },
+    {
+      factory: formsTemplate,
+      title: "Анкеты приюта",
+      description: "Бот для сбора заявок от пользователей в двух сценариях.",
+    },
     { factory: contentOnlyTemplate, title: "Шаблон 4", description: "Описание шаблона" },
   ];
 </script>
