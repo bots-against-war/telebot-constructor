@@ -6,37 +6,48 @@
   import { type LocalizableText } from "../../types";
   import LocalizableTextInput from "./LocalizableTextInput.svelte";
 
-  interface SortableListItem {
+  interface Option {
     label: LocalizableText;
     [k: string]: unknown;
   }
 
   export let label: string;
-  export let options: SortableListItem[];
-  export let optionConstructor: () => SortableListItem;
-  let optionsListResortedCount: number = 0;
+  export let options: Option[];
+  export let optionConstructor: () => Option;
+  let forceUpdateCounter = 0;
+
+  const generateId = () => `sortable-list-item-${crypto.randomUUID()}`;
+  let optionsWithIds = options.map((o) => {
+    return { option: o, id: generateId() };
+  });
+  const optionWithIdConstructor = () => {
+    return { option: optionConstructor(), id: generateId() };
+  };
+  $: {
+    options = optionsWithIds.map(({ option }) => option);
+  }
 
   export let selectedLang: string | null = null;
 </script>
 
 <InputWrapper {label}>
-  {#key optionsListResortedCount}
+  {#key forceUpdateCounter}
     <SortableList
       class="sortable-class-unused"
       handle=".grip-handle"
       onSort={(e) => {
-        const optionsCopy = [...options];
-        console.debug(`Moving option, before: ${JSON.stringify(optionsCopy)}`);
-        const moved = optionsCopy.splice(e.oldIndex, 1)[0];
-        optionsCopy.splice(e.newIndex, 0, moved);
-        console.debug(`... after: ${JSON.stringify(optionsCopy)}`);
-        options = optionsCopy;
-        optionsListResortedCount += 1;
+        const itemsCopy = [...optionsWithIds];
+        console.debug(`Moving option, before: ${JSON.stringify(itemsCopy)}`);
+        const moved = itemsCopy.splice(e.oldIndex, 1)[0];
+        itemsCopy.splice(e.newIndex, 0, moved);
+        console.debug(`... after: ${JSON.stringify(itemsCopy)}`);
+        optionsWithIds = itemsCopy;
+        forceUpdateCounter += 1;
       }}
     >
-      {#each options as option, idx}
+      {#each optionsWithIds as item, idx (item.id)}
         <div class="flex flex-row gap-1 items-center">
-          <LocalizableTextInput bind:value={option.label} isLongText={false} {selectedLang} />
+          <LocalizableTextInput bind:value={item.option.label} isLongText={false} {selectedLang} />
           <div class="grip-handle">
             <BarsOutline class="w-4 h-4 text-gray-700" />
           </div>
@@ -44,7 +55,7 @@
             icon={CloseOutline}
             iconClass="w-4 h-4 text-gray-700"
             on:click={() => {
-              options = options.toSpliced(idx);
+              optionsWithIds = optionsWithIds.toSpliced(idx, 1);
             }}
           />
         </div>
@@ -54,7 +65,7 @@
   <ActionIcon
     icon={PlusOutline}
     on:click={() => {
-      options = [...options, optionConstructor()];
+      optionsWithIds = [...optionsWithIds, optionWithIdConstructor()];
     }}
   />
 </InputWrapper>

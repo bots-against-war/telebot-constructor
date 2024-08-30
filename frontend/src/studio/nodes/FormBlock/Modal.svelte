@@ -2,6 +2,7 @@
   import { TabItem, Tabs } from "flowbite-svelte";
   import { flattenedFormFields } from "../../../api/typeUtils";
   import type { FormBlock, FormBranchConfig } from "../../../api/types";
+  import { TELEGRAM_MAX_MESSAGE_LENGTH_CHARS } from "../../../constants";
   import LocalizableTextInput from "../../components/LocalizableTextInput.svelte";
   import NodeModalBody from "../../components/NodeModalBody.svelte";
   import NodeModalControls from "../../components/NodeModalControls.svelte";
@@ -13,7 +14,6 @@
   import FormResultExportOptions from "./components/FormResultExportOptions.svelte";
   import { getRandomFormStartMessage } from "./content";
   import { updateWithPrefilled, type FormErrorMessages } from "./prefill";
-  import { TELEGRAM_MAX_MESSAGE_LENGTH_CHARS } from "../../../constants";
 
   export let config: FormBlock;
   export let botId: string;

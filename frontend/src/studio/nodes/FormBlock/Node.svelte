@@ -1,10 +1,12 @@
 <script lang="ts">
+  import { Li, List } from "flowbite-svelte";
   import { Node } from "svelvet";
   import { flattenedFormFields } from "../../../api/typeUtils";
   import { type FormBlock } from "../../../api/types";
   import type { SvelvetPosition } from "../../../types";
   import { getModalOpener } from "../../../utils";
   import InputAnchor from "../../components/InputAnchor.svelte";
+  import LocalizableText from "../../components/LocalizableTextPreview.svelte";
   import NodeContent from "../../components/NodeContent.svelte";
   import OutputAnchor from "../../components/OutputAnchor.svelte";
   import OutputAnchorsBox from "../../components/OutputAnchorsBox.svelte";
@@ -12,9 +14,7 @@
   import { DEFAULT_NODE_PROPS } from "../nodeProps";
   import { validateFormBlock } from "../nodeValidators";
   import Modal from "./Modal.svelte";
-  import { Li, List } from "flowbite-svelte";
   import { getBaseFormFieldConfig } from "./utils";
-  import LocalizableText from "../../components/LocalizableTextPreview.svelte";
 
   const openModal = getModalOpener();
 
