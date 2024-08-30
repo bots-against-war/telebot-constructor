@@ -1,14 +1,15 @@
 <script lang="ts">
   import { TabItem, Tabs } from "flowbite-svelte";
   import { ExclamationCircleOutline } from "flowbite-svelte-icons";
+  import { createEventDispatcher } from "svelte";
+  import AlertBadge from "../../components/AlertBadge.svelte";
   import Language from "../../components/Language.svelte";
   import InputWrapper from "../../components/inputs/InputWrapper.svelte";
   import TextInput from "../../components/inputs/TextInput.svelte";
+  import Textarea from "../../components/inputs/Textarea.svelte";
   import type { LocalizableText } from "../../types";
   import type { LanguageConfig } from "../stores";
   import LanguageMenu from "./LanguageMenu.svelte";
-  import Textarea from "../../components/inputs/Textarea.svelte";
-  import { createEventDispatcher } from "svelte";
 
   export let langConfig: LanguageConfig | null;
   export let value: LocalizableText;
@@ -66,7 +67,7 @@
   }
   internalDebug(`after validation and type coercion value = ${JSON.stringify(value)}`);
 
-  if (selectedLang == null) {
+  if (!selectedLang) {
     selectedLang = langConfig ? langConfig.supportedLanguageCodes[0] : null;
   }
 </script>
@@ -125,4 +126,6 @@
       </div>
     {/if}
   </InputWrapper>
+{:else}
+  <AlertBadge text="Что-то пошло не так :(" />
 {/if}

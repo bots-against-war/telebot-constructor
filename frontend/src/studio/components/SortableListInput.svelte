@@ -15,6 +15,8 @@
   export let options: SortableListItem[];
   export let optionConstructor: () => SortableListItem;
   let optionsListResortedCount: number = 0;
+
+  export let selectedLang: string | null = null;
 </script>
 
 <InputWrapper {label}>
@@ -33,13 +35,14 @@
       }}
     >
       {#each options as option, idx}
-        <div class="flex flex-row gap-1 items-baseline">
-          <LocalizableTextInput bind:value={option.label} isLongText={false} />
+        <div class="flex flex-row gap-1 items-center">
+          <LocalizableTextInput bind:value={option.label} isLongText={false} {selectedLang} />
           <div class="grip-handle">
-            <BarsOutline />
+            <BarsOutline class="w-4 h-4 text-gray-700" />
           </div>
           <ActionIcon
             icon={CloseOutline}
+            iconClass="w-4 h-4 text-gray-700"
             on:click={() => {
               options = options.toSpliced(idx);
             }}

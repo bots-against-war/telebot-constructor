@@ -63,8 +63,9 @@
     botConfig; // trigger svelte's reactivity by mentioning the value we're reacting to
     configReactivityTriggeredCount += 1;
     console.debug("bot config reactivity triggered!");
-    if (configReactivityTriggeredCount > 2) {
-      // dont know why it's 2 but it just works...
+    if (configReactivityTriggeredCount > 3) {
+      // HACK: seems like there are 3 "implicit" triggers on every config load...
+      // will need to make up a more elegant way to handle this stuff!
       isConfigModified = true;
     }
   }

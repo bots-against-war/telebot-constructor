@@ -120,9 +120,9 @@ export function validateMenuBlock(config: MenuBlock, langConfig: LanguageConfig 
 
   for (const [idx, item] of config.menu.items.entries()) {
     results.push(validateLocalizableText(item.label, `пункт #${idx + 1}`, langConfig));
-    if (!item.next_block_id) {
-      results.push(err({ error: `Для пункта #${idx + 1} не выбран следующий блок` }));
-    }
+    // if (!item.next_block_id) {
+    //   results.push(err({ error: `Для пункта #${idx + 1} не выбран следующий блок` }));
+    // }
   }
 
   return mergeResults(results);

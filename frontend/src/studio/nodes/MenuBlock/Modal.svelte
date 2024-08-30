@@ -1,13 +1,14 @@
 <script lang="ts">
   import { Toggle } from "flowbite-svelte";
   import type { MenuBlock, MenuItem } from "../../../api/types";
+  import { TELEGRAM_MAX_MESSAGE_LENGTH_CHARS } from "../../../constants";
   import LocalizableTextInput from "../../components/LocalizableTextInput.svelte";
   import NodeModalBody from "../../components/NodeModalBody.svelte";
   import NodeModalControls from "../../components/NodeModalControls.svelte";
   import SortableListInput from "../../components/SortableListInput.svelte";
+  import { languageConfigStore } from "../../stores";
   import { clone } from "../../utils";
   import { NODE_TITLE } from "../display";
-  import { TELEGRAM_MAX_MESSAGE_LENGTH_CHARS } from "../../../constants";
 
   export let config: MenuBlock;
   export let onConfigUpdate: (newConfig: MenuBlock) => any;
@@ -32,6 +33,9 @@
 
   let addBackButton = config.menu.config.back_label !== null;
   let backButtonLabel = config.menu.config.back_label || "";
+
+  let selectedLang: string | null = null;
+  selectedLang = $languageConfigStore ? $languageConfigStore.supportedLanguageCodes[0] : null;
 </script>
 
 <NodeModalBody title={NODE_TITLE.menu}>
@@ -39,9 +43,17 @@
     label="Текст"
     bind:value={editedConfig.menu.text}
     maxCharacters={TELEGRAM_MAX_MESSAGE_LENGTH_CHARS}
+    on:languageChanged={(event) => {
+      selectedLang = event.detail;
+    }}
   />
-  <SortableListInput label="Кнопки" bind:options={editedConfig.menu.items} optionConstructor={newMenuItem} />
-  <Toggle bind:checked={addBackButton}>Возможность выйти на предыдущий уровень</Toggle>
+  <SortableListInput
+    label="Кнопки"
+    bind:options={editedConfig.menu.items}
+    optionConstructor={newMenuItem}
+    {selectedLang}
+  />
+  <Toggle bind:checked={addBackButton}>Возможность вернуться назад</Toggle>
   {#if addBackButton}
     <LocalizableTextInput
       label={'Кнопка "назад"'}

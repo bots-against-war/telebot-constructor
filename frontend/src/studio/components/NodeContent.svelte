@@ -34,7 +34,7 @@
     isValid = configValidationResult.ok;
   }
 
-  const showMoreActionsIconId = `show-more-actions-${id}`;
+  const showMoreActionsIconId = `show-more-actions-${id}-${crypto.randomUUID()}`;
 </script>
 
 <div class="node-content-container">
