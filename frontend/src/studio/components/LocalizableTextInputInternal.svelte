@@ -101,7 +101,7 @@
               inactiveClasses="p-2 border-b-2 border-transparent hover:text-gray-600 hover:border-gray-300 text-gray-500"
             >
               <div slot="title" class="flex flex-row gap-1 items-center">
-                {#if !value[language]}
+                {#if required && !value[language]}
                   <ExclamationCircleOutline color="red" size="md" />
                 {/if}
                 <Language {language} fullName tooltip={false} />

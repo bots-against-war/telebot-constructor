@@ -67,6 +67,12 @@ class ContentText(BaseModel):
                     lang: preprocess_markdown_for_telegram(translation) for lang, translation in self.text.items()
                 }
 
+    def is_empty(self) -> bool:
+        if isinstance(self.text, str):
+            return len(self.text) == 0
+        else:
+            return any(len(v) == 0 for v in self.text.values())
+
 
 class ContentBlockContentAttachment(ExactlyOneNonNullFieldModel):
     image: Optional[str]  # base64-encoded with possible "data:*/*;base64," prefix
@@ -105,7 +111,7 @@ class ContentBlock(UserFlowBlock):
     def model_post_init(self, __context: Any) -> None:
         if not self.contents:
             raise ValueError("Block must contain at least one content unit")
-        empty_contents = [c for c in self.contents if c.text is None and not c.attachments]
+        empty_contents = [c for c in self.contents if (c.text is None or c.text.is_empty()) and not c.attachments]
         if empty_contents:
             raise ValueError(f"Block contains empty content unit(s): {len(empty_contents)}")
         contents_validated: list[Content] = []

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { ImageSolid } from "flowbite-svelte-icons";
   import { Node } from "svelvet";
   import type { ContentBlock } from "../../../api/types";
   import type { SvelvetPosition } from "../../../types";
@@ -12,7 +13,6 @@
   import { DEFAULT_NODE_PROPS } from "../nodeProps";
   import { validateContentBlock } from "../nodeValidators";
   import Modal from "./Modal.svelte";
-  import truncate from "@svackages/truncate";
 
   const openModal = getModalOpener();
 
@@ -43,7 +43,14 @@
     on:edit={openEditModal}
   >
     {#if config.contents.length > 0 && config.contents[0].text}
-      <LocalizableText text={config.contents[0].text?.text} maxHeightPx={80} />
+      <div class="flex flex-row gap-2">
+        {#if config.contents[0].attachments.length > 0}
+          <ImageSolid color="gray" class="w-4 h-4" />
+        {/if}
+        <div class="w-full flex-grow">
+          <LocalizableText text={config.contents[0].text?.text} maxHeightPx={80} />
+        </div>
+      </div>
     {/if}
   </NodeContent>
   <OutputAnchorsBox>

@@ -6,7 +6,10 @@
 
 <div class="flex flex-col gap-4">
   {#if title}
-    <Heading tag="h4">{title}</Heading>
+    <div>
+      <Heading tag="h4">{title}</Heading>
+      <slot name="description" />
+    </div>
   {/if}
   <slot />
 </div>

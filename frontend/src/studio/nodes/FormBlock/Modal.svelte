@@ -69,9 +69,13 @@
 </script>
 
 <NodeModalBody title={NODE_TITLE.form}>
+  <div slot="description" class="text-sm text-gray-600 mt-2">
+    После успешного заполнения формы ответы пользователь:ницы сохраняются и он:а переходит по пути <strong>ОК</strong>.
+    Если в процессе заполнения он:а ввела команду <code>/cancel</code>, он:а переходит по пути <strong>Отмена</strong>.
+  </div>
   <!-- NOTE: additional div is needed because Tabs have no top-level container -->
   <div>
-    <Tabs style="underline" contentClass="mt-3">
+    <Tabs style="underline" contentClass="mt-1">
       <TabItem open title={`Поля (${flattenedFormFields(topLevelBranch.members).length})`}>
         <div class="mb-4">
           <LocalizableTextInput

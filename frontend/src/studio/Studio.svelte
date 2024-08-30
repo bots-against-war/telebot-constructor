@@ -291,6 +291,10 @@
 
   let forceReloadCounter = 0;
   const applyTempalateToConfig = (template: Template) => {
+    if (isBotMultilang && template.config.blocks.find((b) => b.language_select)) {
+      alert("Не получилось добавить шаблон: в боте уже есть блок выбора языков!");
+      return;
+    }
     console.debug("Applying template:", template);
     // since we're storing node display coords separately, we need to patch
     // them back into the config here

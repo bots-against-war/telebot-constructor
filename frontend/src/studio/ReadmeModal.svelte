@@ -143,7 +143,7 @@
       </P>
     </TabItem>
 
-    <TabItem title="Понятия">
+    <TabItem title="Термины">
       <Heading tag="h4" class={headingClass}>О Telegram-ботах</Heading>
       <P class={pClass}>
         Бот в Telegram — это программа, которая работает внутри мессенджера и взаимодействует с пользователями. Проще

@@ -24,6 +24,7 @@ export function validateLocalizableText(
   text: LocalizableText,
   textName: string,
   langConfig: LanguageConfig | null,
+  allowEmptyTexts: boolean = false,
 ): Result<null, ValidationError> {
   if (langConfig === null) {
     if (typeof text === "object") {
@@ -40,9 +41,14 @@ export function validateLocalizableText(
     if (typeof text === "string") {
       missingLanguages = langConfig.supportedLanguageCodes;
     } else {
-      missingLanguages = langConfig.supportedLanguageCodes.filter(
-        (lang) => !text[lang], // filtering out missing and empty localizations
-      );
+      missingLanguages = langConfig.supportedLanguageCodes.filter((lang) => {
+        // filtering out missing and empty localizations
+        if (allowEmptyTexts) {
+          return text[lang] === undefined;
+        } else {
+          return !text[lang];
+        }
+      });
     }
     if (missingLanguages.length > 0) {
       return err({
@@ -70,12 +76,14 @@ export function validateContentBlock(
   langConfig: LanguageConfig | null,
 ): Result<null, ValidationError> {
   const textValidationResults: Result<null, ValidationError>[] = config.contents.map((content, idx) => {
+    let res: Result<null, ValidationError> = ok(null);
     if (content.text) {
-      return validateLocalizableText(content.text.text, `текст #${idx + 1}`, langConfig);
-    } else {
-      // TODO: attachments validation
-      return ok(null);
+      res = mergeResults([res, validateLocalizableText(content.text.text, `текст #${idx + 1}`, langConfig, true)]);
     }
+    if (content.attachments) {
+      // TODO: attachments validation
+    }
+    return res;
   });
   return mergeResults(textValidationResults);
 }

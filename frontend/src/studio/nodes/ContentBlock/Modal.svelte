@@ -21,17 +21,14 @@
   }
 
   async function serializeAttachments(): Promise<Attachments> {
+    if (!files) return [];
     const attachments: Attachments = [];
-
-    if (!files) return attachments;
-
     for (let file of files) {
       // NOTE future improvement, add try catch block, err monitoring presence is required
       const image = await base64EncodeFileContent(file);
       const filename = file.name;
       attachments.push({ image, filename });
     }
-
     return attachments;
   }
 
@@ -95,6 +92,7 @@
     maxCharacters={files ? TELEGRAM_MAX_MESSAGE_LENGTH_CHARS : TELEGRAM_MAX_CAPTION_LENGTH_CHARS}
     textareaRows={10}
     markdown
+    required={false}
   />
   <InputWrapper label="Приложения" required={false}>
     <Fileupload id="multiple_files" class="mb-2" multiple bind:files accept="image/*" />

@@ -160,6 +160,8 @@ EXTRA_SPACE_AFTER_BLOCKQUOTE = re.compile(r"^\s*\>\s*", flags=re.MULTILINE)
 
 
 def preprocess_markdown_for_telegram(text: str) -> str:
+    if not text:
+        return text
     text = telegramify_markdown.markdownify(text)
     # see https://github.com/sudoskys/telegramify-markdown/issues/21 for why this is needed
     text = EXTRA_SPACE_AFTER_BLOCKQUOTE.sub(">", text)
