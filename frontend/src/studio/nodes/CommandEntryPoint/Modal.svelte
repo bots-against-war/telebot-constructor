@@ -42,13 +42,13 @@
     </ButtonGroup>
   </InputWrapper>
   <TextInput label="Описание" required={false} bind:value={descr}>
-    <InlineCollapsible slot="description">
-      Для меню рядом с полем ввода сообщения или подсказки при наборе "<code>/</code>".
-      <span slot="expanded">
-        В многоязычных ботах это описание не переводится – советуем писать на самом популярном языке или несколько
-        вариантов в одну строчку. Например: <code>/help</code> – "помощь" или "помощь/pomoc/assistere".
-      </span>
-    </InlineCollapsible>
+    <details slot="description">
+      <summary>
+        Для меню рядом с полем ввода сообщения или подсказки при наборе "<code>/</code>".
+      </summary>
+      В многоязычных ботах это описание не переводится – советуем писать на самом популярном языке или несколько вариантов
+      в одну строчку. Например: <code>/help</code> – "помощь" или "помощь/pomoc/assistere".
+    </details>
   </TextInput>
   <NodeModalControls saveable={commandError === undefined} on:save={updateConfig} />
 </NodeModalBody>
