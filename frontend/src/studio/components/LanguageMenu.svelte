@@ -9,14 +9,14 @@
   export let selectedLang: string | null = null;
 
   let dropdownOpen = false;
-  const langMenuId = crypto.randomUUID();
+  const langMenuId = `openLanguageMenu-${crypto.randomUUID()}`;
 </script>
 
 {#if $languageConfigStore}
-  <div id="openLanguageMenu-{langMenuId}">
+  <div id={langMenuId}>
     <ActionIcon icon={GlobeSolid} />
   </div>
-  <Dropdown bind:open={dropdownOpen} triggeredBy="#openLanguageMenu-{langMenuId}" placement="right">
+  <Dropdown bind:open={dropdownOpen} triggeredBy="#{langMenuId}" placement="right">
     {#each $languageConfigStore.supportedLanguageCodes as language (language)}
       <DropdownItem
         class="text-nowrap p-2"

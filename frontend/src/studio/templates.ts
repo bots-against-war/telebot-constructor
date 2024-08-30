@@ -919,7 +919,7 @@ export function festivalBotTemplate(): Template {
               ],
               config: {
                 mechanism: "inline_buttons",
-                back_label: "⬅️",
+                back_label: "⬅️️️⬅️️️⬅️️️",
                 lock_after_termination: false,
               },
             },

@@ -2,7 +2,7 @@
   import { Fileupload, Helper, Listgroup } from "flowbite-svelte";
   import type { Attachments, ContentBlock, ContentBlockContentAttachment } from "../../../api/types";
   import InputWrapper from "../../../components/inputs/InputWrapper.svelte";
-  import { TELEGRAM_MAX_MESSAGE_LENGTH_CHARS } from "../../../constants";
+  import { TELEGRAM_MAX_CAPTION_LENGTH_CHARS, TELEGRAM_MAX_MESSAGE_LENGTH_CHARS } from "../../../constants";
   import LocalizableTextInput from "../../components/LocalizableTextInput.svelte";
   import NodeModalBody from "../../components/NodeModalBody.svelte";
   import NodeModalControls from "../../components/NodeModalControls.svelte";
@@ -92,7 +92,7 @@
   <LocalizableTextInput
     label="Текст сообщения"
     bind:value={editedMessageText}
-    maxCharacters={TELEGRAM_MAX_MESSAGE_LENGTH_CHARS}
+    maxCharacters={files ? TELEGRAM_MAX_MESSAGE_LENGTH_CHARS : TELEGRAM_MAX_CAPTION_LENGTH_CHARS}
     textareaRows={10}
     markdown
   />

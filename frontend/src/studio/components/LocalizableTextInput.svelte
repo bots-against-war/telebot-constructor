@@ -9,4 +9,4 @@
   export let value: LocalizableText;
 </script>
 
-<LocalizableTextInputInternal bind:value langConfig={$languageConfigStore} {...$$restProps} />
+<LocalizableTextInputInternal bind:value langConfig={$languageConfigStore} {...$$restProps} on:languageChanged />

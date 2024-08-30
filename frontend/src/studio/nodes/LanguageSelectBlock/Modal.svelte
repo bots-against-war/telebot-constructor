@@ -3,6 +3,7 @@
   import type { LanguageData, LanguageSelectBlock } from "../../../api/types";
   import LanguageDataComponent from "../../../components/LanguageData.svelte";
   import InputWrapper from "../../../components/inputs/InputWrapper.svelte";
+  import { TELEGRAM_MAX_MESSAGE_LENGTH_CHARS } from "../../../constants";
   import { availableLanguagesStore, lookupLanguage } from "../../../globalStateStores";
   import { unwrap } from "../../../utils";
   import LocalizableTextInput from "../../components/LocalizableTextInputInternal.svelte";
@@ -10,12 +11,9 @@
   import NodeModalControls from "../../components/NodeModalControls.svelte";
   import { languageConfigStore } from "../../stores";
   import { NODE_TITLE } from "../display";
-  import { TELEGRAM_MAX_MESSAGE_LENGTH_CHARS } from "../../../constants";
 
   export let config: LanguageSelectBlock;
   export let onConfigUpdate: (newConfig: LanguageSelectBlock) => any;
-
-  const getCode = (ld: LanguageData) => ld.code;
 
   function updateConfig() {
     if (!(supportedLanguageDataList && defaultLanguage)) return;
@@ -62,7 +60,7 @@
   let supportedLanguageDataList: LanguageData[] = config.supported_languages.map((code) =>
     unwrap(lookupLanguage(code, $availableLanguagesStore)),
   );
-  let supportedLanguageDataListUpdatedCounter = 0;
+  let forceMenuRerenderCounter = 0;
   let defaultLanguage: LanguageData | null | undefined = config.default_language
     ? unwrap(lookupLanguage(config.default_language, $availableLanguagesStore))
     : null;
@@ -74,15 +72,30 @@
   function handleSupportedLanguageListUpdate() {
     if (
       supportedLanguageDataList &&
-      (!defaultLanguage || !supportedLanguageDataList.map(getCode).includes(defaultLanguage.code))
+      (!defaultLanguage || !supportedLanguageDataList.map((ld) => ld.code).includes(defaultLanguage.code))
     ) {
       defaultLanguage = supportedLanguageDataList[0];
     }
-    supportedLanguageDataListUpdatedCounter += 1;
+    forceMenuRerenderCounter += 1;
   }
 </script>
 
 <NodeModalBody title={NODE_TITLE.language_select}>
+  {#key forceMenuRerenderCounter}
+    {#if supportedLanguageDataList && defaultLanguage}
+      <LocalizableTextInput
+        label="Сообщение"
+        description="Для меню выбора языка"
+        bind:value={prompt}
+        langConfig={{
+          supportedLanguageCodes: supportedLanguageDataList.map((ld) => ld.code),
+          defaultLanguageCode: defaultLanguage.code,
+        }}
+        maxCharacters={TELEGRAM_MAX_MESSAGE_LENGTH_CHARS}
+      />
+    {/if}
+  {/key}
+
   <InputWrapper label="Поддерживаемые языки" description="Начните вводить код или название языка по-английски">
     <Select
       itemId="code"
@@ -102,10 +115,11 @@
     </Select>
   </InputWrapper>
 
-  {#key supportedLanguageDataListUpdatedCounter}
+  {#key forceMenuRerenderCounter}
     <InputWrapper
       label="Язык по умолчанию"
-      description="Будет использоваться, если не подходит язык интерфейса Telegram"
+      description="Используется, если пользователь:ница не выбрал:а язык"
+      required={false}
     >
       <Select itemId="code" placeholder="" bind:value={defaultLanguage} items={supportedLanguageDataList}>
         <div slot="item" let:item class="select-internal-container">
@@ -116,19 +130,8 @@
         </div>
       </Select>
     </InputWrapper>
-    {#if supportedLanguageDataList && defaultLanguage}
-      <LocalizableTextInput
-        label="Сообщение"
-        description="Для меню выбора языка"
-        bind:value={prompt}
-        langConfig={{
-          supportedLanguageCodes: supportedLanguageDataList.map((ld) => ld.code),
-          defaultLanguageCode: defaultLanguage.code,
-        }}
-        maxCharacters={TELEGRAM_MAX_MESSAGE_LENGTH_CHARS}
-      />
-    {/if}
   {/key}
+
   <NodeModalControls saveable={isConfigValid} on:save={updateConfig} />
 </NodeModalBody>
 

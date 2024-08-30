@@ -435,21 +435,21 @@
           on:click={nodeFactory(NodeKind.block, NodeTypeKey.content, defaultContentBlockConfig)}
         />
         <AddNodeButton
+          key={NodeTypeKey.menu}
+          on:click={nodeFactory(NodeKind.block, NodeTypeKey.menu, defaultMenuBlockConfig)}
+        />
+        <AddNodeButton
           key={NodeTypeKey.human_operator}
           on:click={nodeFactory(NodeKind.block, NodeTypeKey.human_operator, defaultHumanOperatorBlockConfig)}
+        />
+        <AddNodeButton
+          key={NodeTypeKey.form}
+          on:click={nodeFactory(NodeKind.block, NodeTypeKey.form, defaultFormBlockConfig)}
         />
         <AddNodeButton
           key={NodeTypeKey.language_select}
           disabled={isBotMultilang}
           on:click={nodeFactory(NodeKind.block, NodeTypeKey.language_select, defaultLanguageSelectBlockConfig)}
-        />
-        <AddNodeButton
-          key={NodeTypeKey.menu}
-          on:click={nodeFactory(NodeKind.block, NodeTypeKey.menu, defaultMenuBlockConfig)}
-        />
-        <AddNodeButton
-          key={NodeTypeKey.form}
-          on:click={nodeFactory(NodeKind.block, NodeTypeKey.form, defaultFormBlockConfig)}
         />
       </div>
 

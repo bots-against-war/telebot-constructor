@@ -20,14 +20,20 @@
   export let position: SvelvetPosition;
   export let isValid = true;
 
-  const setNewConfig = (newConfig: LanguageSelectBlock) => {
-    config = newConfig;
-  };
   const openEditModal = () =>
     openModal(Modal, {
       config,
-      onConfigUpdate: setNewConfig,
+      onConfigUpdate: (newConfig: LanguageSelectBlock) => {
+        config = newConfig;
+      },
     });
+
+  $: {
+    if (config.next_block_id) {
+      // silently setting these two outputs to the same block
+      config.language_selected_next_block_id = config.next_block_id;
+    }
+  }
 </script>
 
 <Node id={config.block_id} bind:position {...DEFAULT_NODE_PROPS}>
@@ -53,6 +59,5 @@
   </NodeContent>
   <OutputAnchorsBox>
     <OutputAnchor bind:nextBlockId={config.next_block_id} />
-    <OutputAnchor bind:nextBlockId={config.language_selected_next_block_id} anchorLabel="Выбран язык" />
   </OutputAnchorsBox>
 </Node>

@@ -66,8 +66,8 @@ export function defaultMenuBlockConfig(id: string, langConfig: LanguageConfig | 
         config: {
           back_label:
             langConfig === null
-              ? "⬅️"
-              : Object.fromEntries(langConfig.supportedLanguageCodes.map((lang) => [lang, "⬅️"])),
+              ? "⬅️⬅️⬅️"
+              : Object.fromEntries(langConfig.supportedLanguageCodes.map((lang) => [lang, "⬅️⬅️⬅️"])),
           mechanism: "inline_buttons",
           lock_after_termination: false,
         },

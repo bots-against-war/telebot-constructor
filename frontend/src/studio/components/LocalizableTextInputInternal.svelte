@@ -8,6 +8,7 @@
   import type { LanguageConfig } from "../stores";
   import LanguageMenu from "./LanguageMenu.svelte";
   import Textarea from "../../components/inputs/Textarea.svelte";
+  import { createEventDispatcher } from "svelte";
 
   export let langConfig: LanguageConfig | null;
   export let value: LocalizableText;
@@ -23,6 +24,12 @@
   export let preventExceedingMaxLength: boolean = false;
 
   export let markdown: boolean = false;
+
+  // does not feature a two-way binding!
+  // instead, listen for languageChanged event (only for long text with tabs tho)
+  export let selectedLang: string | null = null;
+
+  const dispatch = createEventDispatcher<{ languageChanged: string }>();
 
   const INTERNAL_DEBUG_LOG = false;
   function internalDebug(msg: string) {
@@ -59,7 +66,9 @@
   }
   internalDebug(`after validation and type coercion value = ${JSON.stringify(value)}`);
 
-  let selectedLang = langConfig ? langConfig.supportedLanguageCodes[0] : null;
+  if (selectedLang == null) {
+    selectedLang = langConfig ? langConfig.supportedLanguageCodes[0] : null;
+  }
 </script>
 
 {#if !langConfig && typeof value === "string"}
@@ -86,6 +95,7 @@
           {#each langConfig.supportedLanguageCodes as language, idx (language)}
             <TabItem
               open={idx === 0}
+              on:click={() => dispatch("languageChanged", language)}
               activeClasses="p-2 text-primary-600 border-b-2 border-primary-600"
               inactiveClasses="p-2 border-b-2 border-transparent hover:text-gray-600 hover:border-gray-300 text-gray-500"
             >
