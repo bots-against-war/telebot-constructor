@@ -4,6 +4,7 @@
   import { generateOptionId } from "../utils";
 
   export let config: SingleSelectFormFieldConfig;
+  export let selectedLang: string | null = null;
 </script>
 
 <div>
@@ -13,5 +14,6 @@
     optionConstructor={() => {
       return { id: generateOptionId(), label: "" };
     }}
+    {selectedLang}
   />
 </div>

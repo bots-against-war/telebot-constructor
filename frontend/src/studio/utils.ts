@@ -47,7 +47,7 @@ export function capitalize(string: string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
-// for display purposes only
+// for display purposes and some internal pre-filling
 export function localizableTextToString(lc: LocalizableText, langConfig: LanguageConfig | null): string {
   if (langConfig === null && typeof lc === "string") return lc;
   else if (langConfig !== null && typeof lc === "object") return lc[langConfig.defaultLanguageCode] || "";
