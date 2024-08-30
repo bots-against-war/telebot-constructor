@@ -40,7 +40,7 @@ export function defaultHumanOperatorBlockConfig(id: string): UserFlowBlockConfig
         max_messages_per_minute: 10,
         messages_to_user: {
           forwarded_to_admin_ok: "",
-          throttling: "",
+          throttling: "Не присылайте больше {} сообщений в минуту!",
         },
         messages_to_admin: {
           copied_to_user_ok: "Отправлено!",

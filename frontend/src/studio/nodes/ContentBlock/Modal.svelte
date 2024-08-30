@@ -89,7 +89,7 @@
   <LocalizableTextInput
     label="Текст сообщения"
     bind:value={editedMessageText}
-    maxCharacters={files ? TELEGRAM_MAX_MESSAGE_LENGTH_CHARS : TELEGRAM_MAX_CAPTION_LENGTH_CHARS}
+    maxCharacters={files ? TELEGRAM_MAX_CAPTION_LENGTH_CHARS : TELEGRAM_MAX_MESSAGE_LENGTH_CHARS}
     textareaRows={10}
     markdown
     required={false}

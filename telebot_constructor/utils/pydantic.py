@@ -29,7 +29,7 @@ class ExactlyOneNonNullFieldModel(BaseModel):
         non_null_optional_fields = {name for name in optional_field_names if getattr(self, name) is not None}
         if len(non_null_optional_fields) != 1:
             raise ValueError(
-                f"Exacly one optional field (of {sorted(optional_field_names)}) must be set to non-null value, "
+                f"Exacly one optional field (of {sorted(optional_field_names)}) must be set to a non-null value, "
                 + f"but {len(non_null_optional_fields)} actually are: {sorted(non_null_optional_fields)}"
             )
         return self

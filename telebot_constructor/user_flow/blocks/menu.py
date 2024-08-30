@@ -18,13 +18,12 @@ from telebot_constructor.user_flow.types import (
     UserFlowSetupContext,
 )
 from telebot_constructor.utils import without_nones
-from telebot_constructor.utils.pydantic import (
-    ExactlyOneNonNullFieldModel,
-    LocalizableText,
-)
+from telebot_constructor.utils.pydantic import LocalizableText
+
+NOOP_TERMINATOR = "noop"
 
 
-class MenuItem(ExactlyOneNonNullFieldModel):
+class MenuItem(BaseModel):
     label: LocalizableText
 
     # exactly one field must be non-None
@@ -32,11 +31,18 @@ class MenuItem(ExactlyOneNonNullFieldModel):
     next_block_id: Optional[str] = None  # for terminal items
     link_url: Optional[str] = None  # for link buttons (works only if mechanism is inline)
 
+    def model_post_init(self, __context: Any) -> None:
+        specified_options = [o for o in (self.submenu, self.next_block_id, self.link_url) if o is not None]
+        if len(specified_options) > 1:
+            raise ValueError("At most one of the options may be specified: submenu, next block, or link URL")
+
+        self._menu_terminator: str | None = NOOP_TERMINATOR if len(specified_options) == 0 else self.next_block_id
+
     def to_components_menu_item(self) -> ComponentsMenuItem:
         return ComponentsMenuItem(
             label=self.label,
             submenu=None if self.submenu is None else self.submenu.to_components_menu(),
-            terminator=self.next_block_id,
+            terminator=self._menu_terminator,
             link_url=self.link_url,
             bound_category=None,
         )
@@ -100,16 +106,22 @@ class MenuBlock(UserFlowBlock):
         )
 
         async def on_terminal_menu_option_selected(terminator_context: TerminatorContext) -> Optional[TerminatorResult]:
-            next_block_id = terminator_context.terminator
-            await context.enter_block(
-                next_block_id,
-                UserFlowContext.from_setup_context(
-                    setup_ctx=context,
-                    chat=terminator_context.menu_message.chat if terminator_context.menu_message is not None else None,
-                    user=terminator_context.user,
-                    last_update_content=terminator_context.menu_message,
-                ),
-            )
+            terminator = terminator_context.terminator
+            if terminator != NOOP_TERMINATOR:
+                next_block_id = terminator
+                await context.enter_block(
+                    next_block_id,
+                    UserFlowContext.from_setup_context(
+                        setup_ctx=context,
+                        chat=(
+                            terminator_context.menu_message.chat
+                            if terminator_context.menu_message is not None
+                            else None
+                        ),
+                        user=terminator_context.user,
+                        last_update_content=terminator_context.menu_message,
+                    ),
+                )
             return None
 
         self.menu_handler.setup(

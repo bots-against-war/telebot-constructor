@@ -92,6 +92,7 @@ class UserFlow:
                     next_block = self.block_by_id[menu_item.next_block_id]
                     if isinstance(next_block, MenuBlock):
                         menu_item.next_block_id = None
+                        menu_item._menu_terminator = None
                         menu_item.submenu = copy.deepcopy(next_block.menu)
 
     @property
