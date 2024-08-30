@@ -47,7 +47,7 @@
             самого чата по команде <code>/help</code>.
           </p>
           <details class="my-2">
-            <summary> Как создать рабочий чат? </summary>
+            <summary> Как создать рабочий чат?</summary>
             <List tag="ol">
               <Li>
                 Откройте Telegram и добавьте вашего бота (<BotUserBadge {botId} inline let:user
