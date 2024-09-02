@@ -25,16 +25,7 @@ logging.basicConfig(level=logging.INFO if os.environ.get("IS_HEROKU") else loggi
 
 
 async def main() -> None:
-    configure_alerts(
-        token=os.environ["ALERTS_BOT_TOKEN"],
-        alerts_channel_id=int(os.environ["ALERTS_CHANNEL_ID"]),
-        app_name="[🏗️ Constructor 🏗️]",
-    )
-
-    try:
-        raise RuntimeError("Testing error reporting")
-    except Exception:
-        logging.exception("Example error")
+    configure_alerts(token=os.environ["ALERTS_BOT_TOKEN"], alerts_channel_id=int(os.environ["ALERTS_CHANNEL_ID"]))
 
     if bool(os.environ.get("TELEBOT_CONSTRUCTOR_USE_REDIS_EMULATION")):
         logging.info("Using redis emulation")
