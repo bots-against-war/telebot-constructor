@@ -356,6 +356,7 @@
     </Navbar>
   </div>
   {#key forceReloadCounter}
+    <!-- FIXME: add support for trackpad pan (just trackpadPan option breaks mouse compat) -->
     <Svelvet
       TD
       fitView
@@ -364,7 +365,6 @@
       minimap={false}
       enableAllHotkeys={false}
       controls
-      trackpadPan
       {customMouseDownHandler}
       customCssCursor={tentativeNode ? "crosshair" : null}
     >
