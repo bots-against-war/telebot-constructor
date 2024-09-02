@@ -30,7 +30,7 @@ class PollingConstructedBotRunner(ConstructedBotRunner):
         if bot_id in self.running_bot_tasks.get(username, {}):
             return False
 
-        bot_running_task = asyncio.create_task(bot_runner.run_polling(), name=f"{bot_id} by {username}")
+        bot_running_task = asyncio.create_task(bot_runner.run_polling(), name=f"[{username}][{bot_id}] polling")
         self.running_bot_tasks[username][bot_id] = bot_running_task
         bot_running_task.add_done_callback(lambda _task: self.running_bot_tasks[username].pop(bot_id, None))
         return True
@@ -46,9 +46,7 @@ class PollingConstructedBotRunner(ConstructedBotRunner):
             try:
                 await bot_running_task
             except asyncio.CancelledError:
-                # HACK: telebot's infinity polling closes HTTP session on polling stop,
-                #       so here we forcefully recreate it
-                await telebot.api.session_manager.get_session()
+                pass
             return True
 
     async def cleanup(self) -> None:
