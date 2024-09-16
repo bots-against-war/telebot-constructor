@@ -3,7 +3,6 @@ import asyncio
 import collections
 import logging
 
-import telebot.api
 from telebot.runner import BotRunner
 from telebot.webhook import WebhookApp
 

@@ -5,7 +5,7 @@ import subprocess
 from pathlib import Path
 
 # when constructor app is hosted within a larger web application, this base path will be used
-BASE_PATH = "/constructor"
+base_path = "/constructor"
 
 
 def print_cmd(cmd: list[str]) -> None:
@@ -21,25 +21,26 @@ print(f"Package version: {version!r}")
 
 
 print(delimiter)
-print("Building frontend static files")
-vite_cmd = ["npx", "vite", "build", "frontend", "--base", BASE_PATH]
+print("Building frontend")
+vite_cmd = ["npx", "vite", "build", "frontend", "--base", base_path]
 print_cmd(vite_cmd)
 subprocess.run(vite_cmd, env={"GIT_COMMIT_ID": version, **os.environ}, check=True)
 
 
 print(delimiter)
-print("Copying build artifacts to Python package")
+print("Copying frontend build artifacts to the /static dir inside Python package")
 target_dir = "telebot_constructor/static"
 shutil.rmtree(target_dir, ignore_errors=True)
 shutil.copytree("frontend/dist", target_dir)
 
 
 print(delimiter)
-print("Setting base path in backend Python code")
+print("Setting build-time configuration in backend Python code")
 build_time_config_file = Path("telebot_constructor/build_time_config.py")
 build_time_config_body = build_time_config_file.read_text()
 atexit.register(lambda: build_time_config_file.write_text(build_time_config_body))
-build_time_config_body_preprocessed = build_time_config_body.replace('BASE_PATH = ""', f'BASE_PATH = "{BASE_PATH}"')
+build_time_config_body_preprocessed = build_time_config_body.replace('BASE_PATH = ""', f'BASE_PATH = "{base_path}"')
+build_time_config_body_preprocessed = build_time_config_body_preprocessed.replace('VERSION = ""', f'VERSION = "{version}"')
 build_time_config_file.write_text(build_time_config_body_preprocessed)
 
 
@@ -51,4 +52,4 @@ subprocess.run(poetry_cmd, check=True)
 
 
 print(delimiter)
-print("See ya")
+print("See ya!")

@@ -34,7 +34,7 @@ from telebot_constructor.app_models import (
 )
 from telebot_constructor.auth.auth import Auth
 from telebot_constructor.bot_config import BotConfig
-from telebot_constructor.build_time_config import BASE_PATH
+from telebot_constructor.build_time_config import BASE_PATH, VERSION
 from telebot_constructor.construct import BotFactory, construct_bot, make_bare_bot
 from telebot_constructor.cors import setup_cors
 from telebot_constructor.debug import setup_debugging
@@ -229,7 +229,7 @@ class TelebotConstructorApp:
     def _log_prefix(self, username: str, bot_id: str, version: BotVersion | None = None) -> str:
         prefix = f"[{username}][{bot_id}]"
         if version is not None:
-            prefix += f"[ver {version}]"
+            prefix += f"[v{version}]"
         return prefix
 
     async def stop_bot(self, username: str, bot_id: str) -> bool:
@@ -905,6 +905,10 @@ class TelebotConstructorApp:
                 content_type="text/html",
             )
 
+        @routes.get("/api/version")
+        async def api_version(request: web.Request) -> web.Response:
+            return web.Response(text=VERSION or "<unset>")
+
         STATIC_FILE_GLOBS = ["assets/*", "favicon.ico"]
 
         @routes.get("/{path:(?!api/).*}")  # mathing all paths except those starting with /api prefix
@@ -958,13 +962,13 @@ class TelebotConstructorApp:
                 try:
                     bot_config = await self.store.load_bot_config(username, bot_id, version)
                     if bot_config is None:
-                        raise RuntimeError("Bot is running bot no config found")
+                        raise RuntimeError("Bot is marked as running bot no config found")
                     bot_runner = await self._construct_bot(username, bot_id, bot_config)
                     if not await self.runner.start(username=username, bot_id=bot_id, bot_runner=bot_runner):
-                        raise RuntimeError("Failed to start bot")
+                        raise RuntimeError(f"Runner {self.runner} refused to start the bot, maybe see error above")
                     started_bots += 1
                 except Exception:
-                    logger.exception(f"{log_prefix} Error starting stored bot")
+                    logger.exception(f"{log_prefix} Error starting stored bot, will mark it as not running")
                     try:
                         await self.store.set_bot_not_running(username, bot_id)
                     except Exception:
@@ -996,6 +1000,11 @@ class TelebotConstructorApp:
         self._runner = PollingConstructedBotRunner()
         await self.setup()
         aiohttp_app = await self.create_constructor_web_app()
+        if BASE_PATH:
+            logger.info(f"Constructor web app is scoped under {BASE_PATH}")
+            fake_host_app = web.Application()
+            fake_host_app.add_subapp(BASE_PATH, aiohttp_app)
+            aiohttp_app = fake_host_app
         aiohttp_runner = web.AppRunner(aiohttp_app)
         await aiohttp_runner.setup()
         site = web.TCPSite(aiohttp_runner, "0.0.0.0", port)
@@ -1011,10 +1020,20 @@ class TelebotConstructorApp:
     async def setup_on_webhook_app(self, webhook_app: WebhookApp) -> None:
         """Run constructor app as part of larger application, represented by a WebhookApp instance"""
         logger.info(f"Setting up telebot constructor web app on webhook app with base URL {webhook_app.base_url!r}")
+        # create constructor web app *before* setting up any bots as it adds routes to aiohttp app
+        tbc_aiohttp_app = await self.create_constructor_web_app()
+        if BASE_PATH:
+            logger.info(f"Constructor web app is scoped under {BASE_PATH}")
+            webhook_app.aiohttp_app.add_subapp(BASE_PATH, tbc_aiohttp_app)
+        else:
+            logger.warning(
+                "No base path configured at build time, so we're replacing webhook app entirely "
+                + "and effectively deleting all previously set webhooks"
+            )
+            webhook_app.aiohttp_app = tbc_aiohttp_app
+
         self._runner = WebhookAppConstructedBotRunner(webhook_app)
         await self.setup()
-        app = await self.create_constructor_web_app()
-        app.on_cleanup.append(lambda _: self.cleanup())
-        webhook_app.aiohttp_app.add_subapp(BASE_PATH, app)
+        tbc_aiohttp_app.on_cleanup.append(lambda _: self.cleanup())
 
     # endregion

@@ -1,14 +1,17 @@
+"""Example of running Telebot Constructor as part of a larger app"""
+
 import asyncio
 import logging
 import os
 from pathlib import Path
 from urllib.parse import urlparse
 
+from aiohttp import web
 from redis.asyncio import Redis
 from telebot import AsyncTeleBot
+from telebot.webhook import WebhookApp
 from telebot_components.redis_utils.emulation import PersistentRedisEmulation
 from telebot_components.redis_utils.interface import RedisInterface
-from telebot_components.utils.alerts import configure_alerts
 from telebot_components.utils.secrets import RedisSecretStore
 
 from telebot_constructor.app import TelebotConstructorApp
@@ -18,14 +21,16 @@ from telebot_constructor.telegram_files_downloader import (
     RedisCacheTelegramFilesDownloader,
 )
 
-logging.basicConfig(level=logging.INFO if os.environ.get("IS_HEROKU") else logging.DEBUG)
-
 
 async def main() -> None:
-    try:
-        configure_alerts(token=os.environ["ALERTS_BOT_TOKEN"], alerts_channel_id=int(os.environ["ALERTS_CHANNEL_ID"]))
-    except Exception:
-        logging.info("Failed to configure alerts, running without them", exc_info=True)
+    app = WebhookApp(base_url="https://localhost:8888")
+    routes = web.RouteTableDef()
+
+    @routes.get("/")
+    async def host_app_index(request: web.Request) -> web.Response:
+        return web.Response(text="host app index")
+
+    app.aiohttp_app.add_routes(routes)
 
     if bool(os.environ.get("TELEBOT_CONSTRUCTOR_USE_REDIS_EMULATION")):
         logging.info("Using redis emulation")
@@ -70,16 +75,17 @@ async def main() -> None:
         logging.info("Using noop auth")
         auth = NoAuth()
 
-    app = TelebotConstructorApp(
+    tbc_app = TelebotConstructorApp(
         redis=redis,
         auth=auth,
         secret_store=secret_store,
         static_files_dir=Path("frontend/dist"),
         telegram_files_downloader=telegram_files_downloader,
     )
-    logging.info("Running app with polling")
-    await app.run_polling(port=int(os.environ.get("PORT", 8088)))
+
+    await tbc_app.setup_on_webhook_app(app)
+
+    await app.run(port=8088)
 
 
-if __name__ == "__main__":
-    asyncio.run(main())
+asyncio.run(main())
