@@ -37,7 +37,7 @@
     styleCloseButton={{ borderRadius: "0" }}
   >
     <div use:links>
-      <Router>
+      <Router basepath={import.meta.env.BASE_URL}>
         <Route path={botListingPath()}>
           <BotListingLoader />
         </Route>
