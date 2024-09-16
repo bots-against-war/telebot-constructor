@@ -40,7 +40,9 @@ build_time_config_file = Path("telebot_constructor/build_time_config.py")
 build_time_config_body = build_time_config_file.read_text()
 atexit.register(lambda: build_time_config_file.write_text(build_time_config_body))
 build_time_config_body_preprocessed = build_time_config_body.replace('BASE_PATH = ""', f'BASE_PATH = "{base_path}"')
-build_time_config_body_preprocessed = build_time_config_body_preprocessed.replace('VERSION = ""', f'VERSION = "{version}"')
+build_time_config_body_preprocessed = build_time_config_body_preprocessed.replace(
+    'VERSION = ""', f'VERSION = "{version}"'
+)
 build_time_config_file.write_text(build_time_config_body_preprocessed)
 
 

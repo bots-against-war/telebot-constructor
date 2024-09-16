@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from telebot import AsyncTeleBot
 from telebot import types as tg
 from telebot.runner import BotRunner
+from telebot.types import service as tg_service
 from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.stores.generic import KeyValueStore
 
@@ -55,12 +56,14 @@ class TelegramAuth(Auth):
         redis: RedisInterface,
         bot: AsyncTeleBot,
         telegram_files_downloader: TelegramFilesDownloader,
+        bot_is_run_externally: bool = False,
         confirmation_timeout: datetime.timedelta = datetime.timedelta(minutes=10),
         access_token_lifetime: datetime.timedelta = datetime.timedelta(days=1),
     ):
         self.bot = bot
         self.bot_username: Optional[str] = None
         self.telegram_files_downloader = telegram_files_downloader
+        self.bot_is_run_externally = bot_is_run_externally
 
         self.tg_user_data_by_access_code_store = KeyValueStore[TelegramUserData](
             name="tg-user-info",
@@ -162,15 +165,16 @@ class TelegramAuth(Auth):
         app.router.add_post("/telegram-auth/make-auth-link", request_auth_link)
 
     async def setup_bot(self) -> Optional[BotRunner]:
-        @self.bot.message_handler(commands=["start"])
+        @self.bot.message_handler(commands=["start"], priority=100)
         async def save_telegram_user_data(message: tg.Message):
+            continue_ = tg_service.HandlerResult(continue_to_other_handlers=True)
             message_text_parts = message.text_content.split()
             if len(message_text_parts) <= 1:
-                return
+                return continue_
             start_param = message_text_parts[1]
             access_token = await self.access_token_by_start_param.load(start_param)
             if access_token is None:
-                return
+                return continue_
             user = message.from_user
             tg_user_data = await TelegramUserData.from_user(self.bot, message.from_user)
             await self.tg_user_data_by_access_code_store.save(access_token, tg_user_data)
@@ -183,5 +187,9 @@ class TelegramAuth(Auth):
                 text=f"Вы авторизованы как <b>{formatted_user}</b>! Можно вернуться в конструктор.",
                 parse_mode="HTML",
             )
+            return continue_
 
-        return BotRunner(bot_prefix="telegram-auth-bot", bot=self.bot, background_jobs=[])
+        if self.bot_is_run_externally:
+            return None
+        else:
+            return BotRunner(bot_prefix="telegram-auth-bot", bot=self.bot, background_jobs=[])
