@@ -1022,8 +1022,9 @@ class TelebotConstructorApp:
         logger.info(f"Setting up telebot constructor web app on webhook app with base URL {webhook_app.base_url!r}")
         # create constructor web app *before* setting up any bots as it adds routes to aiohttp app
         tbc_aiohttp_app = await self.create_constructor_web_app()
+        tbc_aiohttp_app.on_cleanup.append(lambda _: self.cleanup())
         if BASE_PATH:
-            logger.info(f"Constructor web app is scoped under {BASE_PATH}")
+            logger.info(f"Constructor web app is scoped under {BASE_PATH!r}")
             webhook_app.aiohttp_app.add_subapp(BASE_PATH, tbc_aiohttp_app)
         else:
             logger.warning(
@@ -1034,6 +1035,5 @@ class TelebotConstructorApp:
 
         self._runner = WebhookAppConstructedBotRunner(webhook_app)
         await self.setup()
-        tbc_aiohttp_app.on_cleanup.append(lambda _: self.cleanup())
 
     # endregion
