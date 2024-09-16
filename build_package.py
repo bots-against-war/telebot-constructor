@@ -21,6 +21,23 @@ print(f"Package version: {version!r}")
 
 
 print(delimiter)
+print("Replacing base path in custom HTML files")
+paths = [
+    Path("frontend/public") / filename
+    for filename in ["group_chat_auth_login.html", "landing.html", "telegram_auth_login.html"]
+]
+original_contents: list[str] = []
+processed_contents: list[str] = []
+for path in paths:
+    content = path.read_text()
+    original_contents.append(content)
+    processed_contents.append(content.replace('const BASE_PATH = "";', f'const BASE_PATH = "{base_path}";'))
+atexit.register(lambda: [path.write_text(original_content) for path, original_content in zip(paths, original_contents)])
+for path, content in zip(paths, processed_contents):
+    path.write_text(content)
+
+
+print(delimiter)
 print("Building frontend")
 vite_cmd = ["npx", "vite", "build", "frontend", "--base", base_path]
 print_cmd(vite_cmd)

@@ -9,7 +9,7 @@
     <header>
       <h1>Telebot Constructor</h1>
       <h2>Визуальный ноу-код конструктор Telegram-ботов</h2>
-      <a href="/bots" class="cta-button">СОЗДАТЬ БОТА</a>
+      <a onclick="goToBots()" class="cta-button">СОЗДАТЬ БОТА</a>
     </header>
     <section>
       <h3>Как мы можем помочь вашему проекту?</h3>
@@ -93,6 +93,7 @@
     font-size: 1.2em;
     text-decoration: none;
     transition: background-color 0.3s;
+    cursor: pointer;
   }
   .cta-button:hover {
     background-color: #5e5e68;
@@ -157,3 +158,11 @@
     text-decoration: underline;
   }
 </style>
+
+<script>
+  const BASE_PATH = ""; // MAGIC STRING, see build_package.py
+  console.log(`Base path = ${BASE_PATH}`);
+  function goToBots() {
+    window.location.href = BASE_PATH + "/bots";
+  }
+</script>
