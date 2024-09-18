@@ -3,7 +3,8 @@ import { navigate } from "svelte-routing";
 export const BASE_PATH = import.meta.env.BASE_URL || "";
 
 export function navigateWithBasepath(to: string) {
-  navigate(BASE_PATH + to);
+  // navigate(BASE_PATH + to);
+  navigate(to);
 }
 
 function encodePathPart(part: any): any {
