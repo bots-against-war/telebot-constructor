@@ -1,7 +1,6 @@
 <script lang="ts">
   import { Button, Heading, Spinner, Tooltip } from "flowbite-svelte";
   import { QuestionCircleOutline } from "flowbite-svelte-icons";
-  import { navigate } from "svelte-routing";
   import { Svelvet } from "svelvet";
   import { saveBotConfig } from "../api/botConfig";
   import { getBlockId, getEntrypointId } from "../api/typeUtils";
@@ -9,7 +8,7 @@
   import Navbar from "../components/Navbar.svelte";
   import GridPlusColored from "../components/icons/GridPlusColored.svelte";
   import { BOT_INFO_NODE_ID } from "../constants";
-  import { dashboardPath } from "../routeUtils";
+  import { dashboardPath, navigateWithBasepath } from "../routeUtils";
   import { INFO_MODAL_OPTIONS, err, getError, getModalOpener, ok, withConfirmation, type Result } from "../utils";
   import ReadmeModal from "./ReadmeModal.svelte";
   import SaveConfigModal from "./SaveConfigModal.svelte";
@@ -263,7 +262,7 @@
     }
   }
 
-  const exitStudio = () => navigate(dashboardPath(botId));
+  const exitStudio = () => navigateWithBasepath(dashboardPath(botId));
   const exitStudioWithConfirmation = withConfirmation(
     "Вы уверены, что хотите выйти из студии? Несохранённые изменения будут потеряны.",
     async () => exitStudio(),

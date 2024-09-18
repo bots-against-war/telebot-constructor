@@ -10,6 +10,7 @@
   import VersionsLoader from "./dashboard/routes/versions/VersionsLoader.svelte";
   import GlobalStateProvider from "./GlobalStateProvider.svelte";
   import {
+    BASE_PATH,
     botListingPath,
     dashboardPath,
     formResultsPagePath,
@@ -37,7 +38,7 @@
     styleCloseButton={{ borderRadius: "0" }}
   >
     <div use:links>
-      <Router basepath={import.meta.env.BASE_URL}>
+      <Router basepath={BASE_PATH}>
         <Route path={botListingPath()}>
           <BotListingLoader />
         </Route>

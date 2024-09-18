@@ -1,6 +1,5 @@
 <script lang="ts">
   import { Button, Heading } from "flowbite-svelte";
-  import { navigate } from "svelte-routing";
   import { deleteBotConfig } from "../../../api/botConfig";
   import { stopBot } from "../../../api/lifecycle";
   import { type BotInfo } from "../../../api/types";
@@ -10,7 +9,7 @@
   import Navbar from "../../../components/Navbar.svelte";
   import Page from "../../../components/Page.svelte";
   import PageContent from "../../../components/PageContent.svelte";
-  import { botListingPath, dashboardPath } from "../../../routeUtils";
+  import { botListingPath, dashboardPath, navigateWithBasepath } from "../../../routeUtils";
   import { withConfirmation } from "../../../utils";
 
   export let botInfo: BotInfo;
@@ -21,7 +20,7 @@
       "из конструктора или истории версий.",
     async () => {
       stopBot(botInfo.bot_id);
-      navigate(dashboardPath(botInfo.bot_id));
+      navigateWithBasepath(dashboardPath(botInfo.bot_id));
     },
     "Остановить",
   );
@@ -30,7 +29,7 @@
     "Вы уверены, что хотите удалить бота? Это действие дельзя отменить!",
     async () => {
       deleteBotConfig(botInfo.bot_id);
-      navigate(botListingPath());
+      navigateWithBasepath(botListingPath());
     },
     "Удалить",
   );

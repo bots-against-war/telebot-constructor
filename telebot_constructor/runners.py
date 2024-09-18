@@ -76,5 +76,5 @@ class WebhookAppConstructedBotRunner(ConstructedBotRunner):
             return await self.webhook_app.remove_bot_runner(bot_runner)
 
     async def cleanup(self) -> None:
-        """All bots are cleaned up by the webhook app itweslf, no need to do anything"""
+        """All bots are cleaned up by the webhook app itself, no need to do anything"""
         pass

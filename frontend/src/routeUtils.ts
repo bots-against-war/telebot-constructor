@@ -1,3 +1,11 @@
+import { navigate } from "svelte-routing";
+
+export const BASE_PATH = import.meta.env.BASE_URL || "";
+
+export function navigateWithBasepath(to: string) {
+  navigate(BASE_PATH + to);
+}
+
 function encodePathPart(part: any): any {
   if (typeof part !== "string") {
     return part;

@@ -989,7 +989,7 @@ class TelebotConstructorApp:
         logger.info("Cleanup started")
         await self.telegram_files_downloader.cleanup()
         await self.runner.cleanup()
-        await telebot.api.session_manager.close_session()
+        # await telebot.api.session_manager.close_session()
         logger.info("Cleanup completed")
 
     # public methods to run constructor in different scenarios
