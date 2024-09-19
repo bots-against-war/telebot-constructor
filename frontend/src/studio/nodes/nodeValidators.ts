@@ -240,7 +240,7 @@ export function validateFormBlock(config: FormBlock, langConfig: LanguageConfig 
       validateLocalizableText(text, `текст сообщения "${formMessageName(key)}"`, langConfig),
     ),
   );
-  if (!(config.results_export.echo_to_user || config.results_export.to_chat)) {
+  if (!(config.results_export.echo_to_user || config.results_export.to_chat || config.results_export.to_store)) {
     results.push(err({ error: "Не выбран ни один вариант обработки результатов формы" }));
   }
   if (config.results_export.to_chat !== null && config.results_export.to_chat.chat_id === PLACEHOLDER_GROUP_CHAT_ID) {
