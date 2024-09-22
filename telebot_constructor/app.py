@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import Optional, Type, TypeVar
 
 import pydantic
-import telebot.api
 from aiohttp import web
 from aiohttp_swagger import setup_swagger  # type: ignore
 from telebot import AsyncTeleBot
@@ -996,16 +995,17 @@ class TelebotConstructorApp:
 
     async def run_polling(self, port: int) -> None:
         """Standalone run, polling is used to get updates from Telegram API"""
-        logger.info("Running telebot constructor w/ polling")
+        logger.info("Running telebot constructor with polling")
         self._runner = PollingConstructedBotRunner()
         await self.setup()
-        aiohttp_app = await self.create_constructor_web_app()
+        constructor_web_app = await self.create_constructor_web_app()
         if BASE_PATH:
-            logger.info(f"Constructor web app is scoped under {BASE_PATH}")
-            fake_host_app = web.Application()
-            fake_host_app.add_subapp(BASE_PATH, aiohttp_app)
-            aiohttp_app = fake_host_app
-        aiohttp_runner = web.AppRunner(aiohttp_app)
+            logger.info(f"Constructor web app is scoped under path {BASE_PATH}")
+            app = web.Application()
+            app.add_subapp(BASE_PATH, constructor_web_app)
+        else:
+            app = constructor_web_app
+        aiohttp_runner = web.AppRunner(app)
         await aiohttp_runner.setup()
         site = web.TCPSite(aiohttp_runner, "0.0.0.0", port)
         logger.info(f"Running server on {site.name}")

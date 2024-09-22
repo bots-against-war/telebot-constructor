@@ -126,8 +126,6 @@
           <span>В разработке</span>
         </BotInfoCard>
 
-        <!-- TODO: full activity page -->
-        <!-- <BotInfoCard title="Активность" moreLinkTitle="Вся активность" moreLinkHref="/activity-TBD"> -->
         <BotInfoCard title="Активность">
           <BotEventList events={botInfo.last_events} />
         </BotInfoCard>

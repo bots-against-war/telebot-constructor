@@ -2,10 +2,11 @@
   import { Avatar, Button, NavBrand, Navbar, Popover } from "flowbite-svelte";
   import logo from "../assets/logo.svg";
   import { loggedInUserStore } from "../globalStateStores";
+  import { botListingPath } from "../routeUtils";
 </script>
 
 <Navbar fluid={true} color="primary" shadow>
-  <NavBrand href="/" target="_blank">
+  <NavBrand href={botListingPath()} target="_blank">
     <img src={logo} class="h-10" alt="Telebot constructor Logo" />
   </NavBrand>
   <slot>

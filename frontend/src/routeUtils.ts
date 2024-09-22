@@ -1,10 +1,8 @@
-import { navigate } from "svelte-routing";
+export const BASE_PATH = import.meta.env.BASE_URL;
 
-export const BASE_PATH = import.meta.env.BASE_URL || "";
-
-export function navigateWithBasepath(to: string) {
-  // navigate(BASE_PATH + to);
-  navigate(to);
+function withBasePath(path: string): string {
+  const prefix = BASE_PATH === "/" ? "" : BASE_PATH;
+  return prefix + path;
 }
 
 function encodePathPart(part: any): any {
@@ -16,29 +14,29 @@ function encodePathPart(part: any): any {
 }
 
 export function formResultsPagePath(botId: string, formBlockId: string): string {
-  return `/forms/${encodePathPart(botId)}/${encodePathPart(formBlockId)}`;
+  return withBasePath(`/forms/${encodePathPart(botId)}/${encodePathPart(formBlockId)}`);
 }
 
 export function studioPath(botId: string, version: number | null): string {
-  let path = `/studio/${encodePathPart(botId)}`;
+  let relpath = `/studio/${encodePathPart(botId)}`;
   if (version !== null) {
-    path += `?version=${encodePathPart(version)}`;
+    relpath += `?version=${encodePathPart(version)}`;
   }
-  return path;
+  return withBasePath(relpath);
 }
 
 export function dashboardPath(botId: string): string {
-  return `/dashboard/${encodePathPart(botId)}`;
+  return withBasePath(`/dashboard/${encodePathPart(botId)}`);
 }
 
 export function botListingPath(): string {
-  return "/bots";
+  return withBasePath("/bots");
 }
 
 export function versionsPagePath(botId: string): string {
-  return `/versions/${encodePathPart(botId)}`;
+  return withBasePath(`/versions/${encodePathPart(botId)}`);
 }
 
 export function settingsPath(botId: string): string {
-  return `/settings/${encodePathPart(botId)}`;
+  return withBasePath(`/settings/${encodePathPart(botId)}`);
 }
