@@ -1,7 +1,12 @@
 # telebot-constructor
 
-Free & open-source Telegram bot constructor with no-code web UI, using
-[telebot-components](https://github.com/bots-against-war/telebot-components) as backend .
+Free & open-source no-code constructor of Telegram bots for grass-roots activist initiatives
+and human rights organizations. Focused on privacy both for bot users and admins.
+Developed by [bots against war](https://t.me/bots_against_war_bot) team.
+
+## How to use
+
+:warning: Under construction
 
 ## Development
 
