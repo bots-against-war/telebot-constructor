@@ -1,15 +1,17 @@
 import asyncio
+import csv
+import datetime
 import fnmatch
 import json
 import logging
 import mimetypes
 import re
+from io import StringIO
 from pathlib import Path
 from typing import Optional, Type, TypeVar
 
-import aiocsv
 import pydantic
-from aiohttp import web
+from aiohttp import hdrs, web
 from aiohttp_swagger import setup_swagger  # type: ignore
 from telebot import AsyncTeleBot
 from telebot.runner import BotRunner
@@ -67,7 +69,6 @@ from telebot_constructor.telegram_files_downloader import (
     TelegramFilesDownloader,
 )
 from telebot_constructor.utils import page_params_to_redis_indices
-from telebot_constructor.utils.csv import StreamResponseCsvEncodingAdapter
 
 logger = logging.getLogger(__name__)
 
@@ -667,20 +668,32 @@ class TelebotConstructorApp:
                 load_page_size=100,
                 max_results_count=MAX_RESULTS_COUNT,
             )
-            # generating CSV response on the fly and streaming it directly to the response stream to avoid storing
-            response = web.StreamResponse(status=200 if is_full else 206)
-            response.content_type = "text/csv"
-            await response.prepare(request)
-            csv_writer = aiocsv.AsyncDictWriter(
-                asyncfile=StreamResponseCsvEncodingAdapter(response),
+            csv_out_stream = StringIO()
+            csv_writer = csv.DictWriter(
+                f=csv_out_stream,
                 fieldnames=[TIMESTAMP_KEY, USER_KEY] + list(form_info.field_names.keys()),
             )
             if with_header:
                 header = {TIMESTAMP_KEY: "Timestamp", USER_KEY: "User", **form_info.field_names}
-                await csv_writer.writerow(header)
+                csv_writer.writerow(header)
             for r in results:
-                await csv_writer.writerow(r)
-            return response
+                if TIMESTAMP_KEY in r:
+                    timestamp = r.get(TIMESTAMP_KEY)
+                    if isinstance(timestamp, float):
+                        r[TIMESTAMP_KEY] = datetime.datetime.fromtimestamp(timestamp).isoformat()
+                csv_writer.writerow(r)
+            return web.Response(
+                status=200 if is_full else 206,
+                text=csv_out_stream.getvalue(),
+                content_type="text/csv",
+                headers={
+                    hdrs.CONTENT_DISPOSITION: (
+                        f"attachment; filename=\"Results for {form_info.title or 'Unnamed form'} "
+                        + f"({filter.describe()}; generated on "
+                        + f'{datetime.datetime.now().isoformat(timespec='minutes')}).csv"'
+                    ),
+                },
+            )
 
         @routes.put("/api/forms/{bot_id}/{form_block_id}/title")
         async def update_form_title(request: web.Request) -> web.Response:

@@ -1,3 +1,4 @@
+import datetime
 import operator
 import time
 from dataclasses import dataclass
@@ -64,6 +65,14 @@ class FormInfo(FormInfoBasic):
 class FormResultsFilter:
     min_timestamp: float | None
     max_timestamp: float | None
+
+    def describe(self) -> str:
+        def fmt(ts: float):
+            return datetime.datetime.fromtimestamp(ts).isoformat(timespec="minutes")
+
+        start = fmt(self.min_timestamp) if self.min_timestamp is not None else "earliest"
+        end = fmt(self.max_timestamp) if self.max_timestamp is not None else "latest"
+        return f"{start} - {end}"
 
     @staticmethod
     def matches_timestamp(

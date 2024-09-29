@@ -1,3 +1,4 @@
+import datetime
 from typing import Tuple
 
 import aiohttp.web
@@ -287,7 +288,7 @@ async def test_form_results_api(
 
     # also, exporting results to CSV
     responses = await (await client.get("/api/forms/mybot/form-block-123/responses")).json()
-    timestamps = [r["timestamp"] for r in responses["results"]]
+    timestamps = [datetime.datetime.fromtimestamp(r["timestamp"]).isoformat() for r in responses["results"]]
     assert len(timestamps) == 3
 
     resp = await client.get("/api/forms/mybot/form-block-123/export")
