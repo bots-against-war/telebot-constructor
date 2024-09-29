@@ -1,6 +1,5 @@
 import abc
 import logging
-import time
 from enum import Enum
 from typing import Any, Literal, Optional, Sequence, Type, Union, cast
 
@@ -25,7 +24,13 @@ from telebot_components.language import any_text_to_str
 from telebot_components.utils import emoji_hash, telegram_html_escape
 from typing_extensions import Self
 
-from telebot_constructor.store.form_results import BotSpecificFormResultsStore
+from telebot_constructor.store.form_results import (
+    RESERVED_FORM_FIELD_IDS,
+    USER_KEY,
+    BotSpecificFormResultsStore,
+    FormResult,
+    empty_form_result,
+)
 from telebot_constructor.user_flow.blocks.base import UserFlowBlock
 from telebot_constructor.user_flow.blocks.constants import (
     FORM_CANCEL_CMD,
@@ -286,10 +291,6 @@ class FormResultsExport(BaseModel):
 # to ensure unique single select field -> form attribution
 # see the comment in the field's construction method
 FORM_ID_BY_SINGLE_SELECT_FIELD_ID = dict[str, str]()
-# form field ids reserved for use in internal storage
-TIMESTAMP_KEY = "timestamp"
-USER_KEY = "user"
-RESERVED_FORM_FIELD_IDS = {TIMESTAMP_KEY, USER_KEY}
 
 
 class FormBlock(UserFlowBlock):
@@ -452,7 +453,7 @@ class FormBlock(UserFlowBlock):
                     logger.exception("Error sending form result to admin chat")
             if self.results_export.to_store:
                 try:
-                    result_dump: dict[str, str | float] = {TIMESTAMP_KEY: time.time()}
+                    result_dump: FormResult = empty_form_result()
                     for field_id, field_value in result.items():
                         result_dump[field_id] = self._form.fields_by_name[field_id].value_to_str(
                             field_value, admin_lang

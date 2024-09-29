@@ -11,7 +11,11 @@ from telebot_constructor.bot_config import (
     UserFlowEntryPointConfig,
 )
 from telebot_constructor.construct import construct_bot
-from telebot_constructor.store.form_results import FormResultsStore, GlobalFormId
+from telebot_constructor.store.form_results import (
+    FormResultsFilter,
+    FormResultsStore,
+    GlobalFormId,
+)
 from telebot_constructor.user_flow.blocks.content import ContentBlock
 from telebot_constructor.user_flow.blocks.form import (
     BranchingFormMemberConfig,
@@ -437,7 +441,10 @@ async def test_form_results_internal_storage() -> None:
         },
     ]
     assert mask_recent_timestamps(
-        await form_results_store.load_all(form_id=GlobalFormId(username=username, bot_id=bot_id, form_block_id="form"))
+        await form_results_store.load(
+            form_id=GlobalFormId(username=username, bot_id=bot_id, form_block_id="form"),
+            filter=FormResultsFilter(min_timestamp=None, max_timestamp=None),
+        )
     ) == [
         {
             "timestamp": RECENT_TIMESTAMP,
