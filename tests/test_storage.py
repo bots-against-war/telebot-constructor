@@ -5,6 +5,7 @@ from telebot_components.redis_utils.emulation import RedisEmulation
 
 from telebot_constructor.store.form_results import (
     TIMESTAMP_KEY,
+    FormResult,
     FormResultsFilter,
     FormResultsStore,
     GlobalFormId,
@@ -46,22 +47,33 @@ async def test_form_results_load_with_filter(load_page_size: int):
     form_id = GlobalFormId(username="test", bot_id="testbot", form_block_id="testform")
 
     now = time.time()
+    all_results: list[FormResult] = [
+        {TIMESTAMP_KEY: now - 100},
+        {TIMESTAMP_KEY: now - 80},
+        {TIMESTAMP_KEY: now - 60},
+        {TIMESTAMP_KEY: now - 40},
+        {TIMESTAMP_KEY: now - 20},
+        {TIMESTAMP_KEY: now},
+    ]
 
-    await form_results_store.save(form_id, result={TIMESTAMP_KEY: now - 100})
-    await form_results_store.save(form_id, result={TIMESTAMP_KEY: now - 80})
-    await form_results_store.save(form_id, result={TIMESTAMP_KEY: now - 60})
-    await form_results_store.save(form_id, result={TIMESTAMP_KEY: now - 40})
-    await form_results_store.save(form_id, result={TIMESTAMP_KEY: now - 20})
-    await form_results_store.save(form_id, result={TIMESTAMP_KEY: now})
+    for r in all_results:
+        await form_results_store.save(form_id, result=r)
 
-    async def len_matching_filter(filter: FormResultsFilter):
-        return len(await form_results_store.load(form_id, filter=filter, load_page_size=load_page_size))
+    async def matching(filter: FormResultsFilter):
+        results, is_full = await form_results_store.load(
+            form_id,
+            filter=filter,
+            load_page_size=load_page_size,
+            max_results_count=1000,
+        )
+        assert is_full
+        return results
 
-    assert await len_matching_filter(FormResultsFilter(None, None)) == 6
-    assert await len_matching_filter(FormResultsFilter(min_timestamp=now - 50, max_timestamp=None)) == 3
-    assert await len_matching_filter(FormResultsFilter(min_timestamp=now - 50, max_timestamp=now + 10)) == 3
-    assert await len_matching_filter(FormResultsFilter(min_timestamp=now - 70, max_timestamp=now + 10)) == 4
-    assert await len_matching_filter(FormResultsFilter(min_timestamp=now - 70, max_timestamp=now - 10)) == 3
-    assert await len_matching_filter(FormResultsFilter(min_timestamp=now - 110, max_timestamp=now - 10)) == 5
-    assert await len_matching_filter(FormResultsFilter(min_timestamp=now - 110, max_timestamp=None)) == 6
-    assert await len_matching_filter(FormResultsFilter(min_timestamp=None, max_timestamp=now - 90)) == 1
+    assert await matching(FormResultsFilter(None, None)) == all_results
+    assert await matching(FormResultsFilter(min_timestamp=now - 50, max_timestamp=None)) == all_results[3:]
+    assert await matching(FormResultsFilter(min_timestamp=now - 50, max_timestamp=now + 10)) == all_results[3:]
+    assert await matching(FormResultsFilter(min_timestamp=now - 70, max_timestamp=now + 10)) == all_results[2:]
+    assert await matching(FormResultsFilter(min_timestamp=now - 70, max_timestamp=now - 10)) == all_results[2:5]
+    assert await matching(FormResultsFilter(min_timestamp=now - 110, max_timestamp=now - 10)) == all_results[0:5]
+    assert await matching(FormResultsFilter(min_timestamp=now - 110, max_timestamp=None)) == all_results[0:6]
+    assert await matching(FormResultsFilter(min_timestamp=None, max_timestamp=now - 90)) == all_results[0:1]

@@ -7,6 +7,7 @@ import re
 from pathlib import Path
 from typing import Optional, Type, TypeVar
 
+import aiocsv
 import pydantic
 from aiohttp import web
 from aiohttp_swagger import setup_swagger  # type: ignore
@@ -44,7 +45,12 @@ from telebot_constructor.runners import (
     WebhookAppConstructedBotRunner,
 )
 from telebot_constructor.static import get_prefilled_messages, static_file_content
-from telebot_constructor.store.form_results import GlobalFormId
+from telebot_constructor.store.form_results import (
+    TIMESTAMP_KEY,
+    USER_KEY,
+    FormResultsFilter,
+    GlobalFormId,
+)
 from telebot_constructor.store.store import (
     BotConfigVersionMetadata,
     BotVersion,
@@ -61,6 +67,7 @@ from telebot_constructor.telegram_files_downloader import (
     TelegramFilesDownloader,
 )
 from telebot_constructor.utils import page_params_to_redis_indices
+from telebot_constructor.utils.csv import StreamResponseCsvEncodingAdapter
 
 logger = logging.getLogger(__name__)
 
@@ -628,6 +635,52 @@ class TelebotConstructorApp:
             return web.json_response(
                 text=FormResultsPage(bot_info=bot_info, info=form_info, results=form_results).model_dump_json(),
             )
+
+        @routes.get("/api/forms/{bot_id}/{form_block_id}/export")
+        async def export_form_responses_as_csv(request: web.Request) -> web.StreamResponse:
+            """
+            ---
+            description: Export form responses in a CSV format
+            produces:
+            - text/csv
+            responses:
+                "200":
+                    description: OK
+            """
+            username = await self.authenticate(request)
+            bot_id = self.parse_bot_id(request)
+            global_form_id = GlobalFormId(
+                username=username, bot_id=bot_id, form_block_id=self.parse_path_part(request, "form_block_id")
+            )
+            filter = FormResultsFilter(
+                min_timestamp=self.parse_query_param_int(request, name="min_timestamp", min_=None, max_=None),
+                max_timestamp=self.parse_query_param_int(request, name="max_timestamp", min_=None, max_=None),
+            )
+            with_header = self.parse_query_param_bool(request, "header", default=True)
+            form_info = await self.store.form_results.load_form_info(global_form_id)
+            if not form_info:
+                raise web.HTTPNotFound(reason="Form not found")
+            MAX_RESULTS_COUNT = 1000
+            results, is_full = await self.store.form_results.load(
+                form_id=global_form_id,
+                filter=filter,
+                load_page_size=100,
+                max_results_count=MAX_RESULTS_COUNT,
+            )
+            # generating CSV response on the fly and streaming it directly to the response stream to avoid storing
+            response = web.StreamResponse(status=200 if is_full else 206)
+            response.content_type = "text/csv"
+            await response.prepare(request)
+            csv_writer = aiocsv.AsyncDictWriter(
+                asyncfile=StreamResponseCsvEncodingAdapter(response),
+                fieldnames=[TIMESTAMP_KEY, USER_KEY] + list(form_info.field_names.keys()),
+            )
+            if with_header:
+                header = {TIMESTAMP_KEY: "Timestamp", USER_KEY: "User", **form_info.field_names}
+                await csv_writer.writerow(header)
+            for r in results:
+                await csv_writer.writerow(r)
+            return response
 
         @routes.put("/api/forms/{bot_id}/{form_block_id}/title")
         async def update_form_title(request: web.Request) -> web.Response:

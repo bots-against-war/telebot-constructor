@@ -440,12 +440,12 @@ async def test_form_results_internal_storage() -> None:
             "user": "Mary (@mmmmmm, #3)",
         },
     ]
-    assert mask_recent_timestamps(
-        await form_results_store.load(
-            form_id=GlobalFormId(username=username, bot_id=bot_id, form_block_id="form"),
-            filter=FormResultsFilter(min_timestamp=None, max_timestamp=None),
-        )
-    ) == [
+    all_results, is_full = await form_results_store.load(
+        form_id=GlobalFormId(username=username, bot_id=bot_id, form_block_id="form"),
+        filter=FormResultsFilter(min_timestamp=None, max_timestamp=None),
+    )
+    assert is_full
+    assert mask_recent_timestamps(all_results) == [
         {
             "timestamp": RECENT_TIMESTAMP,
             "user": "Alice (@all, #1)",

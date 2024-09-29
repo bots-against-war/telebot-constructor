@@ -209,24 +209,26 @@ class FormResultsStore:
         form_id: GlobalFormId,
         filter: FormResultsFilter,
         load_page_size: int = 100,
-    ) -> list[FormResult]:
+        max_results_count: int = 10_000,
+    ) -> tuple[list[FormResult], bool]:
         key = form_id.as_key()
         results: list[FormResult] = []
         start = 0
-        while True:
+        while len(results) < max_results_count:
             page = await self._results_store.slice(key, start, start + load_page_size - 1)
             if not page:
                 # no more results to load
-                return results
+                return results, True
             start += len(page)
             for r in page:
                 if filter.is_too_new(r):
                     # results are ordered chronologically, so we return as soon as
                     # we see the results that's too new
-                    return results
+                    return results, True
                 if filter.is_too_old(r):
                     continue
                 results.append(r)
+        return results, False
 
 
 @dataclass
