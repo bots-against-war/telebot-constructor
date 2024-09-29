@@ -1,14 +1,17 @@
 import asyncio
+import csv
+import datetime
 import fnmatch
 import json
 import logging
 import mimetypes
 import re
+from io import StringIO
 from pathlib import Path
 from typing import Optional, Type, TypeVar
 
 import pydantic
-from aiohttp import web
+from aiohttp import hdrs, web
 from aiohttp_swagger import setup_swagger  # type: ignore
 from telebot import AsyncTeleBot
 from telebot.runner import BotRunner
@@ -44,7 +47,12 @@ from telebot_constructor.runners import (
     WebhookAppConstructedBotRunner,
 )
 from telebot_constructor.static import get_prefilled_messages, static_file_content
-from telebot_constructor.store.form_results import GlobalFormId
+from telebot_constructor.store.form_results import (
+    TIMESTAMP_KEY,
+    USER_KEY,
+    FormResultsFilter,
+    GlobalFormId,
+)
 from telebot_constructor.store.store import (
     BotConfigVersionMetadata,
     BotVersion,
@@ -627,6 +635,64 @@ class TelebotConstructorApp:
             form_results = await self.store.form_results.load_page(global_form_id, offset=offset, count=count)
             return web.json_response(
                 text=FormResultsPage(bot_info=bot_info, info=form_info, results=form_results).model_dump_json(),
+            )
+
+        @routes.get("/api/forms/{bot_id}/{form_block_id}/export")
+        async def export_form_responses_as_csv(request: web.Request) -> web.StreamResponse:
+            """
+            ---
+            description: Export form responses in a CSV format
+            produces:
+            - text/csv
+            responses:
+                "200":
+                    description: OK
+            """
+            username = await self.authenticate(request)
+            bot_id = self.parse_bot_id(request)
+            global_form_id = GlobalFormId(
+                username=username, bot_id=bot_id, form_block_id=self.parse_path_part(request, "form_block_id")
+            )
+            filter = FormResultsFilter(
+                min_timestamp=self.parse_query_param_int(request, name="min_timestamp", min_=None, max_=None),
+                max_timestamp=self.parse_query_param_int(request, name="max_timestamp", min_=None, max_=None),
+            )
+            with_header = self.parse_query_param_bool(request, "header", default=True)
+            form_info = await self.store.form_results.load_form_info(global_form_id)
+            if not form_info:
+                raise web.HTTPNotFound(reason="Form not found")
+            MAX_RESULTS_COUNT = 1000
+            results, is_full = await self.store.form_results.load(
+                form_id=global_form_id,
+                filter=filter,
+                load_page_size=100,
+                max_results_count=MAX_RESULTS_COUNT,
+            )
+            csv_out_stream = StringIO()
+            csv_writer = csv.DictWriter(
+                f=csv_out_stream,
+                fieldnames=[TIMESTAMP_KEY, USER_KEY] + list(form_info.field_names.keys()),
+            )
+            if with_header:
+                header = {TIMESTAMP_KEY: "Timestamp", USER_KEY: "User", **form_info.field_names}
+                csv_writer.writerow(header)
+            for r in results:
+                if TIMESTAMP_KEY in r:
+                    timestamp = r.get(TIMESTAMP_KEY)
+                    if isinstance(timestamp, float):
+                        r[TIMESTAMP_KEY] = datetime.datetime.fromtimestamp(timestamp).isoformat()
+                csv_writer.writerow(r)
+            return web.Response(
+                status=200 if is_full else 206,
+                text=csv_out_stream.getvalue(),
+                content_type="text/csv",
+                headers={
+                    hdrs.CONTENT_DISPOSITION: (
+                        f"attachment; filename=\"Results for {form_info.title or 'Unnamed form'} "
+                        + f"({filter.describe()}; generated on "
+                        + f'{datetime.datetime.now().isoformat(timespec='minutes')}).csv"'
+                    ),
+                },
             )
 
         @routes.put("/api/forms/{bot_id}/{form_block_id}/title")

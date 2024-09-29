@@ -1,3 +1,4 @@
+import datetime
 from typing import Tuple
 
 import aiohttp.web
@@ -105,7 +106,6 @@ async def test_form_results_api(
 
     resp = await client.get("/api/info/mybot")
     assert resp.status == 200
-    print(await resp.json())
     assert mask_recent_timestamps(await resp.json()) == {
         "bot_id": "mybot",
         "display_name": "my test bot",
@@ -285,3 +285,21 @@ async def test_form_results_api(
             "admin_chat_ids": [],
         },
     }
+
+    # also, exporting results to CSV
+    responses = await (await client.get("/api/forms/mybot/form-block-123/responses")).json()
+    timestamps = [datetime.datetime.fromtimestamp(r["timestamp"]).isoformat() for r in responses["results"]]
+    assert len(timestamps) == 3
+
+    resp = await client.get("/api/forms/mybot/form-block-123/export")
+    assert resp.status == 200
+    csv_text = await resp.text()
+    assert (
+        csv_text.strip().replace("\r\n", "\n")
+        == f"""
+Timestamp,User,one,two
+{timestamps[0]},AAA,First answer by user #1,Second answer by user #1
+{timestamps[1]},BBB,First answer by user #2,Second answer by user #2
+{timestamps[2]},CCC,First answer by user #3,Second answer by user #3
+""".strip()
+    )

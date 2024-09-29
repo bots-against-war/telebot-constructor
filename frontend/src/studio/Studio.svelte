@@ -49,6 +49,7 @@
   export let readonly: boolean;
 
   const open = getModalOpener();
+  let forceReloadCounter = 0;
 
   // we store node positions separately to be able to react to bot config changes with sveltes $:{} blocks,
   // while ignoring changes in the noisy and unimportant node position data
@@ -120,15 +121,18 @@
             defaultLanguageCode: block.language_select.default_language,
           });
         }
+        break;
       }
     }
     if (!foundLanguageField) {
       languageConfigStore.set(null);
     }
-    isBotMultilang = foundLanguageField;
+    if (foundLanguageField !== isBotMultilang) {
+      // forceReloadCounter += 1;
+      isBotMultilang = foundLanguageField;
+    }
   }
 
-  // node deletion callback
   function deleteNode(event: CustomEvent<string>) {
     const id = event.detail;
     // this is a bit cumbersome because we store very similar things (blocks and entrypoing) in two different places
@@ -200,7 +204,6 @@
     return true;
   }
 
-  // node cloning is another way to create nodes from existing one
   function cloneNode(event: CustomEvent<string>) {
     const id = event.detail;
     const entrypointIdx = botConfig.user_flow_config.entrypoints.map(getEntrypointId).findIndex((eId) => eId === id);
@@ -289,7 +292,6 @@
     openReadmeModal();
   }
 
-  let forceReloadCounter = 0;
   const applyTempalateToConfig = (template: Template) => {
     if (isBotMultilang && template.config.blocks.find((b) => b.language_select)) {
       alert("Не получилось добавить шаблон: в боте уже есть блок выбора языков!");
@@ -300,7 +302,6 @@
     // them back into the config here
     botConfig.user_flow_config.node_display_coords = nodeDisplayCoords;
     botConfig.user_flow_config = applyTemplate(botConfig.user_flow_config, template);
-    // TODO: update langs if needed!!!
     nodeDisplayCoords = botConfig.user_flow_config.node_display_coords;
     isConfigModified = true;
     forceReloadCounter += 1;

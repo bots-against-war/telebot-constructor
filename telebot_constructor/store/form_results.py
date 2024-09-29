@@ -1,5 +1,8 @@
+import datetime
+import operator
+import time
 from dataclasses import dataclass
-from typing import Mapping, cast
+from typing import Callable, Mapping, MutableMapping, cast
 
 from pydantic import BaseModel
 from telebot_components.redis_utils.interface import RedisInterface
@@ -12,7 +15,16 @@ FieldId = str
 
 # form results can have a lot of "internal" data types, but for this simple storage
 # they're all cast to strings - CSV doesn't support anything complicated anyway!
-FormResult = Mapping[FieldId, str | int | float]
+FormResult = MutableMapping[FieldId, str | int | float]
+
+# some keys reserved for internal usage
+USER_KEY = "user"
+TIMESTAMP_KEY = "timestamp"
+RESERVED_FORM_FIELD_IDS = {TIMESTAMP_KEY, USER_KEY}
+
+
+def empty_form_result() -> FormResult:
+    return {TIMESTAMP_KEY: time.time()}
 
 
 def noop(x: str) -> str:
@@ -47,6 +59,39 @@ class FormInfoBasic(BaseModel):
 
 class FormInfo(FormInfoBasic):
     field_names: dict[FieldId, str]
+
+
+@dataclass
+class FormResultsFilter:
+    min_timestamp: float | None
+    max_timestamp: float | None
+
+    def describe(self) -> str:
+        def fmt(ts: float):
+            return datetime.datetime.fromtimestamp(ts).isoformat(timespec="minutes")
+
+        start = fmt(self.min_timestamp) if self.min_timestamp is not None else "earliest"
+        end = fmt(self.max_timestamp) if self.max_timestamp is not None else "latest"
+        return f"{start} - {end}"
+
+    @staticmethod
+    def matches_timestamp(
+        result: FormResult,
+        filter_timestamp: float | None,
+        cmp: Callable[[float, float], bool],
+    ) -> bool:
+        if filter_timestamp is None:
+            return True
+        result_timestamp = result.get(TIMESTAMP_KEY)
+        if not isinstance(result_timestamp, float):
+            return True
+        return cmp(result_timestamp, filter_timestamp)
+
+    def is_too_old(self, result: FormResult) -> bool:
+        return not self.matches_timestamp(result, self.min_timestamp, cmp=operator.ge)
+
+    def is_too_new(self, result: FormResult) -> bool:
+        return not self.matches_timestamp(result, self.max_timestamp, cmp=operator.le)
 
 
 class FormResultsStore:
@@ -168,18 +213,31 @@ class FormResultsStore:
             or []
         )
 
-    async def load_all(self, form_id: GlobalFormId) -> list[FormResult]:
+    async def load(
+        self,
+        form_id: GlobalFormId,
+        filter: FormResultsFilter,
+        load_page_size: int = 100,
+        max_results_count: int = 10_000,
+    ) -> tuple[list[FormResult], bool]:
         key = form_id.as_key()
-        res: list[FormResult] = []
+        results: list[FormResult] = []
         start = 0
-        page_size = 100
-        while True:
-            page = await self._results_store.slice(key, start, start + page_size - 1)
+        while len(results) < max_results_count:
+            page = await self._results_store.slice(key, start, start + load_page_size - 1)
             if not page:
-                break
-            res.extend(page)
+                # no more results to load
+                return results, True
             start += len(page)
-        return res
+            for r in page:
+                if filter.is_too_new(r):
+                    # results are ordered chronologically, so we return as soon as
+                    # we see the results that's too new
+                    return results, True
+                if filter.is_too_old(r):
+                    continue
+                results.append(r)
+        return results, False
 
 
 @dataclass
