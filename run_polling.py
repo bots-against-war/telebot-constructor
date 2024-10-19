@@ -1,8 +1,8 @@
 import asyncio
 import logging
 import os
-from pathlib import Path
 import time
+from pathlib import Path
 from urllib.parse import urlparse
 
 from redis.asyncio import Redis
