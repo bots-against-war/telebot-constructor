@@ -2,6 +2,7 @@ import asyncio
 import logging
 import os
 from pathlib import Path
+import time
 from urllib.parse import urlparse
 
 from redis.asyncio import Redis
@@ -38,7 +39,13 @@ async def main() -> None:
             port=redis_url.port or 0,
             username=redis_url.username,
             password=redis_url.password,
+            ssl=True,
+            ssl_cert_reqs=None,  # type: ignore
         )
+        start_time = time.time()
+        await redis.ping()  # type: ignore
+        ping_time = start_time - time.time()
+        logging.info(f"Redis pinged in {ping_time:.3f} sec")
 
     secret_store = RedisSecretStore(
         redis=redis,
