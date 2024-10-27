@@ -89,6 +89,7 @@ export function defaultMenuBlockConfig(
       block_id: id,
       menu: {
         text: "",
+        markup: "markdown",
         items: [],
         config: {
           back_label:

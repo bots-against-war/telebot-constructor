@@ -1,6 +1,25 @@
+import {
+  EyeSlashSolid,
+  LetterBoldOutline,
+  LetterItalicOutline,
+  LinkOutline,
+  QuoteSolid,
+  TextSlashOutline,
+} from "flowbite-svelte-icons";
 import { marked, type RendererObject, type Token, type TokenizerAndRendererExtension } from "marked";
+import type { SvelteComponent } from "svelte";
+import type { Newable } from "ts-essentials";
 
 export type MarkdownEntityType = "bold" | "italic" | "strikethrough" | "spoiler" | "link" | "blockquote";
+
+export const markdownEntityData: [Newable<SvelteComponent>, MarkdownEntityType, string][] = [
+  [LetterBoldOutline, "bold", "Жирный"],
+  [LetterItalicOutline, "italic", "Курсив"],
+  [QuoteSolid, "blockquote", "Цитата"],
+  [LinkOutline, "link", "Ссылка"],
+  [TextSlashOutline, "strikethrough", "Зачеркнутый"],
+  [EyeSlashSolid, "spoiler", "Спойлер"],
+];
 
 export interface MarkdownEntity {
   prefix: string;

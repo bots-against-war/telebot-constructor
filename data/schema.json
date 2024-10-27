@@ -640,7 +640,7 @@
           "title": "Text"
         },
         "markup": {
-          "$ref": "#/$defs/ContentTextMarkup"
+          "$ref": "#/$defs/TextMarkup"
         }
       },
       "required": [
@@ -649,15 +649,6 @@
       ],
       "title": "ContentText",
       "type": "object"
-    },
-    "ContentTextMarkup": {
-      "enum": [
-        "none",
-        "html",
-        "markdown"
-      ],
-      "title": "ContentTextMarkup",
-      "type": "string"
     },
     "EnumOption": {
       "properties": {
@@ -1441,6 +1432,14 @@
         },
         "config": {
           "$ref": "#/$defs/MenuConfig"
+        },
+        "markup": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/TextMarkup"
+            }
+          ],
+          "default": "none"
         }
       },
       "required": [
@@ -1956,6 +1955,15 @@
       ],
       "title": "TelegramUpdateMetrics",
       "type": "object"
+    },
+    "TextMarkup": {
+      "enum": [
+        "none",
+        "html",
+        "markdown"
+      ],
+      "title": "TextMarkup",
+      "type": "string"
     },
     "TgBotCommand": {
       "properties": {

@@ -24,6 +24,7 @@
   }
 
   const editedConfig: MenuBlock = clone(config);
+  editedConfig.menu.markup = "markdown";
 
   function newMenuItem(): MenuItem {
     return {
@@ -58,6 +59,7 @@
   <LocalizableTextInput
     label="Текст"
     required
+    markdown
     bind:value={editedConfig.menu.text}
     maxCharacters={TELEGRAM_MAX_MESSAGE_LENGTH_CHARS}
     on:languageChanged={(event) => {
