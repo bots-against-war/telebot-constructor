@@ -67,13 +67,13 @@
   <InputWrapper label="Тип кнопок" required={false}>
     <Select placeholder="" items={menuMechanismSelectItems} bind:value={editedConfig.menu.config.mechanism} />
     <div class="text-sm text-gray-600">
-      {#if config.menu.config.mechanism == "inline_buttons"}
+      {#if editedConfig.menu.config.mechanism == "inline_buttons"}
         <a target="_blank" href="https://core.telegram.org/bots/features#inline-keyboards">Кнопки под сообщением</a>
         хорошо подходят для небольших, динамичных меню. Текст сообщения обновляется при навигации по меню. Telegram автоматически
         деактивирует кнопки через несколько дней после отправки, поэтому этот тип не подойдёт для меню, которое должно использоваться
         в течение долгого времени.
       {:else}
-        <a target="_blank" href="https://core.telegram.org/bots/features#keyboards"> Кастомная клавиатура</a> подходит для
+        <a target="_blank" href="https://core.telegram.org/bots/features#keyboards">Кастомная клавиатура</a> подходит для
         длинных разветвленных диалоговых схем. Каждый новый уровень отправляется новым сообщением.
       {/if}
     </div>
