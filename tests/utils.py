@@ -137,7 +137,8 @@ def assert_method_call_dictified_kwargs_include(
     method_calls: list[MethodCall], required_call_kwargs: list[dict]
 ) -> None:
     preprocessed_kwargs = [
-        {k: v.to_dict() for k, v in mc.full_kwargs.items() if isinstance(v, Dictionaryable)} for mc in method_calls
+        {k: v.to_dict() if isinstance(v, Dictionaryable) else v for k, v in mc.full_kwargs.items()}
+        for mc in method_calls
     ]
     assert_dicts_include(preprocessed_kwargs, required_call_kwargs)
 

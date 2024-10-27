@@ -476,56 +476,58 @@ async def test_flow_with_nexted_menu() -> None:
 
     bot = bot_runner.bot
     assert isinstance(bot, MockedAsyncTeleBot)
-    bot.method_calls.clear()  # remove construct-time calls
+    bot.method_calls.clear()
 
     # /start command
     await bot.process_new_updates([tg_update_message_to_bot(USER_ID, first_name="User", text="/start")])
-    assert_method_call_kwargs_include(
-        bot.method_calls["send_message"],
-        [
-            {"chat_id": USER_ID, "text": "top level menu"},
-        ],
-    )
     assert_method_call_dictified_kwargs_include(
         bot.method_calls["send_message"],
         [
             {
+                "chat_id": USER_ID,
+                "text": "top level menu",
                 "reply_markup": {
                     "inline_keyboard": [
                         [{"text": "one", "callback_data": "menu:8d6ab84ca2af9fcc-1"}],
                         [{"text": "two", "callback_data": "terminator:8d6ab84ca2af9fcc-1"}],
                     ]
-                }
+                },
             }
         ],
     )
     bot.method_calls.clear()
 
-    # pressing the second button
-    await bot.process_new_updates([tg_update_callback_query(USER_ID, first_name="User", callback_query="terminator:1")])
+    # pressing the second (terminating) button
+    await bot.process_new_updates(
+        [tg_update_callback_query(USER_ID, first_name="User", callback_query="terminator:8d6ab84ca2af9fcc-1")]
+    )
     assert_method_call_kwargs_include(
         bot.method_calls["send_message"], [{"chat_id": 1312, "text": "message after menu"}]
     )
     assert bot.method_calls["send_message"][0].full_kwargs["reply_markup"].to_json() == '{"remove_keyboard":true}'
     bot.method_calls.clear()
 
-    # pressing the first button
-    await bot.process_new_updates([tg_update_callback_query(USER_ID, first_name="User", callback_query="menu:1")])
-    assert not bot.method_calls.get("send_message")
-    assert_method_call_kwargs_include(
-        bot.method_calls["edit_message_text"], [{"chat_id": 1312, "text": "second level menu", "message_id": 1}]
+    # resending menu and pressing the first button
+    await bot.process_new_updates([tg_update_message_to_bot(USER_ID, first_name="User", text="/start")])
+    bot.method_calls.clear()
+    await bot.process_new_updates(
+        [tg_update_callback_query(USER_ID, first_name="User", callback_query="menu:8d6ab84ca2af9fcc-1")]
     )
+    assert not bot.method_calls.get("send_message")
     assert_method_call_dictified_kwargs_include(
         bot.method_calls["edit_message_text"],
         [
             {
+                "chat_id": 1312,
+                "text": "second level menu",
+                "message_id": 1,
                 "reply_markup": {
                     "inline_keyboard": [
                         [{"text": "foo", "callback_data": "terminator:8d6ab84ca2af9fcc-2"}],
                         [{"text": "bar", "callback_data": "terminator:8d6ab84ca2af9fcc-3"}],
                         [{"text": "<-", "callback_data": "menu:8d6ab84ca2af9fcc-0"}],
                     ]
-                }
+                },
             }
         ],
     )
