@@ -1,6 +1,5 @@
 import base64
 import datetime
-import enum
 import hashlib
 import logging
 import re
@@ -10,6 +9,7 @@ from pydantic import BaseModel
 from telebot import types as tg
 from telebot_components.language import any_text_to_str, vaildate_singlelang_text
 from telebot_components.stores.generic import KeyValueStore
+from telebot_components.utils import TextMarkup
 
 from telebot_constructor.user_flow.blocks.base import UserFlowBlock
 from telebot_constructor.user_flow.types import (
@@ -20,7 +20,7 @@ from telebot_constructor.user_flow.types import (
 )
 from telebot_constructor.utils import (
     iter_batches,
-    preprocess_markdown_for_telegram,
+    preprocess_for_telegram,
     without_nones,
 )
 from telebot_constructor.utils.pydantic import (
@@ -31,24 +31,9 @@ from telebot_constructor.utils.pydantic import (
 logger = logging.getLogger(__name__)
 
 
-class ContentTextMarkup(enum.Enum):
-    NONE = "none"
-    HTML = "html"
-    MARKDOWN = "markdown"
-
-    def as_parse_mode(self) -> Optional[str]:
-        """See https://core.telegram.org/bots/api#formatting-options"""
-        if self is ContentTextMarkup.NONE:
-            return None
-        elif self is ContentTextMarkup.HTML:
-            return "HTML"
-        elif self is ContentTextMarkup.MARKDOWN:
-            return "MarkdownV2"
-
-
 class ContentText(BaseModel):
     text: LocalizableText
-    markup: ContentTextMarkup
+    markup: TextMarkup
 
     _preprocessed_text: LocalizableText | None = None
 
@@ -57,15 +42,7 @@ class ContentText(BaseModel):
         return self._preprocessed_text or self.text
 
     def model_post_init(self, __context: Any) -> None:
-        if self.markup is ContentTextMarkup.MARKDOWN:
-            # we store texts in more or less vanilla markdown, but telegram
-            # requires somem extra processing
-            if isinstance(self.text, str):
-                self._preprocessed_text = preprocess_markdown_for_telegram(self.text)
-            else:
-                self._preprocessed_text = {
-                    lang: preprocess_markdown_for_telegram(translation) for lang, translation in self.text.items()
-                }
+        self._preprocessed_text = preprocess_for_telegram(self.text, self.markup)
 
     def is_empty(self) -> bool:
         if isinstance(self.text, str):
@@ -149,7 +126,7 @@ class ContentBlock(UserFlowBlock):
                 Content(
                     text=ContentText(
                         text=message_text,
-                        markup=ContentTextMarkup.NONE,
+                        markup=TextMarkup.NONE,
                     ),
                     attachments=[],
                 )
@@ -163,7 +140,7 @@ class ContentBlock(UserFlowBlock):
             await self._language_store.get_user_language(context.user) if self._language_store is not None else None
         )
         for content in self.contents:
-            parse_mode = content.text.markup.as_parse_mode() if content.text is not None else None
+            parse_mode = content.text.markup.parse_mode() if content.text is not None else None
             if not content.attachments:
                 if content.text is not None:
                     await context.bot.send_message(

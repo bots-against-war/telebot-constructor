@@ -1,7 +1,6 @@
 import collections
 import functools
 import logging
-import re
 from typing import (
     Any,
     Awaitable,
@@ -17,7 +16,9 @@ from typing import (
 import telegramify_markdown  # type: ignore
 from telebot import types as tg
 from telebot.types.service import HandlerFunction, HandlerResult
-from telebot_components.utils import html_link
+from telebot_components.utils import TextMarkup, html_link
+
+from telebot_constructor.utils.pydantic import LocalizableText
 
 logger = logging.getLogger(__name__)
 
@@ -156,13 +157,19 @@ def page_params_to_redis_indices(offset: int, count: int) -> tuple[int, int]:
     return start, end
 
 
-EXTRA_SPACE_AFTER_BLOCKQUOTE = re.compile(r"^\s*\>\s*", flags=re.MULTILINE)
-
-
 def preprocess_markdown_for_telegram(text: str) -> str:
     if not text:
         return text
-    text = telegramify_markdown.markdownify(text)
-    # see https://github.com/sudoskys/telegramify-markdown/issues/21 for why this is needed
-    text = EXTRA_SPACE_AFTER_BLOCKQUOTE.sub(">", text)
-    return text
+    return telegramify_markdown.markdownify(text)
+
+
+def preprocess_for_telegram(text: LocalizableText, markup: TextMarkup) -> LocalizableText:
+    if markup is not TextMarkup.MARKDOWN:
+        return text
+    else:
+        # we store texts in a more or less vanilla markdown, but telegram
+        # requires some extra processing provided by telegramify_markdown package
+        if isinstance(text, str):
+            return preprocess_markdown_for_telegram(text)
+        else:
+            return {lang: preprocess_markdown_for_telegram(translation) for lang, translation in text.items()}

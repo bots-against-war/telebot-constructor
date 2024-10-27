@@ -10,6 +10,7 @@ from telebot_components.menu.menu import (
     TerminatorContext,
     TerminatorResult,
 )
+from telebot_components.utils import TextMarkup
 
 from telebot_constructor.user_flow.blocks.base import UserFlowBlock
 from telebot_constructor.user_flow.types import (
@@ -17,7 +18,7 @@ from telebot_constructor.user_flow.types import (
     UserFlowContext,
     UserFlowSetupContext,
 )
-from telebot_constructor.utils import without_nones
+from telebot_constructor.utils import preprocess_for_telegram, without_nones
 from telebot_constructor.utils.pydantic import LocalizableText
 
 NOOP_TERMINATOR = "noop"
@@ -58,17 +59,17 @@ class Menu(BaseModel):
     text: LocalizableText
     items: list[MenuItem]
     config: MenuConfig
+    markup: TextMarkup = TextMarkup.NONE
 
     def to_components_menu(self) -> ComponentsMenu:
         config = ComponentsMenuConfig(
             back_label=self.config.back_label,
             lock_after_termination=self.config.lock_after_termination,
-            # TODO: convert markdown and plain texts to HTML and set is_text_html to True
-            is_text_html=False,
             mechanism=self.config.mechanism,
+            text_markup=self.markup,
         )
         return ComponentsMenu(
-            text=self.text,
+            text=preprocess_for_telegram(self.text, self.markup),
             menu_items=[item.to_components_menu_item() for item in self.items],
             config=config,
         )
