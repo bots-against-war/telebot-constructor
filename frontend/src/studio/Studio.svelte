@@ -5,7 +5,7 @@
   import { Svelvet } from "svelvet";
   import { saveBotConfig } from "../api/botConfig";
   import { getBlockId, getEntrypointId } from "../api/typeUtils";
-  import type { BotConfig, UserFlowEntryPointConfig } from "../api/types";
+  import type { BotConfig } from "../api/types";
   import Navbar from "../components/Navbar.svelte";
   import GridPlusColored from "../components/icons/GridPlusColored.svelte";
   import { BOT_INFO_NODE_ID } from "../constants";
@@ -31,9 +31,10 @@
     defaultHumanOperatorBlockConfig,
     defaultLanguageSelectBlockConfig,
     defaultMenuBlockConfig,
+    type ConfigFactory,
   } from "./nodes/defaultConfigs";
   import { NODE_HUE, NODE_ICON, NODE_TITLE, NodeTypeKey, headerColor } from "./nodes/display";
-  import { languageConfigStore, type LanguageConfig } from "./stores";
+  import { languageConfigStore } from "./stores";
   import { applyTemplate, basicShowcaseTemplate, type Template } from "./templates";
   import {
     NodeKind,
@@ -162,17 +163,10 @@
 
   let tentativeNode: TentativeNode | null = null;
 
-  function nodeFactory(
-    kind: NodeKind,
-    typeKey: NodeTypeKey,
-    configFactory: (
-      id: string,
-      langConfig: LanguageConfig | null,
-    ) => UserFlowEntryPointConfig | UserFlowEntryPointConfig,
-  ) {
+  function nodeFactory(kind: NodeKind, typeKey: NodeTypeKey, configFactory: ConfigFactory) {
     return () => {
       const nodeId = generateNodeId(kind, typeKey);
-      const config = configFactory(nodeId, $languageConfigStore);
+      const config = configFactory(nodeId, $languageConfigStore, botConfig.user_flow_config);
       tentativeNode = {
         kind,
         typeKey,

@@ -1,6 +1,18 @@
-import type { FormMessages, UserFlowBlockConfig, UserFlowEntryPointConfig } from "../../api/types";
+import type {
+  FormMessages,
+  MenuMechanism,
+  UserFlowBlockConfig,
+  UserFlowConfig,
+  UserFlowEntryPointConfig,
+} from "../../api/types";
 import type { LanguageConfig } from "../stores";
 import { updateWithPrefilled } from "./FormBlock/prefill";
+
+export type ConfigFactory = (
+  id: string,
+  langConfig: LanguageConfig | null,
+  currentConfig: UserFlowConfig,
+) => UserFlowEntryPointConfig | UserFlowEntryPointConfig;
 
 export function defaultCommandEntrypoint(id: string): UserFlowEntryPointConfig {
   return {
@@ -56,7 +68,22 @@ export function defaultHumanOperatorBlockConfig(id: string): UserFlowBlockConfig
   };
 }
 
-export function defaultMenuBlockConfig(id: string, langConfig: LanguageConfig | null): UserFlowBlockConfig {
+export function defaultMenuBlockConfig(
+  id: string,
+  langConfig: LanguageConfig | null,
+  currentConfig: UserFlowConfig,
+): UserFlowBlockConfig {
+  const topMechanismOccurrences = currentConfig.blocks
+    .map((bc) => (bc.menu ? bc.menu.menu.config.mechanism : null))
+    .filter((mb) => mb !== null)
+    .reduce((acc, m) => acc.set(m, (acc.get(m) || 0) + 1), new Map<MenuMechanism, number>())
+    .entries()
+    .toArray()
+    .toSorted(([m1, o1], [m2, o2]) => o1 - o2);
+
+  const mechanism: MenuMechanism =
+    topMechanismOccurrences.length > 0 ? topMechanismOccurrences[0][0] : "inline_buttons";
+
   return {
     menu: {
       block_id: id,
@@ -68,7 +95,7 @@ export function defaultMenuBlockConfig(id: string, langConfig: LanguageConfig | 
             langConfig === null
               ? "⬅️⬅️⬅️"
               : Object.fromEntries(langConfig.supportedLanguageCodes.map((lang) => [lang, "⬅️⬅️⬅️"])),
-          mechanism: "inline_buttons",
+          mechanism: mechanism,
           lock_after_termination: false,
         },
       },
