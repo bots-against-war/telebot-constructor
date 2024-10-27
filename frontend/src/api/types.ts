@@ -23,7 +23,7 @@ export type Text =
   | {
       [k: string]: string;
     };
-export type ContentTextMarkup = "none" | "html" | "markdown";
+export type TextMarkup = "none" | "html" | "markdown";
 export type Image = string | null;
 export type Filename = string;
 export type Attachments = ContentBlockContentAttachment[];
@@ -362,7 +362,7 @@ export interface Content {
 }
 export interface ContentText {
   text: Text;
-  markup: ContentTextMarkup;
+  markup: TextMarkup;
   [k: string]: unknown;
 }
 export interface ContentBlockContentAttachment {
@@ -415,6 +415,7 @@ export interface Menu {
   text: Text1;
   items: Items;
   config: MenuConfig;
+  markup?: TextMarkup & string;
   [k: string]: unknown;
 }
 export interface MenuItem {

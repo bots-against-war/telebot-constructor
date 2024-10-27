@@ -1,21 +1,12 @@
 <!-- HACK: partial copy of internal flowbite's implementation to hack markdown editor into it -->
 <script lang="ts">
-  import { Toggle, Toolbar, ToolbarGroup } from "flowbite-svelte";
-  import {
-    ExclamationCircleOutline,
-    EyeSlashSolid,
-    LetterBoldOutline,
-    LetterItalicOutline,
-    LinkOutline,
-    QuestionCircleOutline,
-    QuoteSolid,
-    TextSlashOutline,
-  } from "flowbite-svelte-icons";
-  import { getContext, SvelteComponent } from "svelte";
+  import { Toggle, Toolbar, ToolbarGroup, Tooltip } from "flowbite-svelte";
+  import { ExclamationCircleOutline } from "flowbite-svelte-icons";
+  import { getContext } from "svelte";
   import { twMerge } from "tailwind-merge";
-  import type { Newable } from "ts-essentials";
   import ActionIcon from "../ActionIcon.svelte";
-  import { makeMarkdownEntity, renderPreview, type MarkdownEntityType } from "./markdown_utils";
+  import { makeMarkdownEntity, markdownEntityData, renderPreview, type MarkdownEntityType } from "./markdown_utils";
+  import MarkdownEntityTooltip from "./MarkdownEntityTooltip.svelte";
 
   export let value: string;
   export let wrappedClass = "block w-full text-sm border-0 px-0 bg-inherit dark:bg-inherit";
@@ -61,44 +52,26 @@
       markdownTextarea.focus();
     }, 100);
   }
-
-  const toolbarData: [Newable<SvelteComponent>, MarkdownEntityType, string][] = [
-    [LetterBoldOutline, "bold", "Жирный"],
-    [LetterItalicOutline, "italic", "Курсив"],
-    [QuoteSolid, "blockquote", "Цитата"],
-    [LinkOutline, "link", "Ссылка"],
-    [TextSlashOutline, "strikethrough", "Зачеркнутый"],
-    [EyeSlashSolid, "spoiler", "Спойлер"],
-  ];
-
-  let isDetailed = false;
 </script>
 
 <div class={wrapperClass}>
   <div class={headerClass(true)}>
     <Toolbar embedded>
       <ToolbarGroup divClass={preview ? "pointer-events-none opacity-40" : ""}>
-        {#each toolbarData as [icon, type, caption] (type)}
-          <ActionIcon {icon} title={type} iconClass="w-4 h-4 text-gray-600" size="xs" on:click={() => addMarkup(type)}>
-            {#if isDetailed}
-              <span class="text-xs ml-1">{caption}</span>
-            {/if}
+        {#each markdownEntityData as [icon, type, name] (type)}
+          <ActionIcon
+            id={type}
+            {icon}
+            title={type}
+            iconClass="w-4 h-4 text-gray-600"
+            size="xs"
+            on:click={() => addMarkup(type)}
+          >
+            <Tooltip type="light" placement="top" triggeredBy={`#${type}`} class="p-1">
+              <MarkdownEntityTooltip {icon} {type} {name} />
+            </Tooltip>
           </ActionIcon>
         {/each}
-        <ActionIcon
-          icon={QuestionCircleOutline}
-          title="Режим подсказок"
-          iconClass="w-4 h-4 text-gray-600"
-          size="xs"
-          on:click={() => {
-            isDetailed = !isDetailed;
-          }}
-        ></ActionIcon>
-        {#if isDetailed}
-          <div class="text-xs ml-1 mt-2 text-gray-700">
-            Для применения разметки выделите участок текста и нажмите на соответствующую кнопку
-          </div>
-        {/if}
       </ToolbarGroup>
       <ToolbarGroup>
         <Toggle size="small" bind:checked={preview}>

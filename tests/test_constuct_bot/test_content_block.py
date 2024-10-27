@@ -5,6 +5,7 @@ import pytest
 from telebot import types as tg
 from telebot.test_util import MockedAsyncTeleBot
 from telebot_components.redis_utils.emulation import RedisEmulation
+from telebot_components.utils import TextMarkup as ContentTextMarkup
 
 from telebot_constructor.bot_config import (
     BotConfig,
@@ -18,7 +19,6 @@ from telebot_constructor.user_flow.blocks.content import (
     ContentBlock,
     ContentBlockContentAttachment,
     ContentText,
-    ContentTextMarkup,
 )
 from telebot_constructor.user_flow.entrypoints.command import CommandEntryPoint
 from tests.utils import (
@@ -50,7 +50,7 @@ from tests.utils import (
         ),
         pytest.param(
             "some text...\n\n>block quote\n>oh it's multiline!\n>    and has a > symbol",
-            "some text\\.\\.\\.\n>block quote\n>oh it's multiline\\!\n>and has a \\> symbol\n",
+            "some text\\.\\.\\.\n\n>block quote\n>oh it's multiline\\!\n>and has a \\> symbol\n",
             id="block quote",
         ),
     ],
