@@ -1932,13 +1932,13 @@ ujson = ">=5.3.0,<6.0.0"
 
 [[package]]
 name = "telebot-components"
-version = "0.12.6"
+version = "0.12.7"
 description = "Framework/toolkit for building Telegram bots with telebot and redis"
 optional = false
 python-versions = "<4.0,>=3.10"
 files = [
-    {file = "telebot_components-0.12.6-py3-none-any.whl", hash = "sha256:6a4a88079201a9b2e4498822b99b990cdef4017f256fe389bab070be19d0e5b0"},
-    {file = "telebot_components-0.12.6.tar.gz", hash = "sha256:cfc4c676c3b6db19fe71b771241b0149a715a600fbd4c801416e30b38d5b2b5c"},
+    {file = "telebot_components-0.12.7-py3-none-any.whl", hash = "sha256:f3562adda6d086a1afb4cdb78f920178a67efa007a3785ed0d2561f1652c3b83"},
+    {file = "telebot_components-0.12.7.tar.gz", hash = "sha256:a2d2e292ab07ea40ac7dbb1a927333b6507262f1a13e83d237c8330381f84b6b"},
 ]
 
 [package.dependencies]
@@ -1962,18 +1962,18 @@ urllib3 = ">=1.26.18,<2.0.0"
 
 [[package]]
 name = "telegramify-markdown"
-version = "0.1.10"
+version = "0.1.15"
 description = "Convert Markdown to a format usable by Telegram."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "telegramify_markdown-0.1.10-py3-none-any.whl", hash = "sha256:0f5c5ec3cb9634ed4a1598bd40b9f04e38c4e1c16879e5242040e7d399978f57"},
-    {file = "telegramify_markdown-0.1.10.tar.gz", hash = "sha256:c4e3b37abb8c36dd2ebec155c18c215da012770a4fb3efcb07fd753aaa050146"},
+    {file = "telegramify_markdown-0.1.15-py3-none-any.whl", hash = "sha256:93372eaba64a9c9c5a6aa0640c6c41f3dda89b48b30ebd9cb7c1c1382e9bda62"},
+    {file = "telegramify_markdown-0.1.15.tar.gz", hash = "sha256:2a17c02a4a112e37244e856bee8b58a6e040140082e97ce061fcf377e024cda6"},
 ]
 
 [package.dependencies]
 mistletoe = "1.4.0"
-pytelegrambotapi = ">=4.18.1"
+pytelegrambotapi = ">=4.22.0"
 
 [[package]]
 name = "tenacity"
@@ -2241,4 +2241,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "472bce5a36777dc4e807ccfad97b42376c78f96916e95cc1eb157f40a2f4a1cb"
+content-hash = "6caabb93876d3071e03785ea798b96816c3776a827ce782b8a7002838dc0304f"
