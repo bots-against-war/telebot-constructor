@@ -350,6 +350,7 @@
       </div>
     </Navbar>
   </div>
+<<<<<<< Updated upstream
   {#key forceReloadCounter}
     <!-- FIXME: add support for trackpad pan (just trackpadPan option breaks mouse compat) -->
     <Svelvet
@@ -423,6 +424,78 @@
       {/each}
     </Svelvet>
   {/key}
+=======
+  <Svelvet
+    TD
+    fitView={botConfig.user_flow_config.blocks.length + botConfig.user_flow_config.entrypoints.length >= 1}
+    edge={DeletableEdge}
+    editable={false}
+    minimap={false}
+    enableAllHotkeys={false}
+    controls={false}
+    {customMouseDownHandler}
+    customCssCursor={tentativeNode ? "crosshair" : null}
+  >
+    <BotInfoNode {botId} bind:position={nodeDisplayCoords[BOT_INFO_NODE_ID]} />
+    {#each botConfig.user_flow_config.entrypoints as entrypoint (getEntrypointId(entrypoint))}
+      {#if entrypoint.command}
+        <CommandEntryPointNode
+          on:delete={deleteNode}
+          bind:config={entrypoint.command}
+          bind:position={nodeDisplayCoords[entrypoint.command.entrypoint_id]}
+          bind:isValid={isNodeValid[entrypoint.command.entrypoint_id]}
+        />
+      {/if}
+    {/each}
+    {#each botConfig.user_flow_config.blocks as block (getBlockId(block))}
+      {#if block.content}
+        <ContentBlockNode
+          on:delete={deleteNode}
+          on:clone={cloneNode}
+          bind:config={block.content}
+          bind:position={nodeDisplayCoords[block.content.block_id]}
+          bind:isValid={isNodeValid[block.content.block_id]}
+        />
+      {:else if block.human_operator}
+        <HumanOperatorNode
+          {botId}
+          on:delete={deleteNode}
+          on:clone={cloneNode}
+          bind:config={block.human_operator}
+          bind:position={nodeDisplayCoords[block.human_operator.block_id]}
+          bind:isValid={isNodeValid[block.human_operator.block_id]}
+        />
+      {:else if block.language_select}
+        <LanguageSelectNode
+          on:delete={(e) => {
+            deleteNode(e);
+            languageConfigStore.set(null);
+          }}
+          bind:config={block.language_select}
+          bind:position={nodeDisplayCoords[block.language_select.block_id]}
+          bind:isValid={isNodeValid[block.language_select.block_id]}
+        />
+      {:else if block.menu}
+        <MenuNode
+          on:delete={deleteNode}
+          on:clone={cloneNode}
+          bind:config={block.menu}
+          bind:position={nodeDisplayCoords[block.menu.block_id]}
+          bind:isValid={isNodeValid[block.menu.block_id]}
+        />
+      {:else if block.form}
+        <FormNode
+          {botId}
+          on:delete={deleteNode}
+          on:clone={cloneNode}
+          bind:config={block.form}
+          bind:position={nodeDisplayCoords[block.form.block_id]}
+          bind:isValid={isNodeValid[block.form.block_id]}
+        />
+      {/if}
+    {/each}
+  </Svelvet>
+>>>>>>> Stashed changes
   <StudioSidePandel>
     <div>
       <div class="flex flex-col gap-2">

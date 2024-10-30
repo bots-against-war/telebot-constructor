@@ -29,6 +29,7 @@
 </script>
 
 <GlobalStateProvider>
+<<<<<<< Updated upstream
   <Modal
     closeButton={false}
     styleWindow={{ borderRadius: "0" }}
@@ -36,6 +37,9 @@
     closeOnEsc={false}
     styleCloseButton={{ borderRadius: "0" }}
   >
+=======
+  <Modal closeButton={false} styleWindow={{ borderRadius: "0" }} closeOnOuterClick={false} closeOnEsc={false}>
+>>>>>>> Stashed changes
     <div use:links>
       <Router>
         <Route path={botListingPath()}>
