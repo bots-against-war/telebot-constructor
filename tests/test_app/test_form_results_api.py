@@ -113,10 +113,7 @@ async def test_form_results_api(
         "last_versions": [
             {
                 "version": 0,
-                "metadata": {
-                    "timestamp": RECENT_TIMESTAMP,
-                    "message": "init",
-                },
+                "metadata": {"timestamp": RECENT_TIMESTAMP, "message": "init", "author_username": "no-auth"},
             }
         ],
         "last_events": [
@@ -189,6 +186,7 @@ async def test_form_results_api(
                 "metadata": {
                     "timestamp": RECENT_TIMESTAMP,
                     "message": "init",
+                    "author_username": "no-auth",
                 },
             }
         ],
@@ -245,7 +243,12 @@ async def test_form_results_api(
             "forms_with_responses": [],
             "last_errors": [],
             "last_events": [{"event": "started", "timestamp": RECENT_TIMESTAMP, "username": "no-auth", "version": 0}],
-            "last_versions": [{"metadata": {"message": "init", "timestamp": RECENT_TIMESTAMP}, "version": 0}],
+            "last_versions": [
+                {
+                    "metadata": {"message": "init", "timestamp": RECENT_TIMESTAMP, "author_username": "no-auth"},
+                    "version": 0,
+                }
+            ],
             "running_version": 0,
             "admin_chat_ids": [],
         },
@@ -280,7 +283,12 @@ async def test_form_results_api(
             "forms_with_responses": [],
             "last_errors": [],
             "last_events": [{"event": "started", "timestamp": RECENT_TIMESTAMP, "username": "no-auth", "version": 0}],
-            "last_versions": [{"metadata": {"message": "init", "timestamp": RECENT_TIMESTAMP}, "version": 0}],
+            "last_versions": [
+                {
+                    "metadata": {"message": "init", "timestamp": RECENT_TIMESTAMP, "author_username": "no-auth"},
+                    "version": 0,
+                }
+            ],
             "running_version": 0,
             "admin_chat_ids": [],
         },

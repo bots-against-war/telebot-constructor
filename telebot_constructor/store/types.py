@@ -6,6 +6,7 @@ from typing_extensions import NotRequired, TypedDict
 class BotConfigVersionMetadata(TypedDict):
     timestamp: NotRequired[float]
     message: str | None
+    author_username: NotRequired[str | None]  # for shared bots
 
 
 BotVersion = int | Literal["stub"]
