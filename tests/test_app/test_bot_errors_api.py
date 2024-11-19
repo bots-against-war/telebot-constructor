@@ -88,6 +88,7 @@ async def test_bot_errors_api(
                 "metadata": {
                     "timestamp": RECENT_TIMESTAMP,
                     "message": "init",
+                    "author_username": "no-auth",
                 },
             }
         ],

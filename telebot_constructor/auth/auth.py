@@ -18,7 +18,7 @@ from telebot_constructor.telegram_files_downloader import TelegramFilesDownloade
 
 
 class Auth(abc.ABC):
-    """Interface class for different ways to authorize web requests to bot constructor"""
+    """Interface class for different ways to authenticate web requests"""
 
     @abc.abstractmethod
     async def authenticate_request(self, request: web.Request) -> Optional[LoggedInUser]:

@@ -66,7 +66,16 @@ async def test_bot_config(
             "bot_id": "test-bot-1312",
             "display_name": "my bot",
             "running_version": None,
-            "last_versions": [{"version": 0, "metadata": {"timestamp": RECENT_TIMESTAMP, "message": "init message"}}],
+            "last_versions": [
+                {
+                    "version": 0,
+                    "metadata": {
+                        "timestamp": RECENT_TIMESTAMP,
+                        "message": "init message",
+                        "author_username": "no-auth",
+                    },
+                }
+            ],
             "last_events": [
                 {"timestamp": RECENT_TIMESTAMP, "username": "no-auth", "event": "edited", "new_version": 0}
             ],
@@ -90,7 +99,16 @@ async def test_bot_config(
             "bot_id": "test-bot-1312",
             "display_name": "my bot",
             "running_version": 0,
-            "last_versions": [{"version": 0, "metadata": {"timestamp": RECENT_TIMESTAMP, "message": "init message"}}],
+            "last_versions": [
+                {
+                    "version": 0,
+                    "metadata": {
+                        "timestamp": RECENT_TIMESTAMP,
+                        "message": "init message",
+                        "author_username": "no-auth",
+                    },
+                }
+            ],
             "last_events": [
                 bot_created_event,
                 {"timestamp": RECENT_TIMESTAMP, "username": "no-auth", "event": "started", "version": 0},
@@ -166,8 +184,18 @@ async def test_bot_config(
         "display_name": "changed display name",
         "running_version": 1,
         "last_versions": [
-            {"version": 0, "metadata": {"timestamp": RECENT_TIMESTAMP, "message": "init message"}},
-            {"version": 1, "metadata": {"timestamp": RECENT_TIMESTAMP, "message": "bot config update"}},
+            {
+                "version": 0,
+                "metadata": {"timestamp": RECENT_TIMESTAMP, "message": "init message", "author_username": "no-auth"},
+            },
+            {
+                "version": 1,
+                "metadata": {
+                    "timestamp": RECENT_TIMESTAMP,
+                    "message": "bot config update",
+                    "author_username": "no-auth",
+                },
+            },
         ],
         "last_events": [
             bot_created_event,
@@ -195,8 +223,18 @@ async def test_bot_config(
         "display_name": "changed display name",
         "running_version": None,
         "last_versions": [
-            {"version": 0, "metadata": {"timestamp": RECENT_TIMESTAMP, "message": "init message"}},
-            {"version": 1, "metadata": {"timestamp": RECENT_TIMESTAMP, "message": "bot config update"}},
+            {
+                "version": 0,
+                "metadata": {"timestamp": RECENT_TIMESTAMP, "message": "init message", "author_username": "no-auth"},
+            },
+            {
+                "version": 1,
+                "metadata": {
+                    "timestamp": RECENT_TIMESTAMP,
+                    "message": "bot config update",
+                    "author_username": "no-auth",
+                },
+            },
         ],
         "last_events": [
             bot_started_event,
@@ -218,7 +256,7 @@ async def test_bot_config(
     # try to see it one more time and fail
     resp = await client.get(f"/api/info/{bot_id}")
     assert resp.status == 404
-    assert await resp.text() == "404: Bot id not found"
+    assert await resp.text() == '404: Bot "test-bot-1312" does not exist'
 
 
 async def test_admin_chat_ids(
@@ -297,7 +335,16 @@ async def test_admin_chat_ids(
             "bot_id": "test-bot",
             "display_name": "my bot",
             "running_version": None,
-            "last_versions": [{"version": 0, "metadata": {"timestamp": RECENT_TIMESTAMP, "message": "init message"}}],
+            "last_versions": [
+                {
+                    "version": 0,
+                    "metadata": {
+                        "timestamp": RECENT_TIMESTAMP,
+                        "message": "init message",
+                        "author_username": "no-auth",
+                    },
+                }
+            ],
             "last_events": [
                 {"timestamp": RECENT_TIMESTAMP, "username": "no-auth", "event": "edited", "new_version": 0}
             ],
