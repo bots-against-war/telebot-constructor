@@ -27,6 +27,7 @@ async def create_telebot_constructor_client_bot(
 
     @bot.message_handler(commands=["mybots"], chat_types=[tgconst.ChatType.private])
     async def list_my_bots(m: tg.Message) -> None:
+        # await client.
         pass
 
     return BotRunner(bot_prefix=bot_prefix, bot=bot)
