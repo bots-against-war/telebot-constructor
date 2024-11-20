@@ -1564,7 +1564,8 @@
     "MenuMechanism": {
       "enum": [
         "inline_buttons",
-        "reply_keyboard"
+        "reply_keyboard",
+        "inline_buttons_immutable"
       ],
       "title": "MenuMechanism",
       "type": "string"
