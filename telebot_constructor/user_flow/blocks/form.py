@@ -364,7 +364,7 @@ class FormBlock(UserFlowBlock):
 
         #                                          VVV impossible to generate type anntation for
         #                                              form result type, so we use Any
-        self._form_handler = ComponentsFormHandler[Any](
+        self._form_handler = ComponentsFormHandler[Any, Any](
             redis=context.redis,
             bot_prefix=context.bot_prefix,
             name=self.form_name,
