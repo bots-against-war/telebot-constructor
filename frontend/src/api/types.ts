@@ -66,7 +66,7 @@ export type Label =
 export type NextBlockId4 = string | null;
 export type LinkUrl = string | null;
 export type Items = MenuItem[];
-export type MenuMechanism = "inline_buttons" | "reply_keyboard";
+export type MenuMechanism = "inline_buttons" | "reply_keyboard" | "inline_buttons_immutable";
 export type BackLabel =
   | string
   | {

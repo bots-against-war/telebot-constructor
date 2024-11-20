@@ -14,12 +14,24 @@
   export let config: MenuBlock;
   export let onConfigUpdate: (newConfig: MenuBlock) => any;
 
+  // decomposing MenuMechanism enum into button type + mutable/immutable (for inline only)
+  type ButtonType = "inline" | "reply";
+
   function saveConfig() {
+    if (selectedButtonType == "reply") {
+      editedConfig.menu.config.mechanism = "reply_keyboard";
+    } else if (mutableInlineButtons) {
+      editedConfig.menu.config.mechanism = "inline_buttons";
+    } else {
+      editedConfig.menu.config.mechanism = "inline_buttons_immutable";
+    }
+
     if (addBackButton) {
       editedConfig.menu.config.back_label = backButtonLabel;
     } else {
       editedConfig.menu.config.back_label = null;
     }
+
     onConfigUpdate(editedConfig);
   }
 
@@ -39,18 +51,21 @@
   let selectedLang: string | null = null;
   selectedLang = $languageConfigStore ? $languageConfigStore.supportedLanguageCodes[0] : null;
 
-  interface MenuMechanismSelectItem {
+  let selectedButtonType: ButtonType = config.menu.config.mechanism === "reply_keyboard" ? "reply" : "inline";
+  let mutableInlineButtons = config.menu.config.mechanism !== "inline_buttons_immutable";
+
+  interface ButtonTypeSelectItem {
     name: string;
-    value: MenuMechanism;
+    value: ButtonType;
   }
-  const menuMechanismSelectItems: MenuMechanismSelectItem[] = [
+  const buttonTypeSelectItems: ButtonTypeSelectItem[] = [
     {
       name: "Под сообщением",
-      value: "inline_buttons",
+      value: "inline",
     },
     {
       name: "Кастомная клавиатура",
-      value: "reply_keyboard",
+      value: "reply",
     },
   ];
 </script>
@@ -67,13 +82,17 @@
     }}
   />
   <InputWrapper label="Тип кнопок" required={false}>
-    <Select placeholder="" items={menuMechanismSelectItems} bind:value={editedConfig.menu.config.mechanism} />
+    <Select placeholder="" items={buttonTypeSelectItems} bind:value={selectedButtonType} />
     <div class="text-sm text-gray-600">
-      {#if editedConfig.menu.config.mechanism == "inline_buttons"}
-        <a target="_blank" href="https://core.telegram.org/bots/features#inline-keyboards">Кнопки под сообщением</a>
-        хорошо подходят для небольших, динамичных меню. Текст сообщения обновляется при навигации по меню. Telegram автоматически
-        деактивирует кнопки через несколько дней после отправки, поэтому этот тип не подойдёт для меню, которое должно использоваться
-        в течение долгого времени.
+      {#if selectedButtonType == "inline"}
+        <Toggle class="my-2" size="small" bind:checked={mutableInlineButtons}>
+          Обновлять текст и кнопки при переходе между уровнями
+        </Toggle>
+        <p>
+          <a target="_blank" href="https://core.telegram.org/bots/features#inline-keyboards">Кнопки под сообщением</a>
+          хорошо подходят для небольших, динамичных меню. Telegram автоматически деактивирует кнопки через несколько дней
+          после отправки, поэтому этот тип не подойдёт для меню, которое должно использоваться в течение долгого времени.
+        </p>
       {:else}
         <a target="_blank" href="https://core.telegram.org/bots/features#keyboards">Кастомная клавиатура</a> подходит для
         длинных разветвленных диалоговых схем. Каждый новый уровень отправляется новым сообщением.
