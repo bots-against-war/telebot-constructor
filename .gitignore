@@ -255,3 +255,4 @@ env.sh
 secrets.toml
 node_modules
 temp.py
+temp.json

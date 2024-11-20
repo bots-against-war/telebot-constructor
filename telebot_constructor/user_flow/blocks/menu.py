@@ -27,7 +27,7 @@ NOOP_TERMINATOR = "noop"
 class MenuItem(BaseModel):
     label: LocalizableText
 
-    # exactly one field must be non-None
+    # at most one field must be non-None; if all are None, the item is a noop button
     submenu: Optional["Menu"] = None
     next_block_id: Optional[str] = None  # for terminal items
     link_url: Optional[str] = None  # for link buttons (works only if mechanism is inline)
@@ -36,14 +36,13 @@ class MenuItem(BaseModel):
         specified_options = [o for o in (self.submenu, self.next_block_id, self.link_url) if o is not None]
         if len(specified_options) > 1:
             raise ValueError("At most one of the options may be specified: submenu, next block, or link URL")
-
-        self._menu_terminator: str | None = NOOP_TERMINATOR if len(specified_options) == 0 else self.next_block_id
+        self._is_noop = len(specified_options) == 0
 
     def to_components_menu_item(self) -> ComponentsMenuItem:
         return ComponentsMenuItem(
             label=self.label,
             submenu=None if self.submenu is None else self.submenu.to_components_menu(),
-            terminator=self._menu_terminator,
+            terminator=NOOP_TERMINATOR if self._is_noop else self.next_block_id,
             link_url=self.link_url,
             bound_category=None,
         )
@@ -84,7 +83,10 @@ class MenuBlock(UserFlowBlock):
         return without_nones([item.next_block_id for item in self.menu.items])
 
     def model_post_init(self, __context: Any) -> None:
-        self.menu.to_components_menu()  # to validate
+        self.validate_menu()
+
+    def validate_menu(self) -> None:
+        self.menu.to_components_menu()  # telebot_components' menu performs validation on instantiation
 
     @property
     def menu_handler(self) -> MenuHandler:
