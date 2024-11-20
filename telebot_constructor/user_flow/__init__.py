@@ -108,17 +108,17 @@ class UserFlow:
             # phase 1: selecting which blocks form a tree
             menu_block_tree: dict[str, set[str]] = collections.defaultdict(set)
             to_visit = {block.block_id}
-            visited = set[str]()
+            seen_block_ids = set[str]()
             while to_visit:
+                seen_block_ids.update(to_visit)  # we mark all next step's field as visited to not go to them again
                 to_visit_next = set[str]()
                 for current_block_id in to_visit:
                     current_block = self.block_by_id[current_block_id]
-                    visited.add(current_block_id)
                     if not isinstance(current_block, MenuBlock):
                         continue
                     for menu_item in current_block.menu.items:
                         next_block_id = menu_item.next_block_id
-                        if next_block_id is not None and next_block_id not in visited:
+                        if next_block_id is not None and next_block_id not in seen_block_ids:
                             menu_block_tree[current_block_id].add(next_block_id)
                             to_visit_next.add(next_block_id)
                 to_visit = to_visit_next
@@ -129,7 +129,7 @@ class UserFlow:
                 block = self.block_by_id[block_id]
                 if not isinstance(block, MenuBlock):
                     return None
-                menu_with_submenus = block.menu
+                menu_with_submenus = copy.deepcopy(block.menu)
                 for child_id in menu_block_tree.get(block_id, set()):
                     child_menu_tree = menu_tree_starting_with(child_id)
                     if child_menu_tree is None:
@@ -144,7 +144,7 @@ class UserFlow:
             if menu_tree is not None:
                 block.menu = menu_tree
             else:
-                logger.error(f"Something went wrong, failed to assemble menu tree!")
+                logger.error("Something went wrong, failed to assemble menu tree!")
 
     @property
     def active_block_id_store(self) -> KeyValueStore[str]:
