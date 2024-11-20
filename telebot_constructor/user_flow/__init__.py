@@ -16,7 +16,7 @@ from telebot_constructor.user_flow.blocks.base import UserFlowBlock
 from telebot_constructor.user_flow.blocks.form import FormBlock
 from telebot_constructor.user_flow.blocks.human_operator import HumanOperatorBlock
 from telebot_constructor.user_flow.blocks.language_select import LanguageSelectBlock
-from telebot_constructor.user_flow.blocks.menu import MenuBlock
+from telebot_constructor.user_flow.blocks.menu import Menu, MenuBlock
 from telebot_constructor.user_flow.entrypoints.base import UserFlowEntryPoint
 from telebot_constructor.user_flow.entrypoints.command import CommandEntryPoint
 from telebot_constructor.user_flow.types import (
@@ -47,7 +47,8 @@ class UserFlow:
             for next_block_id in node.possible_next_block_ids():
                 if next_block_id not in self.block_by_id:
                     raise ValueError(
-                        f"Block/entrypoing {node} references non-existent block as possible next: {next_block_id}"
+                        f"Block/entrypoing {node} references a non-existent block "
+                        + f"as a possible next block: {next_block_id}"
                     )
                 self.nodes_leading_to[next_block_id].append(
                     node.block_id if isinstance(node, UserFlowBlock) else node.entrypoint_id
@@ -81,19 +82,69 @@ class UserFlow:
         )
 
         validate_unique([b.form_name for b in self.blocks if isinstance(b, FormBlock)], items_name="form names")
+        self._construct_menu_trees()
 
+    def _construct_menu_trees(self) -> None:
+        """
+        Each menu block looks for (sub)menu blocks following it and copies their menu configs into
+        itself to build a submenu tree. This way the navigation through a multilevel menu will be
+        handled by the MenuHandler of the block of first entry. This makes it possible to navigate
+        back to a higher menu level or (for inline buttons menu) send a single message and update
+        its text and buttons upon navigation.
+
+        NOTE: In this case the "active block" state is not updated until the user exits the menu
+        tree and proceeds to a non-menu block. This can theoretically be fixed with some kind of
+        hook into the components lib...
+
+        The process of building a menu tree consists of two phases:
+        - BFS-traversal of the free-form block graph to create a tree subgraph
+        - DFS-traversal of this tree to convert it to a menu tree
+        This is done for every menu block independently.
+        """
         for block in self.blocks:
-            if isinstance(block, MenuBlock):
-                for menu_item in block.menu.items:
-                    if menu_item.next_block_id is None:
+            if not isinstance(block, MenuBlock):
+                continue
+
+            # phase 1: selecting which blocks form a tree
+            menu_block_tree: dict[str, set[str]] = collections.defaultdict(set)
+            to_visit = {block.block_id}
+            visited = set[str]()
+            while to_visit:
+                to_visit_next = set[str]()
+                for current_block_id in to_visit:
+                    current_block = self.block_by_id[current_block_id]
+                    visited.add(current_block_id)
+                    if not isinstance(current_block, MenuBlock):
                         continue
-                    # if an item leads to another menu, we short-circuit it and and add as a submenu within the
-                    # same menu block to allow "back" button functionality and both menus in one tg message
-                    next_block = self.block_by_id[menu_item.next_block_id]
-                    if isinstance(next_block, MenuBlock):
-                        menu_item.next_block_id = None
-                        menu_item._menu_terminator = None
-                        menu_item.submenu = copy.deepcopy(next_block.menu)
+                    for menu_item in current_block.menu.items:
+                        next_block_id = menu_item.next_block_id
+                        if next_block_id is not None and next_block_id not in visited:
+                            menu_block_tree[current_block_id].add(next_block_id)
+                            to_visit_next.add(next_block_id)
+                to_visit = to_visit_next
+
+            # phase 2: building a Menu object with submenus taken from other blocks according to a tree
+            # basically a DFS traversal with recursive function
+            def menu_tree_starting_with(block_id: str) -> Menu | None:
+                block = self.block_by_id[block_id]
+                if not isinstance(block, MenuBlock):
+                    return None
+                menu_with_submenus = block.menu
+                for child_id in menu_block_tree.get(block_id, set()):
+                    child_menu_tree = menu_tree_starting_with(child_id)
+                    if child_menu_tree is None:
+                        continue
+                    for menu_item in menu_with_submenus.items:
+                        if menu_item.next_block_id == child_id:
+                            menu_item.next_block_id = None
+                            menu_item.submenu = child_menu_tree
+                return menu_with_submenus
+
+            menu_tree = menu_tree_starting_with(block.block_id)
+            if menu_tree is not None:
+                block.menu = menu_tree
+            else:
+                logger.error(f"Something went wrong, failed to assemble menu tree!")
 
     @property
     def active_block_id_store(self) -> KeyValueStore[str]:
@@ -102,7 +153,9 @@ class UserFlow:
         return self._active_block_id_store
 
     async def _enter_block(self, id: UserFlowBlockId, context: UserFlowContext) -> None:
-        if id in context.visited_block_ids:  # prevent infinite loops in the user flow
+        # prevent infinite loops in the user flow in a given interaction (e.g. message block leads to itself)
+        # in general, loops are allowed (e.g. two menu blocks leading to each other)
+        if id in context.visited_block_ids:
             raise RuntimeError(f"Likely loop in user flow, attempted to enter the block twice: {id}")
         context.visited_block_ids.add(id)
         if await context.banned_users_store.is_banned(context.user.id):
