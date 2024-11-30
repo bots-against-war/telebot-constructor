@@ -682,3 +682,192 @@ async def test_dag_menu() -> None:
         ],
     )
     bot.method_calls.clear()
+
+
+async def test_rhombus_menu() -> None:
+    """
+    A menu with more than one way to get to a submenu. The "back" button from D will lead to one
+    of the parents, but this must be consistent.
+
+        ┌───┐
+      ┌─┤ A ├─┐
+      │ └───┘ │
+    ┌─▼─┐   ┌─▼─┐
+    │ B │   │ C │
+    └─┬─┘   └─┬─┘
+      │ ┌───┐ │
+      └►│ D │◄┘
+        └───┘
+    """
+    USER_ID = 1312
+
+    menu_blocks = make_menu_blocks({"A": ["B", "C"], "B": ["D"], "C": ["D"], "D": ["E"], "E": []})
+    bot_config = BotConfig(
+        token_secret_name="token",
+        display_name="Menu bot",
+        user_flow_config=UserFlowConfig(
+            entrypoints=[
+                UserFlowEntryPointConfig(
+                    command=CommandEntryPoint(entrypoint_id="start-cmd", command="start", next_block_id="menu-A"),
+                )
+            ],
+            blocks=[UserFlowBlockConfig(menu=menu) for menu in menu_blocks],
+            node_display_coords={},
+        ),
+    )
+
+    redis = RedisEmulation()
+    secret_store = dummy_secret_store(redis)
+    username = "user12345"
+    await secret_store.save_secret(secret_name="token", secret_value="mock-token", owner_id=username)
+    bot_runner = await construct_bot(
+        username=username,
+        bot_id="menu-bot",
+        bot_config=bot_config,
+        form_results_store=dummy_form_results_store(),
+        metrics_store=dummy_metrics_store(),
+        secret_store=secret_store,
+        redis=redis,
+        _bot_factory=MockedAsyncTeleBot,
+    )
+
+    assert not bot_runner.background_jobs
+    assert not bot_runner.aux_endpoints
+
+    bot = bot_runner.bot
+    assert isinstance(bot, MockedAsyncTeleBot)
+    bot.method_calls.clear()
+
+    # entry point 1
+
+    # /start command
+    await bot.process_new_updates([tg_update_message_to_bot(USER_ID, first_name="User", text="/start")])
+    assert_method_call_dictified_kwargs_include(
+        bot.method_calls["send_message"],
+        [
+            {
+                "text": "A",
+                "reply_markup": {
+                    "inline_keyboard": [
+                        [{"text": "B", "callback_data": "menu:3b7f5e8a6401a0e6-1"}],
+                        [{"text": "C", "callback_data": "menu:3b7f5e8a6401a0e6-2"}],
+                    ]
+                },
+            }
+        ],
+    )
+    bot.method_calls.clear()
+
+    # right branch
+    await bot.process_new_updates(
+        [tg_update_callback_query(USER_ID, first_name="User", callback_query="menu:3b7f5e8a6401a0e6-2")]
+    )
+    assert_method_call_dictified_kwargs_include(
+        bot.method_calls["edit_message_text"],
+        [
+            {
+                "text": "C",
+                "reply_markup": {
+                    "inline_keyboard": [
+                        [{"text": "D", "callback_data": "menu:3b7f5e8a6401a0e6-5"}],
+                        [{"text": "<-", "callback_data": "menu:3b7f5e8a6401a0e6-0"}],
+                    ]
+                },
+            }
+        ],
+    )
+    bot.method_calls.clear()
+
+    await bot.process_new_updates(
+        [tg_update_callback_query(USER_ID, first_name="User", callback_query="menu:3b7f5e8a6401a0e6-5")]
+    )
+    assert_method_call_dictified_kwargs_include(
+        bot.method_calls["edit_message_text"],
+        [
+            {
+                "text": "D",
+                "reply_markup": {
+                    "inline_keyboard": [
+                        [{"text": "E", "callback_data": "menu:3b7f5e8a6401a0e6-6"}],
+                        [{"text": "<-", "callback_data": "menu:3b7f5e8a6401a0e6-2"}],
+                    ]
+                },
+            }
+        ],
+    )
+    bot.method_calls.clear()
+
+    await bot.process_new_updates(
+        [tg_update_callback_query(USER_ID, first_name="User", callback_query="menu:3b7f5e8a6401a0e6-6")]
+    )
+    assert_method_call_dictified_kwargs_include(
+        bot.method_calls["edit_message_text"],
+        [
+            {
+                "text": "E",
+                "reply_markup": {
+                    "inline_keyboard": [
+                        [{"text": "<-", "callback_data": "menu:3b7f5e8a6401a0e6-5"}],
+                    ]
+                },
+            }
+        ],
+    )
+    bot.method_calls.clear()
+
+    # left branch
+    await bot.process_new_updates(
+        [tg_update_callback_query(USER_ID, first_name="User", callback_query="menu:3b7f5e8a6401a0e6-1")]
+    )
+    assert_method_call_dictified_kwargs_include(
+        bot.method_calls["edit_message_text"],
+        [
+            {
+                "text": "B",
+                "reply_markup": {
+                    "inline_keyboard": [
+                        [{"text": "D", "callback_data": "menu:3b7f5e8a6401a0e6-3"}],
+                        [{"text": "<-", "callback_data": "menu:3b7f5e8a6401a0e6-0"}],
+                    ]
+                },
+            }
+        ],
+    )
+    bot.method_calls.clear()
+
+    await bot.process_new_updates(
+        [tg_update_callback_query(USER_ID, first_name="User", callback_query="menu:3b7f5e8a6401a0e6-3")]
+    )
+    assert_method_call_dictified_kwargs_include(
+        bot.method_calls["edit_message_text"],
+        [
+            {
+                "text": "D",
+                "reply_markup": {
+                    "inline_keyboard": [
+                        [{"text": "E", "callback_data": "menu:3b7f5e8a6401a0e6-4"}],
+                        [{"text": "<-", "callback_data": "menu:3b7f5e8a6401a0e6-1"}],
+                    ]
+                },
+            }
+        ],
+    )
+    bot.method_calls.clear()
+
+    await bot.process_new_updates(
+        [tg_update_callback_query(USER_ID, first_name="User", callback_query="menu:3b7f5e8a6401a0e6-4")]
+    )
+    assert_method_call_dictified_kwargs_include(
+        bot.method_calls["edit_message_text"],
+        [
+            {
+                "text": "E",
+                "reply_markup": {
+                    "inline_keyboard": [
+                        [{"text": "<-", "callback_data": "menu:3b7f5e8a6401a0e6-3"}],
+                    ]
+                },
+            }
+        ],
+    )
+    bot.method_calls.clear()

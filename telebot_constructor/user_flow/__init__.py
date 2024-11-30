@@ -112,7 +112,7 @@ class UserFlow:
             while to_visit:
                 seen_block_ids.update(to_visit)  # we mark all next step's field as visited to not go to them again
                 to_visit_next = set[str]()
-                for current_block_id in to_visit:
+                for current_block_id in sorted(to_visit):  # sorting blocks lexicographically to ensure consistency
                     current_block = self.block_by_id[current_block_id]
                     if not isinstance(current_block, MenuBlock):
                         continue
