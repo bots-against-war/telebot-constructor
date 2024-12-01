@@ -58,14 +58,15 @@ async def main() -> None:
     telegram_files_downloader = RedisCacheTelegramFilesDownloader(redis=redis)
 
     auth: Auth
-    if os.environ.get("AUTH") == "TELEGRAM":
+    auth_type = os.environ.get("AUTH", "NOOP").upper()
+    if auth_type == "TELEGRAM":
         logging.info("Using Telegram-based auth")
         auth = TelegramAuth(
             redis=redis,
             bot=AsyncTeleBot(token=os.environ["TELEGRAM_AUTH_BOT_TOKEN"]),
             telegram_files_downloader=telegram_files_downloader,
         )
-    elif os.environ.get("AUTH") == "GROUP_CHAT":
+    elif auth_type == "GROUP_CHAT":
         logging.info("Using Telegram group auth")
         auth = GroupChatAuth(
             redis=redis,
@@ -73,9 +74,11 @@ async def main() -> None:
             auth_chat_id=int(os.environ["GROUP_CHAT_AUTH_CHAT_ID"]),
             telegram_files_downloader=telegram_files_downloader,
         )
-    else:
+    elif auth_type == "NOOP":
         logging.info("Using noop auth")
         auth = NoAuth()
+    else:
+        raise ValueError(f"Unexpected auth type: {auth_type!r}")
 
     app = TelebotConstructorApp(
         redis=redis,
