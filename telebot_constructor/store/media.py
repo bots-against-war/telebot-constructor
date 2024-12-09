@@ -7,6 +7,9 @@ from typing import Any
 import aiobotocore.client  # type: ignore
 import aiobotocore.session  # type: ignore
 import pydantic
+from telebot_components.redis_utils.interface import RedisInterface
+
+from telebot_constructor.constants import CONSTRUCTOR_PREFIX
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +35,51 @@ class MediaStore(abc.ABC):
     async def setup(self) -> None: ...
 
     async def cleanup(self) -> None: ...
+
+
+class RedisMediaStore(MediaStore):
+    """Redis-based store for testing and development, do not use in production!"""
+
+    def __init__(self, redis: RedisInterface) -> None:
+        self.redis = redis
+
+    def _content_key(self, owner_id: str, media_id: str) -> str:
+        return f"{CONSTRUCTOR_PREFIX}/media/{owner_id}/{media_id}"
+
+    def _filename_key(self, owner_id: str, media_id: str) -> str:
+        return f"{CONSTRUCTOR_PREFIX}/media/{owner_id}/filename/{media_id}"
+
+    async def save_media(self, owner_id: str, media: Media) -> MediaId | None:
+        media_id = str(uuid.uuid4())
+        if not await self.redis.set(
+            self._content_key(owner_id=owner_id, media_id=media_id),
+            media.content,
+        ):
+            return None
+        if media.filename:
+            if not await self.redis.set(
+                self._filename_key(owner_id=owner_id, media_id=media_id), media.filename.encode("utf-8")
+            ):
+                return None
+        return media_id
+
+    async def load_media(self, owner_id: str, media_id: MediaId) -> Media | None:
+        content = await self.redis.get(self._content_key(owner_id, media_id))
+        if content is None:
+            return None
+        filename = await self.redis.get(self._filename_key(owner_id, media_id))
+        return Media(
+            content=content,
+            filename=filename.decode("utf-8") if filename is not None else None,
+        )
+
+    async def delete_media(self, owner_id: str, media_id: MediaId) -> bool:
+        return (
+            await self.redis.delete(
+                self._content_key(owner_id, media_id),
+                self._filename_key(owner_id, media_id),
+            )
+        ) > 0
 
 
 class AwsS3Credentials(pydantic.BaseModel):

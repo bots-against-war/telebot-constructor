@@ -54,6 +54,7 @@ from telebot_constructor.store.form_results import (
     FormResultsFilter,
     GlobalFormId,
 )
+from telebot_constructor.store.media import Media, MediaStore
 from telebot_constructor.store.store import (
     BotConfigVersionMetadata,
     BotVersion,
@@ -98,6 +99,7 @@ class TelebotConstructorApp:
         secret_store: SecretStore,
         static_files_dir: Path = Path(__file__).parent / "static",
         telegram_files_downloader: Optional[TelegramFilesDownloader] = None,
+        media_store: MediaStore | None = None,
     ) -> None:
         self.auth = auth
         self.secret_store = secret_store
@@ -107,6 +109,7 @@ class TelebotConstructorApp:
 
         self.telegram_files_downloader = telegram_files_downloader or InmemoryCacheTelegramFilesDownloader()
         self.store = TelebotConstructorStore(redis)
+        self.media_store = media_store
         self.group_chat_discovery_handler = GroupChatDiscoveryHandler(
             redis=redis, telegram_files_downloader=self.telegram_files_downloader
         )
@@ -222,6 +225,11 @@ class TelebotConstructorApp:
             return flag.lower() not in {"false", "0"}
         else:
             return flag.lower() in {"true", "1"}
+
+    def get_media_store(self) -> MediaStore:
+        if self.media_store is None:
+            raise web.HTTPNotImplemented(reason="Media store not configured")
+        return self.media_store
 
     # endregion
 
@@ -750,6 +758,32 @@ class TelebotConstructorApp:
 
         # endregion
         ##################################################################################
+        # region media store access
+
+        @routes.post("/api/media")
+        async def save_media(request: web.Request) -> web.Response:
+            """
+            ---
+            description: Save new media item to media store
+            produces:
+            - application/text
+            responses:
+                "200":
+                    description: OK, newly saved media id is returned
+            """
+            username = await self.authenticate(request)
+            media_store = self.get_media_store()
+            media_id = await media_store.save_media(
+                owner_id=username,
+                media=Media(content=await request.read(), filename=request.headers.get("filename")),
+            )
+            if media_id is None:
+                raise web.HTTPServiceUnavailable(reason="Media store failed")
+            else:
+                return web.Response(text=media_id)
+
+        # endregion
+        ##################################################################################
         # region bot metrics and errors
 
         @routes.get("/api/errors/{bot_id}")
@@ -983,6 +1017,22 @@ class TelebotConstructorApp:
                 content_type="application/json",
             )
 
+        @routes.get("/api/media-store-check")
+        async def check_media_store_configured(request: web.Request) -> web.Response:
+            """
+            ---
+            description: Check if media store is configured
+            produces:
+            - application/json
+            responses:
+                "200":
+                    description: Media store available
+                "501":
+                    description: Media store not available
+            """
+            self.get_media_store()
+            return web.Response()
+
         @routes.get("/")
         @routes.get("")
         async def landing_page(request: web.Request) -> web.Response:
@@ -1070,12 +1120,17 @@ class TelebotConstructorApp:
             logger.info("Starting auth bot")
             await self.runner.start(username="internal", bot_id="auth-bot", bot_runner=auth_bot_runner)
         await self.telegram_files_downloader.setup()
+        if self.media_store is not None:
+            await self.media_store.setup()
+        logger.info("Setup completed")
 
     async def cleanup(self) -> None:
         logger.info("Cleanup started")
         await self.telegram_files_downloader.cleanup()
         await self.runner.cleanup()
         # await telebot.api.session_manager.close_session()
+        if self.media_store is not None:
+            await self.media_store.cleanup()
         logger.info("Cleanup completed")
 
     # public methods to run constructor in different scenarios

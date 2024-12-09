@@ -30,7 +30,7 @@ def set_current_timestamp(data: BotConfigVersionMetadata | BotEvent):
 
 
 class TelebotConstructorStore:
-    """Main application storage class"""
+    """Main Redis-based application storage class"""
 
     def __init__(self, redis: RedisInterface) -> None:
         # username + bot id composite key -> versioned bot config
