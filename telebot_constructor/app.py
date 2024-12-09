@@ -146,7 +146,6 @@ class TelebotConstructorApp:
             if bot_must_exist:
                 raise web.HTTPNotFound(reason=f'Bot "{bot_id}" does not exist')
             else:
-                # NOTE: this means that "shared" bots will shadow "owned" bots
                 owner_username = actor_username
         return BotAccessAuthorization(
             bot_id=bot_id,
