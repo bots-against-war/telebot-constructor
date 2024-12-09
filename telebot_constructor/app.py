@@ -85,10 +85,6 @@ class BotAccessAuthorization:
     actor_username: str
     owner_username: str
 
-    @property
-    def username(self) -> str:
-        return self.owner_username
-
 
 class TelebotConstructorApp:
     """
@@ -297,7 +293,7 @@ class TelebotConstructorApp:
         a: BotAccessAuthorization,
         version: BotVersion,
     ) -> None:
-        """Start a specific version of the bot; this method must be initiated by an authorized user user"""
+        """Start a specific version of the bot; this method must be initiated by an authorized user"""
         bot_config = await self.load_bot_config(a.owner_username, a.bot_id, version)
         log_prefix = self._log_prefix(a.owner_username, a.bot_id, version=version, actor_username=a.actor_username)
         logger.info(f"{log_prefix} (Re)starting bot")
@@ -655,12 +651,12 @@ class TelebotConstructorApp:
             """
             a = await self.authorize(request)
             global_form_id = GlobalFormId(
-                username=a.username,
+                username=a.owner_username,
                 bot_id=a.bot_id,
                 form_block_id=self.parse_path_part(request, "form_block_id"),
             )
             offset, count = self.parse_offset_count_params(request, max_count=100, default_count=20)
-            bot_info = await self.store.load_bot_info(username=a.username, bot_id=a.bot_id, detailed=False)
+            bot_info = await self.store.load_bot_info(username=a.owner_username, bot_id=a.bot_id, detailed=False)
             if not bot_info:
                 raise web.HTTPNotFound(reason="Bot not found")
             form_info = await self.store.form_results.load_form_info(global_form_id)
@@ -684,7 +680,7 @@ class TelebotConstructorApp:
             """
             a = await self.authorize(request)
             global_form_id = GlobalFormId(
-                username=a.username, bot_id=a.bot_id, form_block_id=self.parse_path_part(request, "form_block_id")
+                username=a.owner_username, bot_id=a.bot_id, form_block_id=self.parse_path_part(request, "form_block_id")
             )
             filter = FormResultsFilter(
                 min_timestamp=self.parse_query_param_int(request, name="min_timestamp", min_=None, max_=None),
@@ -741,7 +737,7 @@ class TelebotConstructorApp:
             """
             a = await self.authorize(request)
             form_id = GlobalFormId(
-                username=a.username,
+                username=a.owner_username,
                 bot_id=a.bot_id,
                 form_block_id=self.parse_path_part(request, "form_block_id"),
             )
@@ -770,7 +766,7 @@ class TelebotConstructorApp:
             """
             a = await self.authorize(request)
             offset, count = self.parse_offset_count_params(request, max_count=100, default_count=20)
-            errors = await self.store.metrics.load_errors(a.username, a.bot_id, offset, count)
+            errors = await self.store.metrics.load_errors(a.owner_username, a.bot_id, offset, count)
             return web.json_response(text=BotErrorsPage(errors=errors).model_dump_json())
 
         # endregion
@@ -815,7 +811,7 @@ class TelebotConstructorApp:
                     description: TgBotUser object
             """
             a = await self.authorize(request)
-            bot = await self._make_bare_bot(a.username, a.bot_id)
+            bot = await self._make_bare_bot(a.owner_username, a.bot_id)
             try:
                 tg_bot_user = await TgBotUser.fetch(bot, telegram_files_downloader=self.telegram_files_downloader)
                 return web.json_response(tg_bot_user.model_dump())
@@ -838,7 +834,7 @@ class TelebotConstructorApp:
             bot_user_update = await self.parse_body_as_model(request, TgBotUserUpdate)
             if not bot_user_update.name:
                 raise web.HTTPBadRequest(reason="Bot name can't be empty")
-            bot = await self._make_bare_bot(a.username, a.bot_id)
+            bot = await self._make_bare_bot(a.owner_username, a.bot_id)
             try:
                 await bot_user_update.save(bot, telegram_files_downloader=self.telegram_files_downloader)
                 return web.Response(reason="OK")
@@ -860,10 +856,10 @@ class TelebotConstructorApp:
                     description: OK
             """
             a = await self.authorize(request)
-            if not await self.store.is_bot_running(a.username, a.bot_id):
+            if not await self.store.is_bot_running(a.owner_username, a.bot_id):
                 logger.info("Group discovery mode requested but bot is not running, starting stub bot")
                 await self.start_bot(a, version="stub")
-            await self.group_chat_discovery_handler.start_discovery(a.username, a.bot_id)
+            await self.group_chat_discovery_handler.start_discovery(a.owner_username, a.bot_id)
             return web.Response(text="Group discovery started")
 
         @routes.post("/api/stop-group-chat-discovery/{bot_id}")
@@ -878,8 +874,8 @@ class TelebotConstructorApp:
                     description: OK
             """
             a = await self.authorize(request)
-            await self.group_chat_discovery_handler.stop_discovery(a.username, a.bot_id)
-            if await self.store.get_bot_running_version(a.username, a.bot_id) == "stub":
+            await self.group_chat_discovery_handler.stop_discovery(a.owner_username, a.bot_id)
+            if await self.store.get_bot_running_version(a.owner_username, a.bot_id) == "stub":
                 logger.info("Group discovery mode stopped and bot stub was running, stopping it")
                 await self.stop_bot(a)
             return web.Response(text="Group discovery stopped")
@@ -897,9 +893,9 @@ class TelebotConstructorApp:
             """
             a = await self.authorize(request)
             chats = await self.group_chat_discovery_handler.validate_discovered_chats(
-                a.username,
+                a.owner_username,
                 a.bot_id,
-                bot=await self._make_bare_bot(a.username, a.bot_id),
+                bot=await self._make_bare_bot(a.owner_username, a.bot_id),
             )
             # this is probably not chronological or anything, but at least it's consistent...
             chats.sort(key=lambda c: c.id)
@@ -919,7 +915,7 @@ class TelebotConstructorApp:
                     description: Chat not found
             """
             a = await self.authorize(request)
-            bot = await self._make_bare_bot(a.username, a.bot_id)
+            bot = await self._make_bare_bot(a.owner_username, a.bot_id)
             # NOTE: numeric chat ids are not casted into ints because it doesn't matter for Telegram bot API
             group_chat_id = request.query.get("group_chat")
             if group_chat_id is None:
