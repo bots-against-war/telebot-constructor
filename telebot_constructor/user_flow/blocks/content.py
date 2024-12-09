@@ -197,7 +197,8 @@ class ContentBlock(UserFlowBlock):
 
                 messages = await context.bot.send_media_group(
                     chat_id=chat_id,
-                    media=list(media),  # <- hack to get over bad upstream lib typing
+                    # bad typing in telebot (list[InputMediaPhoto | ...], complains because list is invariant generic)
+                    media=list(media),
                 )
                 logger.debug(f"Sent media group, received messages: {messages}")
 

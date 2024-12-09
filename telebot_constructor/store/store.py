@@ -30,7 +30,7 @@ def set_current_timestamp(data: BotConfigVersionMetadata | BotEvent):
 
 
 class TelebotConstructorStore:
-    """Main application storage for bot configs and their status"""
+    """Main application storage class"""
 
     def __init__(self, redis: RedisInterface) -> None:
         # username + bot id composite key -> versioned bot config
@@ -239,3 +239,9 @@ class TelebotConstructorStore:
             )
             for version, metadata in zip(itertools.count(start_version), version_metadata)
         ]
+
+    async def load_owner_username(self, actor_username: str, bot_id: str) -> str | None:
+        if await self.is_bot_exists(actor_username, bot_id):
+            return actor_username  # the actor owns the bot, they're the boss
+
+        return None

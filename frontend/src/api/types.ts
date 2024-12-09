@@ -216,6 +216,7 @@ export type RunningVersion = number | null;
 export type Version = number;
 export type Timestamp = number;
 export type Message = string | null;
+export type AuthorUsername = string | null;
 export type LastVersions = BotVersionInfo[];
 export type Timestamp1 = number;
 export type Username3 = string;
@@ -632,6 +633,7 @@ export interface BotVersionInfo {
 export interface BotConfigVersionMetadata {
   timestamp?: Timestamp;
   message: Message;
+  author_username?: AuthorUsername;
   [k: string]: unknown;
 }
 export interface BotStoppedEvent {
