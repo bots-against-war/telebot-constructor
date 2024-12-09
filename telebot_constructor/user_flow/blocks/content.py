@@ -64,7 +64,6 @@ data_url_prefix_re = re.compile(r"^data:\w+/\w+;base64,")
 
 
 def decode_b64_data_url(b64_data_url: str) -> bytes:
-    print(b64_data_url[:64])
     return base64.b64decode(data_url_prefix_re.sub("", b64_data_url))
 
 
