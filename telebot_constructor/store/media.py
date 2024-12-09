@@ -18,6 +18,14 @@ class Media(pydantic.BaseModel):
     content: bytes
     filename: str | None
 
+    @property
+    def mimetype(self) -> str | None:
+        if self.filename is not None:
+            mimetype, _ = mimetypes.guess_type(self.filename)
+            return mimetype
+        else:
+            return None
+
 
 MediaId = str
 
@@ -109,13 +117,11 @@ class AwsS3MediaStore(MediaStore):
 
     async def save_media(self, owner_id: str, media: Media) -> MediaId | None:
         media_id = str(uuid.uuid4())
-        content_type: str | None = None
-        if media.filename is not None:
-            content_type, _ = mimetypes.guess_type(media.filename)
 
         # see docs at
         # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3/client/put_object.html
         put_object_kwargs: dict[str, Any] = dict()
+        content_type = media.mimetype
         if content_type is not None:
             put_object_kwargs["ContentType"] = content_type
         if media.filename is not None:

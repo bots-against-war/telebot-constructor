@@ -75,7 +75,7 @@ extend-ignore = [
 omit = ['tests/**']
 skip_covered = true
 show_missing = true
-fail_under = 60
+fail_under = 80
 exclude_lines = [
     # re-enable the standard pragma
     'pragma: no cover',

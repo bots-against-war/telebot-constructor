@@ -87,6 +87,11 @@ class BotAccessAuthorization:
     owner_username: str
 
 
+BOT_PREFIX = "X-Telebot-Constructor"
+BOT_ID_HEADER = f"{BOT_PREFIX}-Bot-Id"
+FILENAME_HEADER = f"{BOT_PREFIX}-Filename"
+
+
 class TelebotConstructorApp:
     """
     Main application class, managing aiohttp app setup (routes, middlewares) and running bots (via bot runner)
@@ -141,9 +146,14 @@ class TelebotConstructorApp:
         logged_in_user = await self._authenticate_full(request)
         return logged_in_user.username
 
-    async def authorize(self, request: web.Request, bot_must_exist: bool = True) -> BotAccessAuthorization:
+    async def authorize(
+        self,
+        request: web.Request,
+        bot_must_exist: bool = True,
+        for_bot_id: str | None = None,
+    ) -> BotAccessAuthorization:
         actor_username = await self.authenticate(request)
-        bot_id = self.parse_bot_id(request)
+        bot_id = for_bot_id or self.parse_bot_id(request)
         owner_username = await self.store.load_owner_username(actor_username, bot_id)
         if owner_username is None:
             if bot_must_exist:
@@ -230,6 +240,17 @@ class TelebotConstructorApp:
         if self.media_store is None:
             raise web.HTTPNotImplemented(reason="Media store not configured")
         return self.media_store
+
+    async def authorize_media_owner(self, request: web.Request) -> str:
+        bot_id = request.headers.get(BOT_ID_HEADER)
+        if bot_id is not None:
+            # if bot id header is present, attempt to save media to bot owner's store to make sure
+            # the bot has access to it later
+            a = await self.authorize(request, for_bot_id=bot_id)
+            return a.owner_username
+        else:
+            # otherwise, use this user's store
+            return await self.authenticate(request)
 
     # endregion
 
@@ -562,7 +583,7 @@ class TelebotConstructorApp:
             a = await self.authorize(request)
             payload = await self.parse_body_as_model(request, UpdateBotDisplayNamePayload)
             if await self.store.save_bot_display_name(a.owner_username, a.bot_id, payload.display_name):
-                return web.Response()
+                return web.Response(text="Display name saved")
             else:
                 raise web.HTTPInternalServerError(reason="Failed to save bot display name")
 
@@ -752,13 +773,13 @@ class TelebotConstructorApp:
             if len(new_title) > 512:
                 raise web.HTTPBadRequest(reason="The title is too long")
             if await self.store.form_results.save_form_title(form_id, title=new_title):
-                return web.Response()
+                return web.Response(text="Form title updated")
             else:
                 return web.HTTPInternalServerError(reason="Unable to save new form title")
 
         # endregion
         ##################################################################################
-        # region media store access
+        # region media store
 
         @routes.post("/api/media")
         async def save_media(request: web.Request) -> web.Response:
@@ -771,16 +792,58 @@ class TelebotConstructorApp:
                 "200":
                     description: OK, newly saved media id is returned
             """
-            username = await self.authenticate(request)
             media_store = self.get_media_store()
+            media_owner = await self.authorize_media_owner(request)
             media_id = await media_store.save_media(
-                owner_id=username,
-                media=Media(content=await request.read(), filename=request.headers.get("filename")),
+                owner_id=media_owner,
+                media=Media(content=await request.read(), filename=request.headers.get(FILENAME_HEADER)),
             )
             if media_id is None:
                 raise web.HTTPServiceUnavailable(reason="Media store failed")
             else:
                 return web.Response(text=media_id)
+
+        @routes.get("/api/media/{media_id}")
+        async def serve_media(request: web.Request) -> web.Response:
+            """
+            ---
+            description: Load media from media store by its id
+            produces:
+            - */*
+            responses:
+                "200":
+                    description: Media body
+            """
+            media_store = self.get_media_store()
+            media_owner = await self.authorize_media_owner(request)
+            media_id = self.parse_path_part(request, part_name="media_id")
+            media = await media_store.load_media(owner_id=media_owner, media_id=media_id)
+            if media is None:
+                raise web.HTTPNotFound(reason=f"Media not found: {media_id}")
+            else:
+                headers: dict[str, str] = {}
+                if media.filename is not None:
+                    headers[FILENAME_HEADER] = media.filename
+                return web.Response(body=media.content, content_type=media.mimetype, headers=headers)
+
+        @routes.delete("/api/media/{media_id}")
+        async def delete_media(request: web.Request) -> web.Response:
+            """
+            ---
+            description: Delete media
+            produces:
+            - text/plain
+            responses:
+                "200":
+                    description: Media deleted
+            """
+            media_store = self.get_media_store()
+            media_owner = await self.authorize_media_owner(request)
+            media_id = self.parse_path_part(request, part_name="media_id")
+            if await media_store.delete_media(owner_id=media_owner, media_id=media_id):
+                return web.Response(text="Media deleted")
+            else:
+                raise web.HTTPNotFound(reason=f"Media not found: {media_id}")
 
         # endregion
         ##################################################################################
@@ -1031,7 +1094,7 @@ class TelebotConstructorApp:
                     description: Media store not available
             """
             self.get_media_store()
-            return web.Response()
+            return web.Response(text="Media store available")
 
         @routes.get("/")
         @routes.get("")
