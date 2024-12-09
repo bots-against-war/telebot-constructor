@@ -111,6 +111,17 @@
             }
           ],
           "title": "Message"
+        },
+        "author_username": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Author Username"
         }
       },
       "required": [
