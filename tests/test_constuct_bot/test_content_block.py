@@ -98,7 +98,7 @@ async def test_markdown_text(markdown_text: str, expected_sent: str) -> None:
     await secret_store.save_secret(secret_name="token", secret_value="<token>", owner_id=username)
 
     bot_runner = await construct_bot(
-        username=username,
+        owner_id=username,
         bot_id="simple-user-flow-bot",
         bot_config=bot_config,
         form_results_store=dummy_form_results_store(),
@@ -174,7 +174,7 @@ async def test_single_photo() -> None:
 
     # calling main constructor function, in prod it is done when starting the bot (see /api/start/{bot_id})
     bot_runner = await construct_bot(
-        username=username,
+        owner_id=username,
         bot_id="simple-user-flow-bot",
         bot_config=bot_config,
         form_results_store=dummy_form_results_store(),
@@ -300,7 +300,7 @@ async def test_multiple_photos() -> None:
     await secret_store.save_secret(secret_name="token", secret_value="<token>", owner_id=username)
 
     bot_runner = await construct_bot(
-        username=username,
+        owner_id=username,
         bot_id="multiple-photos-in-content-block",
         bot_config=bot_config,
         form_results_store=dummy_form_results_store(),
@@ -370,7 +370,7 @@ async def test_multiple_photos() -> None:
         ContentBlockContentAttachment(image=base64.b64encode(b"base64-string-3").decode())
     )
     bot_runner_2 = await construct_bot(
-        username=username,
+        owner_id=username,
         bot_id="multiple-photos-in-content-block",
         bot_config=bot_config,
         form_results_store=dummy_form_results_store(),

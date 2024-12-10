@@ -191,7 +191,7 @@ async def test_user_flow_with_form(
     username = "bot-admin-1312"
     await secret_store.save_secret(secret_name="token", secret_value="mock-token", owner_id=username)
     bot_runner = await construct_bot(
-        username=username,
+        owner_id=username,
         bot_id="form-bot-test",
         bot_config=bot_config,
         form_results_store=dummy_form_results_store(),
@@ -355,10 +355,10 @@ async def test_form_results_internal_storage() -> None:
     form_results_store = FormResultsStore(redis)
     await secret_store.save_secret(secret_name="token", secret_value="mock-token", owner_id=username)
     bot_runner = await construct_bot(
-        username=username,
+        owner_id=username,
         bot_id=bot_id,
         bot_config=bot_config,
-        form_results_store=form_results_store.adapter_for(username=username, bot_id=bot_id),
+        form_results_store=form_results_store.adapter_for(owner_id=username, bot_id=bot_id),
         metrics_store=dummy_metrics_store(),
         secret_store=secret_store,
         redis=redis,
@@ -422,7 +422,7 @@ async def test_form_results_internal_storage() -> None:
     # check the result is saved
     assert mask_recent_timestamps(
         await form_results_store.load_page(
-            form_id=GlobalFormId(username=username, bot_id=bot_id, form_block_id="form"),
+            form_id=GlobalFormId(owner_id=username, bot_id=bot_id, form_block_id="form"),
             offset=0,
             count=2,
         )
@@ -441,7 +441,7 @@ async def test_form_results_internal_storage() -> None:
         },
     ]
     all_results, is_full = await form_results_store.load(
-        form_id=GlobalFormId(username=username, bot_id=bot_id, form_block_id="form"),
+        form_id=GlobalFormId(owner_id=username, bot_id=bot_id, form_block_id="form"),
         filter=FormResultsFilter(min_timestamp=None, max_timestamp=None),
     )
     assert is_full

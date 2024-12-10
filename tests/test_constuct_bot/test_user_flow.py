@@ -90,7 +90,7 @@ async def test_simple_user_flow() -> None:
     username = "user123"
     await secret_store.save_secret(secret_name="token", secret_value="mock-token", owner_id=username)
     bot_runner = await construct_bot(
-        username=username,
+        owner_id=username,
         bot_id="simple-user-flow-bot",
         bot_config=bot_config,
         form_results_store=dummy_form_results_store(),
@@ -179,7 +179,7 @@ async def test_flow_with_human_operator(catch_all: bool) -> None:
     username = "user123"
     await secret_store.save_secret(secret_name="token", secret_value="mock-token", owner_id=username)
     bot_runner = await construct_bot(
-        username=username,
+        owner_id=username,
         bot_id=f"flow-with-human-operator-bot-{catch_all=}",
         bot_config=bot_config,
         form_results_store=dummy_form_results_store(),
@@ -305,7 +305,7 @@ async def test_catch_all_entrypoint() -> None:
     username = "user123"
     await secret_store.save_secret(secret_name="token", secret_value="mock-token", owner_id=username)
     bot_runner = await construct_bot(
-        username=username,
+        owner_id=username,
         bot_id="catch-all-entrypoint-bot",
         bot_config=bot_config,
         form_results_store=dummy_form_results_store(),
@@ -378,7 +378,7 @@ async def test_regex_match_entrypoint() -> None:
     username = "user123"
     await secret_store.save_secret(secret_name="token", secret_value="mock-token", owner_id=username)
     bot_runner = await construct_bot(
-        username=username,
+        owner_id=username,
         bot_id="regex-entrypoint-bot",
         bot_config=bot_config,
         form_results_store=dummy_form_results_store(),
@@ -528,7 +528,7 @@ async def test_multilang_user_flow() -> None:
     username = "bot-admin-1312"
     await secret_store.save_secret(secret_name="token", secret_value="mock-token", owner_id=username)
     bot_runner = await construct_bot(
-        username=username,
+        owner_id=username,
         bot_id="simple-user-flow-bot",
         bot_config=bot_config,
         form_results_store=dummy_form_results_store(),
@@ -615,7 +615,7 @@ async def test_no_infinte_loop_flow() -> None:
     username = "user123"
     await secret_store.save_secret(secret_name="token", secret_value="mock-token", owner_id=username)
     bot_runner = await construct_bot(
-        username=username,
+        owner_id=username,
         bot_id="simple-user-flow-bot",
         bot_config=bot_config,
         form_results_store=dummy_form_results_store(),

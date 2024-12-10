@@ -44,7 +44,7 @@ async def test_form_results_load_with_filter(load_page_size: int):
     redis = RedisEmulation()
     form_results_store = FormResultsStore(redis)
 
-    form_id = GlobalFormId(username="test", bot_id="testbot", form_block_id="testform")
+    form_id = GlobalFormId(owner_id="test", bot_id="testbot", form_block_id="testform")
 
     now = time.time()
     all_results: list[FormResult] = [

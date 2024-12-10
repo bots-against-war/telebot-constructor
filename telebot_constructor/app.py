@@ -236,7 +236,7 @@ class TelebotConstructorApp:
         else:
             return flag.lower() in {"true", "1"}
 
-    def get_media_store(self) -> MediaStore:
+    def ensure_media_store(self) -> MediaStore:
         if self.media_store is None:
             raise web.HTTPNotImplemented(reason="Media store not configured")
         return self.media_store
@@ -271,19 +271,20 @@ class TelebotConstructorApp:
             _bot_factory=self._bot_factory,
         )
 
-    async def _construct_bot(self, username: str, bot_id: str, bot_config: BotConfig) -> BotRunner:
+    async def _construct_bot(self, owner_id: str, bot_id: str, bot_config: BotConfig) -> BotRunner:
         return await construct_bot(
-            username=username,
+            owner_id=owner_id,
             bot_id=bot_id,
             bot_config=bot_config,
             secret_store=self.secret_store,
             form_results_store=self.store.form_results.adapter_for(
-                username=username,
+                owner_id=owner_id,
                 bot_id=bot_id,
             ),
             metrics_store=self.store.metrics,
             redis=self.redis,
             group_chat_discovery_handler=self.group_chat_discovery_handler,
+            media_store=self.media_store.adapter_for(owner_id) if self.media_store else None,
             _bot_factory=self._bot_factory,
         )
 
@@ -328,7 +329,7 @@ class TelebotConstructorApp:
         await self.stop_bot(a)
         try:
             bot_runner = await self._construct_bot(
-                username=a.owner_username,
+                owner_id=a.owner_username,
                 bot_id=a.bot_id,
                 bot_config=bot_config,
             )
@@ -679,7 +680,7 @@ class TelebotConstructorApp:
             """
             a = await self.authorize(request)
             global_form_id = GlobalFormId(
-                username=a.owner_username,
+                owner_id=a.owner_username,
                 bot_id=a.bot_id,
                 form_block_id=self.parse_path_part(request, "form_block_id"),
             )
@@ -708,7 +709,7 @@ class TelebotConstructorApp:
             """
             a = await self.authorize(request)
             global_form_id = GlobalFormId(
-                username=a.owner_username, bot_id=a.bot_id, form_block_id=self.parse_path_part(request, "form_block_id")
+                owner_id=a.owner_username, bot_id=a.bot_id, form_block_id=self.parse_path_part(request, "form_block_id")
             )
             filter = FormResultsFilter(
                 min_timestamp=self.parse_query_param_int(request, name="min_timestamp", min_=None, max_=None),
@@ -765,7 +766,7 @@ class TelebotConstructorApp:
             """
             a = await self.authorize(request)
             form_id = GlobalFormId(
-                username=a.owner_username,
+                owner_id=a.owner_username,
                 bot_id=a.bot_id,
                 form_block_id=self.parse_path_part(request, "form_block_id"),
             )
@@ -792,7 +793,7 @@ class TelebotConstructorApp:
                 "200":
                     description: OK, newly saved media id is returned
             """
-            media_store = self.get_media_store()
+            media_store = self.ensure_media_store()
             media_owner = await self.authorize_media_owner(request)
             media_id = await media_store.save_media(
                 owner_id=media_owner,
@@ -814,7 +815,7 @@ class TelebotConstructorApp:
                 "200":
                     description: Media body
             """
-            media_store = self.get_media_store()
+            media_store = self.ensure_media_store()
             media_owner = await self.authorize_media_owner(request)
             media_id = self.parse_path_part(request, part_name="media_id")
             media = await media_store.load_media(owner_id=media_owner, media_id=media_id)
@@ -837,7 +838,7 @@ class TelebotConstructorApp:
                 "200":
                     description: Media deleted
             """
-            media_store = self.get_media_store()
+            media_store = self.ensure_media_store()
             media_owner = await self.authorize_media_owner(request)
             media_id = self.parse_path_part(request, part_name="media_id")
             if await media_store.delete_media(owner_id=media_owner, media_id=media_id):
@@ -1093,7 +1094,7 @@ class TelebotConstructorApp:
                 "501":
                     description: Media store not available
             """
-            self.get_media_store()
+            self.ensure_media_store()
             return web.Response(text="Media store available")
 
         @routes.get("/")

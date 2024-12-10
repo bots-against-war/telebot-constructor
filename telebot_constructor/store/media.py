@@ -18,6 +18,12 @@ class Media(pydantic.BaseModel):
     content: bytes
     filename: str | None
 
+    def __str__(self) -> str:
+        return f"Media <{len(self.content)} bytes> filename={self.filename!r} mimetype={self.mimetype}"
+
+    def __repr__(self) -> str:
+        return str(self)
+
     @property
     def mimetype(self) -> str | None:
         if self.filename is not None:
@@ -43,6 +49,9 @@ class MediaStore(abc.ABC):
     async def setup(self) -> None: ...
 
     async def cleanup(self) -> None: ...
+
+    def adapter_for(self, owner_id: str) -> "UserSpecificMediaStore":
+        return UserSpecificMediaStore(media_store=self, owner_id=owner_id)
 
 
 class RedisMediaStore(MediaStore):
@@ -166,3 +175,14 @@ class AwsS3MediaStore(MediaStore):
             if exc.__class__.__name__ != "NoSuchKey":
                 logger.exception("Unexpected error getting an object from S3")
             return False
+
+
+class UserSpecificMediaStore:
+    """Thin adapter to use in contexts without easy access to user"""
+
+    def __init__(self, media_store: MediaStore, owner_id: str) -> None:
+        self.media_store = media_store
+        self.owner_id = owner_id
+
+    async def load_media(self, media_id: MediaId) -> Media | None:
+        return await self.media_store.load_media(owner_id=self.owner_id, media_id=media_id)

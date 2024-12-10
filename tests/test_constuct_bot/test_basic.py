@@ -24,7 +24,7 @@ async def test_construct_empty_bot() -> None:
     username = "test-user"
     await secret_store.save_secret(secret_name="empty-bot-token", secret_value="mock-token", owner_id=username)
     await construct_bot(
-        username=username,
+        owner_id=username,
         bot_id="empty-bot-test",
         bot_config=BotConfig(
             token_secret_name="empty-bot-token", display_name="Test bot", user_flow_config=EMPTY_USER_FLOW_CONFIG
@@ -41,7 +41,7 @@ async def test_missing_token_secret() -> None:
     redis = RedisEmulation()
     with pytest.raises(ValueError):
         await construct_bot(
-            username="some-user",
+            owner_id="some-user",
             bot_id="bot-test",
             bot_config=BotConfig(
                 token_secret_name="empty-bot-token", display_name="Test bot", user_flow_config=EMPTY_USER_FLOW_CONFIG
@@ -63,7 +63,7 @@ async def test_bot_token_validation_failed() -> None:
         mock_http.get("https://api.telegram.org/bot123456789/getMe", status=404, repeat=True)
         with pytest.raises(ValueError, match="Failed to get bot user with getMe, the token is probably invalid"):
             await construct_bot(
-                username=username,
+                owner_id=username,
                 bot_id="test",
                 bot_config=BotConfig(
                     token_secret_name="token",

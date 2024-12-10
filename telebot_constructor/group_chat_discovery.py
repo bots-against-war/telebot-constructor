@@ -89,14 +89,14 @@ class GroupChatDiscoveryHandler:
             photo=photo_b64,
         )
 
-    async def validate_discovered_chats(self, username: str, bot_id: str, bot: AsyncTeleBot) -> list[TgGroupChat]:
+    async def validate_discovered_chats(self, owner_id: str, bot_id: str, bot: AsyncTeleBot) -> list[TgGroupChat]:
         """
         Check saved available chats and validate they are still available to the bot (i.e. it was not kicked, group chat
         was not promoted to supergroup, etc); return a list of valid chats as telegram Chat objects
         """
-        prefix = f"{bot_id!r} by {username!r} (validating discovered chats)"
+        prefix = f"{bot_id!r} by {owner_id!r} (validating discovered chats)"
         chats: list[TgGroupChat] = []
-        key = self._full_key(username, bot_id)
+        key = self._full_key(owner_id, bot_id)
         available_chat_ids = await self._available_group_chat_ids.all(key)
         logger.info(prefix + f"Available chat ids: {sorted(available_chat_ids)}")
         for chat_id in available_chat_ids:
@@ -108,35 +108,35 @@ class GroupChatDiscoveryHandler:
                 chats.append(chat)
         return chats
 
-    def setup_handlers(self, username: str, bot_id: str, bot: AsyncTeleBot) -> None:
+    def setup_handlers(self, owner_id: str, bot_id: str, bot: AsyncTeleBot) -> None:
         @bot.my_chat_member_handler()
         @non_capturing_handler
         async def discover_group_chats_on_add(cmu: tg.ChatMemberUpdated) -> None:
             if (
                 tg_const.ChatType(cmu.chat.type) is not tg_const.ChatType.private
                 and cmu.new_chat_member.status in {"creator", "administrator", "member", "restricted"}
-                and await self.is_discovering(username, bot_id)
+                and await self.is_discovering(owner_id, bot_id)
             ):
                 logger.info(f"Discovered chat from being added: {cmu.chat.id}")
-                await self.save_discovered_chat(username, bot_id, chat_id=cmu.chat.id)
+                await self.save_discovered_chat(owner_id, bot_id, chat_id=cmu.chat.id)
             if cmu.new_chat_member.status in {"kicked", "left"}:
                 logger.info(f"Undiscovered chat from being kicked: {cmu.chat.id}")
-                await self._available_group_chat_ids.remove(self._full_key(username, bot_id), cmu.chat.id)
+                await self._available_group_chat_ids.remove(self._full_key(owner_id, bot_id), cmu.chat.id)
 
         @bot.message_handler(commands=["discover_chat"])
         @non_capturing_handler
         async def discover_group_chat_on_explicit_cmd(message: tg.Message) -> None:
             if tg_const.ChatType(message.chat.type) is not tg_const.ChatType.private and await self.is_discovering(
-                username, bot_id
+                owner_id, bot_id
             ):
                 logger.info(f"Discovered chat from explicit command: {message.chat.id}")
-                await self.save_discovered_chat(username, bot_id, chat_id=message.chat.id)
+                await self.save_discovered_chat(owner_id, bot_id, chat_id=message.chat.id)
 
         @bot.message_handler(commands=["undiscover_chat"])
         @non_capturing_handler
         async def undiscover_group_chat(message: tg.Message) -> None:
             logger.info(f"Undiscovered chat from explicit command: {message.chat.id}")
-            await self._available_group_chat_ids.remove(self._full_key(username, bot_id), message.chat.id)
+            await self._available_group_chat_ids.remove(self._full_key(owner_id, bot_id), message.chat.id)
 
         @bot.message_handler(
             content_types=[
@@ -149,7 +149,7 @@ class GroupChatDiscoveryHandler:
             if message.migrate_from_chat_id is not None:
                 logger.info(f"Migrate from chat {message.migrate_from_chat_id} message detected, undiscovering")
                 await self._available_group_chat_ids.remove(
-                    self._full_key(username, bot_id),
+                    self._full_key(owner_id, bot_id),
                     message.migrate_from_chat_id,
                 )
             if message.migrate_to_chat_id is not None:
@@ -157,6 +157,6 @@ class GroupChatDiscoveryHandler:
                     f"Migrate to chat {message.migrate_to_chat_id} message detected, undiscovering current chat"
                 )
                 await self._available_group_chat_ids.remove(
-                    self._full_key(username, bot_id),
+                    self._full_key(owner_id, bot_id),
                     message.chat.id,
                 )

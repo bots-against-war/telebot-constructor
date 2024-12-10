@@ -12,6 +12,7 @@ from telebot_components.stores.banned_users import BannedUsersStore
 from telebot_components.stores.generic import KeyValueStore
 
 from telebot_constructor.store.form_results import BotSpecificFormResultsStore
+from telebot_constructor.store.media import UserSpecificMediaStore
 from telebot_constructor.user_flow.blocks.base import UserFlowBlock
 from telebot_constructor.user_flow.blocks.form import FormBlock
 from telebot_constructor.user_flow.blocks.human_operator import HumanOperatorBlock
@@ -176,6 +177,7 @@ class UserFlow:
         redis: RedisInterface,
         banned_users_store: BannedUsersStore,
         form_results_store: BotSpecificFormResultsStore,
+        media_store: UserSpecificMediaStore | None,
     ) -> SetupResult:
         self._active_block_id_store = KeyValueStore[str](
             name="user-flow-active-block",
@@ -194,6 +196,7 @@ class UserFlow:
             redis=redis,
             form_results_store=form_results_store,
             banned_users_store=banned_users_store,
+            media_store=media_store,
             feedback_handlers=dict(),
             language_store=None,
             enter_block=self._enter_block,

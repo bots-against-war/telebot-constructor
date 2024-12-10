@@ -144,7 +144,7 @@ def assert_method_call_dictified_kwargs_include(
 
 
 def dummy_form_results_store() -> BotSpecificFormResultsStore:
-    return FormResultsStore(RedisEmulation()).adapter_for(username="dummy", bot_id="dummy")
+    return FormResultsStore(RedisEmulation()).adapter_for(owner_id="dummy", bot_id="dummy")
 
 
 def dummy_metrics_store() -> MetricsStore:
