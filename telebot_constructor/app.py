@@ -355,7 +355,9 @@ class TelebotConstructorApp:
     # region: API endpoints
 
     async def create_constructor_web_app(self) -> web.Application:
-        app = web.Application()
+        app = web.Application(
+            client_max_size=10 * 1024**2,  # 10 Mib
+        )
         routes = web.RouteTableDef()
 
         ##################################################################################

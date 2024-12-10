@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Fileupload, Helper, Listgroup } from "flowbite-svelte";
+  import { Dropzone, Fileupload, Helper, Listgroup } from "flowbite-svelte";
   import type { Attachments, ContentBlock, ContentBlockContentAttachment } from "../../../api/types";
   import InputWrapper from "../../../components/inputs/InputWrapper.svelte";
   import { TELEGRAM_MAX_CAPTION_LENGTH_CHARS, TELEGRAM_MAX_MESSAGE_LENGTH_CHARS } from "../../../constants";
@@ -11,99 +11,76 @@
   export let config: ContentBlock;
   export let onConfigUpdate: (newConfig: ContentBlock) => any;
 
-  let editedMessageText = config.contents[0].text?.text || "";
-  let files = initFiles(config.contents[0].attachments);
+  let messageText = config.contents.length > 0 ? config.contents[0].text?.text || "" : "";
+  let attachments = config.contents.length > 0 ? config.contents[0].attachments : [];
 
   async function updateConfig(): Promise<void> {
-    const attachments = await serializeAttachments();
-    config.contents = [{ text: { text: editedMessageText, markup: "markdown" }, attachments }];
+    config.contents = [{ text: { text: messageText, markup: "markdown" }, attachments }];
     onConfigUpdate(config);
   }
 
-  async function serializeAttachments(): Promise<Attachments> {
-    if (!files) return [];
-    const attachments: Attachments = [];
-    for (let file of files) {
-      // NOTE future improvement, add try catch block, err monitoring presence is required
-      const image = await base64EncodeFileContent(file);
-      const filename = file.name;
-      attachments.push({ image, filename });
-    }
-    return attachments;
+  let isUploadingFiles = false;
+
+  function uploadFiles(files: FileList) {
+    // set uploading flag
+    // upload files one by one, collect errors, if occur
+    // add media ids to the list of attachments
+    // notify of errors, if occured
+    // reset uploading flag
   }
 
-  async function base64EncodeFileContent(file: File): Promise<string> {
-    return new Promise<any>((resolve, reject) => {
-      let reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = () => reject(reader.error);
-
-      reader.readAsDataURL(file);
-    });
+  function handleDropFile(event: DragEvent): any {
+    event.preventDefault();
+    if (event.dataTransfer === null) return;
+    uploadFiles(event.dataTransfer.files);
   }
 
-  function decodeBase64(base64: string, filename: string) {
-    const dataTypeMatch = base64.match(/data:(.+?);base64,/);
-    if (!dataTypeMatch) throw "Failed to extract data type from base64 data URL";
-    const type = dataTypeMatch[1];
-    const [_, data] = base64.split(";base64,");
-    const binary = atob(data);
-    const uint8 = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; ++i) {
-      uint8[i] = binary.charCodeAt(i);
-    }
-
-    const file = new File([uint8], filename, { type });
-    return file;
-  }
-
-  function initFiles(attachments: Array<ContentBlockContentAttachment>): FileList | undefined {
-    if (!attachments.length) return undefined;
-
-    // NOTE DataTransfer is a hack, used to create a File List, which is required for a UI component
-    const dataTransfer = new DataTransfer();
-    attachments.forEach((obj) => {
-      let { image, filename } = obj;
-
-      if (typeof image !== "string" || typeof filename !== "string") return;
-
-      const file = decodeBase64(image, filename);
-      dataTransfer.items.add(file);
-    });
-
-    return dataTransfer.files;
-  }
-
-  let filenames: string[];
-  $: {
-    if (files) {
-      filenames = [];
-      for (const f of files) {
-        filenames.push(f.name);
-      }
-    }
+  function handleSelectFile(event: Event): any {
+    if (!(event.target instanceof HTMLInputElement)) return;
+    if (event.target.files === null) return;
+    uploadFiles(event.target.files);
   }
 </script>
 
 <NodeModalBody title={NODE_TITLE.content}>
   <LocalizableTextInput
     label="Текст сообщения"
-    bind:value={editedMessageText}
-    maxCharacters={files ? TELEGRAM_MAX_CAPTION_LENGTH_CHARS : TELEGRAM_MAX_MESSAGE_LENGTH_CHARS}
+    bind:value={messageText}
+    maxCharacters={attachments.length > 0 ? TELEGRAM_MAX_CAPTION_LENGTH_CHARS : TELEGRAM_MAX_MESSAGE_LENGTH_CHARS}
     textareaRows={10}
     markdown
     required={false}
   />
-  <InputWrapper label="Приложения" required={false}>
-    <Fileupload id="multiple_files" class="mb-2" multiple bind:files accept="image/*" />
-    <Helper>PNG, JPG, SVG, WEBP, GIF</Helper>
-    {#if filenames}
-      <Listgroup items={filenames} let:item class="mt-2">
-        {#if item}
-          {item}
-        {/if}
-      </Listgroup>
-    {/if}
-  </InputWrapper>
+  <Dropzone
+    id="dropzone"
+    on:drop={handleDropFile}
+    on:dragover={(event) => event.preventDefault()}
+    on:change={handleSelectFile}
+  >
+    <!-- TODO: use icon from icon pack -->
+    <svg
+      aria-hidden="true"
+      class="mb-3 w-10 h-10 text-gray-400"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+      ><path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+      /></svg
+    >
+    <!-- TODO: render existing attachments as images with crosses to delete -->
+    <!-- {#if value.length === 0}
+      <p class="mb-2 text-sm text-gray-500 dark:text-gray-400">
+        <span class="font-semibold">Click to upload</span> or drag and drop
+      </p>
+      <p class="text-xs text-gray-500 dark:text-gray-400">SVG, PNG, JPG or GIF (MAX. 800x400px)</p>
+    {:else}
+      <p>{showFiles(value)}</p>
+    {/if} -->
+  </Dropzone>
   <NodeModalControls on:save={updateConfig} />
 </NodeModalBody>

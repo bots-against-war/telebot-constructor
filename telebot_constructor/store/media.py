@@ -109,20 +109,30 @@ class AwsS3Credentials(pydantic.BaseModel):
 class AwsS3MediaStore(MediaStore):
     def __init__(self, credentials: AwsS3Credentials) -> None:
         self.credentials = credentials
+        self._client: aiobotocore.client.AioBaseClient | None = None
+
+    @property
+    def client(self) -> aiobotocore.client.AioBaseClient:
+        if self._client is None:
+            raise RuntimeError("Attempt to use media store before initialization")
+        return self._client
 
     async def setup(self) -> None:
+        if self._client is not None:
+            return
         session = aiobotocore.session.get_session()
         # HACK: (aio)botocore forces the use of client as a context manager, but it will not fly with us
-        self.client: aiobotocore.client.AioBaseClient = await session._create_client(
+        self._client = await session._create_client(
             "s3",
             region_name="us-west-2",
             aws_secret_access_key=self.credentials.secret_access_key,
             aws_access_key_id=self.credentials.access_key_id,
         )
-        await self.client.__aenter__()
+        await self._client.__aenter__()
 
     async def cleanup(self):
-        await self.client.__aexit__(None, None, None)
+        await self._client.__aexit__(None, None, None)
+        self._client = None
 
     async def save_media(self, owner_id: str, media: Media) -> MediaId | None:
         media_id = str(uuid.uuid4())
