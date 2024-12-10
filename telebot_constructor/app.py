@@ -88,7 +88,6 @@ class BotAccessAuthorization:
 
 
 BOT_PREFIX = "X-Telebot-Constructor"
-BOT_ID_HEADER = f"{BOT_PREFIX}-Bot-Id"
 FILENAME_HEADER = f"{BOT_PREFIX}-Filename"
 
 
@@ -242,7 +241,7 @@ class TelebotConstructorApp:
         return self.media_store
 
     async def authorize_media_owner(self, request: web.Request) -> str:
-        bot_id = request.headers.get(BOT_ID_HEADER)
+        bot_id = request.query.get("bot_id")
         if bot_id is not None:
             # if bot id header is present, attempt to save media to bot owner's store to make sure
             # the bot has access to it later
