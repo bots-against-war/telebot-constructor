@@ -133,14 +133,25 @@ def assert_method_call_kwargs_include(method_calls: list[MethodCall], required_c
     assert_dicts_include(call_kwargs, required_call_kwargs)
 
 
+def _dictify_method_call_kwargs(d: Any) -> Any:
+    """Convert"""
+    if isinstance(d, dict):
+        return {k: _dictify_method_call_kwargs(v) for k, v in d.items()}
+    elif isinstance(d, list):
+        return [_dictify_method_call_kwargs(el) for el in d]
+    elif isinstance(d, tg.InputMedia):
+        media_json, files = d.convert_input_media()
+        return {"media_json": media_json, "files": files}
+    elif isinstance(d, Dictionaryable):
+        return d.to_dict()
+    else:
+        return d
+
+
 def assert_method_call_dictified_kwargs_include(
     method_calls: list[MethodCall], required_call_kwargs: list[dict]
 ) -> None:
-    preprocessed_kwargs = [
-        {k: v.to_dict() if isinstance(v, Dictionaryable) else v for k, v in mc.full_kwargs.items()}
-        for mc in method_calls
-    ]
-    assert_dicts_include(preprocessed_kwargs, required_call_kwargs)
+    assert_dicts_include(_dictify_method_call_kwargs([mc.full_kwargs for mc in method_calls]), required_call_kwargs)
 
 
 def dummy_form_results_store() -> BotSpecificFormResultsStore:

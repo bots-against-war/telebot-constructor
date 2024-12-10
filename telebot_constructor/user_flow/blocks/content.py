@@ -63,7 +63,10 @@ class ContentBlockContentAttachment(ExactlyOneNonNullFieldModel):
         return self.image  # type: ignore
 
     def is_legacy_base64_image(self) -> bool:
-        return self.image is not None and DATA_URL_PREFIX_REGEX.match(self.image) is not None
+        return self.image is not None and (
+            DATA_URL_PREFIX_REGEX.match(self.image) is not None
+            or len(self.image) > 1024  # 1024 - sensible limit for media_id, otherwise it's likely b64
+        )
 
 
 class Content(BaseModel):
@@ -149,6 +152,10 @@ class ContentBlock(UserFlowBlock):
                 source: str | Media | None = await self._tg_file_id_by_media_id_store.load(attachment.media_id())
                 if source is None and self._media_store is not None:
                     source = await self._media_store.load_media(attachment.media_id())
+                    if source is None:
+                        logger.error(
+                            f"Failed to load media from the store: {attachment.media_id()}; will proceed without it"
+                        )
                 if source is not None:
                     prepared_attachments.append(
                         PreparedAttachment(
@@ -177,7 +184,7 @@ class ContentBlock(UserFlowBlock):
                         messages = [
                             await context.bot.send_photo(
                                 chat_id=chat_id,
-                                photo=pa.source,
+                                photo=pa.telegram_attachment(),
                                 caption=(
                                     any_text_to_str(content.text.preprocessed, language)
                                     if content.text is not None
@@ -193,7 +200,7 @@ class ContentBlock(UserFlowBlock):
                     # multiple attachments case
                     tg_input_media = [
                         # input media handles both file_id and raw bytes case, even though it's not properly typed
-                        tg.InputMediaPhoto(pa.source)  # type: ignore
+                        tg.InputMediaPhoto(pa.telegram_attachment())  # type: ignore
                         for pa in prepared_attachments
                     ]
                     # for media groups, text content is put to first media's caption
@@ -267,3 +274,9 @@ class PreparedAttachment:
 
     attachment: ContentBlockContentAttachment
     source: str | Media  # str = Telegram file id, Media = new raw media
+
+    def telegram_attachment(self) -> str | bytes:
+        if isinstance(self.source, str):
+            return self.source  # file_id
+        else:
+            return self.source.content
