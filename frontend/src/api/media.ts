@@ -8,14 +8,14 @@ export async function saveMedia(file: File, forBotId: string): Promise<Result<st
     method: "POST",
     body: file,
     headers: {
-      "X-Telebot-Constructor-Filename": file.name,
+      "X-Telebot-Constructor-Filename": encodeURIComponent(file.name),
     },
   });
   return await toStringResult(resp);
 }
 
 export function mediaUrl(mediaId: string, forBotId: string): string {
-  return apiUrl(`/media/${encode(mediaId)}/?bot_id=${encode(forBotId)}`);
+  return apiUrl(`/media/${encode(mediaId)}?bot_id=${encode(forBotId)}`);
 }
 
 export async function deleteMedia(mediaId: string, forBotId: string): Promise<Result<null>> {

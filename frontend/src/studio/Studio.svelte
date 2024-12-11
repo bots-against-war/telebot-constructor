@@ -377,6 +377,7 @@
       {#each botConfig.user_flow_config.blocks as block (getBlockId(block))}
         {#if block.content}
           <ContentBlockNode
+            {botId}
             on:delete={deleteNode}
             on:clone={cloneNode}
             bind:config={block.content}
