@@ -60,7 +60,7 @@ async def test_cors(
     headers.pop("Server")
     assert headers == {
         "Access-Control-Allow-Origin": "http://localhost:8081",
-        "Access-Control-Allow-Headers": "Content-Type",
+        "Access-Control-Allow-Headers": "Content-Type, X-Telebot-Constructor-Filename",
         "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
         "Access-Control-Max-Age": "300",
         "Content-Length": "0",

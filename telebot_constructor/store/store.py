@@ -187,8 +187,6 @@ class TelebotConstructorStore:
         last_events = await self._bot_events_store.tail(
             key=self._composite_key(username, bot_id), start=-INCLUDE_LAST_EVENTS
         )
-        if not last_events:
-            return None
 
         return BotInfo(
             bot_id=bot_id,
@@ -200,7 +198,7 @@ class TelebotConstructorStore:
                 start_version=min_version,
                 end_version=None,
             ),
-            last_events=last_events,
+            last_events=last_events or [],
             forms_with_responses=(await self.form_results.list_forms(username, bot_id) if detailed else []),
             last_errors=(
                 await self.metrics.load_errors(username, bot_id, offset=0, count=INCLUDE_LAST_ERRORS)

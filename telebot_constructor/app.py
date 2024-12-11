@@ -38,6 +38,7 @@ from telebot_constructor.app_models import (
 from telebot_constructor.auth.auth import Auth
 from telebot_constructor.bot_config import BotConfig
 from telebot_constructor.build_time_config import BASE_PATH, VERSION
+from telebot_constructor.constants import FILENAME_HEADER
 from telebot_constructor.construct import BotFactory, construct_bot, make_bare_bot
 from telebot_constructor.cors import setup_cors
 from telebot_constructor.debug import setup_debugging
@@ -85,10 +86,6 @@ class BotAccessAuthorization:
     bot_id: str
     actor_username: str
     owner_username: str
-
-
-BOT_PREFIX = "X-Telebot-Constructor"
-FILENAME_HEADER = f"{BOT_PREFIX}-Filename"
 
 
 class TelebotConstructorApp:
@@ -823,7 +820,9 @@ class TelebotConstructorApp:
             if media is None:
                 raise web.HTTPNotFound(reason=f"Media not found: {media_id}")
             else:
-                headers: dict[str, str] = {}
+                headers = {
+                    hdrs.CACHE_CONTROL: "private, max-age=31536000",  # a year, as we use unique media ids
+                }
                 if media.filename is not None:
                     headers[FILENAME_HEADER] = media.filename
                 return web.Response(body=media.content, content_type=media.mimetype, headers=headers)

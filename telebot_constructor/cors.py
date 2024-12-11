@@ -3,6 +3,8 @@ import logging
 from aiohttp import hdrs, web
 from aiohttp.typedefs import Handler
 
+from telebot_constructor.constants import FILENAME_HEADER
+
 logger = logging.getLogger(__name__)
 
 
@@ -21,7 +23,7 @@ def setup_cors(app: web.Application) -> None:
             resp.headers[hdrs.ACCESS_CONTROL_ALLOW_ORIGIN] = (
                 request_origin if request_origin in allowed_origins else allowed_origins[0]
             )
-            resp.headers[hdrs.ACCESS_CONTROL_ALLOW_HEADERS] = f"{hdrs.CONTENT_TYPE}"
+            resp.headers[hdrs.ACCESS_CONTROL_ALLOW_HEADERS] = f"{hdrs.CONTENT_TYPE}, {FILENAME_HEADER}"
             resp.headers[hdrs.ACCESS_CONTROL_ALLOW_METHODS] = "GET,POST,PUT,DELETE,OPTIONS"
             resp.headers[hdrs.ACCESS_CONTROL_MAX_AGE] = "300"
             logger.debug(

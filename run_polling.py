@@ -15,7 +15,11 @@ from telebot_components.utils.secrets import RedisSecretStore
 from telebot_constructor.app import TelebotConstructorApp
 from telebot_constructor.auth.auth import Auth, GroupChatAuth, NoAuth
 from telebot_constructor.auth.telegram_auth import TelegramAuth
-from telebot_constructor.store.media import AwsS3Credentials, AwsS3MediaStore
+from telebot_constructor.store.media import (
+    AwsS3Credentials,
+    AwsS3MediaStore,
+    MediaStore,
+)
 from telebot_constructor.telegram_files_downloader import (
     RedisCacheTelegramFilesDownloader,
 )
@@ -81,15 +85,22 @@ async def main() -> None:
     else:
         raise ValueError(f"Unexpected auth type: {auth_type!r}")
 
+    media_store: MediaStore | None = None
+    try:
+        media_store = AwsS3MediaStore(
+            credentials=AwsS3Credentials.model_validate_json(os.environ["MEDIA_STORE_AWS_S3_CREDENTIALS"])
+        )
+        logging.info("AWS S3 media store set up")
+    except Exception:
+        logging.info("Error setting up AWS S3 media store, running without it")
+
     app = TelebotConstructorApp(
         redis=redis,
         auth=auth,
         secret_store=secret_store,
         static_files_dir=Path("frontend/dist"),
         telegram_files_downloader=telegram_files_downloader,
-        media_store=AwsS3MediaStore(
-            credentials=AwsS3Credentials.model_validate_json(os.environ["MEDIA_STORE_AWS_S3_CREDENTIALS"])
-        ),
+        media_store=media_store,
     )
     logging.info("Running app with polling")
     await app.run_polling(port=int(os.environ.get("PORT", 8088)))
