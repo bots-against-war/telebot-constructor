@@ -12,6 +12,7 @@ from telebot_components.stores.banned_users import BannedUsersStore
 from telebot_components.stores.language import LanguageStore
 
 from telebot_constructor.store.form_results import BotSpecificFormResultsStore
+from telebot_constructor.store.media import UserSpecificMediaStore
 from telebot_constructor.utils import AnyChatId
 
 
@@ -26,6 +27,7 @@ class UserFlowSetupContext:
     feedback_handlers: dict[AnyChatId, FeedbackHandler]
     enter_block: "EnterUserFlowBlockCallback"
     get_active_block_id: "GetActiveUserFlowBlockId"
+    media_store: UserSpecificMediaStore | None
 
 
 @dataclass(frozen=True)

@@ -38,6 +38,7 @@ from telebot_constructor.app_models import (
 from telebot_constructor.auth.auth import Auth
 from telebot_constructor.bot_config import BotConfig
 from telebot_constructor.build_time_config import BASE_PATH, VERSION
+from telebot_constructor.constants import FILENAME_HEADER
 from telebot_constructor.construct import BotFactory, construct_bot, make_bare_bot
 from telebot_constructor.cors import setup_cors
 from telebot_constructor.debug import setup_debugging
@@ -54,6 +55,7 @@ from telebot_constructor.store.form_results import (
     FormResultsFilter,
     GlobalFormId,
 )
+from telebot_constructor.store.media import Media, MediaStore
 from telebot_constructor.store.store import (
     BotConfigVersionMetadata,
     BotVersion,
@@ -98,6 +100,7 @@ class TelebotConstructorApp:
         secret_store: SecretStore,
         static_files_dir: Path = Path(__file__).parent / "static",
         telegram_files_downloader: Optional[TelegramFilesDownloader] = None,
+        media_store: MediaStore | None = None,
     ) -> None:
         self.auth = auth
         self.secret_store = secret_store
@@ -107,6 +110,7 @@ class TelebotConstructorApp:
 
         self.telegram_files_downloader = telegram_files_downloader or InmemoryCacheTelegramFilesDownloader()
         self.store = TelebotConstructorStore(redis)
+        self.media_store = media_store
         self.group_chat_discovery_handler = GroupChatDiscoveryHandler(
             redis=redis, telegram_files_downloader=self.telegram_files_downloader
         )
@@ -138,9 +142,14 @@ class TelebotConstructorApp:
         logged_in_user = await self._authenticate_full(request)
         return logged_in_user.username
 
-    async def authorize(self, request: web.Request, bot_must_exist: bool = True) -> BotAccessAuthorization:
+    async def authorize(
+        self,
+        request: web.Request,
+        bot_must_exist: bool = True,
+        for_bot_id: str | None = None,
+    ) -> BotAccessAuthorization:
         actor_username = await self.authenticate(request)
-        bot_id = self.parse_bot_id(request)
+        bot_id = for_bot_id or self.parse_bot_id(request)
         owner_username = await self.store.load_owner_username(actor_username, bot_id)
         if owner_username is None:
             if bot_must_exist:
@@ -223,6 +232,22 @@ class TelebotConstructorApp:
         else:
             return flag.lower() in {"true", "1"}
 
+    def ensure_media_store(self) -> MediaStore:
+        if self.media_store is None:
+            raise web.HTTPNotImplemented(reason="Media store not configured")
+        return self.media_store
+
+    async def authorize_media_owner(self, request: web.Request) -> str:
+        bot_id = request.query.get("bot_id")
+        if bot_id is not None:
+            # if bot id header is present, attempt to save media to bot owner's store to make sure
+            # the bot has access to it later
+            a = await self.authorize(request, for_bot_id=bot_id)
+            return a.owner_username
+        else:
+            # otherwise, use this user's store
+            return await self.authenticate(request)
+
     # endregion
 
     # region: bot helpers
@@ -242,19 +267,20 @@ class TelebotConstructorApp:
             _bot_factory=self._bot_factory,
         )
 
-    async def _construct_bot(self, username: str, bot_id: str, bot_config: BotConfig) -> BotRunner:
+    async def _construct_bot(self, owner_id: str, bot_id: str, bot_config: BotConfig) -> BotRunner:
         return await construct_bot(
-            username=username,
+            owner_id=owner_id,
             bot_id=bot_id,
             bot_config=bot_config,
             secret_store=self.secret_store,
             form_results_store=self.store.form_results.adapter_for(
-                username=username,
+                owner_id=owner_id,
                 bot_id=bot_id,
             ),
             metrics_store=self.store.metrics,
             redis=self.redis,
             group_chat_discovery_handler=self.group_chat_discovery_handler,
+            media_store=self.media_store.adapter_for(owner_id) if self.media_store else None,
             _bot_factory=self._bot_factory,
         )
 
@@ -299,7 +325,7 @@ class TelebotConstructorApp:
         await self.stop_bot(a)
         try:
             bot_runner = await self._construct_bot(
-                username=a.owner_username,
+                owner_id=a.owner_username,
                 bot_id=a.bot_id,
                 bot_config=bot_config,
             )
@@ -326,7 +352,9 @@ class TelebotConstructorApp:
     # region: API endpoints
 
     async def create_constructor_web_app(self) -> web.Application:
-        app = web.Application()
+        app = web.Application(
+            client_max_size=10 * 1024**2,  # 10 Mib
+        )
         routes = web.RouteTableDef()
 
         ##################################################################################
@@ -554,7 +582,7 @@ class TelebotConstructorApp:
             a = await self.authorize(request)
             payload = await self.parse_body_as_model(request, UpdateBotDisplayNamePayload)
             if await self.store.save_bot_display_name(a.owner_username, a.bot_id, payload.display_name):
-                return web.Response()
+                return web.Response(text="Display name saved")
             else:
                 raise web.HTTPInternalServerError(reason="Failed to save bot display name")
 
@@ -650,7 +678,7 @@ class TelebotConstructorApp:
             """
             a = await self.authorize(request)
             global_form_id = GlobalFormId(
-                username=a.owner_username,
+                owner_id=a.owner_username,
                 bot_id=a.bot_id,
                 form_block_id=self.parse_path_part(request, "form_block_id"),
             )
@@ -679,7 +707,7 @@ class TelebotConstructorApp:
             """
             a = await self.authorize(request)
             global_form_id = GlobalFormId(
-                username=a.owner_username, bot_id=a.bot_id, form_block_id=self.parse_path_part(request, "form_block_id")
+                owner_id=a.owner_username, bot_id=a.bot_id, form_block_id=self.parse_path_part(request, "form_block_id")
             )
             filter = FormResultsFilter(
                 min_timestamp=self.parse_query_param_int(request, name="min_timestamp", min_=None, max_=None),
@@ -736,7 +764,7 @@ class TelebotConstructorApp:
             """
             a = await self.authorize(request)
             form_id = GlobalFormId(
-                username=a.owner_username,
+                owner_id=a.owner_username,
                 bot_id=a.bot_id,
                 form_block_id=self.parse_path_part(request, "form_block_id"),
             )
@@ -744,9 +772,79 @@ class TelebotConstructorApp:
             if len(new_title) > 512:
                 raise web.HTTPBadRequest(reason="The title is too long")
             if await self.store.form_results.save_form_title(form_id, title=new_title):
-                return web.Response()
+                return web.Response(text="Form title updated")
             else:
                 return web.HTTPInternalServerError(reason="Unable to save new form title")
+
+        # endregion
+        ##################################################################################
+        # region media store
+
+        @routes.post("/api/media")
+        async def save_media(request: web.Request) -> web.Response:
+            """
+            ---
+            description: Save new media item to media store
+            produces:
+            - application/text
+            responses:
+                "200":
+                    description: OK, newly saved media id is returned
+            """
+            media_store = self.ensure_media_store()
+            media_owner = await self.authorize_media_owner(request)
+            media_id = await media_store.save_media(
+                owner_id=media_owner,
+                media=Media(content=await request.read(), filename=request.headers.get(FILENAME_HEADER)),
+            )
+            if media_id is None:
+                raise web.HTTPServiceUnavailable(reason="Media store failed")
+            else:
+                return web.Response(text=media_id)
+
+        @routes.get("/api/media/{media_id}")
+        async def serve_media(request: web.Request) -> web.Response:
+            """
+            ---
+            description: Load media from media store by its id
+            produces:
+            - */*
+            responses:
+                "200":
+                    description: Media body
+            """
+            media_store = self.ensure_media_store()
+            media_owner = await self.authorize_media_owner(request)
+            media_id = self.parse_path_part(request, part_name="media_id")
+            media = await media_store.load_media(owner_id=media_owner, media_id=media_id)
+            if media is None:
+                raise web.HTTPNotFound(reason=f"Media not found: {media_id}")
+            else:
+                headers = {
+                    hdrs.CACHE_CONTROL: "private, max-age=31536000",  # a year, as we use unique media ids
+                }
+                if media.filename is not None:
+                    headers[FILENAME_HEADER] = media.filename
+                return web.Response(body=media.content, content_type=media.mimetype, headers=headers)
+
+        @routes.delete("/api/media/{media_id}")
+        async def delete_media(request: web.Request) -> web.Response:
+            """
+            ---
+            description: Delete media
+            produces:
+            - text/plain
+            responses:
+                "200":
+                    description: Media deleted
+            """
+            media_store = self.ensure_media_store()
+            media_owner = await self.authorize_media_owner(request)
+            media_id = self.parse_path_part(request, part_name="media_id")
+            if await media_store.delete_media(owner_id=media_owner, media_id=media_id):
+                return web.Response(text="Media deleted")
+            else:
+                raise web.HTTPNotFound(reason=f"Media not found: {media_id}")
 
         # endregion
         ##################################################################################
@@ -983,6 +1081,22 @@ class TelebotConstructorApp:
                 content_type="application/json",
             )
 
+        @routes.get("/api/media-store-check")
+        async def check_media_store_configured(request: web.Request) -> web.Response:
+            """
+            ---
+            description: Check if media store is configured
+            produces:
+            - application/json
+            responses:
+                "200":
+                    description: Media store available
+                "501":
+                    description: Media store not available
+            """
+            self.ensure_media_store()
+            return web.Response(text="Media store available")
+
         @routes.get("/")
         @routes.get("")
         async def landing_page(request: web.Request) -> web.Response:
@@ -1070,12 +1184,17 @@ class TelebotConstructorApp:
             logger.info("Starting auth bot")
             await self.runner.start(username="internal", bot_id="auth-bot", bot_runner=auth_bot_runner)
         await self.telegram_files_downloader.setup()
+        if self.media_store is not None:
+            await self.media_store.setup()
+        logger.info("Setup completed")
 
     async def cleanup(self) -> None:
         logger.info("Cleanup started")
         await self.telegram_files_downloader.cleanup()
         await self.runner.cleanup()
         # await telebot.api.session_manager.close_session()
+        if self.media_store is not None:
+            await self.media_store.cleanup()
         logger.info("Cleanup completed")
 
     # public methods to run constructor in different scenarios

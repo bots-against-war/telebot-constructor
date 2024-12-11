@@ -28,13 +28,13 @@ class MetricsStore:
     def _error_store_key(self, username: str, bot_id: str) -> str:
         return f"{username}/{bot_id}"
 
-    def get_update_metrics_handler(self, username: str, bot_id: str) -> TelegramUpdateMetricsHandler:
+    def get_update_metrics_handler(self, owner_id: str, bot_id: str) -> TelegramUpdateMetricsHandler:
 
         async def handler(metrics: TelegramUpdateMetrics) -> None:
             exc_info = metrics.get("exception_info")
             if exc_info is not None:
                 await self._errors_store.push(
-                    self._error_store_key(username, bot_id),
+                    self._error_store_key(owner_id, bot_id),
                     BotError(
                         timestamp=time.time(),
                         update_metrics=metrics,

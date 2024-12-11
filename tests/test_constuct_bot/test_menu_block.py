@@ -92,7 +92,7 @@ async def test_flow_with_menu() -> None:
     username = "user123"
     await secret_store.save_secret(secret_name="token", secret_value="mock-token", owner_id=username)
     bot_runner = await construct_bot(
-        username=username,
+        owner_id=username,
         bot_id="menu-bot",
         bot_config=bot_config,
         form_results_store=dummy_form_results_store(),
@@ -210,7 +210,7 @@ async def test_flow_with_nexted_menu() -> None:
     username = "user12345"
     await secret_store.save_secret(secret_name="token", secret_value="mock-token", owner_id=username)
     bot_runner = await construct_bot(
-        username=username,
+        owner_id=username,
         bot_id="menu-bot",
         bot_config=bot_config,
         form_results_store=dummy_form_results_store(),
@@ -359,7 +359,7 @@ async def test_multilevel_menu() -> None:
     username = "user12345"
     await secret_store.save_secret(secret_name="token", secret_value="mock-token", owner_id=username)
     bot_runner = await construct_bot(
-        username=username,
+        owner_id=username,
         bot_id="menu-bot",
         bot_config=bot_config,
         form_results_store=dummy_form_results_store(),
@@ -507,7 +507,7 @@ async def test_dag_menu() -> None:
     username = "user12345"
     await secret_store.save_secret(secret_name="token", secret_value="mock-token", owner_id=username)
     bot_runner = await construct_bot(
-        username=username,
+        owner_id=username,
         bot_id="menu-bot",
         bot_config=bot_config,
         form_results_store=dummy_form_results_store(),
@@ -721,7 +721,7 @@ async def test_rhombus_menu() -> None:
     username = "user12345"
     await secret_store.save_secret(secret_name="token", secret_value="mock-token", owner_id=username)
     bot_runner = await construct_bot(
-        username=username,
+        owner_id=username,
         bot_id="menu-bot",
         bot_config=bot_config,
         form_results_store=dummy_form_results_store(),

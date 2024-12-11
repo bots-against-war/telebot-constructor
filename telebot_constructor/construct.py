@@ -13,6 +13,7 @@ from telebot_constructor.bot_config import BotConfig
 from telebot_constructor.constants import CONSTRUCTOR_PREFIX
 from telebot_constructor.group_chat_discovery import GroupChatDiscoveryHandler
 from telebot_constructor.store.form_results import BotSpecificFormResultsStore
+from telebot_constructor.store.media import UserSpecificMediaStore
 from telebot_constructor.store.metrics import MetricsStore
 from telebot_constructor.user_flow.types import BotCommandInfo
 from telebot_constructor.utils.rate_limit_retry import rate_limit_retry
@@ -25,13 +26,13 @@ BotFactory = (
 
 
 async def make_bare_bot(
-    username: str,
+    owner_id: str,
     bot_config: BotConfig,
     secret_store: SecretStore,
     update_metrics_handler: Optional[TelegramUpdateMetricsHandler] = None,
     _bot_factory: BotFactory = AsyncTeleBot,
 ) -> AsyncTeleBot:
-    token = await secret_store.get_secret(secret_name=bot_config.token_secret_name, owner_id=username)
+    token = await secret_store.get_secret(secret_name=bot_config.token_secret_name, owner_id=owner_id)
     if token is None:
         raise ValueError(f"Token name {bot_config.token_secret_name!r} does not correspond to a valid secret")
     return _bot_factory(token, update_metrics_handler=update_metrics_handler)
@@ -39,27 +40,28 @@ async def make_bare_bot(
 
 async def construct_bot(
     *,
-    username: str,
+    owner_id: str,
     bot_id: str,
     bot_config: BotConfig,
     secret_store: SecretStore,
     form_results_store: BotSpecificFormResultsStore,
     metrics_store: MetricsStore,
     redis: RedisInterface,
-    group_chat_discovery_handler: Optional[GroupChatDiscoveryHandler] = None,
+    media_store: UserSpecificMediaStore | None = None,
+    group_chat_discovery_handler: GroupChatDiscoveryHandler | None = None,
     _bot_factory: BotFactory = AsyncTeleBot,  # used for testing
 ) -> BotRunner:
     """Core bot construction function responsible for turning a config into a functional bot"""
-    bot_prefix = f"{CONSTRUCTOR_PREFIX}/{username}/{bot_id}"
-    log_prefix = f"[{username}][{bot_id}] "
+    bot_prefix = f"{CONSTRUCTOR_PREFIX}/{owner_id}/{bot_id}"
+    log_prefix = f"[{owner_id}][{bot_id}] "
     logger.info(log_prefix + "Constructing bot")
 
     bot = await make_bare_bot(
-        username=username,
+        owner_id=owner_id,
         bot_config=bot_config,
         secret_store=secret_store,
         update_metrics_handler=metrics_store.get_update_metrics_handler(
-            username=username,
+            owner_id=owner_id,
             bot_id=bot_id,
         ),
         _bot_factory=_bot_factory,
@@ -91,6 +93,7 @@ async def construct_bot(
             redis=redis,
             banned_users_store=banned_users_store,
             form_results_store=form_results_store,
+            media_store=media_store,
         )
 
         logger.info(log_prefix + f"Got result: {user_flow_setup_result}")
@@ -117,7 +120,7 @@ async def construct_bot(
                 )
 
     if group_chat_discovery_handler is not None:
-        group_chat_discovery_handler.setup_handlers(username=username, bot_id=bot_id, bot=bot)
+        group_chat_discovery_handler.setup_handlers(owner_id=owner_id, bot_id=bot_id, bot=bot)
 
     return BotRunner(
         bot_prefix=bot_prefix,

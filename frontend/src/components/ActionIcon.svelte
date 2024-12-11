@@ -10,7 +10,7 @@
   export let iconClass = "w-3 h-3 text-gray-700";
 </script>
 
-<Button {...$$restProps} outline class={buttonClass} {size} on:click {href} target="_blank">
+<Button {...$$restProps} outline class={buttonClass} {size} on:click on:keydown {href} target="_blank">
   <svelte:component this={icon} class={iconClass} />
   <slot />
 </Button>

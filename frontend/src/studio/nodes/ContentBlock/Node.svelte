@@ -16,6 +16,7 @@
 
   const openModal = getModalOpener();
 
+  export let botId: string;
   export let config: ContentBlock;
   export let position: SvelvetPosition;
   export let isValid = true;
@@ -25,6 +26,7 @@
   };
   const openEditModal = () =>
     openModal(Modal, {
+      botId,
       config,
       onConfigUpdate: setNewConfig,
     });

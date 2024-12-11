@@ -49,6 +49,12 @@ export async function toDataResult<T>(resp: Response): Promise<Result<T, string>
   else return err(respText);
 }
 
+export async function toStringResult(resp: Response): Promise<Result<string, string>> {
+  const respText = await resp.text();
+  if (resp.ok) return ok(respText);
+  else return err(respText);
+}
+
 export function mean(data: number[]): number {
   if (data.length < 1) {
     return NaN;

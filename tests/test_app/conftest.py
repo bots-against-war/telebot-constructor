@@ -15,6 +15,7 @@ from telebot_components.utils.secrets import RedisSecretStore
 from telebot_constructor.app import TelebotConstructorApp
 from telebot_constructor.auth.auth import NoAuth
 from telebot_constructor.runners import ConstructedBotRunner
+from telebot_constructor.store.media import RedisMediaStore
 
 
 class MockBotRunner(ConstructedBotRunner):
@@ -64,6 +65,7 @@ async def constructor_app() -> AsyncGenerator[tuple[TelebotConstructorApp, aioht
                 scope_secrets_to_user=True,
             ),
             static_files_dir=Path(tempdir),
+            media_store=RedisMediaStore(redis=redis),
         )
         telebot_constructor_app._runner = MockBotRunner()
         telebot_constructor_app._bot_factory = mocked_async_telebot_factory

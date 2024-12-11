@@ -33,12 +33,12 @@ def noop(x: str) -> str:
 
 @dataclass
 class GlobalFormId:
-    username: str
+    owner_id: str
     bot_id: str
     form_block_id: str
 
     def as_key(self) -> str:
-        return "/".join([self.username, self.bot_id, self.form_block_id])
+        return "/".join([self.owner_id, self.bot_id, self.form_block_id])
 
     @classmethod
     def from_key(self, ck: str) -> "GlobalFormId":
@@ -47,7 +47,7 @@ class GlobalFormId:
         parts = ck.split("/", maxsplit=2)
         if len(parts) != 3:
             raise ValueError(f"Error parsing composite key: {ck} -> {parts}")
-        return GlobalFormId(username=parts[0], bot_id=parts[1], form_block_id=parts[2])
+        return GlobalFormId(owner_id=parts[0], bot_id=parts[1], form_block_id=parts[2])
 
 
 class FormInfoBasic(BaseModel):
@@ -133,10 +133,10 @@ class FormResultsStore:
             loader=noop,
         )
 
-    def adapter_for(self, username: str, bot_id: str) -> "BotSpecificFormResultsStore":
+    def adapter_for(self, owner_id: str, bot_id: str) -> "BotSpecificFormResultsStore":
         return BotSpecificFormResultsStore(
             storage=self,
-            username=username,
+            owner_id=owner_id,
             bot_id=bot_id,
         )
 
@@ -155,11 +155,11 @@ class FormResultsStore:
     async def save_form_prompt(self, form_id: GlobalFormId, prompt: str) -> bool:
         return await self._prompt_store.save(form_id.as_key(), prompt)
 
-    async def list_forms(self, username: str, bot_id: str) -> list[FormInfoBasic]:
+    async def list_forms(self, owner_id: str, bot_id: str) -> list[FormInfoBasic]:
         """Returns dict of bot id -> list of form block ids with saved data"""
         form_keys = await self._results_store.find_keys(
             pattern=GlobalFormId(
-                username,
+                owner_id,
                 bot_id=bot_id,
                 form_block_id="*",
             ).as_key()
@@ -167,10 +167,10 @@ class FormResultsStore:
 
         global_form_ids = [GlobalFormId.from_key(key) for key in form_keys]
         if invalid_form_ids := [
-            gfid for gfid in global_form_ids if (gfid.username != username or bot_id != gfid.bot_id)
+            gfid for gfid in global_form_ids if (gfid.owner_id != owner_id or bot_id != gfid.bot_id)
         ]:
             raise ValueError(
-                f"Parsed global form ids not matching the query: {username = } {bot_id = } {invalid_form_ids = }"
+                f"Parsed global form ids not matching the query: {owner_id = } {bot_id = } {invalid_form_ids = }"
             )
 
         prompts = await self._prompt_store.load_multiple(form_keys)
@@ -245,7 +245,7 @@ class BotSpecificFormResultsStore:
     """Small adapter to be passed to bot's internals"""
 
     storage: FormResultsStore
-    username: str
+    owner_id: str
     bot_id: str
 
     async def save_form_result(
@@ -255,7 +255,7 @@ class BotSpecificFormResultsStore:
         field_names: Mapping[FieldId, str],
         prompt: str,
     ) -> bool:
-        form_id = GlobalFormId(username=self.username, bot_id=self.bot_id, form_block_id=form_block_id)
+        form_id = GlobalFormId(owner_id=self.owner_id, bot_id=self.bot_id, form_block_id=form_block_id)
         return all(
             (
                 await self.storage.save(form_id, result=form_result),

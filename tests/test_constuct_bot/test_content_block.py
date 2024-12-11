@@ -1,4 +1,5 @@
 import base64
+import copy
 import time
 
 import pytest
@@ -14,6 +15,7 @@ from telebot_constructor.bot_config import (
     UserFlowEntryPointConfig,
 )
 from telebot_constructor.construct import construct_bot
+from telebot_constructor.store.media import Media, RedisMediaStore
 from telebot_constructor.user_flow.blocks.content import (
     Content,
     ContentBlock,
@@ -22,6 +24,7 @@ from telebot_constructor.user_flow.blocks.content import (
 )
 from telebot_constructor.user_flow.entrypoints.command import CommandEntryPoint
 from tests.utils import (
+    assert_method_call_dictified_kwargs_include,
     assert_method_call_kwargs_include,
     dummy_form_results_store,
     dummy_metrics_store,
@@ -98,7 +101,7 @@ async def test_markdown_text(markdown_text: str, expected_sent: str) -> None:
     await secret_store.save_secret(secret_name="token", secret_value="<token>", owner_id=username)
 
     bot_runner = await construct_bot(
-        username=username,
+        owner_id=username,
         bot_id="simple-user-flow-bot",
         bot_config=bot_config,
         form_results_store=dummy_form_results_store(),
@@ -131,6 +134,17 @@ async def test_markdown_text(markdown_text: str, expected_sent: str) -> None:
 
 
 async def test_single_photo() -> None:
+    # setting up dependencies with in-memory redis emulation
+    redis = RedisEmulation()
+    secret_store = dummy_secret_store(redis)
+
+    # creating "secret" with bot token (in prod it is done automatically during bot creation)
+    owner_id = "test-username"
+    await secret_store.save_secret(secret_name="token", secret_value="<token>", owner_id=owner_id)
+
+    media_store = RedisMediaStore(redis)
+    media_id = await media_store.save_media(owner_id, Media(content=b"attachment-body", filename=None))
+
     # simple bot config with a single /start leading to a single content block
     bot_config = BotConfig(
         token_secret_name="token",
@@ -153,7 +167,7 @@ async def test_single_photo() -> None:
                         contents=[
                             Content(
                                 text=ContentText(text="photo caption", markup=ContentTextMarkup.HTML),
-                                attachments=[ContentBlockContentAttachment(image="base64-string")],
+                                attachments=[ContentBlockContentAttachment(image=media_id)],
                             )
                         ],
                         next_block_id=None,
@@ -164,23 +178,16 @@ async def test_single_photo() -> None:
         ),
     )
 
-    # setting up dependencies with in-memory redis emulation
-    redis = RedisEmulation()
-    secret_store = dummy_secret_store(redis)
-
-    # creating "secret" with bot token (in prod it is done automatically during bot creation)
-    username = "test-username"
-    await secret_store.save_secret(secret_name="token", secret_value="<token>", owner_id=username)
-
     # calling main constructor function, in prod it is done when starting the bot (see /api/start/{bot_id})
     bot_runner = await construct_bot(
-        username=username,
+        owner_id=owner_id,
         bot_id="simple-user-flow-bot",
         bot_config=bot_config,
         form_results_store=dummy_form_results_store(),
         metrics_store=dummy_metrics_store(),
         secret_store=secret_store,
         redis=redis,
+        media_store=media_store.adapter_for(owner_id),
         # for tests we use "mocked" bot class instead of the real one; it will not make any requests
         # to Telegram, but store calls so that we can check them as part of the test (see below)
         _bot_factory=MockedAsyncTeleBot,
@@ -230,7 +237,7 @@ async def test_single_photo() -> None:
         [
             {
                 "caption": "photo caption",
-                "photo": b"m\xab\x1e\xeb\x8b-\xae)\xe0",
+                "photo": b"attachment-body",
                 "chat_id": 111111,
                 "parse_mode": "HTML",
             },
@@ -257,8 +264,131 @@ async def test_single_photo() -> None:
     bot.method_calls.clear()
 
 
-async def test_multiple_photos() -> None:
+@pytest.mark.parametrize("media_store_configured", [True, False])
+async def test_media_store_error_fallback(media_store_configured: bool) -> None:
+    redis = RedisEmulation()
+    secret_store = dummy_secret_store(redis)
+
+    owner_id = "test-username"
+    await secret_store.save_secret(secret_name="token", secret_value="<token>", owner_id=owner_id)
+
     bot_config = BotConfig(
+        token_secret_name="token",
+        display_name="Content block test bot",
+        user_flow_config=UserFlowConfig(
+            entrypoints=[
+                UserFlowEntryPointConfig(
+                    command=CommandEntryPoint(
+                        entrypoint_id="command-1",
+                        command="start",
+                        next_block_id="content-1",
+                        short_description="start cmd",
+                    ),
+                )
+            ],
+            blocks=[
+                UserFlowBlockConfig(
+                    content=ContentBlock(
+                        block_id="content-1",
+                        contents=[
+                            Content(
+                                text=ContentText(text="photo caption", markup=ContentTextMarkup.HTML),
+                                attachments=[ContentBlockContentAttachment(image="nonexistent")],
+                            )
+                        ],
+                        next_block_id=None,
+                    ),
+                ),
+            ],
+            node_display_coords={},
+        ),
+    )
+
+    bot_runner = await construct_bot(
+        owner_id=owner_id,
+        bot_id="simple-user-flow-bot",
+        bot_config=bot_config,
+        form_results_store=dummy_form_results_store(),
+        metrics_store=dummy_metrics_store(),
+        secret_store=secret_store,
+        redis=redis,
+        media_store=RedisMediaStore(redis).adapter_for(owner_id) if media_store_configured else None,
+        _bot_factory=MockedAsyncTeleBot,
+    )
+
+    bot = bot_runner.bot
+    assert isinstance(bot, MockedAsyncTeleBot)  # just for typing
+    bot.method_calls.clear()
+
+    await bot.process_new_updates([tg_update_message_to_bot(user_id=111111, first_name="User", text="/start")])
+    assert len(bot.method_calls) == 1
+    assert_method_call_kwargs_include(
+        bot.method_calls["send_message"],
+        [
+            {
+                "chat_id": 111111,
+                "text": "photo caption",
+                "parse_mode": "HTML",
+            },
+        ],
+    )
+    bot.method_calls.clear()
+
+
+async def test_multiple_photos() -> None:
+    owner_id = "test-username"
+    bot_id = "multiple-photos-test-bot"
+
+    redis = RedisEmulation()
+
+    media_store = RedisMediaStore(redis)
+    file_1_body = b"file-1-body"
+    file_1_media_id = await media_store.save_media(owner_id, Media(content=file_1_body, filename=None))
+
+    secret_store = dummy_secret_store(redis)
+    await secret_store.save_secret(secret_name="token", secret_value="<token>", owner_id=owner_id)
+
+    async def make_bot(config: BotConfig) -> MockedAsyncTeleBot:
+        bot_runner = await construct_bot(
+            owner_id=owner_id,
+            bot_id=bot_id,
+            bot_config=config,
+            form_results_store=dummy_form_results_store(),
+            metrics_store=dummy_metrics_store(),
+            secret_store=secret_store,
+            redis=redis,
+            media_store=media_store.adapter_for(owner_id),
+            _bot_factory=MockedAsyncTeleBot,
+        )
+        bot = bot_runner.bot
+        assert isinstance(bot, MockedAsyncTeleBot)
+        bot.method_calls.clear()
+        return bot
+
+    def set_return_for_send_photo(bot: MockedAsyncTeleBot, file_id: str):
+        bot.add_return_values(
+            "send_photo",
+            tg.Message(
+                message_id=1312,
+                from_user=tg.User(id=161, is_bot=True, first_name="Bot"),
+                date=int(time.time()),
+                chat=None,  # type: ignore
+                content_type="photo",
+                options={
+                    "photo": [
+                        tg.PhotoSize(
+                            file_id=file_id,
+                            file_unique_id="unused",
+                            width=100,
+                            height=100,
+                        )
+                    ]
+                },
+                json_string={},
+            ),
+        )
+
+    bot_config_v1 = BotConfig(
         token_secret_name="token",
         display_name="Content block test bot",
         user_flow_config=UserFlowConfig(
@@ -280,8 +410,7 @@ async def test_multiple_photos() -> None:
                             Content(
                                 text=ContentText(text="photo album for u", markup=ContentTextMarkup.HTML),
                                 attachments=[
-                                    ContentBlockContentAttachment(image=base64.b64encode(b"base64-string-1").decode()),
-                                    ContentBlockContentAttachment(image=base64.b64encode(b"base64-string-2").decode()),
+                                    ContentBlockContentAttachment(image=file_1_media_id),
                                 ],
                             )
                         ],
@@ -292,28 +421,32 @@ async def test_multiple_photos() -> None:
             node_display_coords={},
         ),
     )
-
-    redis = RedisEmulation()
-    secret_store = dummy_secret_store(redis)
-
-    username = "test-username"
-    await secret_store.save_secret(secret_name="token", secret_value="<token>", owner_id=username)
-
-    bot_runner = await construct_bot(
-        username=username,
-        bot_id="multiple-photos-in-content-block",
-        bot_config=bot_config,
-        form_results_store=dummy_form_results_store(),
-        metrics_store=dummy_metrics_store(),
-        secret_store=secret_store,
-        redis=redis,
-        _bot_factory=MockedAsyncTeleBot,
+    bot = await make_bot(bot_config_v1)
+    set_return_for_send_photo(bot, "file-1-id")
+    await bot.process_new_updates([tg_update_message_to_bot(user_id=1900, first_name="User", text="/start")])
+    assert len(bot.method_calls) == 1
+    assert_method_call_kwargs_include(
+        bot.method_calls["send_photo"],
+        [{"chat_id": 1900, "photo": b"file-1-body", "caption": "photo album for u", "parse_mode": "HTML"}],
     )
-    bot = bot_runner.bot
-    assert isinstance(bot, MockedAsyncTeleBot)
     bot.method_calls.clear()
 
-    def set_return_for_send_photo(bot: MockedAsyncTeleBot, response_file_ids: list[str]):
+    # attachment with invalid media id is simply ignored, the first file id is cached
+    bot_config_v2 = copy.deepcopy(bot_config_v1)
+    bot_config_v2.user_flow_config.blocks[0].content.contents[0].attachments.append(  # type: ignore
+        ContentBlockContentAttachment(image="non-existent-media-id"),
+    )
+    bot = await make_bot(bot_config_v2)
+    set_return_for_send_photo(bot, "file-1-id")
+    await bot.process_new_updates([tg_update_message_to_bot(user_id=1900, first_name="User", text="/start")])
+    assert len(bot.method_calls) == 1
+    assert_method_call_kwargs_include(
+        bot.method_calls["send_photo"],
+        [{"chat_id": 1900, "photo": "file-1-id", "caption": "photo album for u", "parse_mode": "HTML"}],
+    )
+    bot.method_calls.clear()
+
+    def set_return_for_send_media_group(bot: MockedAsyncTeleBot, response_file_ids: list[str]):
         bot.add_return_values(
             "send_media_group",
             [
@@ -339,77 +472,49 @@ async def test_multiple_photos() -> None:
             ],
         )
 
-    set_return_for_send_photo(bot, ["file-id-1", "file-id-2"])
+    # adding a second new attachment, the first should still be cached
+    file_2_body = b"file-2-body"
+    file_2_media_id = await media_store.save_media(owner_id, Media(content=file_2_body, filename=None))
+    bot_config_v3 = copy.deepcopy(bot_config_v1)
+    bot_config_v3.user_flow_config.blocks[0].content.contents[0].attachments.append(  # type: ignore
+        ContentBlockContentAttachment(image=file_2_media_id),
+    )
+    bot = await make_bot(bot_config_v3)
+    set_return_for_send_media_group(bot, ["file-id-1", "file-id-2"])
     await bot.process_new_updates([tg_update_message_to_bot(user_id=1900, first_name="User", text="/start")])
     assert len(bot.method_calls) == 1
-    media_group_calls = bot.method_calls["send_media_group"]
-    assert len(media_group_calls) == 1
-    media_group_kwargs = media_group_calls[0].full_kwargs
-    assert media_group_kwargs["chat_id"] == 1900
-    assert len(media_group_kwargs["media"]) == 2
-    assert media_group_kwargs["media"][0].media == b"base64-string-1"
-    assert media_group_kwargs["media"][1].media == b"base64-string-2"
+    assert len(bot.method_calls["send_media_group"]) == 1
+    smg_kwargs = bot.method_calls["send_media_group"][0].full_kwargs
+    assert smg_kwargs["chat_id"] == 1900
+    m1_dict = smg_kwargs["media"][0].to_dict()
+    assert m1_dict == {"type": "photo", "media": "file-1-id", "caption": "photo album for u", "parse_mode": "HTML"}
+    assert smg_kwargs["media"][1].media == b"file-2-body"
     bot.method_calls.clear()
 
-    # repeated call should use cached file ids
-    set_return_for_send_photo(bot, ["file-id-1", "file-id-2"])
+    # now both cached
+    set_return_for_send_media_group(bot, ["file-id-1", "file-id-2"])
     await bot.process_new_updates([tg_update_message_to_bot(user_id=1900, first_name="User", text="/start")])
     assert len(bot.method_calls) == 1
-    media_group_calls = bot.method_calls["send_media_group"]
-    assert len(media_group_calls) == 1
-    media_group_kwargs = media_group_calls[0].full_kwargs
-    assert media_group_kwargs["chat_id"] == 1900
-    assert len(media_group_kwargs["media"]) == 2
-    assert media_group_kwargs["media"][0].media == "file-id-1"
-    assert media_group_kwargs["media"][1].media == "file-id-2"
+    assert len(bot.method_calls["send_media_group"]) == 1
+    assert_method_call_dictified_kwargs_include(
+        bot.method_calls["send_media_group"],
+        [
+            {
+                "chat_id": 1900,
+                "media": [
+                    {
+                        "media_json": (
+                            '{"type":"photo","media":"file-1-id",'
+                            + '"caption":"photo album for u","parse_mode":"HTML"}'
+                        ),
+                        "files": None,
+                    },
+                    {"media_json": '{"type":"photo","media":"file-id-2"}', "files": None},
+                ],
+            }
+        ],
+    )
     bot.method_calls.clear()
-
-    # modifying bot by adding one more file
-    assert bot_config.user_flow_config.blocks[0].content is not None
-    bot_config.user_flow_config.blocks[0].content.contents[0].attachments.append(
-        ContentBlockContentAttachment(image=base64.b64encode(b"base64-string-3").decode())
-    )
-    bot_runner_2 = await construct_bot(
-        username=username,
-        bot_id="multiple-photos-in-content-block",
-        bot_config=bot_config,
-        form_results_store=dummy_form_results_store(),
-        metrics_store=dummy_metrics_store(),
-        secret_store=secret_store,
-        redis=redis,
-        _bot_factory=MockedAsyncTeleBot,
-    )
-    bot_2 = bot_runner_2.bot
-    assert isinstance(bot_2, MockedAsyncTeleBot)
-    bot_2.method_calls.clear()
-
-    # now first two files should be cached, but the third one not
-    set_return_for_send_photo(bot_2, ["file-id-1", "file-id-2", "new-file-id"])
-    await bot_2.process_new_updates([tg_update_message_to_bot(user_id=1900, first_name="User", text="/start")])
-    assert len(bot_2.method_calls) == 1
-    media_group_calls = bot_2.method_calls["send_media_group"]
-    assert len(media_group_calls) == 1
-    media_group_kwargs = media_group_calls[0].full_kwargs
-    assert media_group_kwargs["chat_id"] == 1900
-    assert len(media_group_kwargs["media"]) == 3
-    assert media_group_kwargs["media"][0].media == "file-id-1"
-    assert media_group_kwargs["media"][1].media == "file-id-2"
-    assert media_group_kwargs["media"][2].media == b"base64-string-3"
-    bot_2.method_calls.clear()
-
-    # finally, all 3 files are cached
-    set_return_for_send_photo(bot_2, ["file-id-1", "file-id-2", "new-file-id"])
-    await bot_2.process_new_updates([tg_update_message_to_bot(user_id=1900, first_name="User", text="/start")])
-    assert len(bot_2.method_calls) == 1
-    media_group_calls = bot_2.method_calls["send_media_group"]
-    assert len(media_group_calls) == 1
-    media_group_kwargs = media_group_calls[0].full_kwargs
-    assert media_group_kwargs["chat_id"] == 1900
-    assert len(media_group_kwargs["media"]) == 3
-    assert media_group_kwargs["media"][0].media == "file-id-1"
-    assert media_group_kwargs["media"][1].media == "file-id-2"
-    assert media_group_kwargs["media"][2].media == "new-file-id"
-    bot_2.method_calls.clear()
 
 
 def test_content_block_separates_too_long_caption() -> None:

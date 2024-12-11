@@ -1,8 +1,8 @@
-import base64
 import datetime
 import hashlib
 import logging
 import re
+from dataclasses import dataclass
 from typing import Any, Optional
 
 from pydantic import BaseModel
@@ -11,6 +11,7 @@ from telebot_components.language import any_text_to_str, vaildate_singlelang_tex
 from telebot_components.stores.generic import KeyValueStore
 from telebot_components.utils import TextMarkup
 
+from telebot_constructor.store.media import Media
 from telebot_constructor.user_flow.blocks.base import UserFlowBlock
 from telebot_constructor.user_flow.types import (
     SetupResult,
@@ -51,26 +52,29 @@ class ContentText(BaseModel):
             return any(len(v) == 0 for v in self.text.values())
 
 
-class ContentBlockContentAttachment(ExactlyOneNonNullFieldModel):
-    image: Optional[str]  # base64-encoded with possible "data:*/*;base64," prefix
-    filename: str = ""
+DATA_URL_PREFIX_REGEX = re.compile(r"^data:\w+/\w+;base64,")
 
-    def content(self) -> str:
+
+class ContentBlockContentAttachment(ExactlyOneNonNullFieldModel):
+    image: Optional[str]  # media id in media store
+
+    def media_id(self) -> str:
         # runtime guarantee that at least one (now it's always image) option is non-None
         return self.image  # type: ignore
 
-
-data_url_prefix_re = re.compile(r"^data:\w+/\w+;base64,")
-
-
-def decode_b64_data_url(b64_data_url: str) -> bytes:
-    print(b64_data_url[:64])
-    return base64.b64decode(data_url_prefix_re.sub("", b64_data_url))
+    def is_legacy_base64_image(self) -> bool:
+        return self.image is not None and (
+            DATA_URL_PREFIX_REGEX.match(self.image) is not None
+            or len(self.image) > 1024  # 1024 - sensible limit for media_id, otherwise it's likely b64
+        )
 
 
 class Content(BaseModel):
     text: Optional[ContentText]
     attachments: list[ContentBlockContentAttachment]
+
+    def model_post_init(self, __context: Any) -> None:
+        self.attachments = [a for a in self.attachments if not a.is_legacy_base64_image()]
 
 
 class ContentBlock(UserFlowBlock):
@@ -141,7 +145,27 @@ class ContentBlock(UserFlowBlock):
         )
         for content in self.contents:
             parse_mode = content.text.markup.parse_mode() if content.text is not None else None
-            if not content.attachments:
+
+            # preparing attachments: either loading from cache or from storage
+            prepared_attachments: list[PreparedAttachment] = []
+            for attachment in content.attachments:
+                source: str | Media | None = await self._tg_file_id_by_media_id_store.load(attachment.media_id())
+                if source is None and self._media_store is not None:
+                    source = await self._media_store.load_media(attachment.media_id())
+                    if source is None:
+                        logger.error(
+                            f"Failed to load media from the store: {attachment.media_id()}; will proceed without it"
+                        )
+                if source is not None:
+                    prepared_attachments.append(
+                        PreparedAttachment(
+                            attachment=attachment,
+                            source=source,
+                        )
+                    )
+            logger.debug("Prepared attachments: %s", prepared_attachments)
+
+            if not prepared_attachments:
                 if content.text is not None:
                     await context.bot.send_message(
                         chat_id=chat_id,
@@ -151,81 +175,72 @@ class ContentBlock(UserFlowBlock):
                     )
                 else:
                     logger.error("Empty content block: no text and no attachments!")
-            elif len(content.attachments) == 1:
-                attachment = content.attachments[0]
-                if attachment.image is not None:
-                    file_id = await self._file_id_by_hash_store.load(md5_hash(attachment.image))
-                    message = await context.bot.send_photo(
-                        chat_id=chat_id,
-                        photo=file_id if file_id is not None else decode_b64_data_url(attachment.image),
-                        caption=(
-                            any_text_to_str(content.text.preprocessed, language) if content.text is not None else None
-                        ),
-                        parse_mode=parse_mode if content.text is not None else None,
-                        reply_markup=tg.ReplyKeyboardRemove(),
-                    )
-                    if file_id is None:
-                        if message.photo is not None:
-                            file_id = message.photo[0].file_id
-                            await self._file_id_by_hash_store.save(md5_hash(attachment.image), file_id)
-                        else:
-                            logger.error(
-                                "Telegram unexpectedly returned message without photo on send_photo, "
-                                + "unable to fill the cache"
+            else:
+                # sending attachments and caching resulting file ids
+                if len(prepared_attachments) == 1:
+                    # single attachment
+                    pa = prepared_attachments[0]
+                    if pa.attachment.image is not None:
+                        messages = [
+                            await context.bot.send_photo(
+                                chat_id=chat_id,
+                                photo=pa.telegram_attachment(),
+                                caption=(
+                                    any_text_to_str(content.text.preprocessed, language)
+                                    if content.text is not None
+                                    else None
+                                ),
+                                parse_mode=parse_mode if content.text is not None else None,
+                                reply_markup=tg.ReplyKeyboardRemove(),
                             )
+                        ]
+                    else:
+                        logger.error("Unexpected attachment type; only images are supported for now")
                 else:
-                    logger.error("Unexpected attachment type; only images are supported for now")
-            else:  # multiple attachments case
-                logger.debug("Sending message with multiple attachments")
-                attachment_md5_hashes = [md5_hash(att.content()) for att in content.attachments]
-                cached_file_ids = [await self._file_id_by_hash_store.load(att_md5) for att_md5 in attachment_md5_hashes]
-                logger.debug(f"Found file ids in cache (None = cache miss): {cached_file_ids}")
+                    # multiple attachments case
+                    tg_input_media = [
+                        # input media handles both file_id and raw bytes case, even though it's not properly typed
+                        tg.InputMediaPhoto(pa.telegram_attachment())  # type: ignore
+                        for pa in prepared_attachments
+                    ]
+                    # for media groups, text content is put to first media's caption
+                    if content.text is not None:
+                        tg_input_media[0].caption = any_text_to_str(content.text.preprocessed, language)
+                        tg_input_media[0].parse_mode = parse_mode
+                        # NOTE: reply markup is not available for media groups, so we don't send it
 
-                media = [
-                    (
-                        tg.InputMediaPhoto(maybe_file_id)  # type: ignore
-                        if maybe_file_id is not None
-                        else tg.InputMediaPhoto(decode_b64_data_url(attachment.image))  # type: ignore
+                    messages = await context.bot.send_media_group(
+                        chat_id=chat_id,
+                        # bad typing in telebot (list[InputMediaPhoto | ...], complains because list is invariant)
+                        media=list(tg_input_media),
                     )
-                    for maybe_file_id, attachment in zip(cached_file_ids, content.attachments)
-                ]
-                # for media groups, text content is put to first media's caption
-                if content.text is not None:
-                    media[0].caption = any_text_to_str(content.text.preprocessed, language)
-                    media[0].parse_mode = parse_mode
-                    # NOTE: reply markup is not available for media groups, so we don't send it
 
-                messages = await context.bot.send_media_group(
-                    chat_id=chat_id,
-                    # bad typing in telebot (list[InputMediaPhoto | ...], complains because list is invariant generic)
-                    media=list(media),
-                )
-                logger.debug(f"Sent media group, received messages: {messages}")
+                logger.debug(f"Sent attachments in messages: {messages}")
 
-                if len(messages) != len(content.attachments):
+                if len(messages) != len(prepared_attachments):
                     logger.error(
-                        "send_media_group returned unexpected number of messages "
-                        + f"({len(messages) = }, {len(content.attachments) = })"
+                        "The number of messages doesn't match the number of attachments"
+                        + f"({len(messages) = }, {len(prepared_attachments) = })"
                     )
-                for message, cached_file_id, attachment_md5 in zip(messages, cached_file_ids, attachment_md5_hashes):
-                    if cached_file_id is not None:
+
+                for message, pa in zip(messages, prepared_attachments):
+                    if isinstance(pa.source, str):
+                        # already cached
                         continue
                     if message.photo is None:
                         logger.error(
-                            "Telegram unexpectedly returned message without photo on send_photo, "
-                            + "unable to fill the cache, ignoring it"
+                            f"Got Message object without photo on unable to fill the cache, ignoring it: {message}"
                         )
                         continue
-
-                    file_id = message.photo[0].file_id
-                    logger.debug(f"Saving attachment file id to cache: {attachment_md5} -> {file_id}")
-                    await self._file_id_by_hash_store.save(attachment_md5, file_id)
+                    new_file_id = message.photo[0].file_id
+                    logger.debug(f"Caching Telegram file_id for attachment: {pa} -> {new_file_id}")
+                    await self._tg_file_id_by_media_id_store.save(pa.attachment.media_id(), new_file_id)
 
         if self.next_block_id is not None:
             await context.enter_block(self.next_block_id, context)
 
     async def setup(self, context: UserFlowSetupContext) -> SetupResult:
-        self._file_id_by_hash_store = KeyValueStore[str](
+        self._tg_file_id_by_media_id_store = KeyValueStore[str](
             name="file-id",
             prefix=context.bot_prefix,
             redis=context.redis,
@@ -244,8 +259,24 @@ class ContentBlock(UserFlowBlock):
             else:
                 vaildate_singlelang_text(c.text.preprocessed)
 
+        self._media_store = context.media_store
+
         return SetupResult.empty()
 
 
 def md5_hash(data: str) -> str:
     return hashlib.md5(data.encode("utf-8"), usedforsecurity=False).hexdigest()
+
+
+@dataclass
+class PreparedAttachment:
+    """Helper class to store information about where do we source the given attachment from"""
+
+    attachment: ContentBlockContentAttachment
+    source: str | Media  # str = Telegram file id, Media = new raw media
+
+    def telegram_attachment(self) -> str | bytes:
+        if isinstance(self.source, str):
+            return self.source  # file_id
+        else:
+            return self.source.content
