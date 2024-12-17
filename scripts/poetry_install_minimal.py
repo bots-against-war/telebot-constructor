@@ -16,10 +16,8 @@ if not PYPROJECT.exists():
 LOCK_FILE = Path("poetry.lock")
 LOCK_FILE_BCK = Path("poetry.lock.bck")
 if LOCK_FILE.exists():
-    print(f"Backing up {LOCK_FILE}")
+    print(f"Backing up {LOCK_FILE} to {LOCK_FILE_BCK}")
     shutil.move(LOCK_FILE, LOCK_FILE_BCK)
-    LOCK_FILE.unlink()
-    print("Done")
 
 
 PYPROJECT_BCK = Path("pyproject.toml.bck")
@@ -41,5 +39,6 @@ except Exception as e:
 finally:
     print(f"Restoring {PYPROJECT}...")
     shutil.move(PYPROJECT_BCK, PYPROJECT)
-    print(f"Restoring {LOCK_FILE}")
-    shutil.move(LOCK_FILE_BCK, LOCK_FILE)
+    if LOCK_FILE_BCK.exists():
+        print(f"Restoring {LOCK_FILE}")
+        shutil.move(LOCK_FILE_BCK, LOCK_FILE)
