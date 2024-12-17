@@ -58,6 +58,10 @@ export function clone<T>(jsonSerializable: T): T {
   return JSON.parse(JSON.stringify(jsonSerializable));
 }
 
+export function areEqual<T>(jsonSerializable1: T, jsonSerializable2: T): boolean {
+  return JSON.stringify(jsonSerializable1) == JSON.stringify(jsonSerializable2);
+}
+
 export function cloneEntrypointConfig(c: UserFlowEntryPointConfig): TentativeNode {
   const config = clone(c);
   const concrete = getEntrypointConcreteConfig(config);

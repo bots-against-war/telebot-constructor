@@ -5,7 +5,7 @@
   import { Svelvet } from "svelvet";
   import { saveBotConfig } from "../api/botConfig";
   import { getBlockId, getEntrypointId } from "../api/typeUtils";
-  import type { BotConfig } from "../api/types";
+  import type { BotConfig, UserFlowConfig } from "../api/types";
   import Navbar from "../components/Navbar.svelte";
   import GridPlusColored from "../components/icons/GridPlusColored.svelte";
   import { BOT_INFO_NODE_ID } from "../constants";
@@ -38,6 +38,8 @@
   import { applyTemplate, basicShowcaseTemplate, type Template } from "./templates";
   import {
     NodeKind,
+    areEqual,
+    clone,
     cloneBlockConfig,
     cloneEntrypointConfig,
     filterNodeDisplayCoords,
@@ -50,69 +52,56 @@
   export let readonly: boolean;
 
   const open = getModalOpener();
+
   let forceRerenderCounter = 0;
   const forceRerender = () => {
     forceRerenderCounter += 1;
   };
 
   let ufConfig = botConfig.user_flow_config;
+  let savedUfConfig = clone(ufConfig);
+  let nodeDisplayCoords = ufConfig.node_display_coords; // we store node positions separately so that moving blocks does not trigger reactivity
 
-  // we store node positions separately to be able to react to config changes with sveltes $:{} blocks,
-  // while ignoring changes in the noisy and unimportant node position data
-  // this way, node movement doesn't trigger any logic reactive to bot config
-  // when we save / load bot config, we manually add display coords to it
-  let nodeDisplayCoords = ufConfig.node_display_coords;
-
-  // tracking when the config is modified to prevent exiting with unsaved changes
   let isModified = false;
-  let configChangedCounter = 0;
   $: {
-    // trigger svelte's reactivity by mentioning the values we're reacting to
-    ufConfig;
-
-    configChangedCounter += 1;
-    console.debug(`reactivity triggered: ${configChangedCounter}`);
-    isModified = true;
+    isModified = !areEqual(ufConfig, savedUfConfig);
+    console.debug(`isModified = ${isModified}`);
   }
 
   // saving bot config copy on every update for ctrl+Z functionality
-  // const botConfigEditHistory: BotConfig[] = [];
-  // const EDIT_HISTORY_LENGTH = 30;
-  // let lastEditSavedAt: number | null = null;
-  // $: {
-  //   const configClone = clone(botConfig);
-  //   const now = Date.now();
-  //   if (botConfigEditHistory.length > 0 && (lastEditSavedAt === null || now - lastEditSavedAt < 100)) {
-  //     console.debug("Overwriting the last change in edit history with ", configClone);
-  //     botConfigEditHistory[botConfigEditHistory.length - 1] = configClone;
-  //   } else {
-  //     console.debug("Pushing bot config to edit history: ", configClone);
-  //     botConfigEditHistory.push(configClone);
-  //     if (botConfigEditHistory.length > EDIT_HISTORY_LENGTH) {
-  //       botConfigEditHistory.splice(0, botConfigEditHistory.length - EDIT_HISTORY_LENGTH);
-  //     }
-  //     lastEditSavedAt = now;
-  //   }
-  // }
+  const EDIT_HISTORY_LENGTH = 30;
+  const editHistory: UserFlowConfig[] = [clone(ufConfig)];
+  let lastEditTime = Date.now();
+  $: {
+    if (!areEqual(ufConfig, editHistory[editHistory.length - 1])) {
+      const now = Date.now();
+      if (now - lastEditTime > 300) {
+        editHistory.push(clone(ufConfig));
+        console.debug("Pushed to edit history", editHistory[editHistory.length - 1]);
+        lastEditTime = now;
+        if (editHistory.length > EDIT_HISTORY_LENGTH) {
+          editHistory.splice(0, editHistory.length - EDIT_HISTORY_LENGTH);
+        }
+      } else {
+        // debouncing rapid changes in config, e.g. when the block is deleted and "next_block_id" in other blocks gets deleted
+        editHistory[editHistory.length - 1] = clone(ufConfig);
+        console.debug("Updated the last edit history entry", editHistory[editHistory.length - 1]);
+      }
+    }
+  }
 
-  // function undo() {
-  //   if (botConfigEditHistory.length < 2) {
-  //     console.debug("Already at the last change, nothing to undo");
-  //     return;
-  //   }
-  //   console.debug("Undoing the last change...");
-  //   botConfigEditHistory.pop();
-  //   const prevBotConfig = botConfigEditHistory.pop();
-  //   if (prevBotConfig) {
-  //     prevBotConfig.user_flow_config.node_display_coords = filterNodeDisplayCoords(
-  //       { ...prevBotConfig.user_flow_config.node_display_coords, ...nodeDisplayCoords },
-  //       prevBotConfig,
-  //     );
-  //     botConfig = prevBotConfig;
-  //   }
-  // }
+  function undo() {
+    if (editHistory.length < 2) {
+      window.alert("Already at the earliest change");
+      return;
+    }
+    console.debug("Undoing the last change...");
+    editHistory.pop(); // removing the last version from the edit history
+    const undoneUfConfig = editHistory[editHistory.length - 1];
+    undoneUfConfig.node_display_coords = filterNodeDisplayCoords(nodeDisplayCoords, undoneUfConfig); // adding up-to-date node coords
+    ufConfig = clone(undoneUfConfig);
+  }
 
-  // setting the initial language config based on whether bot config includes language select block
   let isBotMultilang = false;
   $: {
     let foundLanguageField = false;
@@ -205,7 +194,7 @@
     } else if (blockIdx !== -1) {
       tentativeNode = cloneBlockConfig(ufConfig.blocks[blockIdx]);
     } else {
-      console.debug(`Node with id '${id}' not found among entrypoints and blocks`);
+      console.error(`Node with id '${id}' not found among entrypoints and blocks`);
       return;
     }
   }
@@ -237,11 +226,11 @@
     }
   }
 
-  // config saving function with "in progress" state
   let isSavingBotConfig = false;
   async function saveCurrentBotConfig(versionMessage: string | null, start: boolean) {
     if (readonly) return;
     if (!configValidationResult.ok) return;
+
     isSavingBotConfig = true;
     // returning node display coords from separate storage to config
     ufConfig.node_display_coords = filterNodeDisplayCoords(
@@ -253,14 +242,14 @@
       user_flow_config: ufConfig,
       display_name: botConfig.display_name,
     };
-    console.debug(`Saving bot config for ${botId}`, newBotConfig);
+    console.debug(`Saving bot config for ${botId}:`, newBotConfig);
 
     const res = await saveBotConfig(botId, { config: newBotConfig, version_message: versionMessage, start });
     isSavingBotConfig = false;
-    if (getError(res) !== null) {
-      window.alert(`Error saving bot config: ${getError(res)}`);
+    if (res.ok) {
+      savedUfConfig = clone(ufConfig);
     } else {
-      isModified = false;
+      window.alert(`Error saving bot config: ${res.error}`);
     }
   }
 
@@ -309,18 +298,18 @@
 <svelte:window
   on:mousemove={handleMouseMove}
   on:keydown={(e) => {
-    // if (
-    //   e.target &&
-    //   // @ts-expect-error
-    //   e.target.tagName !== "TEXTAREA" &&
-    //   // @ts-expect-error
-    //   e.target.tagName !== "INPUT" &&
-    //   !e.repeat &&
-    //   (e.metaKey || e.ctrlKey) &&
-    //   e.code === "KeyZ"
-    // ) {
-    //   undo();
-    // }
+    if (
+      e.target &&
+      // @ts-expect-error
+      e.target.tagName !== "TEXTAREA" &&
+      // @ts-expect-error
+      e.target.tagName !== "INPUT" &&
+      !e.repeat &&
+      (e.metaKey || e.ctrlKey) &&
+      e.code === "KeyZ"
+    ) {
+      undo();
+    }
   }}
 />
 
