@@ -53,14 +53,16 @@
 
   const open = getModalOpener();
 
+  let ufConfig = botConfig.user_flow_config;
+  let savedUfConfig = clone(ufConfig);
+  // node positions are stored separately = moving blocks does not trigger reactivity, edit history, etc
+  let nodeDisplayCoords = ufConfig.node_display_coords;
+
+  // region: reactive actions
   let forceRerenderCounter = 0;
   const forceRerender = () => {
     forceRerenderCounter += 1;
   };
-
-  let ufConfig = botConfig.user_flow_config;
-  let savedUfConfig = clone(ufConfig);
-  let nodeDisplayCoords = ufConfig.node_display_coords; // we store node positions separately so that moving blocks does not trigger reactivity
 
   let isModified = false;
   $: {
@@ -68,7 +70,6 @@
     console.debug(`isModified = ${isModified}`);
   }
 
-  // saving bot config copy on every update for ctrl+Z functionality
   const EDIT_HISTORY_LENGTH = 30;
   const editHistory: UserFlowConfig[] = [clone(ufConfig)];
   let lastEditTime = Date.now();
@@ -126,6 +127,8 @@
     }
   }
 
+  // region: node manipulation
+
   function deleteNode(event: CustomEvent<string>) {
     const id = event.detail;
     // this is a bit cumbersome because we store very similar things (blocks and entrypoing) in two different places
@@ -144,11 +147,17 @@
     }
   }
 
-  // node creation machinery:
   // when the user clicks on "add" button for a particular kind of node, we save it as "tentative"
   // then, when the user selects a place for the node, we add it to the config
 
   let tentativeNode: TentativeNode | null = null;
+
+  let tentativeNodeMouseFollowerElement: HTMLElement | null = null;
+  function moveTentativeNodeMouseFollower(e: MouseEvent) {
+    if (!tentativeNodeMouseFollowerElement) return;
+    tentativeNodeMouseFollowerElement.style.left = e.pageX + "px";
+    tentativeNodeMouseFollowerElement.style.top = e.pageY + "px";
+  }
 
   function nodeFactory(kind: NodeKind, typeKey: NodeTypeKey, configFactory: ConfigFactory) {
     return () => {
@@ -199,7 +208,8 @@
     }
   }
 
-  // automatic config validation on any nodes' validity update
+  // region: node validation
+
   let isNodeValid: { [k: string]: boolean } = {};
   let configValidationResult: Result<null> = ok(null);
   $: {
@@ -225,6 +235,8 @@
       configValidationResult = err("Бот содержит больше одного блока выбора языка");
     }
   }
+
+  // region: high-level actions
 
   let isSavingBotConfig = false;
   async function saveCurrentBotConfig(versionMessage: string | null, start: boolean) {
@@ -260,13 +272,6 @@
     "Выйти",
   );
 
-  let tentativeNodeMouseFollowerElement: HTMLElement | null = null;
-  function handleMouseMove(e: MouseEvent) {
-    if (!tentativeNodeMouseFollowerElement) return;
-    tentativeNodeMouseFollowerElement.style.left = e.pageX + "px";
-    tentativeNodeMouseFollowerElement.style.top = e.pageY + "px";
-  }
-
   const openReadmeModal = () =>
     open(
       ReadmeModal,
@@ -293,10 +298,12 @@
     isModified = true;
     forceRerender();
   };
+
+  // region: markup
 </script>
 
 <svelte:window
-  on:mousemove={handleMouseMove}
+  on:mousemove={moveTentativeNodeMouseFollower}
   on:keydown={(e) => {
     if (
       e.target &&
