@@ -1,17 +1,18 @@
 import { type Result, toStringResult, toTrivialResult } from "../utils";
 import { apiUrl } from "./config";
+import { fetchApi } from "./utils";
 
 const encode = encodeURIComponent;
 
 export async function saveMedia(file: File, forBotId: string): Promise<Result<string>> {
-  const resp = await fetch(apiUrl(`/media?bot_id=${encode(forBotId)}`), {
+  const res = await fetchApi(`/media?bot_id=${encode(forBotId)}`, {
     method: "POST",
     body: file,
     headers: {
       "X-Telebot-Constructor-Filename": encodeURIComponent(file.name),
     },
   });
-  return await toStringResult(resp);
+  return await toStringResult(res);
 }
 
 export function mediaUrl(mediaId: string, forBotId: string): string {
@@ -19,8 +20,8 @@ export function mediaUrl(mediaId: string, forBotId: string): string {
 }
 
 export async function deleteMedia(mediaId: string, forBotId: string): Promise<Result<null>> {
-  const resp = await fetch(apiUrl(`/media/${encode(mediaId)}?bot_id=${encode(forBotId)}`), {
+  const res = await fetchApi(`/media/${encode(mediaId)}?bot_id=${encode(forBotId)}`, {
     method: "DELETE",
   });
-  return await toTrivialResult(resp);
+  return await toTrivialResult(res);
 }

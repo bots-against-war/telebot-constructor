@@ -24,7 +24,7 @@
     botUserPromise = new Promise((resolve, _) => resolve(ok(botUser)));
   }
 
-  async function loadAndCache() {
+  async function loadAndCache(): Promise<Result<TgBotUser>> {
     const res = await getBotUser(botId);
     if (res.ok) {
       saveToLocalstorage(res.data);
@@ -33,9 +33,6 @@
   }
 
   $: {
-    // NOTE: this reactive block is needed because we're fetching/loading from localStorage stuff based on chatId,
-    // not rendering it directly
-
     if (tgBotUser !== null) {
       saveToLocalstorage(tgBotUser);
       makeUserDataAvailable(tgBotUser);
