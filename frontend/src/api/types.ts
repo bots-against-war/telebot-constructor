@@ -73,6 +73,7 @@ export type BackLabel =
     }
   | null;
 export type LockAfterTermination = boolean;
+export type TextMarkup1 = "none" | "html" | "markdown";
 export type BlockId3 = string;
 export type FormName = string;
 export type Id = string;
@@ -315,7 +316,7 @@ export interface CommandEntryPoint {
   entrypoint_id: EntrypointId;
   command: Command;
   next_block_id: NextBlockId;
-  scope?: CommandScope & string;
+  scope?: CommandScope;
   short_description?: ShortDescription;
   [k: string]: unknown;
 }
@@ -414,7 +415,7 @@ export interface Menu {
   text: Text1;
   items: Items;
   config: MenuConfig;
-  markup?: TextMarkup & string;
+  markup?: TextMarkup1;
   [k: string]: unknown;
 }
 export interface MenuItem {
@@ -501,7 +502,7 @@ export interface FormMessages {
   unsupported_command: UnsupportedCommand;
 }
 export interface FormResultsExport {
-  user_attribution?: FormResultUserAttribution & string;
+  user_attribution?: FormResultUserAttribution;
   echo_to_user: EchoToUser;
   to_chat: FormResultsExportToChatConfig | null;
   to_store?: ToStore;

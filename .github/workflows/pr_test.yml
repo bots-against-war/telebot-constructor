@@ -26,7 +26,7 @@ jobs:
           poetry-version: 1.7.1
       - name: Install backend dependencies (default versions)
         run: poetry install
-      - name: Downgrading backend dependencies to their minimal versions
+      - name: Downgrade backend dependencies to their minimal versions
         if: matrix.dependency-versions == 'minimal'
         run: poetry run python scripts/poetry_install_minimal.py
       - name: Setup NodeJS v18
@@ -47,6 +47,7 @@ jobs:
           poetry run coverage run -m pytest tests -vv &&
           poetry run coverage report
       - name: (back) Validate JSON schema is up-to-date
+        if: matrix.dependency-versions == 'default'  # pydantic schema generator is mildly inconsistent which is ok
         run: poetry run python scripts/models/pydantic2jsonschema.py --check
       - name: Validate requirements.txt are up to date
         run: |

@@ -28,6 +28,9 @@
               "additionalProperties": {
                 "type": "string"
               },
+              "propertyNames": {
+                "format": "IETF-language-tag"
+              },
               "type": "object"
             }
           ],
@@ -44,9 +47,6 @@
             },
             {
               "const": "auto",
-              "enum": [
-                "auto"
-              ],
               "type": "string"
             },
             {
@@ -142,9 +142,6 @@
         },
         "event": {
           "const": "deleted",
-          "enum": [
-            "deleted"
-          ],
           "title": "Event",
           "type": "string"
         }
@@ -168,9 +165,6 @@
         },
         "event": {
           "const": "edited",
-          "enum": [
-            "edited"
-          ],
           "title": "Event",
           "type": "string"
         },
@@ -336,9 +330,6 @@
         },
         "event": {
           "const": "started",
-          "enum": [
-            "started"
-          ],
           "title": "Event",
           "type": "string"
         },
@@ -349,9 +340,6 @@
             },
             {
               "const": "stub",
-              "enum": [
-                "stub"
-              ],
               "type": "string"
             }
           ],
@@ -378,9 +366,6 @@
         },
         "event": {
           "const": "stopped",
-          "enum": [
-            "stopped"
-          ],
           "title": "Event",
           "type": "string"
         }
@@ -511,11 +496,7 @@
           "title": "Next Block Id"
         },
         "scope": {
-          "allOf": [
-            {
-              "$ref": "#/$defs/CommandScope"
-            }
-          ],
+          "$ref": "#/$defs/CommandScope",
           "default": "private"
         },
         "short_description": {
@@ -640,6 +621,9 @@
               "additionalProperties": {
                 "type": "string"
               },
+              "propertyNames": {
+                "format": "IETF-language-tag"
+              },
               "type": "object"
             }
           ],
@@ -670,6 +654,9 @@
             {
               "additionalProperties": {
                 "type": "string"
+              },
+              "propertyNames": {
+                "format": "IETF-language-tag"
               },
               "type": "object"
             }
@@ -900,6 +887,18 @@
               "additionalProperties": {
                 "type": "string"
               },
+              "propertyNames": {
+                "$ref": "#/$defs/Language"
+              },
+              "type": "object"
+            },
+            {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "propertyNames": {
+                "$ref": "#/$defs/LanguageData"
+              },
               "type": "object"
             }
           ],
@@ -1012,6 +1011,9 @@
               "additionalProperties": {
                 "type": "string"
               },
+              "propertyNames": {
+                "format": "IETF-language-tag"
+              },
               "type": "object"
             }
           ],
@@ -1025,6 +1027,9 @@
             {
               "additionalProperties": {
                 "type": "string"
+              },
+              "propertyNames": {
+                "format": "IETF-language-tag"
               },
               "type": "object"
             }
@@ -1040,6 +1045,9 @@
               "additionalProperties": {
                 "type": "string"
               },
+              "propertyNames": {
+                "format": "IETF-language-tag"
+              },
               "type": "object"
             }
           ],
@@ -1053,6 +1061,9 @@
             {
               "additionalProperties": {
                 "type": "string"
+              },
+              "propertyNames": {
+                "format": "IETF-language-tag"
               },
               "type": "object"
             }
@@ -1068,6 +1079,9 @@
               "additionalProperties": {
                 "type": "string"
               },
+              "propertyNames": {
+                "format": "IETF-language-tag"
+              },
               "type": "object"
             }
           ],
@@ -1081,6 +1095,9 @@
             {
               "additionalProperties": {
                 "type": "string"
+              },
+              "propertyNames": {
+                "format": "IETF-language-tag"
               },
               "type": "object"
             }
@@ -1112,11 +1129,7 @@
     "FormResultsExport": {
       "properties": {
         "user_attribution": {
-          "allOf": [
-            {
-              "$ref": "#/$defs/FormResultUserAttribution"
-            }
-          ],
+          "$ref": "#/$defs/FormResultUserAttribution",
           "default": "none"
         },
         "echo_to_user": {
@@ -1243,6 +1256,17 @@
       "title": "HumanOperatorBlock",
       "type": "object"
     },
+    "Language": {
+      "description": "Static language enum for use in legacy code; under the hood it's converted to LanguageData",
+      "enum": [
+        "en",
+        "uk",
+        "ru",
+        "pl"
+      ],
+      "title": "Language",
+      "type": "string"
+    },
     "LanguageData": {
       "properties": {
         "code": {
@@ -1347,6 +1371,9 @@
           "additionalProperties": {
             "type": "string"
           },
+          "propertyNames": {
+            "format": "IETF-language-tag"
+          },
           "title": "Propmt",
           "type": "object"
         },
@@ -1424,6 +1451,9 @@
               "additionalProperties": {
                 "type": "string"
               },
+              "propertyNames": {
+                "format": "IETF-language-tag"
+              },
               "type": "object"
             }
           ],
@@ -1440,11 +1470,7 @@
           "$ref": "#/$defs/MenuConfig"
         },
         "markup": {
-          "allOf": [
-            {
-              "$ref": "#/$defs/TextMarkup"
-            }
-          ],
+          "$ref": "#/$defs/TextMarkup",
           "default": "none"
         }
       },
@@ -1488,6 +1514,9 @@
               "additionalProperties": {
                 "type": "string"
               },
+              "propertyNames": {
+                "format": "IETF-language-tag"
+              },
               "type": "object"
             },
             {
@@ -1519,6 +1548,9 @@
             {
               "additionalProperties": {
                 "type": "string"
+              },
+              "propertyNames": {
+                "format": "IETF-language-tag"
               },
               "type": "object"
             }
@@ -1633,6 +1665,9 @@
               "additionalProperties": {
                 "type": "string"
               },
+              "propertyNames": {
+                "format": "IETF-language-tag"
+              },
               "type": "object"
             }
           ],
@@ -1646,6 +1681,9 @@
             {
               "additionalProperties": {
                 "type": "string"
+              },
+              "propertyNames": {
+                "format": "IETF-language-tag"
               },
               "type": "object"
             }
@@ -1679,6 +1717,9 @@
               "additionalProperties": {
                 "type": "string"
               },
+              "propertyNames": {
+                "format": "IETF-language-tag"
+              },
               "type": "object"
             }
           ],
@@ -1695,9 +1736,6 @@
             },
             {
               "const": "auto",
-              "enum": [
-                "auto"
-              ],
               "type": "string"
             },
             {
@@ -1718,6 +1756,9 @@
             {
               "additionalProperties": {
                 "type": "string"
+              },
+              "propertyNames": {
+                "format": "IETF-language-tag"
               },
               "type": "object"
             }
@@ -1828,6 +1869,9 @@
               "additionalProperties": {
                 "type": "string"
               },
+              "propertyNames": {
+                "format": "IETF-language-tag"
+              },
               "type": "object"
             }
           ],
@@ -1844,9 +1888,6 @@
             },
             {
               "const": "auto",
-              "enum": [
-                "auto"
-              ],
               "type": "string"
             },
             {
@@ -1870,6 +1911,9 @@
             {
               "additionalProperties": {
                 "type": "string"
+              },
+              "propertyNames": {
+                "format": "IETF-language-tag"
               },
               "type": "object"
             }
