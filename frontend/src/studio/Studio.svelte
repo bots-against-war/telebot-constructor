@@ -74,6 +74,7 @@
 
   let forceRerenderCounter = 0;
   const forceRerender = () => {
+    console.debug("Forcing rerender of the graph");
     forceRerenderCounter += 1;
   };
 
@@ -153,6 +154,7 @@
     const undoneUfConfig = editHistory[editHistory.length - 1];
     undoneUfConfig.node_display_coords = filterNodeDisplayCoords(nodeDisplayCoords, undoneUfConfig); // adding up-to-date node coords
     ufConfig = clone(undoneUfConfig);
+    forceRerender();
   }
 
   // region: node manipulation
@@ -315,13 +317,20 @@
   }
 
   if (oldWorkingCopyUfConfigJson !== null) {
-    withConfirmation(
-      "Обнаружена несохранённая версия бота. Восстановить и продолжить редактирование?",
-      async () => {
-        ufConfig = JSON.parse(oldWorkingCopyUfConfigJson);
-      },
-      "Восстановить",
-    )();
+    const oldWorkingCopyUfConfig = JSON.parse(oldWorkingCopyUfConfigJson);
+    if (!areEqual(oldWorkingCopyUfConfig, ufConfig)) {
+      withConfirmation(
+        "Обнаружена несохранённая версия бота. Восстановить и продолжить редактирование?",
+        async () => {
+          ufConfig = JSON.parse(oldWorkingCopyUfConfigJson);
+          forceRerender();
+        },
+        "Восстановить",
+        "Удалить",
+      )();
+    } else {
+      console.debug("Found old working copy, but it's identical to the latest one");
+    }
   }
 
   const applyTempalateToConfig = (template: Template) => {

@@ -8,6 +8,7 @@
   export let text: string;
   export let onConfirm: () => Promise<any>;
   export let confirmButtonLabel: string;
+  export let cancelButtonLabel: string = "Отмена";
 
   let isConfirming = false;
   async function confirm() {
@@ -21,7 +22,7 @@
 <div class="flex flex-col gap-4">
   <p>{text}</p>
   <div class="flex flex-row items-center gap-2">
-    <Button on:click={closeModal} disabled={isConfirming}>Отмена</Button>
+    <Button on:click={closeModal} disabled={isConfirming}>{cancelButtonLabel}</Button>
     <Button color="red" outline on:click={confirm} disabled={isConfirming}>
       <ButtonLoadingSpinner loading={isConfirming} />
       {confirmButtonLabel}

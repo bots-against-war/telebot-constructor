@@ -105,13 +105,19 @@ export async function createBotTokenSecret(botId: string, token: string): Promis
 }
 
 // NOTE: this function must be called on component initialization!
-export function withConfirmation(text: string, onConfirm: () => Promise<any>, confirmButtonLabel: string) {
+export function withConfirmation(
+  text: string,
+  onConfirm: () => Promise<any>,
+  confirmButtonLabel: string,
+  cancelButtonLabel: string = "Отмена",
+) {
   const open = getModalOpener();
   return () => {
     open(ConfirmationModal, {
       text,
       onConfirm,
       confirmButtonLabel,
+      cancelButtonLabel,
     });
   };
 }
