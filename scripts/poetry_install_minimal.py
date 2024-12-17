@@ -3,10 +3,10 @@ Like poetry install, but for all open-ended dependencies locks them in
 the lowest possible versions.
 """
 
-from pathlib import Path
 import shutil
 import subprocess
 import time
+from pathlib import Path
 
 import toml  # type: ignore
 
