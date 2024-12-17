@@ -5,11 +5,7 @@ import pytest
 from pydantic import BaseModel, ValidationError
 from telebot_components.language import LanguageData
 
-from telebot_constructor.utils.pydantic import (
-    ExactlyOneNonNullFieldModel,
-    Language,
-    MultilangText,
-)
+from telebot_constructor.utils.pydantic import ExactlyOneNonNullFieldModel, Language
 
 
 def test_exactly_one_non_null_field_model() -> None:
