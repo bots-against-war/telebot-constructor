@@ -50,26 +50,29 @@
   export let readonly: boolean;
 
   const open = getModalOpener();
-  let forceReloadCounter = 0;
+  let forceRerenderCounter = 0;
+  const forceRerender = () => {
+    forceRerenderCounter += 1;
+  };
 
-  // we store node positions separately to be able to react to bot config changes with sveltes $:{} blocks,
+  let ufConfig = botConfig.user_flow_config;
+
+  // we store node positions separately to be able to react to config changes with sveltes $:{} blocks,
   // while ignoring changes in the noisy and unimportant node position data
   // this way, node movement doesn't trigger any logic reactive to bot config
   // when we save / load bot config, we manually add display coords to it
-  let nodeDisplayCoords = botConfig.user_flow_config.node_display_coords;
+  let nodeDisplayCoords = ufConfig.node_display_coords;
 
   // tracking when the config is modified to prevent exiting with unsaved changes
-  let isConfigModified = false;
-  let configReactivityTriggeredCount = 0;
+  let isModified = false;
+  let configChangedCounter = 0;
   $: {
-    botConfig; // trigger svelte's reactivity by mentioning the value we're reacting to
-    configReactivityTriggeredCount += 1;
-    console.debug("bot config reactivity triggered!");
-    if (configReactivityTriggeredCount > 3) {
-      // HACK: seems like there are 3 "implicit" triggers on every config load...
-      // will need to make up a more elegant way to handle this stuff!
-      isConfigModified = true;
-    }
+    // trigger svelte's reactivity by mentioning the values we're reacting to
+    ufConfig;
+
+    configChangedCounter += 1;
+    console.debug(`reactivity triggered: ${configChangedCounter}`);
+    isModified = true;
   }
 
   // saving bot config copy on every update for ctrl+Z functionality
@@ -113,7 +116,7 @@
   let isBotMultilang = false;
   $: {
     let foundLanguageField = false;
-    for (const block of botConfig.user_flow_config.blocks) {
+    for (const block of ufConfig.blocks) {
       if (block.language_select) {
         foundLanguageField = true;
         if (block.language_select.supported_languages.length > 0) {
@@ -129,7 +132,7 @@
       languageConfigStore.set(null);
     }
     if (foundLanguageField !== isBotMultilang) {
-      // forceReloadCounter += 1;
+      forceRerender();
       isBotMultilang = foundLanguageField;
     }
   }
@@ -138,19 +141,14 @@
     const id = event.detail;
     // this is a bit cumbersome because we store very similar things (blocks and entrypoing) in two different places
     // as a result we need to look in two places and process every one of them
-    const entrypointIdx = botConfig.user_flow_config.entrypoints
-      .map(getEntrypointId)
-      .findIndex((nodeId) => nodeId === id);
-    const blockIdx = botConfig.user_flow_config.blocks.map(getBlockId).findIndex((nodeId) => nodeId === id);
+    const entrypointIdx = ufConfig.entrypoints.map(getEntrypointId).findIndex((nodeId) => nodeId === id);
+    const blockIdx = ufConfig.blocks.map(getBlockId).findIndex((nodeId) => nodeId === id);
     if (entrypointIdx !== -1) {
-      console.debug(
-        `Deleting entrypoint id=${id} idx=${entrypointIdx}`,
-        botConfig.user_flow_config.entrypoints[entrypointIdx],
-      );
-      botConfig.user_flow_config.entrypoints = botConfig.user_flow_config.entrypoints.toSpliced(entrypointIdx, 1);
+      console.debug(`Deleting entrypoint id=${id} idx=${entrypointIdx}`, ufConfig.entrypoints[entrypointIdx]);
+      ufConfig.entrypoints = ufConfig.entrypoints.toSpliced(entrypointIdx, 1);
     } else if (blockIdx !== -1) {
-      console.debug(`Deleting block id=${id} idx=${blockIdx}`, botConfig.user_flow_config.blocks[blockIdx]);
-      botConfig.user_flow_config.blocks = botConfig.user_flow_config.blocks.toSpliced(blockIdx, 1);
+      console.debug(`Deleting block id=${id} idx=${blockIdx}`, ufConfig.blocks[blockIdx]);
+      ufConfig.blocks = ufConfig.blocks.toSpliced(blockIdx, 1);
     } else {
       console.debug(`Node with id '${id}' not found among entrypoints and blocks`);
       return;
@@ -166,7 +164,7 @@
   function nodeFactory(kind: NodeKind, typeKey: NodeTypeKey, configFactory: ConfigFactory) {
     return () => {
       const nodeId = generateNodeId(kind, typeKey);
-      const config = configFactory(nodeId, $languageConfigStore, botConfig.user_flow_config);
+      const config = configFactory(nodeId, $languageConfigStore, ufConfig);
       tentativeNode = {
         kind,
         typeKey,
@@ -190,9 +188,9 @@
       y: cursor.y - 50, // just some arbitrary offset
     };
     if (tentativeNode.kind === NodeKind.block) {
-      botConfig.user_flow_config.blocks = [...botConfig.user_flow_config.blocks, tentativeNode.config];
+      ufConfig.blocks = [...ufConfig.blocks, tentativeNode.config];
     } else {
-      botConfig.user_flow_config.entrypoints = [...botConfig.user_flow_config.entrypoints, tentativeNode.config];
+      ufConfig.entrypoints = [...ufConfig.entrypoints, tentativeNode.config];
     }
     tentativeNode = null;
     return true;
@@ -200,12 +198,12 @@
 
   function cloneNode(event: CustomEvent<string>) {
     const id = event.detail;
-    const entrypointIdx = botConfig.user_flow_config.entrypoints.map(getEntrypointId).findIndex((eId) => eId === id);
-    const blockIdx = botConfig.user_flow_config.blocks.map(getBlockId).findIndex((bId) => bId === id);
+    const entrypointIdx = ufConfig.entrypoints.map(getEntrypointId).findIndex((eId) => eId === id);
+    const blockIdx = ufConfig.blocks.map(getBlockId).findIndex((bId) => bId === id);
     if (entrypointIdx !== -1) {
-      tentativeNode = cloneEntrypointConfig(botConfig.user_flow_config.entrypoints[entrypointIdx]);
+      tentativeNode = cloneEntrypointConfig(ufConfig.entrypoints[entrypointIdx]);
     } else if (blockIdx !== -1) {
-      tentativeNode = cloneBlockConfig(botConfig.user_flow_config.blocks[blockIdx]);
+      tentativeNode = cloneBlockConfig(ufConfig.blocks[blockIdx]);
     } else {
       console.debug(`Node with id '${id}' not found among entrypoints and blocks`);
       return;
@@ -218,12 +216,12 @@
   $: {
     configValidationResult = ok(null);
     if (
-      botConfig.user_flow_config.blocks.some((b) => !isNodeValid[getBlockId(b)]) ||
-      botConfig.user_flow_config.entrypoints.some((e) => !isNodeValid[getEntrypointId(e)])
+      ufConfig.blocks.some((b) => !isNodeValid[getBlockId(b)]) ||
+      ufConfig.entrypoints.some((e) => !isNodeValid[getEntrypointId(e)])
     ) {
       configValidationResult = err("Проблема в одном или нескольких блоках");
     }
-    const commandCounter = botConfig.user_flow_config.entrypoints
+    const commandCounter = ufConfig.entrypoints
       .map((ep) => ep.command?.command)
       .filter((cmd) => cmd !== undefined)
       .reduce((acc: { [k: string]: number }, cmd) => {
@@ -234,7 +232,7 @@
     if (Object.values(commandCounter).some((v) => v > 1)) {
       configValidationResult = err("Бот содержит повторяющиеся /команды");
     }
-    if (botConfig.user_flow_config.blocks.map((b) => b.language_select).filter((ls) => ls).length > 1) {
+    if (ufConfig.blocks.map((b) => b.language_select).filter((ls) => ls).length > 1) {
       configValidationResult = err("Бот содержит больше одного блока выбора языка");
     }
   }
@@ -245,18 +243,24 @@
     if (readonly) return;
     if (!configValidationResult.ok) return;
     isSavingBotConfig = true;
-    console.debug(`Saving bot config for ${botId}`, botConfig);
     // returning node display coords from separate storage to config
-    botConfig.user_flow_config.node_display_coords = filterNodeDisplayCoords(
-      { ...botConfig.user_flow_config.node_display_coords, ...nodeDisplayCoords },
-      botConfig,
+    ufConfig.node_display_coords = filterNodeDisplayCoords(
+      { ...ufConfig.node_display_coords, ...nodeDisplayCoords },
+      ufConfig,
     );
-    const res = await saveBotConfig(botId, { config: botConfig, version_message: versionMessage, start });
+    const newBotConfig: BotConfig = {
+      token_secret_name: botConfig.token_secret_name,
+      user_flow_config: ufConfig,
+      display_name: botConfig.display_name,
+    };
+    console.debug(`Saving bot config for ${botId}`, newBotConfig);
+
+    const res = await saveBotConfig(botId, { config: newBotConfig, version_message: versionMessage, start });
     isSavingBotConfig = false;
     if (getError(res) !== null) {
       window.alert(`Error saving bot config: ${getError(res)}`);
     } else {
-      isConfigModified = false;
+      isModified = false;
     }
   }
 
@@ -294,11 +298,11 @@
     console.debug("Applying template:", template);
     // since we're storing node display coords separately, we need to patch
     // them back into the config here
-    botConfig.user_flow_config.node_display_coords = nodeDisplayCoords;
-    botConfig.user_flow_config = applyTemplate(botConfig.user_flow_config, template);
-    nodeDisplayCoords = botConfig.user_flow_config.node_display_coords;
-    isConfigModified = true;
-    forceReloadCounter += 1;
+    ufConfig.node_display_coords = nodeDisplayCoords;
+    ufConfig = applyTemplate(ufConfig, template);
+    nodeDisplayCoords = ufConfig.node_display_coords;
+    isModified = true;
+    forceRerender();
   };
 </script>
 
@@ -327,7 +331,7 @@
         <Heading tag="h3" class="mr-2 max-w-96 text-nowrap text-ellipsis overflow-clip" title={botConfig.display_name}>
           {botConfig.display_name}
         </Heading>
-        {#if readonly || !configValidationResult.ok || !isConfigModified}
+        {#if readonly || !configValidationResult.ok || !isModified}
           <Tooltip placement="bottom" triggeredBy="#save-button"
             >{readonly
               ? "Режим просмотра"
@@ -338,7 +342,7 @@
         {/if}
         <Button
           id="save-button"
-          disabled={readonly || !configValidationResult.ok || !isConfigModified || isSavingBotConfig}
+          disabled={readonly || !configValidationResult.ok || !isModified || isSavingBotConfig}
           on:click={() => open(SaveConfigModal, { callback: saveCurrentBotConfig })}
         >
           {#if isSavingBotConfig}
@@ -346,11 +350,11 @@
           {/if}
           Сохранить
         </Button>
-        <Button outline on:click={isConfigModified ? exitStudioWithConfirmation : exitStudio}>Выйти</Button>
+        <Button outline on:click={isModified ? exitStudioWithConfirmation : exitStudio}>Выйти</Button>
       </div>
     </Navbar>
   </div>
-  {#key forceReloadCounter}
+  {#key forceRerenderCounter}
     <!-- FIXME: add support for trackpad pan (just trackpadPan option breaks mouse compat) -->
     <Svelvet
       TD
@@ -364,7 +368,7 @@
       customCssCursor={tentativeNode ? "crosshair" : null}
     >
       <BotInfoNode {botId} bind:position={nodeDisplayCoords[BOT_INFO_NODE_ID]} />
-      {#each botConfig.user_flow_config.entrypoints as entrypoint (getEntrypointId(entrypoint))}
+      {#each ufConfig.entrypoints as entrypoint (getEntrypointId(entrypoint))}
         {#if entrypoint.command}
           <CommandEntryPointNode
             on:delete={deleteNode}
@@ -374,7 +378,7 @@
           />
         {/if}
       {/each}
-      {#each botConfig.user_flow_config.blocks as block (getBlockId(block))}
+      {#each ufConfig.blocks as block (getBlockId(block))}
         {#if block.content}
           <ContentBlockNode
             {botId}
