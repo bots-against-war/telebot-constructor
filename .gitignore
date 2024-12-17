@@ -254,5 +254,6 @@ env.sh
 .redis-emulation
 secrets.toml
 node_modules
-temp.py
-temp.json
+scripts/temp
+dump.rdb
+secrets-dump.json

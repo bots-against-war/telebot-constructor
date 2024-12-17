@@ -56,8 +56,8 @@ async def main() -> None:
         redis=redis,
         encryption_key=os.environ["SECRETS_ENCRYPTION_KEY"],
         secret_max_len=10 * 1024,
-        secrets_per_user=10,
-        scope_secrets_to_user=False,
+        secrets_per_user=100,
+        scope_secrets_to_user=True,
     )
 
     telegram_files_downloader = RedisCacheTelegramFilesDownloader(redis=redis)

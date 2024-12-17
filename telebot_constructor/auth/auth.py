@@ -45,9 +45,12 @@ class NoAuth(Auth):
     Useful when running in a private network or during development.
     """
 
+    def __init__(self, username: str = "no-auth") -> None:
+        self.username = username
+
     async def authenticate_request(self, request: web.Request) -> Optional[LoggedInUser]:
         return LoggedInUser(
-            username="no-auth",
+            username=self.username,
             name="Anonymous user",
             auth_type=AuthType.NO_AUTH,
             userpic=None,

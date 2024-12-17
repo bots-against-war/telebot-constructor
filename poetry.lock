@@ -2161,6 +2161,27 @@ files = [
 ]
 
 [[package]]
+name = "tqdm"
+version = "4.67.1"
+description = "Fast, Extensible Progress Meter"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "tqdm-4.67.1-py3-none-any.whl", hash = "sha256:26445eca388f82e72884e0d580d5464cd801a3ea01e63e5601bdff9ba6a48de2"},
+    {file = "tqdm-4.67.1.tar.gz", hash = "sha256:f8aef9c52c08c13a65f30ea34f4e5aac3fd1a34959879d7e59e63027286627f2"},
+]
+
+[package.dependencies]
+colorama = {version = "*", markers = "platform_system == \"Windows\""}
+
+[package.extras]
+dev = ["nbval", "pytest (>=6)", "pytest-asyncio (>=0.24)", "pytest-cov", "pytest-timeout"]
+discord = ["requests"]
+notebook = ["ipywidgets (>=6)"]
+slack = ["slack-sdk"]
+telegram = ["requests"]
+
+[[package]]
 name = "typing-extensions"
 version = "4.12.2"
 description = "Backported and Experimental Type Hints for Python 3.8+"
@@ -2369,6 +2390,22 @@ files = [
 ]
 
 [[package]]
+name = "yarb-against-war"
+version = "1.0.2"
+description = "Yet Another Redis Backup utility"
+optional = false
+python-versions = "*"
+files = [
+    {file = "yarb_against_war-1.0.2-py3-none-any.whl", hash = "sha256:7f7b49495562b159c832f335ff9f00567c9fdded5f937eb3298941d9fcf08827"},
+    {file = "yarb_against_war-1.0.2.tar.gz", hash = "sha256:e18cb0b19854775a21ae105de6e9d8b819ef1480261354726239ac2c342970a4"},
+]
+
+[package.dependencies]
+redis = ">=4.3.4"
+tenacity = ">=8.2.2"
+tqdm = ">=4.65.0"
+
+[[package]]
 name = "yarl"
 version = "1.17.2"
 description = "Yet another URL library"
@@ -2467,4 +2504,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "4edbdb45950a813a5be6469c8b9c9301c11c15cbaedf1191062e7d38e2c70b94"
+content-hash = "461abd527cda5b9a5d881430ff12817368bf1c5958d0d8c457bfea7e2832f024"
