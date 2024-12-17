@@ -28,7 +28,7 @@ jobs:
         run: poetry install
       - name: Downgrading backend dependencies to their minimal versions
         if: matrix.dependency-versions == 'minimal'
-        run: python scripts/poetry_install_minimal.py
+        run: poetry run python scripts/poetry_install_minimal.py
       - name: Setup NodeJS v18
         uses: actions/setup-node@v3
         with:
