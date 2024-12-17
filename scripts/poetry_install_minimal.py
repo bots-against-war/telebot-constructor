@@ -5,7 +5,6 @@ the lowest possible versions.
 
 import shutil
 import subprocess
-import time
 from pathlib import Path
 
 import toml  # type: ignore
@@ -33,7 +32,7 @@ try:
     }
     print(f"Saving temporary {PYPROJECT} with dependencies pinned at the lowest version")
     PYPROJECT.write_text(toml.dumps(pyproject))
-    print(f"Installing...")
+    print("Installing...")
     subprocess.run(["poetry", "install"])
 except Exception as e:
     raise SystemExit(f"Error: {e}")
