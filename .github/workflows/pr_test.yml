@@ -8,6 +8,9 @@ jobs:
   pr-test:
     runs-on: ubuntu-latest
     name: Testing PR
+    strategy:
+      matrix:
+        dependency-versions: ["minimal", "default"]
     steps:
       # setup
       - name: Checkout latest version
@@ -21,8 +24,11 @@ jobs:
         uses: abatilo/actions-poetry@v2.0.0
         with:
           poetry-version: 1.7.1
-      - name: Install backend dependencies
+      - name: Install backend dependencies (default versions)
         run: poetry install
+      - name: Downgrade backend dependencies to their minimal versions
+        if: matrix.dependency-versions == 'minimal'
+        run: poetry run python scripts/poetry_install_minimal.py
       - name: Setup NodeJS v18
         uses: actions/setup-node@v3
         with:
@@ -41,8 +47,10 @@ jobs:
           poetry run coverage run -m pytest tests -vv &&
           poetry run coverage report
       - name: (back) Validate JSON schema is up-to-date
+        if: matrix.dependency-versions == 'default'  # pydantic schema generator is mildly inconsistent which is ok
         run: poetry run python scripts/models/pydantic2jsonschema.py --check
       - name: Validate requirements.txt are up to date
+        if: matrix.dependency-versions == 'default'
         run: |
           poetry export -f requirements.txt --output latest-requirements.txt
           cmp requirements.txt latest-requirements.txt

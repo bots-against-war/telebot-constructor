@@ -1,7 +1,6 @@
-import { err, ok, toDataResult, toTrivialResult, type Result } from "../utils";
-import { apiUrl } from "./config";
+import { toDataResult, toStringResult, toTrivialResult, type Result } from "../utils";
 import type { FormResultsPage } from "./types";
-import { paginationQuery } from "./utils";
+import { fetchApi, paginationQuery } from "./utils";
 
 const encode = encodeURIComponent;
 
@@ -11,18 +10,18 @@ export async function loadFormResults(
   offset: number,
   count: number,
 ): Promise<Result<FormResultsPage>> {
-  const resp = await fetch(
-    apiUrl(`/forms/${encode(botId)}/${encode(formBlockId)}/responses?${paginationQuery(offset, count)}`),
+  const res = await fetchApi(
+    `/forms/${encode(botId)}/${encode(formBlockId)}/responses?${paginationQuery(offset, count)}`,
   );
-  return await toDataResult(resp);
+  return await toDataResult(res);
 }
 
 export async function updateFormTitle(botId: string, formBlockId: string, newTitle: string): Promise<Result<null>> {
-  const resp = await fetch(apiUrl(`/forms/${encode(botId)}/${encode(formBlockId)}/title`), {
+  const res = await fetchApi(`/forms/${encode(botId)}/${encode(formBlockId)}/title`, {
     method: "PUT",
     body: newTitle,
   });
-  return await toTrivialResult(resp);
+  return await toTrivialResult(res);
 }
 
 export async function exportFormResults(
@@ -41,8 +40,6 @@ export async function exportFormResults(
     queryParts.push(`max_timestamp=${toTimestamp(maxDate)}`);
   }
   const query = queryParts.length > 0 ? "?" + queryParts.join("&") : "";
-  const resp = await fetch(apiUrl(`/forms/${encode(botId)}/${encode(formBlockId)}/export${query}`));
-  const respText = await resp.text();
-  if (resp.ok) return ok(respText);
-  else return err(respText);
+  const res = await fetchApi(`/forms/${encode(botId)}/${encode(formBlockId)}/export${query}`);
+  return toStringResult(res);
 }

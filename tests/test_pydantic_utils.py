@@ -5,11 +5,7 @@ import pytest
 from pydantic import BaseModel, ValidationError
 from telebot_components.language import LanguageData
 
-from telebot_constructor.utils.pydantic import (
-    ExactlyOneNonNullFieldModel,
-    Language,
-    MultilangText,
-)
+from telebot_constructor.utils.pydantic import ExactlyOneNonNullFieldModel, Language
 
 
 def test_exactly_one_non_null_field_model() -> None:
@@ -39,17 +35,9 @@ class LanguageContainer(BaseModel):
     lang: Language
 
 
-class MultilangContainer(BaseModel):
-    translations: MultilangText
-
-
 def test_languge_json_schema() -> None:
     assert LanguageContainer.model_json_schema()["properties"] == {
         "lang": {"format": "IETF-language-tag", "type": "string"}
-    }
-
-    assert MultilangContainer.model_json_schema()["properties"] == {
-        "translations": {"additionalProperties": {"type": "string"}, "title": "Translations", "type": "object"}
     }
 
 

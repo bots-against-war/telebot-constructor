@@ -1,9 +1,7 @@
-import { getContext, type ComponentProps } from "svelte";
-import { type SvelteComponent } from "svelte";
+import { getContext, type ComponentProps, type SvelteComponent } from "svelte";
 import type { Newable } from "ts-essentials";
 import { saveSecret } from "./api/secrets";
 import ConfirmationModal from "./components/ConfirmationModal.svelte";
-import { writable } from "svelte/store";
 
 // rust-like result type with convenience functions
 
@@ -35,24 +33,30 @@ export function getError<E = string>(result: Result<any, E>): E | null {
   }
 }
 
-export async function toTrivialResult(resp: Response): Promise<Result<null, string>> {
-  if (resp.ok) {
+export async function toTrivialResult(res: Result<Response>): Promise<Result<null, string>> {
+  if (!res.ok) return res;
+  const response = res.data;
+  if (response.ok) {
     return ok(null);
   } else {
-    return err(await resp.text());
+    return err(await response.text());
   }
 }
 
-export async function toDataResult<T>(resp: Response): Promise<Result<T, string>> {
-  const respText = await resp.text();
-  if (resp.ok) return ok(JSON.parse(respText));
-  else return err(respText);
+export async function toDataResult<T>(res: Result<Response>): Promise<Result<T, string>> {
+  if (!res.ok) return res;
+  const response = res.data;
+  const responseText = await response.text();
+  if (response.ok) return ok(JSON.parse(responseText));
+  else return err(responseText);
 }
 
-export async function toStringResult(resp: Response): Promise<Result<string, string>> {
-  const respText = await resp.text();
-  if (resp.ok) return ok(respText);
-  else return err(respText);
+export async function toStringResult(res: Result<Response>): Promise<Result<string, string>> {
+  if (!res.ok) return res;
+  const response = res.data;
+  const responseText = await response.text();
+  if (response.ok) return ok(responseText);
+  else return err(responseText);
 }
 
 export function mean(data: number[]): number {
@@ -88,7 +92,7 @@ export const INFO_MODAL_OPTIONS = {
 
 export async function createBotTokenSecret(botId: string, token: string): Promise<Result<string, string>> {
   let secretName = botId + "-token-" + crypto.randomUUID().slice(0, 8);
-  console.log("Generated secret name", secretName);
+  console.debug("Generated secret name", secretName);
   // TODO: check if secret with this value does not exist, not its possible to save
   // the same token in two secrets and cause clashes
   let res = await saveSecret(secretName, token);

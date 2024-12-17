@@ -257,3 +257,4 @@ node_modules
 scripts/temp
 dump.rdb
 secrets-dump.json
+temp.py

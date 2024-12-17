@@ -35,7 +35,7 @@ jobs:
       - name: Obtain git tag
         uses: little-core-labs/get-git-tag@v3.0.1
       - name: Build package
-        run: python build_package.py
+        run: python scripts/build_package.py
       - name: Publish package
         uses: pypa/gh-action-pypi-publish@release/v1
         with:

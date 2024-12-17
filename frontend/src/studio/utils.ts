@@ -5,7 +5,7 @@ import {
   getEntrypointConcreteConfig,
   getEntrypointId,
 } from "../api/typeUtils";
-import type { BotConfig, NodeDisplayCoords, UserFlowBlockConfig, UserFlowEntryPointConfig } from "../api/types";
+import type { NodeDisplayCoords, UserFlowBlockConfig, UserFlowConfig, UserFlowEntryPointConfig } from "../api/types";
 import { BOT_INFO_NODE_ID } from "../constants";
 import type { LocalizableText } from "../types";
 import { generateFormFieldId, generateOptionId, getBaseFormFieldConfig } from "./nodes/FormBlock/utils";
@@ -56,6 +56,10 @@ export function localizableTextToString(lc: LocalizableText, langConfig: Languag
 
 export function clone<T>(jsonSerializable: T): T {
   return JSON.parse(JSON.stringify(jsonSerializable));
+}
+
+export function areEqual<T>(jsonSerializable1: T, jsonSerializable2: T): boolean {
+  return JSON.stringify(jsonSerializable1) == JSON.stringify(jsonSerializable2);
 }
 
 export function cloneEntrypointConfig(c: UserFlowEntryPointConfig): TentativeNode {
@@ -136,13 +140,13 @@ export function cloneBlockConfig(c: UserFlowBlockConfig): TentativeNode {
   };
 }
 
-export function filterNodeDisplayCoords(coords: NodeDisplayCoords, config: BotConfig): NodeDisplayCoords {
+export function filterNodeDisplayCoords(coords: NodeDisplayCoords, config: UserFlowConfig): NodeDisplayCoords {
   return Object.fromEntries(
     Object.entries(coords).filter(
       ([id, _]) =>
         id === BOT_INFO_NODE_ID ||
-        config.user_flow_config.entrypoints.some((ep) => getEntrypointId(ep) == id) ||
-        config.user_flow_config.blocks.some((block) => getBlockId(block) == id),
+        config.entrypoints.some((ep) => getEntrypointId(ep) == id) ||
+        config.blocks.some((block) => getBlockId(block) == id),
     ),
   );
 }
