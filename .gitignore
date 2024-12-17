@@ -258,4 +258,3 @@ scripts/temp
 dump.rdb
 secrets-dump.json
 temp.py
-poetry.lock

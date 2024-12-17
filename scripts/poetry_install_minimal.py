@@ -14,8 +14,10 @@ if not PYPROJECT.exists():
     raise SystemExit("pyproject.toml file not found; make sure to run the script from project root")
 
 LOCK_FILE = Path("poetry.lock")
+LOCK_FILE_BCK = Path("poetry.lock.bck")
 if LOCK_FILE.exists():
-    print("Removing lock file...")
+    print(f"Backing up {LOCK_FILE}")
+    shutil.move(LOCK_FILE, LOCK_FILE_BCK)
     LOCK_FILE.unlink()
     print("Done")
 
@@ -38,6 +40,6 @@ except Exception as e:
     raise SystemExit(f"Error: {e}")
 finally:
     print(f"Restoring {PYPROJECT}...")
-    shutil.copy(PYPROJECT_BCK, PYPROJECT)
-    print("Removing backup...")
-    PYPROJECT_BCK.unlink(missing_ok=True)
+    shutil.move(PYPROJECT_BCK, PYPROJECT)
+    print(f"Restoring {LOCK_FILE}")
+    shutil.move(LOCK_FILE_BCK, LOCK_FILE)
