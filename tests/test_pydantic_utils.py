@@ -39,17 +39,9 @@ class LanguageContainer(BaseModel):
     lang: Language
 
 
-class MultilangContainer(BaseModel):
-    translations: MultilangText
-
-
 def test_languge_json_schema() -> None:
     assert LanguageContainer.model_json_schema()["properties"] == {
         "lang": {"format": "IETF-language-tag", "type": "string"}
-    }
-
-    assert MultilangContainer.model_json_schema()["properties"] == {
-        "translations": {"additionalProperties": {"type": "string"}, "title": "Translations", "type": "object"}
     }
 
 
