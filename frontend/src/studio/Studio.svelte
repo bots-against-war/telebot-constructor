@@ -10,7 +10,16 @@
   import GridPlusColored from "../components/icons/GridPlusColored.svelte";
   import { BOT_INFO_NODE_ID } from "../constants";
   import { dashboardPath } from "../routeUtils";
-  import { INFO_MODAL_OPTIONS, err, getError, getModalOpener, ok, withConfirmation, type Result } from "../utils";
+  import {
+    INFO_MODAL_OPTIONS,
+    err,
+    getError,
+    getModalOpener,
+    ok,
+    sleep,
+    withConfirmation,
+    type Result,
+  } from "../utils";
   import ReadmeModal from "./ReadmeModal.svelte";
   import SaveConfigModal from "./SaveConfigModal.svelte";
   import TemplatesModal from "./TemplatesModal.svelte";
@@ -47,33 +56,53 @@
     type TentativeNode,
   } from "./utils";
 
+  const open = getModalOpener();
+  const WORKING_COPY_LS_KEY = "workingCopyUserFlowConfig";
+  const README_SHOWN_LS_KEY = "readmeShown";
+
   export let botId: string;
   export let botConfig: BotConfig;
   export let readonly: boolean;
 
-  const open = getModalOpener();
-
   let ufConfig = botConfig.user_flow_config;
   let savedUfConfig = clone(ufConfig);
+  const oldWorkingCopyUfConfigJson = localStorage.getItem(WORKING_COPY_LS_KEY);
   // node positions are stored separately = moving blocks does not trigger reactivity, edit history, etc
   let nodeDisplayCoords = ufConfig.node_display_coords;
 
-  // region: reactive actions
+  // region: reactive logic
+
   let forceRerenderCounter = 0;
   const forceRerender = () => {
     forceRerenderCounter += 1;
   };
 
   let isModified = false;
-  $: {
-    isModified = !areEqual(ufConfig, savedUfConfig);
-    console.debug(`isModified = ${isModified}`);
-  }
+  let isMultilang = false;
 
   const EDIT_HISTORY_LENGTH = 30;
   const editHistory: UserFlowConfig[] = [clone(ufConfig)];
   let lastEditTime = Date.now();
+
+  let saveWorkingCopyScheduled: boolean = false;
+  const saveWorkingCopy = async () => {
+    if (saveWorkingCopyScheduled) return;
+    saveWorkingCopyScheduled = true;
+    await sleep(100); // debounce: avoid rapid consecutive saves
+    localStorage.setItem(WORKING_COPY_LS_KEY, JSON.stringify(ufConfig));
+    console.debug("Working copy saved");
+    saveWorkingCopyScheduled = false;
+  };
+  const deleteWorkingCopy = () => localStorage.removeItem(WORKING_COPY_LS_KEY);
+
   $: {
+    // reactive block running on every config update
+    // do not rely on it to be too precise, sometimes it fires more that one would expect
+    // add manual debouncing, if needed
+
+    isModified = !areEqual(ufConfig, savedUfConfig);
+    console.debug(`isModified = ${isModified}`);
+
     if (!areEqual(ufConfig, editHistory[editHistory.length - 1])) {
       const now = Date.now();
       if (now - lastEditTime > 300) {
@@ -89,6 +118,29 @@
         console.debug("Updated the last edit history entry", editHistory[editHistory.length - 1]);
       }
     }
+
+    saveWorkingCopy();
+
+    let newIsMultilang = false;
+    for (const block of ufConfig.blocks) {
+      if (block.language_select) {
+        newIsMultilang = true;
+        if (block.language_select.supported_languages.length > 0) {
+          languageConfigStore.set({
+            supportedLanguageCodes: block.language_select.supported_languages,
+            defaultLanguageCode: block.language_select.default_language,
+          });
+        }
+        break;
+      }
+    }
+    if (!newIsMultilang) {
+      languageConfigStore.set(null);
+    }
+    if (newIsMultilang !== isMultilang) {
+      forceRerender();
+      isMultilang = newIsMultilang;
+    }
   }
 
   function undo() {
@@ -101,30 +153,6 @@
     const undoneUfConfig = editHistory[editHistory.length - 1];
     undoneUfConfig.node_display_coords = filterNodeDisplayCoords(nodeDisplayCoords, undoneUfConfig); // adding up-to-date node coords
     ufConfig = clone(undoneUfConfig);
-  }
-
-  let isBotMultilang = false;
-  $: {
-    let foundLanguageField = false;
-    for (const block of ufConfig.blocks) {
-      if (block.language_select) {
-        foundLanguageField = true;
-        if (block.language_select.supported_languages.length > 0) {
-          languageConfigStore.set({
-            supportedLanguageCodes: block.language_select.supported_languages,
-            defaultLanguageCode: block.language_select.default_language,
-          });
-        }
-        break;
-      }
-    }
-    if (!foundLanguageField) {
-      languageConfigStore.set(null);
-    }
-    if (foundLanguageField !== isBotMultilang) {
-      forceRerender();
-      isBotMultilang = foundLanguageField;
-    }
   }
 
   // region: node manipulation
@@ -265,7 +293,10 @@
     }
   }
 
-  const exitStudio = () => navigate(dashboardPath(botId));
+  const exitStudio = () => {
+    deleteWorkingCopy();
+    navigate(dashboardPath(botId));
+  };
   const exitStudioWithConfirmation = withConfirmation(
     "Вы уверены, что хотите выйти из студии? Несохранённые изменения будут потеряны.",
     async () => exitStudio(),
@@ -278,14 +309,23 @@
       { onShowcaseTemplate: () => applyTempalateToConfig(basicShowcaseTemplate()) },
       INFO_MODAL_OPTIONS,
     );
-  const README_SHOWN_LS_KEY = "readmeShown";
   if (localStorage.getItem(README_SHOWN_LS_KEY) === null) {
     localStorage.setItem(README_SHOWN_LS_KEY, "yea");
     openReadmeModal();
   }
 
+  if (oldWorkingCopyUfConfigJson !== null) {
+    withConfirmation(
+      "Восстановить рабочую версию бота?",
+      async () => {
+        ufConfig = JSON.parse(oldWorkingCopyUfConfigJson);
+      },
+      "Восстановить",
+    )();
+  }
+
   const applyTempalateToConfig = (template: Template) => {
-    if (isBotMultilang && template.config.blocks.find((b) => b.language_select)) {
+    if (isMultilang && template.config.blocks.find((b) => b.language_select)) {
       alert("Не получилось добавить шаблон: в боте уже есть блок выбора языков!");
       return;
     }
@@ -449,7 +489,7 @@
         />
         <AddNodeButton
           key={NodeTypeKey.language_select}
-          disabled={isBotMultilang}
+          disabled={isMultilang}
           on:click={nodeFactory(NodeKind.block, NodeTypeKey.language_select, defaultLanguageSelectBlockConfig)}
         />
       </div>
