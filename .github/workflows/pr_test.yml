@@ -25,10 +25,10 @@ jobs:
         with:
           poetry-version: 1.7.1
       - name: Install backend dependencies (default versions)
-        if: matrix.dependency-versions == "default"
+        if: matrix.dependency-versions == 'default'
         run: poetry install
       - name: Install backend dependencies (minimal versions)
-        if: matrix.dependency-versions == "minimal"
+        if: matrix.dependency-versions == 'minimal'
         run: python scripts/poetry_install_minimal.py
       - name: Setup NodeJS v18
         uses: actions/setup-node@v3
