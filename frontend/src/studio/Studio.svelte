@@ -316,7 +316,7 @@
 
   if (oldWorkingCopyUfConfigJson !== null) {
     withConfirmation(
-      "Восстановить рабочую версию бота?",
+      "Обнаружена несохранённая версия бота. Восстановить и продолжить редактирование?",
       async () => {
         ufConfig = JSON.parse(oldWorkingCopyUfConfigJson);
       },
