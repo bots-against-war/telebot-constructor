@@ -55,8 +55,6 @@ from telebot_constructor.utils.pydantic import (
     MultilangText,
 )
 
-logger = logging.getLogger(__name__)
-
 # region: form fields
 # note that the form component offers a lot of dirrefeent kinds of fields,
 # and here we only support a subset of them;
@@ -310,6 +308,8 @@ class FormBlock(UserFlowBlock):
         return without_nones([self.form_cancelled_next_block_id, self.form_completed_next_block_id])
 
     def model_post_init(self, __context: Any) -> None:
+        self._logger = logging.getLogger(__name__)
+
         form_id_error_prefix = f"Form block {self.block_id!r} error: "
 
         if not self.members:
@@ -353,6 +353,7 @@ class FormBlock(UserFlowBlock):
 
     async def setup(self, context: UserFlowSetupContext) -> SetupResult:
         self._store = context.form_results_store
+        self._logger = context.make_instrumented_logger(__name__)
 
         cancelling_because_of_error_eng = "Something went wrong, details: {}"
         if context.language_store is not None:
@@ -388,6 +389,7 @@ class FormBlock(UserFlowBlock):
             ),
             language_store=context.language_store,
         )
+        context.errors_store.instrument(self._form_handler.logger)
 
         def _user_flow_context_for_next_block(form_exit_context: ComponentsFormExitContext) -> UserFlowContext:
             return UserFlowContext.from_setup_context(
@@ -418,7 +420,7 @@ class FormBlock(UserFlowBlock):
                     text = self._form.result_to_html(result=result, lang=user_lang)
                     await context.bot.send_message(chat_id=user.id, text=text, parse_mode="HTML")
                 except Exception:
-                    logger.exception("Error echoing form result to user")
+                    self._logger.exception(f"Error sending form result back to the user: {result}")
             if self.results_export.to_chat is not None:
                 try:
                     feedback_handler = (
@@ -450,7 +452,7 @@ class FormBlock(UserFlowBlock):
                             parse_mode="HTML",
                         )
                 except Exception:
-                    logger.exception("Error sending form result to admin chat")
+                    self._logger.exception(f"Error sending form result to admin chat: {result}")
             if self.results_export.to_store:
                 try:
                     result_dump: FormResult = empty_form_result()
@@ -469,7 +471,7 @@ class FormBlock(UserFlowBlock):
                         prompt=any_text_to_str(self.messages.form_start, language=admin_lang),
                     )
                 except Exception:
-                    logger.exception("Error saving form result to internal storage")
+                    self._logger.exception(f"Error saving form result to internal storage: {result}")
 
             # TODO: more result export options: Airtable, Google Sheets, Trello, etc
 

@@ -1,4 +1,5 @@
 import dataclasses
+import logging
 from dataclasses import dataclass
 from typing import Awaitable, Callable, Coroutine, Optional
 
@@ -30,6 +31,11 @@ class UserFlowSetupContext:
     enter_block: "EnterUserFlowBlockCallback"
     get_active_block_id: "GetActiveUserFlowBlockId"
     media_store: UserSpecificMediaStore | None
+
+    def make_instrumented_logger(self, module_name: str) -> logging.Logger:
+        logger = logging.getLogger(module_name + f"[{self.bot_prefix}]")
+        self.errors_store.instrument(logger)
+        return logger
 
 
 @dataclass(frozen=True)
