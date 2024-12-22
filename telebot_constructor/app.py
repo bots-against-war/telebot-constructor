@@ -940,7 +940,7 @@ class TelebotConstructorApp:
                 return web.Response(reason="OK")
             except Exception:
                 logger.exception("Error updating bot user info")
-                raise web.HTTPInternalServerError(reason="Error updating bot detailed information")
+                raise web.HTTPInternalServerError(reason="Error updating detailed bot information")
 
         @routes.post("/api/start-group-chat-discovery/{bot_id}")
         async def start_discovering_group_chats(request: web.Request) -> web.Response:

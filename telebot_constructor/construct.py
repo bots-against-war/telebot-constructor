@@ -18,8 +18,6 @@ from telebot_constructor.store.media import UserSpecificMediaStore
 from telebot_constructor.user_flow.types import BotCommandInfo
 from telebot_constructor.utils.rate_limit_retry import rate_limit_retry
 
-logger = logging.getLogger(__name__)
-
 BotFactory = (
     Type[AsyncTeleBot] | Callable[..., AsyncTeleBot]
 )  # callable must have the same args as AsyncTeleBot constructor but I can't find the proper typing
@@ -54,7 +52,9 @@ async def construct_bot(
     """Core bot construction function responsible for turning a config into a functional bot"""
     bot_prefix = f"{CONSTRUCTOR_PREFIX}/{owner_id}/{bot_id}"
     log_prefix = f"[{owner_id}][{bot_id}] "
-    logger.info(log_prefix + "Constructing bot")
+    logger = logging.getLogger(__name__ + log_prefix)
+    errors_store.instrument(logger)
+    logger.info("Constructing bot")
 
     bot = await make_bare_bot(
         owner_id=owner_id,
@@ -72,9 +72,9 @@ async def construct_bot(
         async for attempt in rate_limit_retry():
             with attempt:
                 bot_user = await bot.get_me()
-        logger.info(log_prefix + f"Bot user loaded: {bot_user.to_json()}")
+        logger.info(f"Bot user loaded: {bot_user.to_json()}")
     except Exception:
-        logger.exception(log_prefix + "Error getting bot user, probably an invalid token")
+        logger.exception("Error getting bot user, probably an invalid token")
         raise ValueError("Failed to get bot user with getMe, the token is probably invalid")
 
     banned_users_store = BannedUsersStore(redis=redis, bot_prefix=bot_prefix, cached=True)

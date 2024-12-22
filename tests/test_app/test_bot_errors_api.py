@@ -15,7 +15,7 @@ from tests.utils import (
 )
 
 
-async def test_bot_errors_api(
+async def test_bot_level_errors(
     constructor_app: Tuple[TelebotConstructorApp, aiohttp.web.Application],
     aiohttp_client: AiohttpClient,
 ) -> None:
