@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import time
+import traceback
 from dataclasses import dataclass
 from typing import Any
 
@@ -21,14 +22,20 @@ class BotError(pydantic.BaseModel):
     @classmethod
     def from_log_record(cls, record: logging.LogRecord) -> "BotError":
         try:
-            exc_type_str = record.exc_info[0].__class__.__name__ if record.exc_info is not None else None
+            exc_type_str: str | None = record.exc_info[0].__name__  # type: ignore
         except Exception:
-            exc_type_str = "<Unknown>"
+            exc_type_str = None
+
+        try:
+            exc_traceback: str | None = "\n".join(traceback.format_tb(record.exc_info[2]))  # type: ignore
+        except Exception:
+            exc_traceback = None
+
         return BotError(
             timestamp=time.time(),
             message=record.getMessage(),
             exc_type=exc_type_str,
-            exc_traceback=record.exc_text,
+            exc_traceback=exc_traceback,
         )
 
 
