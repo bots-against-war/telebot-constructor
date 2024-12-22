@@ -11,6 +11,7 @@ from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.stores.banned_users import BannedUsersStore
 from telebot_components.stores.language import LanguageStore
 
+from telebot_constructor.store.errors import BotSpecificErrorsStore
 from telebot_constructor.store.form_results import BotSpecificFormResultsStore
 from telebot_constructor.store.media import UserSpecificMediaStore
 from telebot_constructor.utils import AnyChatId
@@ -23,6 +24,7 @@ class UserFlowSetupContext:
     redis: RedisInterface
     banned_users_store: BannedUsersStore
     form_results_store: BotSpecificFormResultsStore
+    errors_store: BotSpecificErrorsStore
     language_store: Optional[LanguageStore]
     feedback_handlers: dict[AnyChatId, FeedbackHandler]
     enter_block: "EnterUserFlowBlockCallback"

@@ -5,11 +5,7 @@ from telebot_components.redis_utils.emulation import RedisEmulation
 
 from telebot_constructor.bot_config import BotConfig, UserFlowConfig
 from telebot_constructor.construct import construct_bot
-from tests.utils import (
-    dummy_form_results_store,
-    dummy_metrics_store,
-    dummy_secret_store,
-)
+from tests.utils import dummy_errors_store, dummy_form_results_store, dummy_secret_store
 
 EMPTY_USER_FLOW_CONFIG = UserFlowConfig(
     entrypoints=[],
@@ -30,7 +26,7 @@ async def test_construct_empty_bot() -> None:
             token_secret_name="empty-bot-token", display_name="Test bot", user_flow_config=EMPTY_USER_FLOW_CONFIG
         ),
         form_results_store=dummy_form_results_store(),
-        metrics_store=dummy_metrics_store(),
+        errors_store=dummy_errors_store(),
         secret_store=secret_store,
         redis=redis,
         _bot_factory=MockedAsyncTeleBot,
@@ -47,7 +43,7 @@ async def test_missing_token_secret() -> None:
                 token_secret_name="empty-bot-token", display_name="Test bot", user_flow_config=EMPTY_USER_FLOW_CONFIG
             ),
             form_results_store=dummy_form_results_store(),
-            metrics_store=dummy_metrics_store(),
+            errors_store=dummy_errors_store(),
             secret_store=dummy_secret_store(redis),
             redis=redis,
             _bot_factory=MockedAsyncTeleBot,
@@ -71,7 +67,7 @@ async def test_bot_token_validation_failed() -> None:
                     user_flow_config=EMPTY_USER_FLOW_CONFIG,
                 ),
                 form_results_store=dummy_form_results_store(),
-                metrics_store=dummy_metrics_store(),
+                errors_store=dummy_errors_store(),
                 secret_store=secret_store,
                 redis=redis,
             )

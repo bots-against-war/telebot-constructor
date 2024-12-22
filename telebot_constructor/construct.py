@@ -12,9 +12,9 @@ from telebot_components.utils.secrets import SecretStore
 from telebot_constructor.bot_config import BotConfig
 from telebot_constructor.constants import CONSTRUCTOR_PREFIX
 from telebot_constructor.group_chat_discovery import GroupChatDiscoveryHandler
+from telebot_constructor.store.errors import BotSpecificErrorsStore
 from telebot_constructor.store.form_results import BotSpecificFormResultsStore
 from telebot_constructor.store.media import UserSpecificMediaStore
-from telebot_constructor.store.metrics import MetricsStore
 from telebot_constructor.user_flow.types import BotCommandInfo
 from telebot_constructor.utils.rate_limit_retry import rate_limit_retry
 
@@ -45,7 +45,7 @@ async def construct_bot(
     bot_config: BotConfig,
     secret_store: SecretStore,
     form_results_store: BotSpecificFormResultsStore,
-    metrics_store: MetricsStore,
+    errors_store: BotSpecificErrorsStore,
     redis: RedisInterface,
     media_store: UserSpecificMediaStore | None = None,
     group_chat_discovery_handler: GroupChatDiscoveryHandler | None = None,
@@ -60,12 +60,9 @@ async def construct_bot(
         owner_id=owner_id,
         bot_config=bot_config,
         secret_store=secret_store,
-        update_metrics_handler=metrics_store.get_update_metrics_handler(
-            owner_id=owner_id,
-            bot_id=bot_id,
-        ),
         _bot_factory=_bot_factory,
     )
+    errors_store.instrument(bot.logger)
 
     background_jobs: list[Coroutine[None, None, None]] = []
     aux_endpoints: list[AuxBotEndpoint] = []
@@ -93,6 +90,7 @@ async def construct_bot(
             redis=redis,
             banned_users_store=banned_users_store,
             form_results_store=form_results_store,
+            errors_store=errors_store,
             media_store=media_store,
         )
 

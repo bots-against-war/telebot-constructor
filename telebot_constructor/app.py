@@ -277,7 +277,10 @@ class TelebotConstructorApp:
                 owner_id=owner_id,
                 bot_id=bot_id,
             ),
-            metrics_store=self.store.metrics,
+            errors_store=self.store.errors.adapter_for(
+                owner_id=owner_id,
+                bot_id=bot_id,
+            ),
             redis=self.redis,
             group_chat_discovery_handler=self.group_chat_discovery_handler,
             media_store=self.media_store.adapter_for(owner_id) if self.media_store else None,
@@ -863,7 +866,7 @@ class TelebotConstructorApp:
             """
             a = await self.authorize(request)
             offset, count = self.parse_offset_count_params(request, max_count=100, default_count=20)
-            errors = await self.store.metrics.load_errors(a.owner_username, a.bot_id, offset, count)
+            errors = await self.store.errors.load_errors(a.owner_username, a.bot_id, offset, count)
             return web.json_response(text=BotErrorsPage(errors=errors).model_dump_json())
 
         # endregion

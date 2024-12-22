@@ -12,11 +12,11 @@ from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.utils.secrets import RedisSecretStore, SecretStore
 from typing_extensions import TypeGuard
 
+from telebot_constructor.store.errors import BotErrorsStore, BotSpecificErrorsStore
 from telebot_constructor.store.form_results import (
     BotSpecificFormResultsStore,
     FormResultsStore,
 )
-from telebot_constructor.store.metrics import MetricsStore
 
 
 def dummy_secret_store(redis: RedisInterface) -> SecretStore:
@@ -158,8 +158,8 @@ def dummy_form_results_store() -> BotSpecificFormResultsStore:
     return FormResultsStore(RedisEmulation()).adapter_for(owner_id="dummy", bot_id="dummy")
 
 
-def dummy_metrics_store() -> MetricsStore:
-    return MetricsStore(RedisEmulation())
+def dummy_errors_store() -> BotSpecificErrorsStore:
+    return BotErrorsStore(RedisEmulation()).adapter_for(owner_id="dummy", bot_id="dummy")
 
 
 DataT = TypeVar("DataT")

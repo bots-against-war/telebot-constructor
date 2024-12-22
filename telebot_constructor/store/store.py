@@ -13,8 +13,8 @@ from telebot_components.stores.generic import (
 from telebot_constructor.app_models import BotInfo, BotVersionInfo
 from telebot_constructor.bot_config import BotConfig
 from telebot_constructor.constants import CONSTRUCTOR_PREFIX
+from telebot_constructor.store.errors import BotErrorsStore
 from telebot_constructor.store.form_results import FormResultsStore
-from telebot_constructor.store.metrics import MetricsStore
 from telebot_constructor.store.types import (
     BotConfigVersionMetadata,
     BotEvent,
@@ -72,7 +72,7 @@ class TelebotConstructorStore:
 
         self.form_results = FormResultsStore(redis=redis)
 
-        self.metrics = MetricsStore(redis=redis)
+        self.errors = BotErrorsStore(redis=redis)
 
     # bot config store CRUD
 
@@ -201,9 +201,7 @@ class TelebotConstructorStore:
             last_events=last_events or [],
             forms_with_responses=(await self.form_results.list_forms(username, bot_id) if detailed else []),
             last_errors=(
-                await self.metrics.load_errors(username, bot_id, offset=0, count=INCLUDE_LAST_ERRORS)
-                if detailed
-                else []
+                await self.errors.load_errors(username, bot_id, offset=0, count=INCLUDE_LAST_ERRORS) if detailed else []
             ),
             admin_chat_ids=admin_chat_ids,
         )
