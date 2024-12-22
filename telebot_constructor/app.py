@@ -24,6 +24,7 @@ from telebot_components.utils.secrets import SecretStore
 
 from telebot_constructor.app_models import (
     BotErrorsPage,
+    BotInfo,
     BotInfoList,
     BotTokenPayload,
     BotVersionsPage,
@@ -161,6 +162,12 @@ class TelebotConstructorApp:
             actor_username=actor_username,
             owner_username=owner_username,
         )
+
+    async def load_nondetailed_bot_info(self, a: BotAccessAuthorization) -> BotInfo:
+        res = await self.store.load_bot_info(username=a.owner_username, bot_id=a.bot_id, detailed=False)
+        if res is None:
+            raise web.HTTPNotFound(reason=f'Bot "{a.bot_id}" does not exist')
+        return res
 
     # used for bot user and bot names
     VALID_NAME_RE = re.compile(r"^[0-9a-zA-Z\-_]{3,64}$")
@@ -649,20 +656,17 @@ class TelebotConstructorApp:
         async def get_bot_versions_page(request: web.Request) -> web.Response:
             a = await self.authorize(request)
             offset, count = self.parse_offset_count_params(request, max_count=100, default_count=20)
-            bot_info = await self.store.load_bot_info(a.owner_username, a.bot_id, detailed=False)
-            if bot_info:
-                start, end = page_params_to_redis_indices(offset, count)
-                return web.json_response(
-                    text=BotVersionsPage(
-                        bot_info=bot_info,
-                        versions=await self.store.load_version_info(
-                            a.owner_username, a.bot_id, start_version=start, end_version=end
-                        ),
-                        total_versions=await self.store.bot_config_version_count(a.owner_username, a.bot_id),
-                    ).model_dump_json()
-                )
-            else:
-                raise web.HTTPNotFound(reason="Bot id not found")
+            bot_info = await self.load_nondetailed_bot_info(a)
+            start, end = page_params_to_redis_indices(offset, count)
+            return web.json_response(
+                text=BotVersionsPage(
+                    bot_info=bot_info,
+                    versions=await self.store.load_version_info(
+                        a.owner_username, a.bot_id, start_version=start, end_version=end
+                    ),
+                    total_versions=await self.store.bot_config_version_count(a.owner_username, a.bot_id),
+                ).model_dump_json()
+            )
 
         # endregion
         ##################################################################################
@@ -686,9 +690,7 @@ class TelebotConstructorApp:
                 form_block_id=self.parse_path_part(request, "form_block_id"),
             )
             offset, count = self.parse_offset_count_params(request, max_count=100, default_count=20)
-            bot_info = await self.store.load_bot_info(username=a.owner_username, bot_id=a.bot_id, detailed=False)
-            if not bot_info:
-                raise web.HTTPNotFound(reason="Bot not found")
+            bot_info = await self.load_nondetailed_bot_info(a)
             form_info = await self.store.form_results.load_form_info(global_form_id)
             if not form_info:
                 raise web.HTTPNotFound(reason="Form not found")
@@ -866,8 +868,9 @@ class TelebotConstructorApp:
             """
             a = await self.authorize(request)
             offset, count = self.parse_offset_count_params(request, max_count=100, default_count=20)
+            bot_info = await self.load_nondetailed_bot_info(a)
             errors = await self.store.errors.load_errors(a.owner_username, a.bot_id, offset, count)
-            return web.json_response(text=BotErrorsPage(errors=errors).model_dump_json())
+            return web.json_response(text=BotErrorsPage(errors=errors, bot_info=bot_info).model_dump_json())
 
         # endregion
         ##################################################################################

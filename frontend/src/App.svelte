@@ -12,12 +12,14 @@
   import {
     botListingPath,
     dashboardPath,
+    errorsPath,
     formResultsPagePath,
     settingsPath,
     studioPath,
     versionsPagePath,
   } from "./routeUtils";
   import StudioLoader from "./studio/StudioLoader.svelte";
+  import ErrorsLoader from "./dashboard/routes/errors/ErrorsLoader.svelte";
 
   // Global icon settings for flowbite-icons
   const iconCtx = {
@@ -55,6 +57,9 @@
         </Route>
         <Route path={formResultsPagePath(":botId", ":formBlockId")} let:params>
           <FormLoader botId={params.botId} formBlockId={params.formBlockId} />
+        </Route>
+        <Route path={errorsPath(":botId")} let:params>
+          <ErrorsLoader botId={params.botId} />
         </Route>
         <Route>
           <div class="w-full h-screen flex flex-col items-center justify-center">

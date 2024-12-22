@@ -13,9 +13,10 @@
   import BreadcrumbHome from "../components/breadcrumbs/BreadcrumbHome.svelte";
   import Breadcrumbs from "../components/breadcrumbs/Breadcrumbs.svelte";
   import EditableText from "../components/inputs/EditableText.svelte";
-  import { formResultsPagePath, settingsPath, studioPath, versionsPagePath } from "../routeUtils";
+  import { errorsPath, formResultsPagePath, settingsPath, studioPath, versionsPagePath } from "../routeUtils";
   import BotInfoCard from "./BotInfoCard.svelte";
   import BotEventList from "./components/BotEventList.svelte";
+  import Timestamp from "../components/Timestamp.svelte";
 
   export let botInfo: BotInfo;
 
@@ -126,13 +127,16 @@
           <span>В разработке</span>
         </BotInfoCard>
 
+        {#if botInfo.last_errors.length > 0}
+          <BotInfoCard title="Ошибки бота" moreLinkTitle="Перейти" moreLinkHref={errorsPath(botId)}>
+            <span
+              >Последняя: <Timestamp timestamp={botInfo.last_errors[botInfo.last_errors.length - 1].timestamp} />
+            </span>
+          </BotInfoCard>
+        {/if}
+
         <BotInfoCard title="Активность">
           <BotEventList events={botInfo.last_events} />
-        </BotInfoCard>
-
-        <BotInfoCard title="Ошибки бота">
-          <strong class="text-2xl">🚧👷🏗️🚧</strong>
-          <span>В разработке</span>
         </BotInfoCard>
       </div>
     </div>

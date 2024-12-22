@@ -139,6 +139,8 @@ class ContentBlock(UserFlowBlock):
         )
 
     async def enter(self, context: UserFlowContext) -> None:
+        self._logger.error("Error reporting test!")  # TEMP
+
         chat_id = context.chat.id if context.chat is not None else context.user.id
         language = (
             await self._language_store.get_user_language(context.user) if self._language_store is not None else None

@@ -182,6 +182,7 @@ class FormResultsPage(BaseModel):
 
 
 class BotErrorsPage(BaseModel):
+    bot_info: BotInfo
     errors: list[BotError]
 
 
