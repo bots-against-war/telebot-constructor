@@ -138,16 +138,7 @@ class ContentBlock(UserFlowBlock):
             next_block_id=next_block_id,
         )
 
-    def func(self):
-        def inner():
-            raise RuntimeError("Runtime error example")
-
-        inner()
-
     async def enter(self, context: UserFlowContext) -> None:
-
-        self.func()
-
         chat_id = context.chat.id if context.chat is not None else context.user.id
         language = (
             await self._language_store.get_user_language(context.user) if self._language_store is not None else None
