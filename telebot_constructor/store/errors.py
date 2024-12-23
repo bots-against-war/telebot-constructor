@@ -3,14 +3,16 @@ import logging
 import time
 import traceback
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Awaitable, Callable
 
 import pydantic
 from telebot_components.redis_utils.interface import RedisInterface
-from telebot_components.stores.generic import KeyListStore
+from telebot_components.stores.generic import KeyListStore, KeyValueStore
 
 from telebot_constructor.constants import CONSTRUCTOR_PREFIX
 from telebot_constructor.utils import page_params_to_redis_indices
+
+logger = logging.getLogger(__name__)
 
 
 class BotError(pydantic.BaseModel):
@@ -39,26 +41,37 @@ class BotError(pydantic.BaseModel):
         )
 
 
-class StoringErrorsLogHandler(logging.Handler):
+class _LogHandler(logging.Handler):
     def __init__(self, store: "BotErrorsStore", owner_id: str, bot_id: str) -> None:
         logging.Handler.__init__(self, level=logging.ERROR)
         self._store = store
         self._owner_id = owner_id
         self._bot_id = bot_id
-        self._tasks: set[asyncio.Task[int]] = set()
+        self._tasks: set[asyncio.Task[Any]] = set()
 
     def emit(self, record: Any) -> None:
         if not isinstance(record, logging.LogRecord):
             return
         task = asyncio.create_task(
-            self._store.save_error(
+            self._store.process_error(
                 owner_id=self._owner_id,
                 bot_id=self._bot_id,
-                e=BotError.from_log_record(record),
+                error=BotError.from_log_record(record),
             )
         )
         task.add_done_callback(self._tasks.discard)
         self._tasks.add(task)
+
+
+@dataclass
+class BotErrorContext:
+    owner_id: str
+    bot_id: str
+    alert_chat_id: int | str
+    error: BotError
+
+
+BotErrorCallback = Callable[[BotErrorContext], Awaitable[Any]]
 
 
 class BotErrorsStore:
@@ -73,6 +86,19 @@ class BotErrorsStore:
             loader=BotError.model_validate_json,
             dumper=BotError.model_dump_json,
         )
+        self._alert_chat_store = KeyValueStore[str](
+            name="alert-chat",
+            prefix=self.STORE_PREFIX,
+            redis=redis,
+            expiration_time=None,
+            loader=str,
+            dumper=str,
+        )
+        # TODO: get and load methods for alert chat + API + return it with detailed bot info
+        self.error_callback: BotErrorCallback | None = None
+
+    def _composite_key(self, owner_id: str, bot_id: str) -> str:
+        return f"{owner_id}/{bot_id}"
 
     def adapter_for(self, owner_id: str, bot_id: str) -> "BotSpecificErrorsStore":
         return BotSpecificErrorsStore(
@@ -81,30 +107,32 @@ class BotErrorsStore:
             bot_id=bot_id,
         )
 
-    def _error_store_key(self, owner_id: str, bot_id: str) -> str:
-        return f"{owner_id}/{bot_id}"
+    async def process_error(self, owner_id: str, bot_id: str, error: BotError) -> None:
+        try:
+            key = self._composite_key(owner_id, bot_id)
+            await self._bot_errors_store.push(key, error)
+            if self.error_callback is not None:
+                alert_chat_id = await self._alert_chat_store.load(key)
+                if alert_chat_id is not None:
+                    await self.error_callback(
+                        BotErrorContext(
+                            owner_id=owner_id,
+                            bot_id=bot_id,
+                            alert_chat_id=alert_chat_id,
+                            error=error,
+                        )
+                    )
+        except Exception:
+            logger.exception(f"Error processing error: {owner_id=} {bot_id=} {error=}")
 
-    async def save_error(self, owner_id: str, bot_id: str, e: BotError) -> int:
-        return await self._bot_errors_store.push(
-            key=self._error_store_key(owner_id, bot_id),
-            item=e,
-            reset_ttl=False,
-        )
-
-    def instrument(self, logger: logging.Logger, owner_id: str, bot_id: str) -> None:
-        logger.addHandler(
-            StoringErrorsLogHandler(
-                store=self,
-                owner_id=owner_id,
-                bot_id=bot_id,
-            )
-        )
+    def instrument(self, li: logging.Logger, owner_id: str, bot_id: str) -> None:
+        li.addHandler(_LogHandler(store=self, owner_id=owner_id, bot_id=bot_id))
 
     async def load_errors(self, username: str, bot_id: str, offset: int, count: int) -> list[BotError]:
         start, end = page_params_to_redis_indices(offset, count)
         return (
             await self._bot_errors_store.slice(
-                key=self._error_store_key(username, bot_id),
+                key=self._composite_key(username, bot_id),
                 start=start,
                 end=end,
             )

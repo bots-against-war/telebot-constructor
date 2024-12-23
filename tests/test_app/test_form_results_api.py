@@ -242,13 +242,8 @@ async def test_form_results_api(
             "display_name": "my test bot",
             "forms_with_responses": [],
             "last_errors": [],
-            "last_events": [{"event": "started", "timestamp": RECENT_TIMESTAMP, "username": "no-auth", "version": 0}],
-            "last_versions": [
-                {
-                    "metadata": {"message": "init", "timestamp": RECENT_TIMESTAMP, "author_username": "no-auth"},
-                    "version": 0,
-                }
-            ],
+            "last_events": [],
+            "last_versions": [],
             "running_version": 0,
             "admin_chat_ids": [],
         },
@@ -282,13 +277,8 @@ async def test_form_results_api(
             "display_name": "my test bot",
             "forms_with_responses": [],
             "last_errors": [],
-            "last_events": [{"event": "started", "timestamp": RECENT_TIMESTAMP, "username": "no-auth", "version": 0}],
-            "last_versions": [
-                {
-                    "metadata": {"message": "init", "timestamp": RECENT_TIMESTAMP, "author_username": "no-auth"},
-                    "version": 0,
-                }
-            ],
+            "last_events": [],
+            "last_versions": [],
             "running_version": 0,
             "admin_chat_ids": [],
         },

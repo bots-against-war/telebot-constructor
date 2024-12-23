@@ -151,18 +151,27 @@ class TelebotConstructorStore:
         return await self._display_names_store.get_subkey(username, bot_id)
 
     async def load_bot_info(self, username: str, bot_id: str, detailed: bool) -> Optional[BotInfo]:
-        INCLUDE_LAST_EVENTS = 5 if detailed else 1
-        INCLUDE_LAST_VERSIONS = 3 if detailed else 1
-        INCLUDE_LAST_ERRORS = 5 if detailed else 0
+        INCLUDE_LAST_EVENTS = 5
+        INCLUDE_LAST_VERSIONS = 3
+        INCLUDE_LAST_ERRORS = 5
 
         running_version = await self.get_bot_running_version(username, bot_id)
         if running_version == "stub":
             running_version = None
 
-        version_count = await self.bot_config_version_count(username, bot_id)
-        if version_count == 0:
-            return None
-        min_version = max(version_count - INCLUDE_LAST_VERSIONS, 0)
+        if detailed:
+            version_count = await self.bot_config_version_count(username, bot_id)
+            if version_count == 0:
+                return None
+            min_version = max(version_count - INCLUDE_LAST_VERSIONS, 0)
+            last_versions = await self.load_version_info(
+                username,
+                bot_id,
+                start_version=min_version,
+                end_version=None,
+            )
+        else:
+            last_versions = []
 
         admin_chat_ids: list[str | int] = []
         if detailed and (config := await self.load_bot_config(username, bot_id, version=running_version or -1)):
@@ -181,21 +190,19 @@ class TelebotConstructorStore:
                 )
             )
 
-        last_events = await self._bot_events_store.tail(
-            key=self._composite_key(username, bot_id), start=-INCLUDE_LAST_EVENTS
-        )
+        if detailed:
+            last_events = (
+                await self._bot_events_store.tail(key=self._composite_key(username, bot_id), start=-INCLUDE_LAST_EVENTS)
+            ) or []
+        else:
+            last_events = []
 
         return BotInfo(
             bot_id=bot_id,
             display_name=await self.load_bot_display_name(username, bot_id) or bot_id,
             running_version=running_version,
-            last_versions=await self.load_version_info(
-                username,
-                bot_id,
-                start_version=min_version,
-                end_version=None,
-            ),
-            last_events=last_events or [],
+            last_versions=last_versions,
+            last_events=last_events,
             forms_with_responses=(await self.form_results.list_forms(username, bot_id) if detailed else []),
             last_errors=(
                 await self.errors.load_errors(username, bot_id, offset=0, count=INCLUDE_LAST_ERRORS) if detailed else []

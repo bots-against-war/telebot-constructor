@@ -50,6 +50,7 @@ from telebot_constructor.runners import (
     WebhookAppConstructedBotRunner,
 )
 from telebot_constructor.static import get_prefilled_messages, static_file_content
+from telebot_constructor.store.errors import BotErrorContext
 from telebot_constructor.store.form_results import (
     TIMESTAMP_KEY,
     USER_KEY,
@@ -72,7 +73,7 @@ from telebot_constructor.telegram_files_downloader import (
     InmemoryCacheTelegramFilesDownloader,
     TelegramFilesDownloader,
 )
-from telebot_constructor.utils import page_params_to_redis_indices
+from telebot_constructor.utils import page_params_to_redis_indices, send_telegram_alert
 
 logger = logging.getLogger(__name__)
 
@@ -111,6 +112,7 @@ class TelebotConstructorApp:
 
         self.telegram_files_downloader = telegram_files_downloader or InmemoryCacheTelegramFilesDownloader()
         self.store = TelebotConstructorStore(redis)
+        self.store.errors.error_callback = self.send_alert_on_error
         self.media_store = media_store
         self.group_chat_discovery_handler = GroupChatDiscoveryHandler(
             redis=redis, telegram_files_downloader=self.telegram_files_downloader
@@ -260,18 +262,26 @@ class TelebotConstructorApp:
     # region: bot helpers
     # common tasks with bots / related data
 
-    async def load_bot_config(self, username: str, bot_id: str, version: BotVersion) -> BotConfig:
-        config = await self.store.load_bot_config(username, bot_id, version)
+    async def load_bot_config(self, owner_id: str, bot_id: str, version: BotVersion) -> BotConfig:
+        config = await self.store.load_bot_config(owner_id, bot_id, version)
         if config is None:
             raise web.HTTPNotFound(reason=f"Bot not found: {bot_id!r}")
         return config
 
-    async def _make_bare_bot(self, username: str, bot_id: str) -> AsyncTeleBot:
+    async def _make_bare_bot(self, owner_id: str, bot_id: str) -> AsyncTeleBot:
         return await make_bare_bot(
-            username,
-            bot_config=await self.load_bot_config(username, bot_id, version=-1),
+            owner_id,
+            bot_config=await self.load_bot_config(owner_id, bot_id, version=-1),
             secret_store=self.secret_store,
             _bot_factory=self._bot_factory,
+        )
+
+    async def send_alert_on_error(self, ctx: BotErrorContext) -> None:
+        await send_telegram_alert(
+            errmsg=ctx.error.message,
+            traceback=ctx.error.exc_traceback,
+            bot=await self._make_bare_bot(ctx.owner_id, ctx.bot_id),
+            alerts_chat_id=ctx.alert_chat_id,
         )
 
     async def _construct_bot(self, owner_id: str, bot_id: str, bot_config: BotConfig) -> BotRunner:
