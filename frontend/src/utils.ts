@@ -24,6 +24,14 @@ export function unwrap<T, E = string>(result: Result<T, E>): T {
   }
 }
 
+export function convert<T1, T2, E>(r: Result<T1, E>, converter: (from: T1) => T2): Result<T2, E> {
+  if (r.ok) {
+    return ok(converter(r.data));
+  } else {
+    return r;
+  }
+}
+
 export function getError<E = string>(result: Result<any, E>): E | null {
   if (result.ok) {
     return null;

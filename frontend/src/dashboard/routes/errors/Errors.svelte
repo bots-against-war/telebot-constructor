@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { BotError, BotErrorsPage } from "../../../api/types";
+  import type { BotErrorsPage } from "../../../api/types";
   import Navbar from "../../../components/Navbar.svelte";
   import Page from "../../../components/Page.svelte";
   import PageContent from "../../../components/PageContent.svelte";

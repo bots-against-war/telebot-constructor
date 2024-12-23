@@ -162,10 +162,7 @@ class TelebotConstructorStore:
         version_count = await self.bot_config_version_count(username, bot_id)
         if version_count == 0:
             return None
-        min_version = version_count - INCLUDE_LAST_VERSIONS
-        if running_version is not None:
-            min_version = min(min_version, running_version - 3)
-        min_version = max(min_version, 0)
+        min_version = max(version_count - INCLUDE_LAST_VERSIONS, 0)
 
         admin_chat_ids: list[str | int] = []
         if detailed and (config := await self.load_bot_config(username, bot_id, version=running_version or -1)):
@@ -214,7 +211,9 @@ class TelebotConstructorStore:
             if start_version < 0:
                 start_version = max(total + start_version, 0)
             if end_version is not None and end_version < 0:
-                end_version = max(total + end_version, 0)
+                end_version = total + end_version
+                if end_version < 0:
+                    return []
         logger.info(f"Loading version info from {start_version} to {end_version}")
         key = self._composite_key(username, bot_id)
         raw_versions = (

@@ -16,7 +16,7 @@
 {#await loadFormResultsOrFail()}
   <LoadingScreen />
 {:then page}
-  <Versions {page} offset={DEFAULT_OFFSET} count={DEFAULT_COUNT} />
+  <Versions {page} />
 {:catch error}
   <FatalError {error} />
 {/await}

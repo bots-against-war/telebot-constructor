@@ -1,10 +1,9 @@
 <script lang="ts">
   import { Button, Heading } from "flowbite-svelte";
-  import { ChevronLeftOutline, ChevronRightOutline, RocketSolid } from "flowbite-svelte-icons";
+  import { RocketSolid } from "flowbite-svelte-icons";
   import { getBotVersionsPage } from "../../../api/botInfo";
   import { startBot, stopBot } from "../../../api/lifecycle";
-  import type { BotVersionInfo, BotVersionsPage } from "../../../api/types";
-  import ActionIcon from "../../../components/ActionIcon.svelte";
+  import type { BotVersionsPage } from "../../../api/types";
   import BotVersionInfoBadge from "../../../components/BotVersionInfoBadge.svelte";
   import BreadcrumbDashboard from "../../../components/breadcrumbs/BreadcrumbDashboard.svelte";
   import BreadcrumbHome from "../../../components/breadcrumbs/BreadcrumbHome.svelte";
@@ -13,56 +12,15 @@
   import Navbar from "../../../components/Navbar.svelte";
   import Page from "../../../components/Page.svelte";
   import PageContent from "../../../components/PageContent.svelte";
+  import Pager from "../../../components/Pager.svelte";
   import { studioPath } from "../../../routeUtils";
-  import { getError, getModalOpener } from "../../../utils";
+  import { convert, getModalOpener } from "../../../utils";
 
   export let page: BotVersionsPage;
-  export let offset: number;
-  export let count: number;
 
-  // TODO: package this into a generic pager element!
-  // START OF PAGER LOGIC
-  let botInfo = page.bot_info;
-  let versions = page.versions;
-  let totalVersions = page.total_versions;
-
-  let firstIdx: number;
-  let lastIdx: number;
-  let isStart: boolean;
-  let isEnd: boolean;
-  $: {
-    firstIdx = offset;
-    lastIdx = offset + versions.length - 1;
-    isStart = firstIdx === 0;
-    isEnd = lastIdx >= totalVersions - 1;
-  }
-  async function loadPage(next: boolean) {
-    let sign;
-    if (next) {
-      if (isEnd) return;
-      sign = 1;
-    } else {
-      if (isStart) return;
-      sign = -1;
-    }
-    const newOffset = offset + sign * count;
-
-    const res = await getBotVersionsPage(botInfo.bot_id, newOffset, count);
-    if (res.ok) {
-      offset = newOffset;
-      versions = res.data.versions;
-      totalVersions = res.data.total_versions;
-      botInfo = res.data.bot_info;
-    } else {
-      window.alert("Failed to load page: " + getError(res));
-    }
-  }
-  // END OF PAGER LOGIC
-
-  let lastVersion: number;
-  $: {
-    lastVersion = totalVersions - 1;
-  }
+  const botInfo = page.bot_info;
+  const total = page.total_versions;
+  const lastVersion = page.total_versions - 1;
 
   const open = getModalOpener();
   const publishBot = (verNo: number) => {
@@ -109,50 +67,52 @@
     </Breadcrumbs>
     <Heading tag="h3">История версий</Heading>
 
-    <!-- TODO: move to a generic pager element -->
-    <div class="text-lg pt-4 flex flex-row gap-5">
-      <span>
-        <strong>{totalVersions - lastIdx} - {totalVersions - firstIdx}</strong>
+    <Pager
+      items={page.versions}
+      loader={async (offset, count) =>
+        convert(await getBotVersionsPage(botInfo.bot_id, offset, count), (page) => page.versions)}
+      {total}
+      let:items
+    >
+      <div slot="indices" let:first let:last>
+        <strong>{total - last + 1} - {total - first + 1}</strong>
         из
-        <strong>{totalVersions}</strong>
-      </span>
-      <div>
-        <ActionIcon icon={ChevronLeftOutline} disabled={isStart} on:click={() => loadPage(false)} />
-        <ActionIcon icon={ChevronRightOutline} disabled={isEnd} on:click={() => loadPage(true)} />
+        <strong>{total}</strong>
       </div>
-    </div>
-
-    <ol class="relative border-s border-gray-200 mt-2">
-      {#each versions.toReversed() as ver (ver.version)}
-        <li class="mb-2 ms-3 p-2">
-          {#if ver.version === botInfo.running_version}
-            <div class="absolute w-8 h-8 mt-1 -start-4 text-green-600">
-              <RocketSolid class="w-8 h-8" />
+      <ol class="relative border-s border-gray-200 mt-2">
+        {#each items.toReversed() as ver (ver.version)}
+          <li class="mb-2 ms-3 p-2">
+            {#if ver.version === botInfo.running_version}
+              <div class="absolute w-8 h-8 mt-1 -start-4 text-green-600">
+                <RocketSolid class="w-8 h-8" />
+              </div>
+            {:else}
+              <div class="absolute w-3 h-3 bg-gray-300 rounded-full mt-2.5 -start-1.5 border border-white" />
+            {/if}
+            <div class="flex flex-row gap-4 items-center justify-between">
+              <div class="flex-grow">
+                <BotVersionInfoBadge {ver} carded={false} />
+              </div>
+              <div class="flex flex-row gap-1 items-baseline">
+                {#if ver.version === botInfo.running_version}
+                  <Button size="xs" outline color="red" on:click={stopPuslishedBot}>Остановить</Button>
+                {:else}
+                  <Button size="xs" outline color="primary" on:click={() => publishBot(ver.version)}
+                    >Опубликовать</Button
+                  >
+                {/if}
+                <Button
+                  size="xs"
+                  outline
+                  href={studioPath(botInfo.bot_id, ver.version === lastVersion ? null : ver.version)}
+                >
+                  {ver.version === lastVersion ? "Редактировать" : "Посмотреть"}
+                </Button>
+              </div>
             </div>
-          {:else}
-            <div class="absolute w-3 h-3 bg-gray-300 rounded-full mt-2.5 -start-1.5 border border-white" />
-          {/if}
-          <div class="flex flex-row gap-4 items-center justify-between">
-            <div class="flex-grow">
-              <BotVersionInfoBadge {ver} carded={false} />
-            </div>
-            <div class="flex flex-row gap-1 items-baseline">
-              {#if ver.version === botInfo.running_version}
-                <Button size="xs" outline color="red" on:click={stopPuslishedBot}>Остановить</Button>
-              {:else}
-                <Button size="xs" outline color="primary" on:click={() => publishBot(ver.version)}>Опубликовать</Button>
-              {/if}
-              <Button
-                size="xs"
-                outline
-                href={studioPath(botInfo.bot_id, ver.version === lastVersion ? null : ver.version)}
-              >
-                {ver.version === lastVersion ? "Редактировать" : "Посмотреть"}
-              </Button>
-            </div>
-          </div>
-        </li>
-      {/each}
-    </ol>
+          </li>
+        {/each}
+      </ol>
+    </Pager>
   </PageContent>
 </Page>
