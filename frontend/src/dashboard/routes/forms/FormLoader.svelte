@@ -8,11 +8,9 @@
   export let botId: string;
   export let formBlockId: string;
 
-  // TODO: configurable from query params
-  const DEFAULT_OFFSET = 0;
-  const DEFAULT_COUNT = 30;
-  const loadFormResultsOrFail = async () =>
-    unwrap(await loadFormResults(botId, formBlockId, DEFAULT_OFFSET, DEFAULT_COUNT));
+  const offset = 0;
+  const count = 30;
+  const loadFormResultsOrFail = async () => unwrap(await loadFormResults(botId, formBlockId, offset, count));
 </script>
 
 {#await loadFormResultsOrFail()}

@@ -7,10 +7,9 @@
 
   export let botId: string;
 
-  // TODO: configurable from query params
-  const DEFAULT_OFFSET = 0;
-  const DEFAULT_COUNT = 20;
-  const loadFormResultsOrFail = async () => unwrap(await getBotVersionsPage(botId, DEFAULT_OFFSET, DEFAULT_COUNT));
+  const offset = 0;
+  const count = 20;
+  const loadFormResultsOrFail = async () => unwrap(await getBotVersionsPage(botId, offset, count));
 </script>
 
 {#await loadFormResultsOrFail()}

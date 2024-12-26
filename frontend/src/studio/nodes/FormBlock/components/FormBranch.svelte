@@ -264,7 +264,6 @@
   </div>
 </FormMemberFrame>
 
-<!-- TODO: move at least some of the styles to tailwind classes -->
 <style>
   div.conditional-branch-container {
     border-left: 2px white solid;

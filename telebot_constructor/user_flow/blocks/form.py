@@ -473,8 +473,6 @@ class FormBlock(UserFlowBlock):
                 except Exception:
                     self._logger.exception(f"Error saving form result to internal storage: {result}")
 
-            # TODO: more result export options: Airtable, Google Sheets, Trello, etc
-
             if self.form_completed_next_block_id is not None:
                 await context.enter_block(
                     self.form_completed_next_block_id,
@@ -482,7 +480,6 @@ class FormBlock(UserFlowBlock):
                 )
 
         async def on_form_cancelled(form_exit_context: ComponentsFormExitContext):
-            # TODO: maybe save not completed form in a separate storage?
             if self.form_cancelled_next_block_id is not None:
                 await context.enter_block(
                     self.form_cancelled_next_block_id,
