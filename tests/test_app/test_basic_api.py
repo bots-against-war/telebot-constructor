@@ -82,6 +82,7 @@ async def test_bot_config(
             "forms_with_responses": [],
             "last_errors": [],
             "admin_chat_ids": [],
+            "alert_chat_id": None,
         }
     ]
     bot_created_event = resp_json_1[0]["last_events"][0]  # type: ignore
@@ -116,6 +117,7 @@ async def test_bot_config(
             "forms_with_responses": [],
             "last_errors": [],
             "admin_chat_ids": [],
+            "alert_chat_id": None,
         }
     ]
     bot_started_event = resp_json_2[0]["last_events"][1]  # type: ignore
@@ -207,6 +209,7 @@ async def test_bot_config(
         "forms_with_responses": [],
         "last_errors": [],
         "admin_chat_ids": [],
+        "alert_chat_id": None,
     }
     bot_edited_event, bot_stopped_event, bot_started_again_event = resp_json_3["last_events"][2:]  # type: ignore
 
@@ -246,6 +249,7 @@ async def test_bot_config(
         "forms_with_responses": [],
         "last_errors": [],
         "admin_chat_ids": [],
+        "alert_chat_id": None,
     }
 
     # let's delete this bot for good
@@ -351,5 +355,6 @@ async def test_admin_chat_ids(
             "forms_with_responses": [],
             "last_errors": [],
             "admin_chat_ids": [987654321],
+            "alert_chat_id": None,
         }
     ]

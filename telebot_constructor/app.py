@@ -153,7 +153,7 @@ class TelebotConstructorApp:
     ) -> BotAccessAuthorization:
         actor_username = await self.authenticate(request)
         bot_id = for_bot_id or self.parse_bot_id(request)
-        owner_username = await self.store.load_owner_username(actor_username, bot_id)
+        owner_username = await self.store.load_owner_id(actor_username, bot_id)
         if owner_username is None:
             if bot_must_exist:
                 raise web.HTTPNotFound(reason=f'Bot "{bot_id}" does not exist')
@@ -166,7 +166,7 @@ class TelebotConstructorApp:
         )
 
     async def load_nondetailed_bot_info(self, a: BotAccessAuthorization) -> BotInfo:
-        res = await self.store.load_bot_info(username=a.owner_username, bot_id=a.bot_id, detailed=False)
+        res = await self.store.load_bot_info(owner_id=a.owner_username, bot_id=a.bot_id, detailed=False)
         if res is None:
             raise web.HTTPNotFound(reason=f'Bot "{a.bot_id}" does not exist')
         return res

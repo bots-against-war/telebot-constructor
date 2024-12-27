@@ -86,15 +86,12 @@ class BotErrorsStore:
             loader=BotError.model_validate_json,
             dumper=BotError.model_dump_json,
         )
-        self._alert_chat_store = KeyValueStore[str](
+        self._alert_chat_store = KeyValueStore[str | int](
             name="alert-chat",
             prefix=self.STORE_PREFIX,
             redis=redis,
             expiration_time=None,
-            loader=str,
-            dumper=str,
         )
-        # TODO: get and load methods for alert chat + API + return it with detailed bot info
         self.error_callback: BotErrorCallback | None = None
 
     def _composite_key(self, owner_id: str, bot_id: str) -> str:
@@ -138,6 +135,12 @@ class BotErrorsStore:
             )
             or []
         )
+
+    async def load_alert_chat_id(self, owner_id: str, bot_id: str) -> int | str | None:
+        return await self._alert_chat_store.load(key=self._composite_key(owner_id, bot_id))
+
+    async def save_alert_chat_id(self, owner_id: str, bot_id: str, chat_id: int | str) -> bool:
+        return await self._alert_chat_store.save(key=self._composite_key(owner_id, bot_id), value=chat_id)
 
 
 @dataclass

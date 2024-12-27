@@ -159,6 +159,7 @@ class BotInfo(BaseModel):
     forms_with_responses: list[FormInfoBasic]
     last_errors: list[BotError]
     admin_chat_ids: list[str | int]
+    alert_chat_id: str | int | None
 
 
 BotInfoList = TypeAdapter(list[BotInfo])

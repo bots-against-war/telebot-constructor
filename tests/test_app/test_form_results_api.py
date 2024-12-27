@@ -123,6 +123,7 @@ async def test_form_results_api(
         "forms_with_responses": [],
         "last_errors": [],
         "admin_chat_ids": [],
+        "alert_chat_id": None,
     }
 
     assert isinstance(constructor.runner, MockBotRunner)
@@ -204,6 +205,7 @@ async def test_form_results_api(
         ],
         "last_errors": [],
         "admin_chat_ids": [],
+        "alert_chat_id": None,
     }
 
     # finally, calling the form results api to get user's responses
@@ -246,6 +248,7 @@ async def test_form_results_api(
             "last_versions": [],
             "running_version": 0,
             "admin_chat_ids": [],
+            "alert_chat_id": None,
         },
     }
 
@@ -281,6 +284,7 @@ async def test_form_results_api(
             "last_versions": [],
             "running_version": 0,
             "admin_chat_ids": [],
+            "alert_chat_id": None,
         },
     }
 
