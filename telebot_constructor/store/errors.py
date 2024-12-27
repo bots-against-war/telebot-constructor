@@ -41,21 +41,31 @@ class BotError(pydantic.BaseModel):
         )
 
 
-class _LogHandler(logging.Handler):
+class BotErrorsStoreLogHandler(logging.Handler):
     def __init__(self, store: "BotErrorsStore", owner_id: str, bot_id: str) -> None:
+        self.store = store
+        self.owner_id = owner_id
+        self.bot_id = bot_id
         logging.Handler.__init__(self, level=logging.ERROR)
-        self._store = store
-        self._owner_id = owner_id
-        self._bot_id = bot_id
         self._tasks: set[asyncio.Task[Any]] = set()
+
+    def __eq__(self, other: Any) -> bool:
+        return (
+            isinstance(other, BotErrorsStoreLogHandler)
+            and self.owner_id == other.owner_id
+            and self.bot_id == other.bot_id
+        )
+
+    def __hash__(self) -> int:
+        return hash((self.__class__.__name__, self.owner_id, self.bot_id))
 
     def emit(self, record: Any) -> None:
         if not isinstance(record, logging.LogRecord):
             return
         task = asyncio.create_task(
-            self._store.process_error(
-                owner_id=self._owner_id,
-                bot_id=self._bot_id,
+            self.store.process_error(
+                owner_id=self.owner_id,
+                bot_id=self.bot_id,
                 error=BotError.from_log_record(record),
             )
         )
@@ -123,7 +133,15 @@ class BotErrorsStore:
             logger.exception(f"Error processing error: {owner_id=} {bot_id=} {error=}")
 
     def instrument(self, li: logging.Logger, owner_id: str, bot_id: str) -> None:
-        li.addHandler(_LogHandler(store=self, owner_id=owner_id, bot_id=bot_id))
+        handler = BotErrorsStoreLogHandler(store=self, owner_id=owner_id, bot_id=bot_id)
+        if any(isinstance(h, BotErrorsStoreLogHandler) and h != handler for h in li.handlers):
+            logger.error(
+                f"Attempt to instrument logger {li.name!r} that is already instrumented for another bot! "
+                + "Removing all instrumentation to prevent data leak."
+            )
+            li.handlers = [h for h in li.handlers if not isinstance(h, BotErrorsStoreLogHandler)]
+        else:
+            li.addHandler(handler)
 
     async def load_errors(self, username: str, bot_id: str, offset: int, count: int) -> list[BotError]:
         start, end = page_params_to_redis_indices(offset, count)

@@ -35,7 +35,11 @@ async def make_bare_bot(
     token = await secret_store.get_secret(secret_name=bot_config.token_secret_name, owner_id=owner_id)
     if token is None:
         raise ValueError(f"Token name {bot_config.token_secret_name!r} does not correspond to a valid secret")
-    return _bot_factory(token, update_metrics_handler=update_metrics_handler, log_marker=log_prefix(owner_id, bot_id))
+    return _bot_factory(
+        token,
+        update_metrics_handler=update_metrics_handler,
+        log_marker=log_prefix(owner_id, bot_id).strip("[]"),
+    )
 
 
 async def construct_bot(
