@@ -176,6 +176,11 @@ class StartBotPayload(BaseModel):
     version: int  # passed directly to versioned store, i.e. values like -1 are supported
 
 
+class SetAlertChatIdPayload(BaseModel):
+    alert_chat_id: int
+    test: bool
+
+
 class FormResultsPage(BaseModel):
     bot_info: BotInfo
     info: FormInfo

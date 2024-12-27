@@ -215,3 +215,7 @@ async def send_telegram_alert(errmsg: str, traceback: str | None, bot: AsyncTele
                 await bot.send_message(chat_id=alerts_chat_id, text=header + "\n\n⚠️ Failed to send alert")
             except Exception:
                 pass
+
+
+def log_prefix(owner_id: str, bot_id: str) -> str:
+    return f"[{owner_id}/{bot_id}]"
