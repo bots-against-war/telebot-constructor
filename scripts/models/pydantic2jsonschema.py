@@ -19,6 +19,7 @@ from telebot_constructor.app_models import (
     FormResultsPage,
     LoggedInUser,
     SaveBotConfigVersionPayload,
+    SetAlertChatIdPayload,
     StartBotPayload,
     TgBotUser,
     TgBotUserUpdate,
@@ -61,6 +62,7 @@ if __name__ == "__main__":
         form_results_page: FormResultsPage
         bot_errors_page: BotErrorsPage
         bot_versions_page: BotVersionsPage
+        alert_chat_id_payload: SetAlertChatIdPayload
 
     current_schema = BackendDataModels.model_json_schema(
         mode="serialization",

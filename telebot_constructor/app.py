@@ -9,6 +9,7 @@ import re
 from dataclasses import dataclass
 from io import StringIO
 from pathlib import Path
+import time
 from typing import Optional, Type, TypeVar
 
 import pydantic
@@ -51,7 +52,7 @@ from telebot_constructor.runners import (
     WebhookAppConstructedBotRunner,
 )
 from telebot_constructor.static import get_prefilled_messages, static_file_content
-from telebot_constructor.store.errors import BotErrorContext
+from telebot_constructor.store.errors import BotError, BotErrorContext
 from telebot_constructor.store.form_results import (
     TIMESTAMP_KEY,
     USER_KEY,
@@ -869,7 +870,7 @@ class TelebotConstructorApp:
 
         # endregion
         ##################################################################################
-        # region bot metrics and errors
+        # region error reporting
 
         @routes.get("/api/errors/{bot_id}")
         async def get_bot_errors(request: web.Request) -> web.Response:
@@ -908,6 +909,14 @@ class TelebotConstructorApp:
             )
             if not res:
                 raise web.HTTPInternalServerError(reason="Failed to save alert chat id to the store")
+            if payload.test:
+                res = await self.store.errors.process_error(
+                    owner_id=a.owner_id,
+                    bot_id=a.bot_id,
+                    error=BotError(timestamp=time.time(), message="Alert chat test", exc_type=None, exc_traceback=None),
+                )
+                if not res:
+                    raise web.HTTPServerError(reason="Alert chat test failed")
             return web.Response(text="OK")
 
         # endregion

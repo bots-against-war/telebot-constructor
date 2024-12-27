@@ -244,6 +244,7 @@ export type ExcType = string | null;
 export type ExcTraceback = string | null;
 export type LastErrors = BotError[];
 export type AdminChatIds = (string | number)[];
+export type AlertChatId = string | number | null;
 export type VersionMessage = string | null;
 export type Start = boolean;
 export type DisplayName2 = string | null;
@@ -258,6 +259,8 @@ export type Results = {
 export type Errors = BotError[];
 export type Versions = BotVersionInfo[];
 export type TotalVersions = number;
+export type AlertChatId1 = number;
+export type Test = boolean;
 
 /**
  * Temporary class to pack several models into one schema; not used directly by frontend code
@@ -278,6 +281,7 @@ export interface BackendDataModels {
   form_results_page: FormResultsPage;
   bot_errors_page: BotErrorsPage;
   bot_versions_page: BotVersionsPage;
+  alert_chat_id_payload: SetAlertChatIdPayload;
   [k: string]: unknown;
 }
 export interface BotConfig {
@@ -611,6 +615,7 @@ export interface BotInfo {
   forms_with_responses: FormsWithResponses;
   last_errors: LastErrors;
   admin_chat_ids: AdminChatIds;
+  alert_chat_id: AlertChatId;
   [k: string]: unknown;
 }
 export interface BotVersionInfo {
@@ -701,5 +706,10 @@ export interface BotVersionsPage {
   bot_info: BotInfo;
   versions: Versions;
   total_versions: TotalVersions;
+  [k: string]: unknown;
+}
+export interface SetAlertChatIdPayload {
+  alert_chat_id: AlertChatId1;
+  test?: Test;
   [k: string]: unknown;
 }

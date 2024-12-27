@@ -114,7 +114,7 @@ class BotErrorsStore:
             bot_id=bot_id,
         )
 
-    async def process_error(self, owner_id: str, bot_id: str, error: BotError) -> None:
+    async def process_error(self, owner_id: str, bot_id: str, error: BotError) -> bool:
         try:
             key = self._composite_key(owner_id, bot_id)
             await self._bot_errors_store.push(key, error)
@@ -129,8 +129,10 @@ class BotErrorsStore:
                             error=error,
                         )
                     )
+            return True
         except Exception:
             logger.exception(f"Error processing error: {owner_id=} {bot_id=} {error=}")
+            return False
 
     def instrument(self, li: logging.Logger, owner_id: str, bot_id: str) -> None:
         handler = BotErrorsStoreLogHandler(store=self, owner_id=owner_id, bot_id=bot_id)

@@ -178,7 +178,7 @@ class StartBotPayload(BaseModel):
 
 class SetAlertChatIdPayload(BaseModel):
     alert_chat_id: int
-    test: bool
+    test: bool = False
 
 
 class FormResultsPage(BaseModel):
