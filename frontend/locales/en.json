@@ -7,21 +7,21 @@
     "title": "My bots",
     "create": "Create",
     "newbot": {
-      "bot_name_cannot_be_empty_error": "Bot name can't be empy",
+      "bot_name_cannot_be_empty_error": "Bot name can't be empty",
       "botname": "Name",
-      "botname_description": "This is bot's name inside the Constructor. It is not visivle to users and can be changed later.",
+      "botname_description": "Bot name inside the Constructor. It is not visible to users and can be changed later.",
       "botname_placeholder": "Volunteer bot",
       "failed_to_save_token_error": "Error saving token",
       "generic_error": "Error",
-      "generic_saving_error": "Unknown error",
+      "generic_saving_error": "Error creating bot",
       "howto": {
         "p1": "To create bot:",
-        "p2": "Use a dedicated Telegram-bot",
-        "p3": "Enter command",
-        "p4": "Give a name and a @username to the bot",
-        "p5": "Copy a token provided by BotFather"
+        "p2": "Go to",
+        "p3": "Enter",
+        "p4": "Give the bot a name and @username",
+        "p5": "Copy your bot's token"
       },
-      "incorrect_token_error": "Check token",
+      "incorrect_token_error": "Check token validity",
       "start_cmd_description": "start bot",
       "token": "Token",
       "token_cannot_be_empty_error": "Token can't be empty"

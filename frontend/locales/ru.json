@@ -22,7 +22,7 @@
       "incorrect_token_error": "Проверьте корректность токена",
       "failed_to_save_token_error": "Не получилось сохранить токен",
       "start_cmd_description": "начало работы",
-      "generic_saving_error": "Ошибка сохранения",
+      "generic_saving_error": "Ошибка при создании бота",
       "bot_name_cannot_be_empty_error": "Имя бота не может быть пустым",
       "token": "Токен",
       "token_cannot_be_empty_error": "Токен не может быть пустым",
@@ -31,7 +31,7 @@
         "p2": "Зайдите в специального Telegram-бота",
         "p3": "Введите команду",
         "p4": "Дайте боту имя и @username",
-        "p5": "Скопируйте токен вашего бота из сообщения BotFather"
+        "p5": "Скопируйте токен вашего бота"
       },
       "generic_error": "Ошибка"
     }
