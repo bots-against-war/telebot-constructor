@@ -1,4 +1,4 @@
-import { type Result, toStringResult, toTrivialResult } from "../utils";
+import { toStringResult, toTrivialResult, type Result } from "../utils";
 import { apiUrl } from "./config";
 import { fetchApi } from "./utils";
 

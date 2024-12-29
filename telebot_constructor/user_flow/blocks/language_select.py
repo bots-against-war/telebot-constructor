@@ -72,6 +72,7 @@ class LanguageSelectBlock(UserFlowBlock):
                 is_prompt_html=True,
             ),
         )
+        context.errors_store.instrument(self._language_store.logger)
 
         async def on_language_change(lang_change_context: LanguageChangeContext) -> None:
             if self.language_selected_next_block_id is not None:

@@ -8,8 +8,8 @@ from telebot import AsyncTeleBot
 from telebot import types as tg
 
 from telebot_constructor.bot_config import BotConfig
+from telebot_constructor.store.errors import BotError
 from telebot_constructor.store.form_results import FormInfo, FormInfoBasic, FormResult
-from telebot_constructor.store.metrics import BotError
 from telebot_constructor.store.types import BotConfigVersionMetadata, BotEvent
 from telebot_constructor.telegram_files_downloader import TelegramFilesDownloader
 from telebot_constructor.utils.rate_limit_retry import rate_limit_retry
@@ -154,11 +154,13 @@ class BotInfo(BaseModel):
     bot_id: str  # internal constructor bot id
     display_name: str  # user-facing name
     running_version: Optional[int]  # None = bot not running
+    running_version_info: Optional[BotVersionInfo]  # None = bot not running
     last_versions: list[BotVersionInfo]  # versions, including last and running (if present) versions
     last_events: list[BotEvent]
     forms_with_responses: list[FormInfoBasic]
     last_errors: list[BotError]
     admin_chat_ids: list[str | int]
+    alert_chat_id: str | int | None
 
 
 BotInfoList = TypeAdapter(list[BotInfo])
@@ -175,6 +177,11 @@ class StartBotPayload(BaseModel):
     version: int  # passed directly to versioned store, i.e. values like -1 are supported
 
 
+class SetAlertChatIdPayload(BaseModel):
+    alert_chat_id: int | str
+    test: bool = False
+
+
 class FormResultsPage(BaseModel):
     bot_info: BotInfo
     info: FormInfo
@@ -182,6 +189,7 @@ class FormResultsPage(BaseModel):
 
 
 class BotErrorsPage(BaseModel):
+    bot_info: BotInfo
     errors: list[BotError]
 
 

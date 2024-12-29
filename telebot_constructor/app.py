@@ -24,12 +24,14 @@ from telebot_components.utils.secrets import SecretStore
 
 from telebot_constructor.app_models import (
     BotErrorsPage,
+    BotInfo,
     BotInfoList,
     BotTokenPayload,
     BotVersionsPage,
     FormResultsPage,
     LoggedInUser,
     SaveBotConfigVersionPayload,
+    SetAlertChatIdPayload,
     StartBotPayload,
     TgBotUser,
     TgBotUserUpdate,
@@ -49,6 +51,7 @@ from telebot_constructor.runners import (
     WebhookAppConstructedBotRunner,
 )
 from telebot_constructor.static import get_prefilled_messages, static_file_content
+from telebot_constructor.store.errors import BotError, BotErrorContext
 from telebot_constructor.store.form_results import (
     TIMESTAMP_KEY,
     USER_KEY,
@@ -71,7 +74,11 @@ from telebot_constructor.telegram_files_downloader import (
     InmemoryCacheTelegramFilesDownloader,
     TelegramFilesDownloader,
 )
-from telebot_constructor.utils import page_params_to_redis_indices
+from telebot_constructor.utils import (
+    log_prefix,
+    page_params_to_redis_indices,
+    send_telegram_alert,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -84,8 +91,8 @@ class BotAccessAuthorization:
     """Access granted to an actor to a bot"""
 
     bot_id: str
-    actor_username: str
-    owner_username: str
+    actor_id: str
+    owner_id: str
 
 
 class TelebotConstructorApp:
@@ -110,6 +117,7 @@ class TelebotConstructorApp:
 
         self.telegram_files_downloader = telegram_files_downloader or InmemoryCacheTelegramFilesDownloader()
         self.store = TelebotConstructorStore(redis)
+        self.store.errors.error_callback = self.send_alert_on_error
         self.media_store = media_store
         self.group_chat_discovery_handler = GroupChatDiscoveryHandler(
             redis=redis, telegram_files_downloader=self.telegram_files_downloader
@@ -148,19 +156,25 @@ class TelebotConstructorApp:
         bot_must_exist: bool = True,
         for_bot_id: str | None = None,
     ) -> BotAccessAuthorization:
-        actor_username = await self.authenticate(request)
+        actor_id = await self.authenticate(request)
         bot_id = for_bot_id or self.parse_bot_id(request)
-        owner_username = await self.store.load_owner_username(actor_username, bot_id)
-        if owner_username is None:
+        owner_id = await self.store.load_owner_id(actor_id, bot_id)
+        if owner_id is None:
             if bot_must_exist:
                 raise web.HTTPNotFound(reason=f'Bot "{bot_id}" does not exist')
             else:
-                owner_username = actor_username
+                owner_id = actor_id
         return BotAccessAuthorization(
             bot_id=bot_id,
-            actor_username=actor_username,
-            owner_username=owner_username,
+            actor_id=actor_id,
+            owner_id=owner_id,
         )
+
+    async def load_nondetailed_bot_info(self, a: BotAccessAuthorization) -> BotInfo:
+        res = await self.store.load_bot_info(owner_id=a.owner_id, bot_id=a.bot_id, detailed=False)
+        if res is None:
+            raise web.HTTPNotFound(reason=f'Bot "{a.bot_id}" does not exist')
+        return res
 
     # used for bot user and bot names
     VALID_NAME_RE = re.compile(r"^[0-9a-zA-Z\-_]{3,64}$")
@@ -243,7 +257,7 @@ class TelebotConstructorApp:
             # if bot id header is present, attempt to save media to bot owner's store to make sure
             # the bot has access to it later
             a = await self.authorize(request, for_bot_id=bot_id)
-            return a.owner_username
+            return a.owner_id
         else:
             # otherwise, use this user's store
             return await self.authenticate(request)
@@ -253,18 +267,28 @@ class TelebotConstructorApp:
     # region: bot helpers
     # common tasks with bots / related data
 
-    async def load_bot_config(self, username: str, bot_id: str, version: BotVersion) -> BotConfig:
-        config = await self.store.load_bot_config(username, bot_id, version)
+    async def load_bot_config(self, owner_id: str, bot_id: str, version: BotVersion) -> BotConfig:
+        config = await self.store.load_bot_config(owner_id, bot_id, version)
         if config is None:
             raise web.HTTPNotFound(reason=f"Bot not found: {bot_id!r}")
         return config
 
-    async def _make_bare_bot(self, username: str, bot_id: str) -> AsyncTeleBot:
+    async def _make_bare_bot(self, owner_id: str, bot_id: str) -> AsyncTeleBot:
         return await make_bare_bot(
-            username,
-            bot_config=await self.load_bot_config(username, bot_id, version=-1),
+            owner_id=owner_id,
+            bot_id=bot_id,
+            bot_config=await self.load_bot_config(owner_id, bot_id, version=-1),
             secret_store=self.secret_store,
             _bot_factory=self._bot_factory,
+        )
+
+    async def send_alert_on_error(self, ctx: BotErrorContext) -> None:
+        await send_telegram_alert(
+            message=ctx.error.message,
+            error_data=ctx.error.exc_data,
+            traceback=ctx.error.exc_traceback,
+            bot=await self._make_bare_bot(ctx.owner_id, ctx.bot_id),
+            alerts_chat_id=ctx.alert_chat_id,
         )
 
     async def _construct_bot(self, owner_id: str, bot_id: str, bot_config: BotConfig) -> BotRunner:
@@ -277,7 +301,10 @@ class TelebotConstructorApp:
                 owner_id=owner_id,
                 bot_id=bot_id,
             ),
-            metrics_store=self.store.metrics,
+            errors_store=self.store.errors.adapter_for(
+                owner_id=owner_id,
+                bot_id=bot_id,
+            ),
             redis=self.redis,
             group_chat_discovery_handler=self.group_chat_discovery_handler,
             media_store=self.media_store.adapter_for(owner_id) if self.media_store else None,
@@ -286,27 +313,27 @@ class TelebotConstructorApp:
 
     def _log_prefix(
         self,
-        username: str,
+        owner_id: str,
         bot_id: str,
         version: BotVersion | None = None,
-        actor_username: str | None = None,
+        actor_id: str | None = None,
     ) -> str:
-        prefix = f"[{username}][{bot_id}]"
+        prefix = log_prefix(owner_id, bot_id)
         if version is not None:
             prefix += f"[v{version}]"
-        if actor_username is not None and actor_username != username:
-            prefix += f"[by {actor_username}]"
+        if actor_id is not None and actor_id != owner_id:
+            prefix += f"[by {actor_id}]"
         return prefix
 
     async def stop_bot(self, a: BotAccessAuthorization) -> bool:
-        log_prefix = self._log_prefix(a.owner_username, a.bot_id, actor_username=a.actor_username)
-        if await self.runner.stop(a.owner_username, a.bot_id):
+        log_prefix = self._log_prefix(a.owner_id, a.bot_id, actor_id=a.actor_id)
+        if await self.runner.stop(a.owner_id, a.bot_id):
             logger.info(f"{log_prefix} Stopped bot")
-            await self.store.set_bot_not_running(a.owner_username, a.bot_id)
+            await self.store.set_bot_not_running(a.owner_id, a.bot_id)
             await self.store.save_event(
-                a.owner_username,
+                a.owner_id,
                 a.bot_id,
-                event=BotStoppedEvent(username=a.actor_username, event="stopped"),
+                event=BotStoppedEvent(username=a.actor_id, event="stopped"),
             )
             return True
         else:
@@ -319,31 +346,31 @@ class TelebotConstructorApp:
         version: BotVersion,
     ) -> None:
         """Start a specific version of the bot; this method must be initiated by an authorized user"""
-        bot_config = await self.load_bot_config(a.owner_username, a.bot_id, version)
-        log_prefix = self._log_prefix(a.owner_username, a.bot_id, version=version, actor_username=a.actor_username)
+        bot_config = await self.load_bot_config(a.owner_id, a.bot_id, version)
+        log_prefix = self._log_prefix(a.owner_id, a.bot_id, version=version, actor_id=a.actor_id)
         logger.info(f"{log_prefix} (Re)starting bot")
         await self.stop_bot(a)
         try:
             bot_runner = await self._construct_bot(
-                owner_id=a.owner_username,
+                owner_id=a.owner_id,
                 bot_id=a.bot_id,
                 bot_config=bot_config,
             )
         except Exception as e:
             logger.exception(f"{log_prefix} Error constructing bot")
-            await self.store.set_bot_not_running(a.owner_username, a.bot_id)
+            await self.store.set_bot_not_running(a.owner_id, a.bot_id)
             raise web.HTTPBadRequest(reason=str(e))
-        if not await self.runner.start(username=a.owner_username, bot_id=a.bot_id, bot_runner=bot_runner):
-            await self.store.set_bot_not_running(a.owner_username, a.bot_id)
+        if not await self.runner.start(owner_id=a.owner_id, bot_id=a.bot_id, bot_runner=bot_runner):
+            await self.store.set_bot_not_running(a.owner_id, a.bot_id)
             logger.error(f"{log_prefix} Bot failed to start")
             raise web.HTTPInternalServerError(reason="Failed to start bot")
         logger.info(f"{log_prefix} Bot started OK!")
-        await self.store.set_bot_running_version(a.owner_username, a.bot_id, version=version)
+        await self.store.set_bot_running_version(a.owner_id, a.bot_id, version=version)
         await self.store.save_event(
-            a.owner_username,
+            a.owner_id,
             a.bot_id,
             event=BotStartedEvent(
-                username=a.actor_username,
+                username=a.actor_id,
                 event="started",
                 version=version,
             ),
@@ -369,7 +396,7 @@ class TelebotConstructorApp:
                 "201":
                     description: Success
             """
-            username = await self.authenticate(request)
+            owner_id = await self.authenticate(request)
             secret_name = self.parse_secret_name(request)
             secret_value = await request.text()
             if not secret_value:
@@ -377,7 +404,7 @@ class TelebotConstructorApp:
             result = await self.secret_store.save_secret(
                 secret_name=secret_name,
                 secret_value=secret_value,
-                owner_id=username,
+                owner_id=owner_id,
                 allow_update=True,
             )
             return web.Response(text=result.message, status=200 if result.is_saved else 400)
@@ -391,11 +418,11 @@ class TelebotConstructorApp:
                 "201":
                     description: Success
             """
-            username = await self.authenticate(request)
+            owner_id = await self.authenticate(request)
             secret_name = self.parse_secret_name(request)
             if await self.secret_store.remove_secret(
                 secret_name=secret_name,
-                owner_id=username,
+                owner_id=owner_id,
             ):
                 return web.Response(text="Removed", status=200)
             else:
@@ -412,8 +439,8 @@ class TelebotConstructorApp:
                 "201":
                     description: List of string secret names
             """
-            username = await self.authenticate(request)
-            secret_names = await self.secret_store.list_secrets(owner_id=username)
+            owner_id = await self.authenticate(request)
+            secret_names = await self.secret_store.list_secrets(owner_id=owner_id)
             return web.json_response(data=secret_names)
 
         # endregion
@@ -434,32 +461,32 @@ class TelebotConstructorApp:
                     description: Bot config is updated, the old version of config is returned
             """
             a = await self.authorize(request, bot_must_exist=False)
-            existing_bot_config = await self.store.load_bot_config(a.owner_username, a.bot_id)
+            existing_bot_config = await self.store.load_bot_config(a.owner_id, a.bot_id)
             payload = await self.parse_body_as_model(request, SaveBotConfigVersionPayload)
             await self.store.save_bot_config(
-                a.owner_username,
+                a.owner_id,
                 a.bot_id,
                 config=payload.config,
                 meta=BotConfigVersionMetadata(
                     message=payload.version_message,
-                    author_username=a.actor_username,
+                    author_username=a.actor_id,
                 ),
             )
 
-            new_bot_version_count = await self.store.bot_config_version_count(a.owner_username, a.bot_id)
+            new_bot_version_count = await self.store.bot_config_version_count(a.owner_id, a.bot_id)
             new_version = new_bot_version_count - 1  # i.e. the last one
             await self.store.save_event(
-                a.owner_username,
+                a.owner_id,
                 a.bot_id,
                 event=BotEditedEvent(
-                    username=a.actor_username,
+                    username=a.actor_id,
                     event="edited",
                     new_version=new_version,
                 ),
             )
 
             if payload.display_name is not None:
-                await self.store.save_bot_display_name(a.owner_username, a.bot_id, payload.display_name)
+                await self.store.save_bot_display_name(a.owner_id, a.bot_id, payload.display_name)
 
             if payload.start:
                 await self.start_bot(a, version=new_version)
@@ -485,7 +512,7 @@ class TelebotConstructorApp:
             a = await self.authorize(request)
             version = self.parse_version_query_param(request)
             config = await self.load_bot_config(
-                a.owner_username,
+                a.owner_id,
                 a.bot_id,
                 version=version if version is not None else -1,
             )
@@ -493,7 +520,7 @@ class TelebotConstructorApp:
             # HACK: the display name is stored separately and frontend can get it from bot info
             #       it should be removed from here when frontend stops depending on it :)
             if "with_display_name" in request.query:
-                config.display_name = await self.store.load_bot_display_name(a.owner_username, a.bot_id)
+                config.display_name = await self.store.load_bot_display_name(a.owner_id, a.bot_id)
             return web.json_response(text=config.model_dump_json())
 
         @routes.delete("/api/config/{bot_id}")
@@ -508,14 +535,14 @@ class TelebotConstructorApp:
                     description: Deleted bot config
             """
             a = await self.authorize(request)
-            config = await self.load_bot_config(a.owner_username, a.bot_id, version=-1)
+            config = await self.load_bot_config(a.owner_id, a.bot_id, version=-1)
             await self.stop_bot(a)
-            await self.store.remove_bot_config(a.owner_username, a.bot_id)
-            await self.secret_store.remove_secret(config.token_secret_name, owner_id=a.owner_username)
+            await self.store.remove_bot_config(a.owner_id, a.bot_id)
+            await self.secret_store.remove_secret(config.token_secret_name, owner_id=a.owner_id)
             await self.store.save_event(
-                a.owner_username,
+                a.owner_id,
                 a.bot_id,
-                BotDeletedEvent(username=a.actor_username, event="deleted"),
+                BotDeletedEvent(username=a.actor_id, event="deleted"),
             )
             return web.json_response(text=config.model_dump_json())
 
@@ -581,7 +608,7 @@ class TelebotConstructorApp:
             """
             a = await self.authorize(request)
             payload = await self.parse_body_as_model(request, UpdateBotDisplayNamePayload)
-            if await self.store.save_bot_display_name(a.owner_username, a.bot_id, payload.display_name):
+            if await self.store.save_bot_display_name(a.owner_id, a.bot_id, payload.display_name):
                 return web.Response(text="Display name saved")
             else:
                 raise web.HTTPInternalServerError(reason="Failed to save bot display name")
@@ -601,7 +628,7 @@ class TelebotConstructorApp:
             """
             a = await self.authorize(request)
             info = await self.store.load_bot_info(
-                a.owner_username,
+                a.owner_id,
                 a.bot_id,
                 detailed=self.parse_query_param_bool(request, "detailed", default=True),
             )
@@ -621,13 +648,13 @@ class TelebotConstructorApp:
                 "200":
                     description: List of all bots name and their statuses
             """
-            owner_username = await self.authenticate(request)
+            owner_id = await self.authenticate(request)
             # TODO: add "shared" bots to the list
-            bot_ids = await self.store.list_bot_ids(owner_username)
-            logger.info(f"Bots owned by {owner_username}: {bot_ids}")
+            bot_ids = await self.store.list_bot_ids(owner_id)
+            logger.info(f"Bots owned by {owner_id}: {bot_ids}")
             maybe_bot_infos = [
                 await self.store.load_bot_info(
-                    owner_username,
+                    owner_id,
                     bot_id,
                     detailed=self.parse_query_param_bool(request, "detailed", default=True),
                 )
@@ -646,20 +673,17 @@ class TelebotConstructorApp:
         async def get_bot_versions_page(request: web.Request) -> web.Response:
             a = await self.authorize(request)
             offset, count = self.parse_offset_count_params(request, max_count=100, default_count=20)
-            bot_info = await self.store.load_bot_info(a.owner_username, a.bot_id, detailed=False)
-            if bot_info:
-                start, end = page_params_to_redis_indices(offset, count)
-                return web.json_response(
-                    text=BotVersionsPage(
-                        bot_info=bot_info,
-                        versions=await self.store.load_version_info(
-                            a.owner_username, a.bot_id, start_version=start, end_version=end
-                        ),
-                        total_versions=await self.store.bot_config_version_count(a.owner_username, a.bot_id),
-                    ).model_dump_json()
-                )
-            else:
-                raise web.HTTPNotFound(reason="Bot id not found")
+            bot_info = await self.load_nondetailed_bot_info(a)
+            start, end = page_params_to_redis_indices(offset, count)
+            return web.json_response(
+                text=BotVersionsPage(
+                    bot_info=bot_info,
+                    versions=await self.store.load_version_info(
+                        a.owner_id, a.bot_id, start_version=start, end_version=end
+                    ),
+                    total_versions=await self.store.bot_config_version_count(a.owner_id, a.bot_id),
+                ).model_dump_json()
+            )
 
         # endregion
         ##################################################################################
@@ -678,14 +702,12 @@ class TelebotConstructorApp:
             """
             a = await self.authorize(request)
             global_form_id = GlobalFormId(
-                owner_id=a.owner_username,
+                owner_id=a.owner_id,
                 bot_id=a.bot_id,
                 form_block_id=self.parse_path_part(request, "form_block_id"),
             )
             offset, count = self.parse_offset_count_params(request, max_count=100, default_count=20)
-            bot_info = await self.store.load_bot_info(username=a.owner_username, bot_id=a.bot_id, detailed=False)
-            if not bot_info:
-                raise web.HTTPNotFound(reason="Bot not found")
+            bot_info = await self.load_nondetailed_bot_info(a)
             form_info = await self.store.form_results.load_form_info(global_form_id)
             if not form_info:
                 raise web.HTTPNotFound(reason="Form not found")
@@ -707,7 +729,7 @@ class TelebotConstructorApp:
             """
             a = await self.authorize(request)
             global_form_id = GlobalFormId(
-                owner_id=a.owner_username, bot_id=a.bot_id, form_block_id=self.parse_path_part(request, "form_block_id")
+                owner_id=a.owner_id, bot_id=a.bot_id, form_block_id=self.parse_path_part(request, "form_block_id")
             )
             filter = FormResultsFilter(
                 min_timestamp=self.parse_query_param_int(request, name="min_timestamp", min_=None, max_=None),
@@ -764,7 +786,7 @@ class TelebotConstructorApp:
             """
             a = await self.authorize(request)
             form_id = GlobalFormId(
-                owner_id=a.owner_username,
+                owner_id=a.owner_id,
                 bot_id=a.bot_id,
                 form_block_id=self.parse_path_part(request, "form_block_id"),
             )
@@ -848,7 +870,7 @@ class TelebotConstructorApp:
 
         # endregion
         ##################################################################################
-        # region bot metrics and errors
+        # region error reporting
 
         @routes.get("/api/errors/{bot_id}")
         async def get_bot_errors(request: web.Request) -> web.Response:
@@ -863,8 +885,66 @@ class TelebotConstructorApp:
             """
             a = await self.authorize(request)
             offset, count = self.parse_offset_count_params(request, max_count=100, default_count=20)
-            errors = await self.store.metrics.load_errors(a.owner_username, a.bot_id, offset, count)
-            return web.json_response(text=BotErrorsPage(errors=errors).model_dump_json())
+            bot_info = await self.load_nondetailed_bot_info(a)
+            errors = await self.store.errors.load_errors(a.owner_id, a.bot_id, offset, count)
+            return web.json_response(text=BotErrorsPage(errors=errors, bot_info=bot_info).model_dump_json())
+
+        @routes.post("/api/alert-chat-id/{bot_id}")
+        async def set_new_alert_chat_id(request: web.Request) -> web.Response:
+            """
+            ---
+            description: Set a new alert chat id
+            produces:
+            - application/text
+            responses:
+                "200":
+                    description: OK
+            """
+            a = await self.authorize(request)
+            payload = await self.parse_body_as_model(request, SetAlertChatIdPayload)
+            res = await self.store.errors.save_alert_chat_id(
+                owner_id=a.owner_id,
+                bot_id=a.bot_id,
+                chat_id=payload.alert_chat_id,
+            )
+            if not res:
+                raise web.HTTPInternalServerError(reason="Failed to save alert chat id to the store")
+            if payload.test:
+
+                def inner_func() -> None:
+                    raise RuntimeError("Alert chat test!")
+
+                try:
+                    inner_func()
+                except RuntimeError:
+                    res = await self.store.errors.process_error(
+                        owner_id=a.owner_id,
+                        bot_id=a.bot_id,
+                        error=BotError.from_last_exception(message="Example report of an unexpected error"),
+                    )
+                    if not res:
+                        raise web.HTTPServerError(reason="Alert chat test failed")
+            return web.Response(text="OK")
+
+        @routes.delete("/api/alert-chat-id/{bot_id}")
+        async def remove_alert_chat(request: web.Request) -> web.Response:
+            """
+            ---
+            description: Remove alert chat from the bot
+            produces:
+            - application/text
+            responses:
+                "200":
+                    description: OK
+            """
+            a = await self.authorize(request)
+            if await self.store.errors.remove_alert_chat_id(
+                owner_id=a.owner_id,
+                bot_id=a.bot_id,
+            ):
+                return web.Response(text="OK")
+            else:
+                raise web.HTTPInternalServerError(reason="Failed to remove alert chat id")
 
         # endregion
         ##################################################################################
@@ -908,7 +988,7 @@ class TelebotConstructorApp:
                     description: TgBotUser object
             """
             a = await self.authorize(request)
-            bot = await self._make_bare_bot(a.owner_username, a.bot_id)
+            bot = await self._make_bare_bot(a.owner_id, a.bot_id)
             try:
                 tg_bot_user = await TgBotUser.fetch(bot, telegram_files_downloader=self.telegram_files_downloader)
                 return web.json_response(tg_bot_user.model_dump())
@@ -931,13 +1011,13 @@ class TelebotConstructorApp:
             bot_user_update = await self.parse_body_as_model(request, TgBotUserUpdate)
             if not bot_user_update.name:
                 raise web.HTTPBadRequest(reason="Bot name can't be empty")
-            bot = await self._make_bare_bot(a.owner_username, a.bot_id)
+            bot = await self._make_bare_bot(a.owner_id, a.bot_id)
             try:
                 await bot_user_update.save(bot, telegram_files_downloader=self.telegram_files_downloader)
                 return web.Response(reason="OK")
             except Exception:
                 logger.exception("Error updating bot user info")
-                raise web.HTTPInternalServerError(reason="Error updating bot detailed information")
+                raise web.HTTPInternalServerError(reason="Error updating detailed bot information")
 
         @routes.post("/api/start-group-chat-discovery/{bot_id}")
         async def start_discovering_group_chats(request: web.Request) -> web.Response:
@@ -953,10 +1033,10 @@ class TelebotConstructorApp:
                     description: OK
             """
             a = await self.authorize(request)
-            if not await self.store.is_bot_running(a.owner_username, a.bot_id):
+            if not await self.store.is_bot_running(a.owner_id, a.bot_id):
                 logger.info("Group discovery mode requested but bot is not running, starting stub bot")
                 await self.start_bot(a, version="stub")
-            await self.group_chat_discovery_handler.start_discovery(a.owner_username, a.bot_id)
+            await self.group_chat_discovery_handler.start_discovery(a.owner_id, a.bot_id)
             return web.Response(text="Group discovery started")
 
         @routes.post("/api/stop-group-chat-discovery/{bot_id}")
@@ -971,8 +1051,8 @@ class TelebotConstructorApp:
                     description: OK
             """
             a = await self.authorize(request)
-            await self.group_chat_discovery_handler.stop_discovery(a.owner_username, a.bot_id)
-            if await self.store.get_bot_running_version(a.owner_username, a.bot_id) == "stub":
+            await self.group_chat_discovery_handler.stop_discovery(a.owner_id, a.bot_id)
+            if await self.store.get_bot_running_version(a.owner_id, a.bot_id) == "stub":
                 logger.info("Group discovery mode stopped and bot stub was running, stopping it")
                 await self.stop_bot(a)
             return web.Response(text="Group discovery stopped")
@@ -990,9 +1070,9 @@ class TelebotConstructorApp:
             """
             a = await self.authorize(request)
             chats = await self.group_chat_discovery_handler.validate_discovered_chats(
-                a.owner_username,
+                a.owner_id,
                 a.bot_id,
-                bot=await self._make_bare_bot(a.owner_username, a.bot_id),
+                bot=await self._make_bare_bot(a.owner_id, a.bot_id),
             )
             # this is probably not chronological or anything, but at least it's consistent...
             chats.sort(key=lambda c: c.id)
@@ -1012,7 +1092,7 @@ class TelebotConstructorApp:
                     description: Chat not found
             """
             a = await self.authorize(request)
-            bot = await self._make_bare_bot(a.owner_username, a.bot_id)
+            bot = await self._make_bare_bot(a.owner_id, a.bot_id)
             # NOTE: numeric chat ids are not casted into ints because it doesn't matter for Telegram bot API
             group_chat_id = request.query.get("group_chat")
             if group_chat_id is None:
@@ -1126,8 +1206,8 @@ class TelebotConstructorApp:
                 # if not static file -- must be an app route, so authenticate and serve
                 # either login or app page; in the latter case, client-side routing kicks
                 # in
-                username = await self.auth.authenticate_request(request)
-                if username is None:
+                owner_id = await self.auth.authenticate_request(request)
+                if owner_id is None:
                     return await self.auth.unauthenticated_client_response(
                         request, static_files_dir=self.static_files_dir
                     )
@@ -1155,22 +1235,22 @@ class TelebotConstructorApp:
             logger.info("Starting stored bots...")
             total_bots = 0
             started_bots = 0
-            async for username, bot_id, version in self.store.iter_running_bot_versions():
+            async for owner_id, bot_id, version in self.store.iter_running_bot_versions():
                 total_bots += 1
-                log_prefix = self._log_prefix(username, bot_id, version)
+                log_prefix = self._log_prefix(owner_id, bot_id, version)
                 logger.debug(f"{log_prefix} Starting stored bot (#{total_bots})")
                 try:
-                    bot_config = await self.store.load_bot_config(username, bot_id, version)
+                    bot_config = await self.store.load_bot_config(owner_id, bot_id, version)
                     if bot_config is None:
                         raise RuntimeError("Bot is marked as running bot no config found")
-                    bot_runner = await self._construct_bot(username, bot_id, bot_config)
-                    if not await self.runner.start(username=username, bot_id=bot_id, bot_runner=bot_runner):
+                    bot_runner = await self._construct_bot(owner_id, bot_id, bot_config)
+                    if not await self.runner.start(owner_id=owner_id, bot_id=bot_id, bot_runner=bot_runner):
                         raise RuntimeError(f"Runner {self.runner} refused to start the bot, maybe see error above")
                     started_bots += 1
                 except Exception:
                     logger.exception(f"{log_prefix} Error starting stored bot, will mark it as not running")
                     try:
-                        await self.store.set_bot_not_running(username, bot_id)
+                        await self.store.set_bot_not_running(owner_id, bot_id)
                     except Exception:
                         logger.exception(f"{log_prefix} Failed to mark bot as non-running after failed startup")
             logger.info(f"Started {started_bots}/{total_bots} bots in total")
@@ -1182,7 +1262,7 @@ class TelebotConstructorApp:
         auth_bot_runner = await self.auth.setup_bot()
         if auth_bot_runner is not None:
             logger.info("Starting auth bot")
-            await self.runner.start(username="internal", bot_id="auth-bot", bot_runner=auth_bot_runner)
+            await self.runner.start(owner_id="internal", bot_id="auth-bot", bot_runner=auth_bot_runner)
         await self.telegram_files_downloader.setup()
         if self.media_store is not None:
             await self.media_store.setup()

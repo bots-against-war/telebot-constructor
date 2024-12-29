@@ -239,22 +239,13 @@ export type Title1 = string | null;
 export type TotalResponses = number;
 export type FormsWithResponses = FormInfoBasic[];
 export type Timestamp5 = number;
-export type BotPrefix = string;
-export type ReceivedAt = number;
-export type UpdateId = number;
-export type UpdateType = string;
-export type HandlerName = string | null;
-export type HandlerTestDurations = number[];
-export type ProcessingDuration = number;
-export type TypeName = string;
-export type Body = string;
-export type UserIdHash = string;
-export type LanguageCode = string | null;
-export type IsForwarded = boolean;
-export type IsReply = boolean;
-export type ContentType = string;
+export type Message1 = string;
+export type ExcType = string | null;
+export type ExcData = string | null;
+export type ExcTraceback = string | null;
 export type LastErrors = BotError[];
 export type AdminChatIds = (string | number)[];
+export type AlertChatId = string | number | null;
 export type VersionMessage = string | null;
 export type Start = boolean;
 export type DisplayName2 = string | null;
@@ -269,6 +260,8 @@ export type Results = {
 export type Errors = BotError[];
 export type Versions = BotVersionInfo[];
 export type TotalVersions = number;
+export type AlertChatId1 = number | string;
+export type Test = boolean;
 
 /**
  * Temporary class to pack several models into one schema; not used directly by frontend code
@@ -289,6 +282,7 @@ export interface BackendDataModels {
   form_results_page: FormResultsPage;
   bot_errors_page: BotErrorsPage;
   bot_versions_page: BotVersionsPage;
+  alert_chat_id_payload: SetAlertChatIdPayload;
   [k: string]: unknown;
 }
 export interface BotConfig {
@@ -617,11 +611,13 @@ export interface BotInfo {
   bot_id: BotId;
   display_name: DisplayName1;
   running_version: RunningVersion;
+  running_version_info: BotVersionInfo | null;
   last_versions: LastVersions;
   last_events: LastEvents;
   forms_with_responses: FormsWithResponses;
   last_errors: LastErrors;
   admin_chat_ids: AdminChatIds;
+  alert_chat_id: AlertChatId;
   [k: string]: unknown;
 }
 export interface BotVersionInfo {
@@ -670,40 +666,10 @@ export interface FormInfoBasic {
 }
 export interface BotError {
   timestamp: Timestamp5;
-  update_metrics: TelegramUpdateMetrics;
-  [k: string]: unknown;
-}
-export interface TelegramUpdateMetrics {
-  bot_prefix: BotPrefix;
-  received_at: ReceivedAt;
-  update_id?: UpdateId;
-  update_type?: UpdateType;
-  handler_name?: HandlerName;
-  handler_metrics?: HandlerMetrics;
-  handler_test_durations?: HandlerTestDurations;
-  processing_duration?: ProcessingDuration;
-  exception_info?: ExceptionInfo;
-  user_info?: UserInfo;
-  message_info?: MessageInfo;
-  [k: string]: unknown;
-}
-export interface HandlerMetrics {
-  [k: string]: unknown;
-}
-export interface ExceptionInfo {
-  type_name: TypeName;
-  body: Body;
-  [k: string]: unknown;
-}
-export interface UserInfo {
-  user_id_hash: UserIdHash;
-  language_code: LanguageCode;
-  [k: string]: unknown;
-}
-export interface MessageInfo {
-  is_forwarded: IsForwarded;
-  is_reply: IsReply;
-  content_type: ContentType;
+  message: Message1;
+  exc_type?: ExcType;
+  exc_data?: ExcData;
+  exc_traceback?: ExcTraceback;
   [k: string]: unknown;
 }
 export interface SaveBotConfigVersionPayload {
@@ -735,6 +701,7 @@ export interface FormResultsPage {
   [k: string]: unknown;
 }
 export interface BotErrorsPage {
+  bot_info: BotInfo;
   errors: Errors;
   [k: string]: unknown;
 }
@@ -742,5 +709,10 @@ export interface BotVersionsPage {
   bot_info: BotInfo;
   versions: Versions;
   total_versions: TotalVersions;
+  [k: string]: unknown;
+}
+export interface SetAlertChatIdPayload {
+  alert_chat_id: AlertChatId1;
+  test?: Test;
   [k: string]: unknown;
 }

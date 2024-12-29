@@ -1,12 +1,12 @@
 <script lang="ts">
   import { A, Li, List, Select, Toggle } from "flowbite-svelte";
   import type { FormResultUserAttribution, FormResultsExport } from "../../../../api/types";
-  import { formResultsPagePath } from "../../../../routeUtils";
-  import GroupChatIdSelect from "../../../components/GroupChatIdSelect.svelte";
-  import { PLACEHOLDER_GROUP_CHAT_ID } from "../../defaultConfigs";
   import BotUserBadge from "../../../../components/BotUserBadge.svelte";
+  import GroupChatIdSelect from "../../../../components/GroupChatIdSelect.svelte";
   import InputWrapper from "../../../../components/inputs/InputWrapper.svelte";
+  import { formResultsPagePath } from "../../../../routeUtils";
   import BlockNameInline from "../../../components/BlockNameInline.svelte";
+  import { PLACEHOLDER_GROUP_CHAT_ID } from "../../defaultConfigs";
   import { NodeTypeKey } from "../../display";
 
   export let config: FormResultsExport;

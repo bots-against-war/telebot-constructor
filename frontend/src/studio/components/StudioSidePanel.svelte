@@ -5,7 +5,7 @@
 <style>
   div.custom-controls {
     position: fixed;
-    top: 100px; /* TODO: unhardcode header height */
+    top: 100px;
     left: 10px;
     border-radius: 0;
     /* copied from svelvet controls css */

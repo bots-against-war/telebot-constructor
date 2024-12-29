@@ -1,6 +1,7 @@
 <script lang="ts">
-  import { Spinner } from "flowbite-svelte";
   import Centered from "./internal/Centered.svelte";
+
+  import { Spinner } from "flowbite-svelte";
 </script>
 
 <Centered>

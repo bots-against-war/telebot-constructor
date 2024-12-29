@@ -107,6 +107,7 @@ class MenuBlock(UserFlowBlock):
             category_store=None,
             language_store=context.language_store,
         )
+        context.errors_store.instrument(self._components_menu_handler.logger)
 
         async def on_terminal_menu_option_selected(terminator_context: TerminatorContext) -> Optional[TerminatorResult]:
             terminator = terminator_context.terminator

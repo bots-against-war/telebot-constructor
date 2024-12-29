@@ -29,8 +29,6 @@ from telebot_constructor.utils.pydantic import (
     LocalizableText,
 )
 
-logger = logging.getLogger(__name__)
-
 
 class ContentText(BaseModel):
     text: LocalizableText
@@ -90,6 +88,8 @@ class ContentBlock(UserFlowBlock):
         return without_nones([self.next_block_id])
 
     def model_post_init(self, __context: Any) -> None:
+        self._logger = logging.getLogger(__name__)
+
         if not self.contents:
             raise ValueError("Block must contain at least one content unit")
         empty_contents = [c for c in self.contents if (c.text is None or c.text.is_empty()) and not c.attachments]
@@ -153,7 +153,7 @@ class ContentBlock(UserFlowBlock):
                 if source is None and self._media_store is not None:
                     source = await self._media_store.load_media(attachment.media_id())
                     if source is None:
-                        logger.error(
+                        self._logger.error(
                             f"Failed to load media from the store: {attachment.media_id()}; will proceed without it"
                         )
                 if source is not None:
@@ -163,7 +163,7 @@ class ContentBlock(UserFlowBlock):
                             source=source,
                         )
                     )
-            logger.debug("Prepared attachments: %s", prepared_attachments)
+            self._logger.debug("Prepared attachments: %s", prepared_attachments)
 
             if not prepared_attachments:
                 if content.text is not None:
@@ -174,7 +174,7 @@ class ContentBlock(UserFlowBlock):
                         reply_markup=tg.ReplyKeyboardRemove(),
                     )
                 else:
-                    logger.error("Empty content block: no text and no attachments!")
+                    self._logger.error("Empty content block: no text and no attachments!")
             else:
                 # sending attachments and caching resulting file ids
                 if len(prepared_attachments) == 1:
@@ -195,7 +195,7 @@ class ContentBlock(UserFlowBlock):
                             )
                         ]
                     else:
-                        logger.error("Unexpected attachment type; only images are supported for now")
+                        self._logger.error("Unexpected attachment type; only images are supported for now")
                 else:
                     # multiple attachments case
                     tg_input_media = [
@@ -215,10 +215,10 @@ class ContentBlock(UserFlowBlock):
                         media=list(tg_input_media),
                     )
 
-                logger.debug(f"Sent attachments in messages: {messages}")
+                self._logger.debug(f"Sent attachments in messages: {messages}")
 
                 if len(messages) != len(prepared_attachments):
-                    logger.error(
+                    self._logger.error(
                         "The number of messages doesn't match the number of attachments"
                         + f"({len(messages) = }, {len(prepared_attachments) = })"
                     )
@@ -228,18 +228,17 @@ class ContentBlock(UserFlowBlock):
                         # already cached
                         continue
                     if message.photo is None:
-                        logger.error(
-                            f"Got Message object without photo on unable to fill the cache, ignoring it: {message}"
-                        )
+                        self._logger.error("Got Message object without photo on unable to fill the cache, ignoring it")
                         continue
                     new_file_id = message.photo[0].file_id
-                    logger.debug(f"Caching Telegram file_id for attachment: {pa} -> {new_file_id}")
+                    self._logger.debug(f"Caching Telegram file_id for attachment: {pa} -> {new_file_id}")
                     await self._tg_file_id_by_media_id_store.save(pa.attachment.media_id(), new_file_id)
 
         if self.next_block_id is not None:
             await context.enter_block(self.next_block_id, context)
 
     async def setup(self, context: UserFlowSetupContext) -> SetupResult:
+        self._logger = context.make_instrumented_logger(__name__)
         self._tg_file_id_by_media_id_store = KeyValueStore[str](
             name="file-id",
             prefix=context.bot_prefix,

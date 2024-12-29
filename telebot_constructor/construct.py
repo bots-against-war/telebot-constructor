@@ -12,13 +12,12 @@ from telebot_components.utils.secrets import SecretStore
 from telebot_constructor.bot_config import BotConfig
 from telebot_constructor.constants import CONSTRUCTOR_PREFIX
 from telebot_constructor.group_chat_discovery import GroupChatDiscoveryHandler
+from telebot_constructor.store.errors import BotSpecificErrorsStore
 from telebot_constructor.store.form_results import BotSpecificFormResultsStore
 from telebot_constructor.store.media import UserSpecificMediaStore
-from telebot_constructor.store.metrics import MetricsStore
 from telebot_constructor.user_flow.types import BotCommandInfo
+from telebot_constructor.utils import log_prefix
 from telebot_constructor.utils.rate_limit_retry import rate_limit_retry
-
-logger = logging.getLogger(__name__)
 
 BotFactory = (
     Type[AsyncTeleBot] | Callable[..., AsyncTeleBot]
@@ -27,6 +26,7 @@ BotFactory = (
 
 async def make_bare_bot(
     owner_id: str,
+    bot_id: str,
     bot_config: BotConfig,
     secret_store: SecretStore,
     update_metrics_handler: Optional[TelegramUpdateMetricsHandler] = None,
@@ -35,7 +35,11 @@ async def make_bare_bot(
     token = await secret_store.get_secret(secret_name=bot_config.token_secret_name, owner_id=owner_id)
     if token is None:
         raise ValueError(f"Token name {bot_config.token_secret_name!r} does not correspond to a valid secret")
-    return _bot_factory(token, update_metrics_handler=update_metrics_handler)
+    return _bot_factory(
+        token,
+        update_metrics_handler=update_metrics_handler,
+        log_marker=log_prefix(owner_id, bot_id).strip("[]"),
+    )
 
 
 async def construct_bot(
@@ -45,7 +49,7 @@ async def construct_bot(
     bot_config: BotConfig,
     secret_store: SecretStore,
     form_results_store: BotSpecificFormResultsStore,
-    metrics_store: MetricsStore,
+    errors_store: BotSpecificErrorsStore,
     redis: RedisInterface,
     media_store: UserSpecificMediaStore | None = None,
     group_chat_discovery_handler: GroupChatDiscoveryHandler | None = None,
@@ -53,19 +57,19 @@ async def construct_bot(
 ) -> BotRunner:
     """Core bot construction function responsible for turning a config into a functional bot"""
     bot_prefix = f"{CONSTRUCTOR_PREFIX}/{owner_id}/{bot_id}"
-    log_prefix = f"[{owner_id}][{bot_id}] "
-    logger.info(log_prefix + "Constructing bot")
+    logger = logging.getLogger(__name__ + log_prefix(owner_id, bot_id))
+    errors_store.instrument(logger)
+    logger.info("Constructing bot")
 
     bot = await make_bare_bot(
         owner_id=owner_id,
+        bot_id=bot_id,
         bot_config=bot_config,
         secret_store=secret_store,
-        update_metrics_handler=metrics_store.get_update_metrics_handler(
-            owner_id=owner_id,
-            bot_id=bot_id,
-        ),
         _bot_factory=_bot_factory,
     )
+    # FIXME: now it's a global logger!!!
+    errors_store.instrument(bot.logger)
 
     background_jobs: list[Coroutine[None, None, None]] = []
     aux_endpoints: list[AuxBotEndpoint] = []
@@ -75,28 +79,29 @@ async def construct_bot(
         async for attempt in rate_limit_retry():
             with attempt:
                 bot_user = await bot.get_me()
-        logger.info(log_prefix + f"Bot user loaded: {bot_user.to_json()}")
+        logger.info(f"Bot user loaded: {bot_user.to_json()}")
     except Exception:
-        logger.exception(log_prefix + "Error getting bot user, probably an invalid token")
+        logger.exception("Error getting bot user, probably an invalid token")
         raise ValueError("Failed to get bot user with getMe, the token is probably invalid")
 
     banned_users_store = BannedUsersStore(redis=redis, bot_prefix=bot_prefix, cached=True)
 
     if bot_config.user_flow_config is not None:
-        logger.info(log_prefix + "Parsing user flow config")
+        logger.info("Parsing user flow config")
         user_flow = bot_config.user_flow_config.to_user_flow()
 
-        logger.info(log_prefix + "Setting up user flow")
+        logger.info("Setting up user flow")
         user_flow_setup_result = await user_flow.setup(
             bot_prefix=bot_prefix,
             bot=bot,
             redis=redis,
             banned_users_store=banned_users_store,
             form_results_store=form_results_store,
+            errors_store=errors_store,
             media_store=media_store,
         )
 
-        logger.info(log_prefix + f"Got result: {user_flow_setup_result}")
+        logger.info(f"Got result: {user_flow_setup_result}")
         background_jobs.extend(user_flow_setup_result.background_jobs)
         aux_endpoints.extend(user_flow_setup_result.aux_endpoints)
         bot_commands.extend(user_flow_setup_result.bot_commands)

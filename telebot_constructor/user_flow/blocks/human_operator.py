@@ -1,5 +1,4 @@
 import datetime
-import logging
 from typing import Any, Optional
 
 from pydantic import BaseModel
@@ -20,8 +19,6 @@ from telebot_constructor.user_flow.types import (
     UserFlowSetupContext,
 )
 from telebot_constructor.utils.pydantic import LocalizableText
-
-logger = logging.getLogger(__name__)
 
 
 class MessagesToUser(BaseModel):
@@ -79,8 +76,6 @@ class HumanOperatorBlock(UserFlowBlock):
         return self.catch_all
 
     async def setup(self, context: UserFlowSetupContext) -> SetupResult:
-        log_prefix = f"[{context.bot_prefix}] "
-        logger.info(log_prefix + "Setting up feedback handler")
 
         async def custom_user_message_filter(message: tg.Message) -> bool:
             if self.catch_all:
@@ -130,6 +125,7 @@ class HumanOperatorBlock(UserFlowBlock):
             banned_users_store=context.banned_users_store,
             language_store=context.language_store,
         )
+        context.errors_store.instrument(self._feedback_handler.logger)
 
         await self._feedback_handler.setup(context.bot)
 

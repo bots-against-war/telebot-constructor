@@ -40,3 +40,7 @@ export function versionsPagePath(botId: string): string {
 export function settingsPath(botId: string): string {
   return withBasePath(`/settings/${encodePathPart(botId)}`);
 }
+
+export function errorsPath(botId: string): string {
+  return withBasePath(`/errors/${encodePathPart(botId)}`);
+}

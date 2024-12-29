@@ -26,7 +26,7 @@
             </span>
           {/if}
           {#if event.timestamp}
-            · <Timestamp timestamp={event.timestamp} timeClass="text-gray-500" />
+            · <Timestamp timestamp={event.timestamp} />
           {/if}
         </div>
       </li>

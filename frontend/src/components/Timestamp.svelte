@@ -2,7 +2,7 @@
   import { onDestroy } from "svelte";
 
   export let timestamp: string | number; // ISO string or epoch time in SECONDS (i.e. Python backend format)
-  export let timeClass: string = "";
+  export let timeClass: string = "text-gray-500";
   export let alwaysAbsolute: boolean = false;
 
   const dt = new Date(

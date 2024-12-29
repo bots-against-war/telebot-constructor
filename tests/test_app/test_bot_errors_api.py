@@ -1,5 +1,5 @@
 import time
-from typing import Tuple
+from typing import Any, Tuple
 
 import aiohttp.web
 from pytest_aiohttp.plugin import AiohttpClient  # type: ignore
@@ -10,14 +10,12 @@ from telebot_constructor.app import TelebotConstructorApp
 from tests.test_app.conftest import MockBotRunner
 from tests.utils import (
     RECENT_TIMESTAMP,
-    SMALL_TIME_DURATION,
     mask_recent_timestamps,
-    mask_small_time_durations,
     tg_update_message_to_bot,
 )
 
 
-async def test_bot_errors_api(
+async def test_bot_level_errors(
     constructor_app: Tuple[TelebotConstructorApp, aiohttp.web.Application],
     aiohttp_client: AiohttpClient,
 ) -> None:
@@ -65,86 +63,51 @@ async def test_bot_errors_api(
     await bot.process_new_updates(
         [
             tg_update_message_to_bot(
+                user_id=123,
+                first_name="john pork",
+                text="/start",
+                metrics=TelegramUpdateMetrics(bot_prefix="test-bot", received_at=time.time()),
+            )
+        ]
+    )
+    assert not bot.method_calls
+
+    def check_error(error: Any, user_id: int) -> None:
+        assert isinstance(error, dict)
+        assert error["timestamp"] == RECENT_TIMESTAMP
+        assert error["message"].startswith(
+            "Error processing update with handler 'telebot_constructor.user_flow.entrypoints.command."
+            + "CommandEntryPoint.setup.<locals>.cmd_handler': Message({'content_type': 'text', 'id': 1, "
+            + "'message_id': 1, 'from_user': {'id': "
+            + f"{user_id}, 'is_bot': False, 'first_name': 'john pork'"
+        )
+        assert error["exc_type"] == "RuntimeError"
+        assert error["exc_data"] == "RuntimeError: User entered the error block (self.block_id='error-block')\n"
+        assert error["exc_traceback"].endswith(
+            'raise RuntimeError(f"User entered the error block ({self.block_id=!r})")\n'
+        )
+
+    resp = await client.get("/api/info/mybot")
+    assert resp.status == 200
+    errors = mask_recent_timestamps(await resp.json())["last_errors"]  # type: ignore
+    assert len(errors) == 1
+    check_error(errors[0], user_id=123)
+
+    await bot.process_new_updates(
+        [
+            tg_update_message_to_bot(
                 user_id=user_id,
                 first_name="john pork",
                 text="/start",
                 metrics=TelegramUpdateMetrics(bot_prefix="test-bot", received_at=time.time()),
             )
-            for user_id in range(30)
+            for user_id in range(5)
         ]
     )
-    assert not bot.method_calls
 
-    # TODO: checking bot info, the last error should be there
-    resp = await client.get("/api/info/mybot")
+    # calling the bot errors api to get the full list (3 last errors in this case)
+    resp = await client.get("/api/errors/mybot?count=3")
     assert resp.status == 200
-    assert mask_small_time_durations(mask_recent_timestamps(await resp.json())) == {
-        "bot_id": "mybot",
-        "display_name": "my test bot",
-        "running_version": 0,
-        "last_versions": [
-            {
-                "version": 0,
-                "metadata": {
-                    "timestamp": RECENT_TIMESTAMP,
-                    "message": "init",
-                    "author_username": "no-auth",
-                },
-            }
-        ],
-        "last_events": [
-            {"timestamp": RECENT_TIMESTAMP, "username": "no-auth", "event": "edited", "new_version": 0},
-            {"timestamp": RECENT_TIMESTAMP, "username": "no-auth", "event": "started", "version": 0},
-        ],
-        "forms_with_responses": [],
-        "last_errors": [
-            {
-                "timestamp": RECENT_TIMESTAMP,
-                "update_metrics": {
-                    "bot_prefix": "test-bot",
-                    "exception_info": {
-                        "body": "User entered the error block (self.block_id='error-block')",
-                        "type_name": "RuntimeError",
-                    },
-                    "handler_name": (
-                        "telebot_constructor.user_flow.entrypoints.command."
-                        "CommandEntryPoint.setup.<locals>.cmd_handler"
-                    ),
-                    "handler_test_durations": [SMALL_TIME_DURATION],
-                    "processing_duration": SMALL_TIME_DURATION,
-                    "received_at": RECENT_TIMESTAMP,
-                },
-            }
-            for _ in range(5)
-        ],
-        "admin_chat_ids": [],
-    }
-
-    # calling the bot errors api to get the full list
-    resp = await client.get("/api/errors/mybot")
-    assert resp.status == 200
-    assert mask_small_time_durations(mask_recent_timestamps(await resp.json())) == {
-        "errors": [
-            # NOTE: due to a hacky details of update parsing and metrics initialization these test
-            # examples lack some info contained in real world metrics, but this is not the point of
-            # this test anyway
-            {
-                "timestamp": RECENT_TIMESTAMP,
-                "update_metrics": {
-                    "bot_prefix": "test-bot",
-                    "exception_info": {
-                        "body": "User entered the error block (self.block_id='error-block')",
-                        "type_name": "RuntimeError",
-                    },
-                    "handler_name": (
-                        "telebot_constructor.user_flow.entrypoints.command."
-                        "CommandEntryPoint.setup.<locals>.cmd_handler"
-                    ),
-                    "handler_test_durations": [SMALL_TIME_DURATION],
-                    "processing_duration": SMALL_TIME_DURATION,
-                    "received_at": RECENT_TIMESTAMP,
-                },
-            }
-            for _ in range(20)
-        ],
-    }
+    errors = mask_recent_timestamps(await resp.json())["errors"]  # type: ignore
+    for user_id, error in zip((2, 3, 4), errors):
+        check_error(error, user_id=user_id)

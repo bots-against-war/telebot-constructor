@@ -1,4 +1,4 @@
-import { type Result, toDataResult, toTrivialResult } from "../utils";
+import { toDataResult, toTrivialResult, type Result } from "../utils";
 import type { BotInfo, BotVersionsPage } from "./types";
 import { fetchApi, paginationQuery } from "./utils";
 

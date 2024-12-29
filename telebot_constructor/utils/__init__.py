@@ -1,6 +1,9 @@
 import collections
+import datetime
 import functools
+import io
 import logging
+import re
 from typing import (
     Any,
     Awaitable,
@@ -14,9 +17,10 @@ from typing import (
 )
 
 import telegramify_markdown  # type: ignore
+from telebot import AsyncTeleBot
 from telebot import types as tg
 from telebot.types.service import HandlerFunction, HandlerResult
-from telebot_components.utils import TextMarkup, html_link
+from telebot_components.utils import TextMarkup, html_link, telegram_html_escape
 
 from telebot_constructor.utils.pydantic import LocalizableText
 
@@ -173,3 +177,54 @@ def preprocess_for_telegram(text: LocalizableText, markup: TextMarkup) -> Locali
             return preprocess_markdown_for_telegram(text)
         else:
             return {lang: preprocess_markdown_for_telegram(translation) for lang, translation in text.items()}
+
+
+NOT_LETTERS_RE = re.compile(r"\W+")
+
+
+async def send_telegram_alert(
+    message: str,
+    error_data: str | None,
+    traceback: str | None,
+    bot: AsyncTeleBot,
+    alerts_chat_id: str | int,
+) -> None:
+    """
+    Send alert data (error message + optional traceback) through a bot to an alerts chat.
+    Try to send in one message, fallback to sending via document if the payload is too large.
+    """
+    try:
+        text = telegram_html_escape(message)
+        pre_text = "\n\n".join(t for t in (traceback, error_data) if t is not None)
+        if pre_text:
+            text += "\n\n<pre>" + telegram_html_escape(pre_text) + "</pre>"
+        await bot.send_message(chat_id=alerts_chat_id, text=text, parse_mode="HTML", auto_split_message=False)
+    except Exception:
+        header = message if len(message) < 256 else message[:256] + "..."
+        try:
+            text = message
+            if traceback is not None:
+                text += "\n\n" + traceback
+            if error_data is not None:
+                text += "\n\n" + error_data
+            body = io.StringIO(initial_value=text)
+            filename_raw = header if traceback is None else traceback.splitlines()[-1]
+            filename = NOT_LETTERS_RE.sub("-", filename_raw)
+            filename = filename[:40]
+            filename = f"{filename}-{datetime.datetime.now().isoformat(timespec='seconds')}.txt"
+            await bot.send_document(
+                chat_id=alerts_chat_id,
+                document=body,
+                caption=header or None,
+                visible_file_name=filename,
+            )
+        except Exception as e:
+            print(f"Error sending alert to Telegram channel: {e!r}")
+            try:
+                await bot.send_message(chat_id=alerts_chat_id, text=header + "\n\n⚠️ Failed to send alert")
+            except Exception:
+                pass
+
+
+def log_prefix(owner_id: str, bot_id: str) -> str:
+    return f"[{owner_id}/{bot_id}]"

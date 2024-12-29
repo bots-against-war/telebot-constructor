@@ -1,11 +1,11 @@
 <script lang="ts">
-  import { Accordion, AccordionItem, Heading, Li, List, NumberInput, P, Select, Toggle } from "flowbite-svelte";
+  import { Accordion, AccordionItem, Heading, Li, List, NumberInput, Select, Toggle } from "flowbite-svelte";
   import type { HumanOperatorBlock } from "../../../api/types";
   import BotUserBadge from "../../../components/BotUserBadge.svelte";
+  import GroupChatIdSelect from "../../../components/GroupChatIdSelect.svelte";
   import InputWrapper from "../../../components/inputs/InputWrapper.svelte";
   import TextInput from "../../../components/inputs/TextInput.svelte";
   import { TELEGRAM_MAX_MESSAGE_LENGTH_CHARS } from "../../../constants";
-  import GroupChatIdSelect from "../../components/GroupChatIdSelect.svelte";
   import LocalizableTextInput from "../../components/LocalizableTextInput.svelte";
   import NodeModalBody from "../../components/NodeModalBody.svelte";
   import NodeModalControls from "../../components/NodeModalControls.svelte";

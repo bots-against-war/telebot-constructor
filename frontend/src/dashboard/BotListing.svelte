@@ -36,9 +36,11 @@
         <a href={dashboardPath(botInfo.bot_id)} class="flex flex-row justify-between">
           <span class="font-bold text-xl">{botInfo.display_name}</span>
           <div class="text-gray-500">
-            <span>v{botInfo.last_versions[botInfo.last_versions.length - 1].version + 1}</span>
-            ·
-            <Timestamp timestamp={botInfoTimestamp(botInfo)} timeClass="text-gray-500" />
+            {#if botInfo.last_versions.length > 0}
+              <span>v{botInfo.last_versions[botInfo.last_versions.length - 1].version + 1}</span>
+              ·
+            {/if}
+            <Timestamp timestamp={botInfoTimestamp(botInfo)} />
           </div>
         </a>
       </div>

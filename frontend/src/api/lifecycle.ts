@@ -1,4 +1,4 @@
-import { type Result, toTrivialResult } from "../utils";
+import { toTrivialResult, type Result } from "../utils";
 import type { StartBotPayload } from "./types";
 import { fetchApi } from "./utils";
 

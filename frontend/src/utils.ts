@@ -24,6 +24,14 @@ export function unwrap<T, E = string>(result: Result<T, E>): T {
   }
 }
 
+export function convert<T1, T2, E>(r: Result<T1, E>, converter: (from: T1) => T2): Result<T2, E> {
+  if (r.ok) {
+    return ok(converter(r.data));
+  } else {
+    return r;
+  }
+}
+
 export function getError<E = string>(result: Result<any, E>): E | null {
   if (result.ok) {
     return null;
@@ -93,8 +101,7 @@ export const INFO_MODAL_OPTIONS = {
 export async function createBotTokenSecret(botId: string, token: string): Promise<Result<string, string>> {
   let secretName = botId + "-token-" + crypto.randomUUID().slice(0, 8);
   console.debug("Generated secret name", secretName);
-  // TODO: check if secret with this value does not exist, not its possible to save
-  // the same token in two secrets and cause clashes
+  // TODO: validate that bot token is saved only once, e.g. by demanding it to be a unique secret
   let res = await saveSecret(secretName, token);
   let saveSecretError = getError(res);
   if (saveSecretError !== null) {
@@ -123,3 +130,11 @@ export function withConfirmation(
 }
 
 export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+export function truncateText(s: string, len: number): [string, boolean] {
+  if (s.length <= len) {
+    return [s, false];
+  } else {
+    return [s.substring(0, len) + "...", true];
+  }
+}

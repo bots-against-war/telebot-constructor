@@ -66,6 +66,7 @@ async def test_bot_config(
             "bot_id": "test-bot-1312",
             "display_name": "my bot",
             "running_version": None,
+            "running_version_info": None,
             "last_versions": [
                 {
                     "version": 0,
@@ -82,6 +83,7 @@ async def test_bot_config(
             "forms_with_responses": [],
             "last_errors": [],
             "admin_chat_ids": [],
+            "alert_chat_id": None,
         }
     ]
     bot_created_event = resp_json_1[0]["last_events"][0]  # type: ignore
@@ -99,6 +101,14 @@ async def test_bot_config(
             "bot_id": "test-bot-1312",
             "display_name": "my bot",
             "running_version": 0,
+            "running_version_info": {
+                "metadata": {
+                    "author_username": "no-auth",
+                    "message": "init message",
+                    "timestamp": "<recent timestamp>",
+                },
+                "version": 0,
+            },
             "last_versions": [
                 {
                     "version": 0,
@@ -116,6 +126,7 @@ async def test_bot_config(
             "forms_with_responses": [],
             "last_errors": [],
             "admin_chat_ids": [],
+            "alert_chat_id": None,
         }
     ]
     bot_started_event = resp_json_2[0]["last_events"][1]  # type: ignore
@@ -183,11 +194,15 @@ async def test_bot_config(
         "bot_id": "test-bot-1312",
         "display_name": "changed display name",
         "running_version": 1,
-        "last_versions": [
-            {
-                "version": 0,
-                "metadata": {"timestamp": RECENT_TIMESTAMP, "message": "init message", "author_username": "no-auth"},
+        "running_version_info": {
+            "metadata": {
+                "author_username": "no-auth",
+                "message": "bot config update",
+                "timestamp": "<recent timestamp>",
             },
+            "version": 1,
+        },
+        "last_versions": [
             {
                 "version": 1,
                 "metadata": {
@@ -207,6 +222,7 @@ async def test_bot_config(
         "forms_with_responses": [],
         "last_errors": [],
         "admin_chat_ids": [],
+        "alert_chat_id": None,
     }
     bot_edited_event, bot_stopped_event, bot_started_again_event = resp_json_3["last_events"][2:]  # type: ignore
 
@@ -222,11 +238,8 @@ async def test_bot_config(
         "bot_id": "test-bot-1312",
         "display_name": "changed display name",
         "running_version": None,
+        "running_version_info": None,
         "last_versions": [
-            {
-                "version": 0,
-                "metadata": {"timestamp": RECENT_TIMESTAMP, "message": "init message", "author_username": "no-auth"},
-            },
             {
                 "version": 1,
                 "metadata": {
@@ -246,6 +259,7 @@ async def test_bot_config(
         "forms_with_responses": [],
         "last_errors": [],
         "admin_chat_ids": [],
+        "alert_chat_id": None,
     }
 
     # let's delete this bot for good
@@ -335,6 +349,7 @@ async def test_admin_chat_ids(
             "bot_id": "test-bot",
             "display_name": "my bot",
             "running_version": None,
+            "running_version_info": None,
             "last_versions": [
                 {
                     "version": 0,
@@ -351,5 +366,6 @@ async def test_admin_chat_ids(
             "forms_with_responses": [],
             "last_errors": [],
             "admin_chat_ids": [987654321],
+            "alert_chat_id": None,
         }
     ]

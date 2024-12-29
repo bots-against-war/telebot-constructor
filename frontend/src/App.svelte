@@ -3,15 +3,17 @@
   import { setContext } from "svelte";
   import { links, Route, Router } from "svelte-routing";
   import Modal from "svelte-simple-modal";
+  import GlobalStateProvider from "./GlobalStateProvider.svelte";
   import BotInfoLoader from "./dashboard/BotInfoLoader.svelte";
   import BotListingLoader from "./dashboard/BotListingLoader.svelte";
+  import ErrorsLoader from "./dashboard/routes/errors/ErrorsLoader.svelte";
   import FormLoader from "./dashboard/routes/forms/FormLoader.svelte";
   import SettingsLoader from "./dashboard/routes/settings/SettingsLoader.svelte";
   import VersionsLoader from "./dashboard/routes/versions/VersionsLoader.svelte";
-  import GlobalStateProvider from "./GlobalStateProvider.svelte";
   import {
     botListingPath,
     dashboardPath,
+    errorsPath,
     formResultsPagePath,
     settingsPath,
     studioPath,
@@ -55,6 +57,9 @@
         </Route>
         <Route path={formResultsPagePath(":botId", ":formBlockId")} let:params>
           <FormLoader botId={params.botId} formBlockId={params.formBlockId} />
+        </Route>
+        <Route path={errorsPath(":botId")} let:params>
+          <ErrorsLoader botId={params.botId} />
         </Route>
         <Route>
           <div class="w-full h-screen flex flex-col items-center justify-center">

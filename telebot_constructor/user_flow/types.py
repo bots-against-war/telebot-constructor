@@ -1,4 +1,5 @@
 import dataclasses
+import logging
 from dataclasses import dataclass
 from typing import Awaitable, Callable, Coroutine, Optional
 
@@ -11,6 +12,7 @@ from telebot_components.redis_utils.interface import RedisInterface
 from telebot_components.stores.banned_users import BannedUsersStore
 from telebot_components.stores.language import LanguageStore
 
+from telebot_constructor.store.errors import BotSpecificErrorsStore
 from telebot_constructor.store.form_results import BotSpecificFormResultsStore
 from telebot_constructor.store.media import UserSpecificMediaStore
 from telebot_constructor.utils import AnyChatId
@@ -23,11 +25,17 @@ class UserFlowSetupContext:
     redis: RedisInterface
     banned_users_store: BannedUsersStore
     form_results_store: BotSpecificFormResultsStore
+    errors_store: BotSpecificErrorsStore
     language_store: Optional[LanguageStore]
     feedback_handlers: dict[AnyChatId, FeedbackHandler]
     enter_block: "EnterUserFlowBlockCallback"
     get_active_block_id: "GetActiveUserFlowBlockId"
     media_store: UserSpecificMediaStore | None
+
+    def make_instrumented_logger(self, module_name: str) -> logging.Logger:
+        logger = logging.getLogger(module_name + f"[{self.bot_prefix}]")
+        self.errors_store.instrument(logger)
+        return logger
 
 
 @dataclass(frozen=True)

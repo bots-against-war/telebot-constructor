@@ -14,7 +14,7 @@ BotVersion = int | Literal["stub"]
 
 class BotEventBase(TypedDict):
     timestamp: NotRequired[float]
-    username: str
+    username: str  # internal constructor username, AKA actor id
 
 
 class BotStoppedEvent(BotEventBase):
