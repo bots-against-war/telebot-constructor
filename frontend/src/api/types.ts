@@ -241,6 +241,7 @@ export type FormsWithResponses = FormInfoBasic[];
 export type Timestamp5 = number;
 export type Message1 = string;
 export type ExcType = string | null;
+export type ExcData = string | null;
 export type ExcTraceback = string | null;
 export type LastErrors = BotError[];
 export type AdminChatIds = (string | number)[];
@@ -667,6 +668,7 @@ export interface BotError {
   timestamp: Timestamp5;
   message: Message1;
   exc_type?: ExcType;
+  exc_data?: ExcData;
   exc_traceback?: ExcTraceback;
   [k: string]: unknown;
 }

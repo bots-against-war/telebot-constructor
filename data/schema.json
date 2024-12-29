@@ -203,6 +203,18 @@
           "default": null,
           "title": "Exc Type"
         },
+        "exc_data": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Exc Data"
+        },
         "exc_traceback": {
           "anyOf": [
             {

@@ -130,3 +130,11 @@ export function withConfirmation(
 }
 
 export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+export function truncateText(s: string, len: number): [string, boolean] {
+  if (s.length <= len) {
+    return [s, false];
+  } else {
+    return [s.substring(0, len) + "...", true];
+  }
+}
