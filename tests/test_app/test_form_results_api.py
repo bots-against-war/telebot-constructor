@@ -110,6 +110,10 @@ async def test_form_results_api(
         "bot_id": "mybot",
         "display_name": "my test bot",
         "running_version": 0,
+        "running_version_info": {
+            "metadata": {"author_username": "no-auth", "message": "init", "timestamp": RECENT_TIMESTAMP},
+            "version": 0,
+        },
         "last_versions": [
             {
                 "version": 0,
@@ -181,6 +185,10 @@ async def test_form_results_api(
         "bot_id": "mybot",
         "display_name": "my test bot",
         "running_version": 0,
+        "running_version_info": {
+            "metadata": {"author_username": "no-auth", "message": "init", "timestamp": RECENT_TIMESTAMP},
+            "version": 0,
+        },
         "last_versions": [
             {
                 "version": 0,
@@ -244,9 +252,20 @@ async def test_form_results_api(
             "display_name": "my test bot",
             "forms_with_responses": [],
             "last_errors": [],
-            "last_events": [],
-            "last_versions": [],
+            "last_events": [
+                {"event": "started", "timestamp": "<recent timestamp>", "username": "no-auth", "version": 0}
+            ],
+            "last_versions": [
+                {
+                    "metadata": {"author_username": "no-auth", "message": "init", "timestamp": "<recent " "timestamp>"},
+                    "version": 0,
+                }
+            ],
             "running_version": 0,
+            "running_version_info": {
+                "metadata": {"author_username": "no-auth", "message": "init", "timestamp": RECENT_TIMESTAMP},
+                "version": 0,
+            },
             "admin_chat_ids": [],
             "alert_chat_id": None,
         },
@@ -280,9 +299,20 @@ async def test_form_results_api(
             "display_name": "my test bot",
             "forms_with_responses": [],
             "last_errors": [],
-            "last_events": [],
-            "last_versions": [],
+            "last_events": [
+                {"event": "started", "timestamp": "<recent timestamp>", "username": "no-auth", "version": 0}
+            ],
+            "last_versions": [
+                {
+                    "metadata": {"author_username": "no-auth", "message": "init", "timestamp": "<recent " "timestamp>"},
+                    "version": 0,
+                }
+            ],
             "running_version": 0,
+            "running_version_info": {
+                "metadata": {"author_username": "no-auth", "message": "init", "timestamp": RECENT_TIMESTAMP},
+                "version": 0,
+            },
             "admin_chat_ids": [],
             "alert_chat_id": None,
         },

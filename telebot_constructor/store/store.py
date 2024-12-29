@@ -20,6 +20,7 @@ from telebot_constructor.store.types import (
     BotEvent,
     BotVersion,
 )
+from telebot_constructor.utils import log_prefix
 
 logger = logging.getLogger(__name__)
 
@@ -151,27 +152,40 @@ class TelebotConstructorStore:
         return await self._display_names_store.get_subkey(owner_id, bot_id)
 
     async def load_bot_info(self, owner_id: str, bot_id: str, detailed: bool) -> Optional[BotInfo]:
-        INCLUDE_LAST_EVENTS = 5
-        INCLUDE_LAST_VERSIONS = 3
-        INCLUDE_LAST_ERRORS = 5
+        INCLUDE_LAST_EVENTS = 5 if detailed else 1
+        INCLUDE_LAST_VERSIONS = 1
+        INCLUDE_LAST_ERRORS = 3
 
         running_version = await self.get_bot_running_version(owner_id, bot_id)
         if running_version == "stub":
             running_version = None
 
-        if detailed:
-            version_count = await self.bot_config_version_count(owner_id, bot_id)
-            if version_count == 0:
-                return None
-            min_version = max(version_count - INCLUDE_LAST_VERSIONS, 0)
-            last_versions = await self.load_version_info(
-                owner_id,
-                bot_id,
-                start_version=min_version,
-                end_version=None,
+        running_version_info: BotVersionInfo | None = None
+        if running_version is not None:
+            running_version_info_list = await self.load_version_info(
+                owner_id=owner_id,
+                bot_id=bot_id,
+                start_version=running_version,
+                end_version=running_version,
             )
-        else:
-            last_versions = []
+            if len(running_version_info_list) == 1:
+                running_version_info = running_version_info_list[0]
+            else:
+                logger.error(
+                    f"{log_prefix(owner_id, bot_id)} Error loading running version info: "
+                    + f"{len(running_version_info_list)=}"
+                )
+
+        version_count = await self.bot_config_version_count(owner_id, bot_id)
+        if version_count == 0:
+            return None
+        min_version = max(version_count - INCLUDE_LAST_VERSIONS, 0)
+        last_versions = await self.load_version_info(
+            owner_id,
+            bot_id,
+            start_version=min_version,
+            end_version=None,
+        )
 
         admin_chat_ids: list[str | int] = []
         if detailed and (config := await self.load_bot_config(owner_id, bot_id, version=running_version or -1)):
@@ -190,19 +204,16 @@ class TelebotConstructorStore:
                 )
             )
 
-        if detailed:
-            last_events = (
-                await self._bot_events_store.tail(key=self._composite_key(owner_id, bot_id), start=-INCLUDE_LAST_EVENTS)
-            ) or []
-        else:
-            last_events = []
-
         return BotInfo(
             bot_id=bot_id,
             display_name=await self.load_bot_display_name(owner_id, bot_id) or bot_id,
             running_version=running_version,
+            running_version_info=running_version_info,
             last_versions=last_versions,
-            last_events=last_events,
+            last_events=(
+                await self._bot_events_store.tail(key=self._composite_key(owner_id, bot_id), start=-INCLUDE_LAST_EVENTS)
+                or []
+            ),
             forms_with_responses=(await self.form_results.list_forms(owner_id, bot_id) if detailed else []),
             last_errors=(
                 await self.errors.load_errors(owner_id, bot_id, offset=0, count=INCLUDE_LAST_ERRORS) if detailed else []

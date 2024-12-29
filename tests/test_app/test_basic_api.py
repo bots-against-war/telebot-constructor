@@ -66,6 +66,7 @@ async def test_bot_config(
             "bot_id": "test-bot-1312",
             "display_name": "my bot",
             "running_version": None,
+            "running_version_info": None,
             "last_versions": [
                 {
                     "version": 0,
@@ -100,6 +101,14 @@ async def test_bot_config(
             "bot_id": "test-bot-1312",
             "display_name": "my bot",
             "running_version": 0,
+            "running_version_info": {
+                "metadata": {
+                    "author_username": "no-auth",
+                    "message": "init message",
+                    "timestamp": "<recent timestamp>",
+                },
+                "version": 0,
+            },
             "last_versions": [
                 {
                     "version": 0,
@@ -185,11 +194,15 @@ async def test_bot_config(
         "bot_id": "test-bot-1312",
         "display_name": "changed display name",
         "running_version": 1,
-        "last_versions": [
-            {
-                "version": 0,
-                "metadata": {"timestamp": RECENT_TIMESTAMP, "message": "init message", "author_username": "no-auth"},
+        "running_version_info": {
+            "metadata": {
+                "author_username": "no-auth",
+                "message": "bot config update",
+                "timestamp": "<recent timestamp>",
             },
+            "version": 1,
+        },
+        "last_versions": [
             {
                 "version": 1,
                 "metadata": {
@@ -225,11 +238,8 @@ async def test_bot_config(
         "bot_id": "test-bot-1312",
         "display_name": "changed display name",
         "running_version": None,
+        "running_version_info": None,
         "last_versions": [
-            {
-                "version": 0,
-                "metadata": {"timestamp": RECENT_TIMESTAMP, "message": "init message", "author_username": "no-auth"},
-            },
             {
                 "version": 1,
                 "metadata": {
@@ -339,6 +349,7 @@ async def test_admin_chat_ids(
             "bot_id": "test-bot",
             "display_name": "my bot",
             "running_version": None,
+            "running_version_info": None,
             "last_versions": [
                 {
                     "version": 0,

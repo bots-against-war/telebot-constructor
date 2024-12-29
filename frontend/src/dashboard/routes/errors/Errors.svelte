@@ -1,7 +1,10 @@
 <script lang="ts">
   import truncate from "@svackages/truncate";
+  import { Heading } from "flowbite-svelte";
+  import { FileCodeOutline } from "flowbite-svelte-icons";
   import { loadErrors as loadBotErrors } from "../../../api/errors";
   import type { BotErrorsPage } from "../../../api/types";
+  import ActionIcon from "../../../components/ActionIcon.svelte";
   import Navbar from "../../../components/Navbar.svelte";
   import Page from "../../../components/Page.svelte";
   import PageContent from "../../../components/PageContent.svelte";
@@ -10,9 +13,7 @@
   import BreadcrumbDashboard from "../../../components/breadcrumbs/BreadcrumbDashboard.svelte";
   import BreadcrumbHome from "../../../components/breadcrumbs/BreadcrumbHome.svelte";
   import Breadcrumbs from "../../../components/breadcrumbs/Breadcrumbs.svelte";
-  import { convert, getModalCloser, getModalOpener, INFO_MODAL_OPTIONS } from "../../../utils";
-  import ActionIcon from "../../../components/ActionIcon.svelte";
-  import { FileCodeOutline } from "flowbite-svelte-icons";
+  import { convert, getModalOpener, INFO_MODAL_OPTIONS } from "../../../utils";
   import TracebackModal from "./TracebackModal.svelte";
 
   export let page: BotErrorsPage;
@@ -27,6 +28,7 @@
       <BreadcrumbHome />
       <BreadcrumbDashboard botInfo={page.bot_info} />
     </Breadcrumbs>
+    <Heading tag="h3">Ошибки</Heading>
     <Pager
       items={page.errors}
       loader={async (offset, count) =>

@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import sys
 import time
 import traceback
 from dataclasses import dataclass
@@ -19,7 +20,22 @@ class BotError(pydantic.BaseModel):
     timestamp: float
     message: str  # message used in logger.error("some message")
     exc_type: str | None = None  # "KeyError", "ValueError", etc
+    exc_data: str | None = None  # str(exc)
     exc_traceback: str | None = None  # multiline string with exception traceback
+
+    @classmethod
+    def from_last_exception(cls, message: str) -> "BotError":
+        bot_error = BotError(
+            timestamp=time.time(),
+            message=message,
+        )
+        exc_type, exc, tb = sys.exc_info()
+        if exc_type is not None and exc is not None and tb is not None:
+            bot_error.exc_type = exc_type.__name__
+            bot_error.exc_data = "".join(traceback.format_exception_only(exc))
+            bot_error.exc_traceback = "".join(traceback.format_tb(tb))
+
+        return bot_error
 
     @classmethod
     def from_log_record(cls, record: logging.LogRecord) -> "BotError":
@@ -29,14 +45,20 @@ class BotError(pydantic.BaseModel):
             exc_type_str = None
 
         try:
-            exc_traceback: str | None = "\n".join(traceback.format_tb(record.exc_info[2]))  # type: ignore
+            exc_traceback: str | None = "".join(traceback.format_tb(record.exc_info[2]))  # type: ignore
         except Exception:
             exc_traceback = None
+
+        try:
+            exc_data: str | None = "".join(traceback.format_exception_only(record.exc_info[1]))  # type: ignore
+        except Exception:
+            exc_data = None
 
         return BotError(
             timestamp=time.time(),
             message=record.getMessage(),
             exc_type=exc_type_str,
+            exc_data=exc_data,
             exc_traceback=exc_traceback,
         )
 
@@ -161,6 +183,9 @@ class BotErrorsStore:
 
     async def save_alert_chat_id(self, owner_id: str, bot_id: str, chat_id: int | str) -> bool:
         return await self._alert_chat_store.save(key=self._composite_key(owner_id, bot_id), value=chat_id)
+
+    async def remove_alert_chat_id(self, owner_id: str, bot_id: str) -> bool:
+        return await self._alert_chat_store.drop(key=self._composite_key(owner_id, bot_id))
 
 
 @dataclass

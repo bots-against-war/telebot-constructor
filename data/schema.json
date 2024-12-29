@@ -278,6 +278,16 @@
           ],
           "title": "Running Version"
         },
+        "running_version_info": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BotVersionInfo"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "last_versions": {
           "items": {
             "$ref": "#/$defs/BotVersionInfo"
@@ -352,6 +362,7 @@
         "bot_id",
         "display_name",
         "running_version",
+        "running_version_info",
         "last_versions",
         "last_events",
         "forms_with_responses",
@@ -1856,8 +1867,15 @@
     "SetAlertChatIdPayload": {
       "properties": {
         "alert_chat_id": {
-          "title": "Alert Chat Id",
-          "type": "integer"
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Alert Chat Id"
         },
         "test": {
           "default": false,

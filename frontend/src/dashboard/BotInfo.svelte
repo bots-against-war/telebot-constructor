@@ -1,35 +1,44 @@
 <script lang="ts">
-  import { Alert, Button, Heading } from "flowbite-svelte";
+  import { Button, Heading } from "flowbite-svelte";
   import { ArrowRightOutline, RocketSolid } from "flowbite-svelte-icons";
   import { updateBotDisplayName } from "../api/botInfo";
-  import type { BotInfo, BotVersionInfo } from "../api/types";
+  import { removeAlertChatId, setAlertChatId } from "../api/errors";
+  import type { BotInfo } from "../api/types";
   import BotUserBadge from "../components/BotUserBadge.svelte";
   import BotVersionInfoBadge from "../components/BotVersionInfoBadge.svelte";
   import GroupChatBadge from "../components/GroupChatBadge.svelte";
+  import GroupChatIdSelect from "../components/GroupChatIdSelect.svelte";
   import JumpingIcon from "../components/JumpingIcon.svelte";
   import Navbar from "../components/Navbar.svelte";
   import Page from "../components/Page.svelte";
   import PageContent from "../components/PageContent.svelte";
+  import Timestamp from "../components/Timestamp.svelte";
   import BreadcrumbHome from "../components/breadcrumbs/BreadcrumbHome.svelte";
   import Breadcrumbs from "../components/breadcrumbs/Breadcrumbs.svelte";
   import EditableText from "../components/inputs/EditableText.svelte";
   import { errorsPath, formResultsPagePath, settingsPath, studioPath, versionsPagePath } from "../routeUtils";
   import BotInfoCard from "./BotInfoCard.svelte";
   import BotEventList from "./components/BotEventList.svelte";
-  import Timestamp from "../components/Timestamp.svelte";
 
   export let botInfo: BotInfo;
 
   const botId = botInfo.bot_id;
 
-  let lastVersionInfo = botInfo.last_versions[botInfo.last_versions.length - 1];
-  let runningVersionInfo: BotVersionInfo | null = null;
-  const matches = botInfo.last_versions.filter((vi) => vi.version === botInfo.running_version);
-  if (matches.length > 0) {
-    runningVersionInfo = matches[0];
-  }
+  const lastVersionInfo = botInfo.last_versions[botInfo.last_versions.length - 1];
+  const runningVersionInfo = botInfo.running_version_info;
 
   let editedDisplayName = botInfo.display_name;
+  const initialAlertChatId = botInfo.alert_chat_id;
+  let editedAlertChatId = botInfo.alert_chat_id;
+  $: {
+    if (editedAlertChatId !== initialAlertChatId) {
+      if (editedAlertChatId !== null) {
+        setAlertChatId(botId, { alert_chat_id: editedAlertChatId, test: true });
+      } else {
+        removeAlertChatId(botId);
+      }
+    }
+  }
 </script>
 
 <Page>
@@ -127,16 +136,25 @@
           <span>В разработке</span>
         </BotInfoCard>
 
-        {#if botInfo.last_errors.length > 0}
-          <BotInfoCard title="Ошибки бота" moreLinkTitle="Перейти" moreLinkHref={errorsPath(botId)}>
-            <span
-              >Последняя: <Timestamp timestamp={botInfo.last_errors[botInfo.last_errors.length - 1].timestamp} />
-            </span>
-          </BotInfoCard>
-        {/if}
-
         <BotInfoCard title="Активность">
           <BotEventList events={botInfo.last_events} />
+        </BotInfoCard>
+
+        <BotInfoCard title="Ошибки бота" moreLinkTitle="Все ошибки" moreLinkHref={errorsPath(botId)}>
+          {#if botInfo.last_errors.length > 0}
+            <span>
+              Последняя: <Timestamp timestamp={botInfo.last_errors[botInfo.last_errors.length - 1].timestamp} />
+            </span>
+          {/if}
+          <GroupChatIdSelect
+            label="Алерт-чат"
+            {botId}
+            bind:selectedGroupChatId={editedAlertChatId}
+            allowEmptyState
+            forbidLegacyGroups={false}
+          >
+            <svelte:fragment slot="delete-chat-id-option">Отключить алерт-чат</svelte:fragment>
+          </GroupChatIdSelect>
         </BotInfoCard>
       </div>
     </div>

@@ -259,7 +259,7 @@ export type Results = {
 export type Errors = BotError[];
 export type Versions = BotVersionInfo[];
 export type TotalVersions = number;
-export type AlertChatId1 = number;
+export type AlertChatId1 = number | string;
 export type Test = boolean;
 
 /**
@@ -610,6 +610,7 @@ export interface BotInfo {
   bot_id: BotId;
   display_name: DisplayName1;
   running_version: RunningVersion;
+  running_version_info: BotVersionInfo | null;
   last_versions: LastVersions;
   last_events: LastEvents;
   forms_with_responses: FormsWithResponses;

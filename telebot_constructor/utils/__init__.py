@@ -182,22 +182,31 @@ def preprocess_for_telegram(text: LocalizableText, markup: TextMarkup) -> Locali
 NOT_LETTERS_RE = re.compile(r"\W+")
 
 
-async def send_telegram_alert(errmsg: str, traceback: str | None, bot: AsyncTeleBot, alerts_chat_id: str | int) -> None:
+async def send_telegram_alert(
+    message: str,
+    error_data: str | None,
+    traceback: str | None,
+    bot: AsyncTeleBot,
+    alerts_chat_id: str | int,
+) -> None:
     """
     Send alert data (error message + optional traceback) through a bot to an alerts chat.
     Try to send in one message, fallback to sending via document if the payload is too large.
     """
     try:
-        text = telegram_html_escape(errmsg)
-        if traceback is not None:
-            text += "\n\n<pre>" + telegram_html_escape(traceback) + "</pre>"
+        text = telegram_html_escape(message)
+        pre_text = "\n\n".join(t for t in (traceback, error_data) if t is not None)
+        if pre_text:
+            text += "\n\n<pre>" + telegram_html_escape(pre_text) + "</pre>"
         await bot.send_message(chat_id=alerts_chat_id, text=text, parse_mode="HTML", auto_split_message=False)
     except Exception:
-        header = errmsg if len(errmsg) < 256 else errmsg[:256] + "..."
+        header = message if len(message) < 256 else message[:256] + "..."
         try:
-            text = errmsg
+            text = message
             if traceback is not None:
                 text += "\n\n" + traceback
+            if error_data is not None:
+                text += "\n\n" + error_data
             body = io.StringIO(initial_value=text)
             filename_raw = header if traceback is None else traceback.splitlines()[-1]
             filename = NOT_LETTERS_RE.sub("-", filename_raw)

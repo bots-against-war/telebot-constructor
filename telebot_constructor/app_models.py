@@ -154,6 +154,7 @@ class BotInfo(BaseModel):
     bot_id: str  # internal constructor bot id
     display_name: str  # user-facing name
     running_version: Optional[int]  # None = bot not running
+    running_version_info: Optional[BotVersionInfo]  # None = bot not running
     last_versions: list[BotVersionInfo]  # versions, including last and running (if present) versions
     last_events: list[BotEvent]
     forms_with_responses: list[FormInfoBasic]
@@ -177,7 +178,7 @@ class StartBotPayload(BaseModel):
 
 
 class SetAlertChatIdPayload(BaseModel):
-    alert_chat_id: int
+    alert_chat_id: int | str
     test: bool = False
 
 

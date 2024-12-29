@@ -1,20 +1,21 @@
 <script lang="ts">
   import { Accordion, AccordionItem, Spinner } from "flowbite-svelte";
-  import { CloseOutline, ExclamationCircleOutline, PenOutline } from "flowbite-svelte-icons";
+  import { CloseOutline, ExclamationCircleOutline, PenOutline, TrashBinOutline } from "flowbite-svelte-icons";
   import { onDestroy } from "svelte";
-  import { getAvailableGroupChats, startGroupChatDiscovery, stopGroupChatDiscovery } from "../../api/groupChats";
-  import type { TgGroupChat } from "../../api/types";
-  import ErrorBadge from "../../components/AlertBadge.svelte";
-  import GroupChatBadge from "../../components/GroupChatBadge.svelte";
-  import { PLACEHOLDER_GROUP_CHAT_ID } from "../nodes/defaultConfigs";
+  import { getAvailableGroupChats, startGroupChatDiscovery, stopGroupChatDiscovery } from "../api/groupChats";
+  import type { TgGroupChat } from "../api/types";
+  import { PLACEHOLDER_GROUP_CHAT_ID } from "../studio/nodes/defaultConfigs";
+  import ErrorBadge from "./AlertBadge.svelte";
+  import GroupChatBadge from "./GroupChatBadge.svelte";
 
   export let label: string;
   export let botId: string;
-  export let selectedGroupChatId: number | string;
+  export let selectedGroupChatId: number | string | null;
   export let forbidLegacyGroups: boolean = true;
+  export let allowEmptyState: boolean = false;
 
   // auto-open if not selected initially
-  let isOpen = selectedGroupChatId === PLACEHOLDER_GROUP_CHAT_ID;
+  let isOpen = !allowEmptyState && (selectedGroupChatId === PLACEHOLDER_GROUP_CHAT_ID || selectedGroupChatId === null);
 
   let chatsLoadError: string | null = null;
   let availableChats: TgGroupChat[] = [];
@@ -79,12 +80,15 @@
   <AccordionItem
     bind:open={isOpen}
     paddingFlush="py-2"
-    class="flex items-center justify-between w-full font-medium text-left border-gray-200"
+    class="flex items-center justify-between w-full font-medium text-left "
+    borderClass="border-none"
   >
     <div slot="header" class="text-gray-900 text-sm">
       <div class="font-bold mb-2">{label}</div>
-      {#if selectedGroupChatId !== PLACEHOLDER_GROUP_CHAT_ID}
+      {#if selectedGroupChatId !== PLACEHOLDER_GROUP_CHAT_ID && selectedGroupChatId !== null}
         <GroupChatBadge {botId} chatId={selectedGroupChatId} />
+      {:else if !isOpen}
+        <span class="text-gray-700">Не выбран</span>
       {/if}
     </div>
     <div slot="arrowdown">
@@ -103,8 +107,8 @@
         {#if chatsLoadError !== null}
           <ErrorBadge title="Не получилось загрузить доступные чаты" text={chatsLoadError} />
         {:else}
-          <div>
-            <div class="mb-2 font-bold">Доступные чаты</div>
+          <div class="flex flex-col gap-1">
+            <div class="font-bold">Доступные чаты</div>
             <div class="flex flex-col gap-2">
               {#each availableChats as chat (chat.id)}
                 <div class="flex flex-row items-center gap-2">
@@ -133,6 +137,24 @@
                 </div>
               {/each}
             </div>
+            {#if allowEmptyState}
+              <div class="flex flex-row items-center gap-2">
+                <input
+                  type="radio"
+                  id={"delete-chat-id"}
+                  on:change={async () => {
+                    selectedGroupChatId = null;
+                    isOpen = false;
+                  }}
+                  value={"delete-chat-id"}
+                />
+                <label for={"delete-chat-id"} class="flex flex-row gap-1">
+                  <slot name="delete-chat-id-option">
+                    <TrashBinOutline size="sm" /> Удалить
+                  </slot>
+                </label>
+              </div>
+            {/if}
             {#if isScannning}
               <p class="mt-3">
                 <Spinner size={4} class="mr-2" />

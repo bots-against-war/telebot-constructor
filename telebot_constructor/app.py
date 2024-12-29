@@ -9,7 +9,6 @@ import re
 from dataclasses import dataclass
 from io import StringIO
 from pathlib import Path
-import time
 from typing import Optional, Type, TypeVar
 
 import pydantic
@@ -285,7 +284,8 @@ class TelebotConstructorApp:
 
     async def send_alert_on_error(self, ctx: BotErrorContext) -> None:
         await send_telegram_alert(
-            errmsg=ctx.error.message,
+            message=ctx.error.message,
+            error_data=ctx.error.exc_data,
             traceback=ctx.error.exc_traceback,
             bot=await self._make_bare_bot(ctx.owner_id, ctx.bot_id),
             alerts_chat_id=ctx.alert_chat_id,
@@ -910,14 +910,41 @@ class TelebotConstructorApp:
             if not res:
                 raise web.HTTPInternalServerError(reason="Failed to save alert chat id to the store")
             if payload.test:
-                res = await self.store.errors.process_error(
-                    owner_id=a.owner_id,
-                    bot_id=a.bot_id,
-                    error=BotError(timestamp=time.time(), message="Alert chat test", exc_type=None, exc_traceback=None),
-                )
-                if not res:
-                    raise web.HTTPServerError(reason="Alert chat test failed")
+
+                def inner_func() -> None:
+                    raise RuntimeError("Alert chat test!")
+
+                try:
+                    inner_func()
+                except RuntimeError:
+                    res = await self.store.errors.process_error(
+                        owner_id=a.owner_id,
+                        bot_id=a.bot_id,
+                        error=BotError.from_last_exception(message="Example report of an unexpected error"),
+                    )
+                    if not res:
+                        raise web.HTTPServerError(reason="Alert chat test failed")
             return web.Response(text="OK")
+
+        @routes.delete("/api/alert-chat-id/{bot_id}")
+        async def remove_alert_chat(request: web.Request) -> web.Response:
+            """
+            ---
+            description: Remove alert chat from the bot
+            produces:
+            - application/text
+            responses:
+                "200":
+                    description: OK
+            """
+            a = await self.authorize(request)
+            if await self.store.errors.remove_alert_chat_id(
+                owner_id=a.owner_id,
+                bot_id=a.bot_id,
+            ):
+                return web.Response(text="OK")
+            else:
+                raise web.HTTPInternalServerError(reason="Failed to remove alert chat id")
 
         # endregion
         ##################################################################################
