@@ -156,18 +156,18 @@ class TelebotConstructorApp:
         bot_must_exist: bool = True,
         for_bot_id: str | None = None,
     ) -> BotAccessAuthorization:
-        actor_username = await self.authenticate(request)
+        actor_id = await self.authenticate(request)
         bot_id = for_bot_id or self.parse_bot_id(request)
-        owner_username = await self.store.load_owner_id(actor_username, bot_id)
-        if owner_username is None:
+        owner_id = await self.store.load_owner_id(actor_id, bot_id)
+        if owner_id is None:
             if bot_must_exist:
                 raise web.HTTPNotFound(reason=f'Bot "{bot_id}" does not exist')
             else:
-                owner_username = actor_username
+                owner_id = actor_id
         return BotAccessAuthorization(
             bot_id=bot_id,
-            actor_id=actor_username,
-            owner_id=owner_username,
+            actor_id=actor_id,
+            owner_id=owner_id,
         )
 
     async def load_nondetailed_bot_info(self, a: BotAccessAuthorization) -> BotInfo:
@@ -360,7 +360,7 @@ class TelebotConstructorApp:
             logger.exception(f"{log_prefix} Error constructing bot")
             await self.store.set_bot_not_running(a.owner_id, a.bot_id)
             raise web.HTTPBadRequest(reason=str(e))
-        if not await self.runner.start(username=a.owner_id, bot_id=a.bot_id, bot_runner=bot_runner):
+        if not await self.runner.start(owner_id=a.owner_id, bot_id=a.bot_id, bot_runner=bot_runner):
             await self.store.set_bot_not_running(a.owner_id, a.bot_id)
             logger.error(f"{log_prefix} Bot failed to start")
             raise web.HTTPInternalServerError(reason="Failed to start bot")
@@ -396,7 +396,7 @@ class TelebotConstructorApp:
                 "201":
                     description: Success
             """
-            username = await self.authenticate(request)
+            owner_id = await self.authenticate(request)
             secret_name = self.parse_secret_name(request)
             secret_value = await request.text()
             if not secret_value:
@@ -404,7 +404,7 @@ class TelebotConstructorApp:
             result = await self.secret_store.save_secret(
                 secret_name=secret_name,
                 secret_value=secret_value,
-                owner_id=username,
+                owner_id=owner_id,
                 allow_update=True,
             )
             return web.Response(text=result.message, status=200 if result.is_saved else 400)
@@ -418,11 +418,11 @@ class TelebotConstructorApp:
                 "201":
                     description: Success
             """
-            username = await self.authenticate(request)
+            owner_id = await self.authenticate(request)
             secret_name = self.parse_secret_name(request)
             if await self.secret_store.remove_secret(
                 secret_name=secret_name,
-                owner_id=username,
+                owner_id=owner_id,
             ):
                 return web.Response(text="Removed", status=200)
             else:
@@ -439,8 +439,8 @@ class TelebotConstructorApp:
                 "201":
                     description: List of string secret names
             """
-            username = await self.authenticate(request)
-            secret_names = await self.secret_store.list_secrets(owner_id=username)
+            owner_id = await self.authenticate(request)
+            secret_names = await self.secret_store.list_secrets(owner_id=owner_id)
             return web.json_response(data=secret_names)
 
         # endregion
@@ -648,13 +648,13 @@ class TelebotConstructorApp:
                 "200":
                     description: List of all bots name and their statuses
             """
-            owner_username = await self.authenticate(request)
+            owner_id = await self.authenticate(request)
             # TODO: add "shared" bots to the list
-            bot_ids = await self.store.list_bot_ids(owner_username)
-            logger.info(f"Bots owned by {owner_username}: {bot_ids}")
+            bot_ids = await self.store.list_bot_ids(owner_id)
+            logger.info(f"Bots owned by {owner_id}: {bot_ids}")
             maybe_bot_infos = [
                 await self.store.load_bot_info(
-                    owner_username,
+                    owner_id,
                     bot_id,
                     detailed=self.parse_query_param_bool(request, "detailed", default=True),
                 )
@@ -1206,8 +1206,8 @@ class TelebotConstructorApp:
                 # if not static file -- must be an app route, so authenticate and serve
                 # either login or app page; in the latter case, client-side routing kicks
                 # in
-                username = await self.auth.authenticate_request(request)
-                if username is None:
+                owner_id = await self.auth.authenticate_request(request)
+                if owner_id is None:
                     return await self.auth.unauthenticated_client_response(
                         request, static_files_dir=self.static_files_dir
                     )
@@ -1235,22 +1235,22 @@ class TelebotConstructorApp:
             logger.info("Starting stored bots...")
             total_bots = 0
             started_bots = 0
-            async for username, bot_id, version in self.store.iter_running_bot_versions():
+            async for owner_id, bot_id, version in self.store.iter_running_bot_versions():
                 total_bots += 1
-                log_prefix = self._log_prefix(username, bot_id, version)
+                log_prefix = self._log_prefix(owner_id, bot_id, version)
                 logger.debug(f"{log_prefix} Starting stored bot (#{total_bots})")
                 try:
-                    bot_config = await self.store.load_bot_config(username, bot_id, version)
+                    bot_config = await self.store.load_bot_config(owner_id, bot_id, version)
                     if bot_config is None:
                         raise RuntimeError("Bot is marked as running bot no config found")
-                    bot_runner = await self._construct_bot(username, bot_id, bot_config)
-                    if not await self.runner.start(username=username, bot_id=bot_id, bot_runner=bot_runner):
+                    bot_runner = await self._construct_bot(owner_id, bot_id, bot_config)
+                    if not await self.runner.start(owner_id=owner_id, bot_id=bot_id, bot_runner=bot_runner):
                         raise RuntimeError(f"Runner {self.runner} refused to start the bot, maybe see error above")
                     started_bots += 1
                 except Exception:
                     logger.exception(f"{log_prefix} Error starting stored bot, will mark it as not running")
                     try:
-                        await self.store.set_bot_not_running(username, bot_id)
+                        await self.store.set_bot_not_running(owner_id, bot_id)
                     except Exception:
                         logger.exception(f"{log_prefix} Failed to mark bot as non-running after failed startup")
             logger.info(f"Started {started_bots}/{total_bots} bots in total")
@@ -1262,7 +1262,7 @@ class TelebotConstructorApp:
         auth_bot_runner = await self.auth.setup_bot()
         if auth_bot_runner is not None:
             logger.info("Starting auth bot")
-            await self.runner.start(username="internal", bot_id="auth-bot", bot_runner=auth_bot_runner)
+            await self.runner.start(owner_id="internal", bot_id="auth-bot", bot_runner=auth_bot_runner)
         await self.telegram_files_downloader.setup()
         if self.media_store is not None:
             await self.media_store.setup()

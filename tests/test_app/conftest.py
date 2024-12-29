@@ -22,8 +22,8 @@ class MockBotRunner(ConstructedBotRunner):
     def __init__(self) -> None:
         self.running: dict[str, dict[str, BotRunner]] = collections.defaultdict(dict)
 
-    async def start(self, username: str, bot_id: str, bot_runner: BotRunner) -> bool:
-        self.running[username][bot_id] = bot_runner
+    async def start(self, owner_id: str, bot_id: str, bot_runner: BotRunner) -> bool:
+        self.running[owner_id][bot_id] = bot_runner
         return True
 
     async def stop(self, username: str, bot_id: str) -> bool:
