@@ -2,6 +2,7 @@
 <script lang="ts">
   import { getContext } from "svelte";
   import { twMerge } from "tailwind-merge";
+
   const ctx = getContext("iconCtx") ?? {};
   const sizes = {
     xs: "w-3 h-3",

@@ -1,8 +1,8 @@
 import type { CommandEntryPoint, UserFlowConfig } from "../api/types";
 import { DEFAULT_START_COMMAND_ENTRYPOINT_ID } from "../constants";
+import { generateFormFieldId, generateOptionId } from "./nodes/FormBlock/utils";
 import { generateFormName, PLACEHOLDER_GROUP_CHAT_ID } from "./nodes/defaultConfigs";
 import { NodeTypeKey } from "./nodes/display";
-import { generateFormFieldId, generateOptionId } from "./nodes/FormBlock/utils";
 import { boundingBox, generateNodeId, NodeKind } from "./utils";
 
 export interface Template {

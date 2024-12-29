@@ -1,5 +1,4 @@
 import { writable } from "svelte/store";
-
 import { type SupportedLanguages } from "../api/types";
 
 export interface LanguageConfig {

@@ -3,12 +3,13 @@
   import { setContext } from "svelte";
   import { links, Route, Router } from "svelte-routing";
   import Modal from "svelte-simple-modal";
+  import GlobalStateProvider from "./GlobalStateProvider.svelte";
   import BotInfoLoader from "./dashboard/BotInfoLoader.svelte";
   import BotListingLoader from "./dashboard/BotListingLoader.svelte";
+  import ErrorsLoader from "./dashboard/routes/errors/ErrorsLoader.svelte";
   import FormLoader from "./dashboard/routes/forms/FormLoader.svelte";
   import SettingsLoader from "./dashboard/routes/settings/SettingsLoader.svelte";
   import VersionsLoader from "./dashboard/routes/versions/VersionsLoader.svelte";
-  import GlobalStateProvider from "./GlobalStateProvider.svelte";
   import {
     botListingPath,
     dashboardPath,
@@ -19,7 +20,6 @@
     versionsPagePath,
   } from "./routeUtils";
   import StudioLoader from "./studio/StudioLoader.svelte";
-  import ErrorsLoader from "./dashboard/routes/errors/ErrorsLoader.svelte";
 
   // Global icon settings for flowbite-icons
   const iconCtx = {

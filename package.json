@@ -10,7 +10,7 @@
     "preview": "vite build frontend && vite preview frontend",
     "check": "svelte-check --tsconfig tsconfig.json --workspace frontend/ --compiler-warnings \"ts:ignore\"",
     "check:watch": "svelte-check --tsconfig ./tsconfig.json --workspace frontend/ --watch",
-    "format": "prettier --write --plugin prettier-plugin-svelte frontend",
+    "format": "prettier --write frontend",
     "pydantic:to:ts": "poetry run python3 scripts/models/pydantic2jsonschema.py && node scripts/models/jsonschema2ts.mjs",
     "dev:with-deps": "API_ORIGIN=http://localhost:8088 vite --port 8081 --force frontend"
   },
@@ -18,6 +18,7 @@
     "@jhubbardsf/svelte-sortablejs": "^1.1.0",
     "@rollup/plugin-node-resolve": "^15.2.1",
     "@rollup/plugin-replace": "^5.0.2",
+    "@svackages/truncate": "^1.0.0",
     "@sveltejs/vite-plugin-svelte": "^3.0.1",
     "@tsconfig/svelte": "^5.0.0",
     "autoprefixer": "^10.4.16",
@@ -26,9 +27,10 @@
     "flowbite-svelte-icons": "^1.6.1",
     "js-md5": "^0.8.3",
     "json-schema-to-typescript": "^13.0.2",
+    "marked": "^14.1.0",
     "postcss": "^8.4.32",
     "postcss-load-config": "^5.0.2",
-    "prettier": "^3.0.2",
+    "prettier": "^3.4.2",
     "prettier-plugin-svelte": "^3.0.3",
     "svelte": "^4.2.19",
     "svelte-check": "^3.6.4",
@@ -49,9 +51,5 @@
     "plugins": [
       "prettier-plugin-svelte"
     ]
-  },
-  "dependencies": {
-    "@svackages/truncate": "^1.0.0",
-    "marked": "^14.1.0"
   }
 }
