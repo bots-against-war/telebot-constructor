@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { _ } from "svelte-i18n";
   import { Button, Heading } from "flowbite-svelte";
   import { PlusOutline } from "flowbite-svelte-icons";
   import { type BotInfo } from "../api/types";
