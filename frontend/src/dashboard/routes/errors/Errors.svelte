@@ -1,7 +1,10 @@
 <script lang="ts">
+  import truncate from "@svackages/truncate";
   import { Heading } from "flowbite-svelte";
+  import { FileCodeOutline } from "flowbite-svelte-icons";
   import { loadErrors as loadBotErrors } from "../../../api/errors";
   import type { BotErrorsPage } from "../../../api/types";
+  import ActionIcon from "../../../components/ActionIcon.svelte";
   import Navbar from "../../../components/Navbar.svelte";
   import Page from "../../../components/Page.svelte";
   import PageContent from "../../../components/PageContent.svelte";
@@ -43,7 +46,7 @@
               <strong>{error.exc_type}</strong>
             {/if}
           </div>
-          <code class="max-h-[10vh]">
+          <code>
             {truncateText(error.message, 512)[0]}
           </code>
         </button>
