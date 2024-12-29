@@ -28,14 +28,22 @@
   const runningVersionInfo = botInfo.running_version_info;
 
   let editedDisplayName = botInfo.display_name;
-  const initialAlertChatId = botInfo.alert_chat_id;
+  let savedAlertChatId = botInfo.alert_chat_id;
   let editedAlertChatId = botInfo.alert_chat_id;
   $: {
-    if (editedAlertChatId !== initialAlertChatId) {
+    if (editedAlertChatId !== savedAlertChatId) {
       if (editedAlertChatId !== null) {
-        setAlertChatId(botId, { alert_chat_id: editedAlertChatId, test: true });
+        setAlertChatId(botId, { alert_chat_id: editedAlertChatId, test: true }).then((res) => {
+          if (res.ok) {
+            savedAlertChatId = editedAlertChatId;
+          }
+        });
       } else {
-        removeAlertChatId(botId);
+        removeAlertChatId(botId).then((res) => {
+          if (res.ok) {
+            savedAlertChatId = editedAlertChatId;
+          }
+        });
       }
     }
   }
