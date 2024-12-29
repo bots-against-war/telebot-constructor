@@ -2,5 +2,18 @@
     "footer": {
         "contact": "Связаться с нами",
         "language": "Язык"
+    },
+    "listing": {
+        "title": "Мои боты",
+        "create": "Создать"
+    },
+    "timestamp": {
+        "now": "только что",
+        "sec": "сек",
+        "min": "мин",
+        "hrs": "ч"
+    },
+    "navbar": {
+        "logout": "Выйти"
     }
 }

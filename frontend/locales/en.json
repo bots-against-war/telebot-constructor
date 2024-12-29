@@ -2,5 +2,18 @@
     "footer": {
         "contact": "Contact us",
         "language": "Language"
+    },
+    "listing": {
+        "title": "My bots",
+        "create": "Create"
+    },
+    "timestamp": {
+        "now": "now",
+        "sec": "s",
+        "min": "m",
+        "hrs": "h"
+    },
+    "navbar": {
+        "logout": "Log out"
     }
 }

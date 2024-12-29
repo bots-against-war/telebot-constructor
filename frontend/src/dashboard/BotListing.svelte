@@ -26,10 +26,10 @@
   <Navbar />
   <PageContent>
     <div class="flex flex-row justify-between items-center mb-4">
-      <Heading tag="h3">Мои боты</Heading>
+      <Heading tag="h3">{$_("listing.title")}</Heading>
       <Button outline on:click={() => open(CreateBotModal)}>
         <PlusOutline class="w-3 h-3 me-2" />
-        Создать
+        {$_("listing.create")}
       </Button>
     </div>
     {#each botInfos as botInfo (botInfo.bot_id)}
