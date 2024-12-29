@@ -75,13 +75,14 @@ async def test_bot_level_errors(
     def check_error(error: Any, user_id: int) -> None:
         assert isinstance(error, dict)
         assert error["timestamp"] == RECENT_TIMESTAMP
-        assert error["exc_type"] == "RuntimeError"
         assert error["message"].startswith(
             "Error processing update with handler 'telebot_constructor.user_flow.entrypoints.command."
             + "CommandEntryPoint.setup.<locals>.cmd_handler': Message({'content_type': 'text', 'id': 1, "
             + "'message_id': 1, 'from_user': {'id': "
             + f"{user_id}, 'is_bot': False, 'first_name': 'john pork'"
         )
+        assert error["exc_type"] == "RuntimeError"
+        assert error["exc_data"] == "RuntimeError: User entered the error block (self.block_id='error-block')\n"
         assert error["exc_traceback"].endswith(
             'raise RuntimeError(f"User entered the error block ({self.block_id=!r})")\n'
         )
