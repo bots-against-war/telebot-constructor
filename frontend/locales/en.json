@@ -1,19 +1,42 @@
 {
-    "footer": {
-        "contact": "Contact us",
-        "language": "Language"
-    },
-    "listing": {
-        "title": "My bots",
-        "create": "Create"
-    },
-    "timestamp": {
-        "now": "now",
-        "sec": "s",
-        "min": "m",
-        "hrs": "h"
-    },
-    "navbar": {
-        "logout": "Log out"
+  "footer": {
+    "contact": "Contact us",
+    "language": "Language"
+  },
+  "listing": {
+    "title": "My bots",
+    "create": "Create",
+    "newbot": {
+      "bot_name_cannot_be_empty_error": "Bot name can't be empy",
+      "botname": "Name",
+      "botname_description": "This is bot's name inside the Constructor. It is not visivle to users and can be changed later.",
+      "botname_placeholder": "Volunteer bot",
+      "failed_to_save_token_error": "Error saving token",
+      "generic_error": "Error",
+      "generic_saving_error": "Unknown error",
+      "howto": {
+        "p1": "To create bot:",
+        "p2": "Use a dedicated Telegram-bot",
+        "p3": "Enter command",
+        "p4": "Give a name and a @username to the bot",
+        "p5": "Copy a token provided by BotFather"
+      },
+      "incorrect_token_error": "Check token",
+      "start_cmd_description": "start bot",
+      "token": "Token",
+      "token_cannot_be_empty_error": "Token can't be empty"
     }
+  },
+  "timestamp": {
+    "now": "now",
+    "sec": "s",
+    "min": "m",
+    "hrs": "h"
+  },
+  "navbar": {
+    "logout": "Log out"
+  },
+  "generic": {
+    "cancel": "Cancel"
+  }
 }
