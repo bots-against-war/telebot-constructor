@@ -80,8 +80,7 @@
   <AccordionItem
     bind:open={isOpen}
     paddingFlush="py-2"
-    class="flex items-center justify-between w-full font-medium text-left "
-    borderClass="border-none"
+    class="flex items-center justify-between w-full font-medium text-left"
   >
     <div slot="header" class="text-gray-900 text-sm">
       <div class="font-bold mb-2">{label}</div>
