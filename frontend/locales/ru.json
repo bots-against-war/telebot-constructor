@@ -37,6 +37,44 @@
     }
   },
   "generic": {
-    "cancel": "Отмена"
+    "cancel": "Отмена",
+    "refresh": "Обновить"
+  },
+  "dashboard": {
+    "status": "Статус",
+    "running": "Работает",
+    "stopped": "Остановлен",
+    "running_version": "Запущена версия",
+    "last_version": "Последняя версия",
+    "account": "Аккаунт",
+    "admin_chats": "Рабочие чаты",
+    "form_responses": "Ответы на формы",
+    "settings": "Управление",
+    "go_to_settings": "Перейти",
+    "stats": "Статистика",
+    "under_construction": "В разработке",
+    "activity": "Активность",
+    "bot_errors": "Ошибки бота",
+    "open_all_errors": "Все ошибки",
+    "last_error": "Последняя",
+    "alert_chat": "Чат для уведомлений об ошибках",
+    "disable_alert_chat": "Отключить уведомления об ошибках",
+    "all_versions": "Все версии",
+    "to_studio": "Конструктор",
+    "events": {
+      "published": "опубликована",
+      "created": "создана",
+      "bot_stopped": "бот остановлен",
+      "stub_version": "версия-заглушка"
+    }
+  },
+  "components": {
+    "bot_user_badge": {
+      "data_loading_error": "Ошибка загрузки данных о боте",
+      "go_to_bot": "Открыть бота"
+    },
+    "group_chat_badge": {
+      "data_loading_error": "Ошибка загрузки данных чата"
+    }
   }
 }

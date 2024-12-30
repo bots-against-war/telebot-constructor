@@ -37,6 +37,44 @@
     "logout": "Log out"
   },
   "generic": {
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "refresh": "Refresh"
+  },
+  "components": {
+    "bot_user_badge": {
+      "data_loading_error": "Error loading bot data",
+      "go_to_bot": "Go to bot"
+    },
+    "group_chat_badge": {
+      "data_loading_error": "Error loading chat data"
+    }
+  },
+  "dashboard": {
+    "account": "Account",
+    "activity": "Activity",
+    "admin_chats": "Connected chats",
+    "alert_chat": "Error notifications chat",
+    "all_versions": "All versions",
+    "bot_errors": "Bot errors",
+    "disable_alert_chat": "Disable error notifications",
+    "form_responses": "Form responses",
+    "go_to_settings": "Open",
+    "settings": "Settings",
+    "last_error": "Latest",
+    "last_version": "Latest version",
+    "open_all_errors": "Browse errors",
+    "running": "Running",
+    "running_version": "Running version",
+    "stats": "Stats",
+    "status": "Status",
+    "stopped": "Stopped",
+    "to_studio": "Constructor",
+    "under_construction": "Under construction",
+    "events": {
+      "bot_stopped": "bot stopped",
+      "created": "created",
+      "published": "published",
+      "stub_version": "stub version"
+    }
   }
 }

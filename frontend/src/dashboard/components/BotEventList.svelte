@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from "svelte-i18n";
   import { botEventTimestamp, type AnyBotEvent } from "../../api/typeUtils";
   import Timestamp from "../../components/Timestamp.svelte";
 
@@ -12,16 +13,17 @@
       .toSorted((e1, e2) => botEventTimestamp(e2) - botEventTimestamp(e1))
       .slice(0, limit || events.length) as event (event.timestamp)}
       <li class="mb-1 ms-2 p-1">
-        <div class="absolute w-2 h-2 bg-gray-300 rounded-full mt-1.5 -start-1 border border-white" />
+        <div class="absolute w-2 h-2 bg-gray-300 rounded-full mt-2.5 -start-1 border border-white" />
         <div class="flex flex-row gap-2 items-baseline">
           {#if event.event}
             <span>
               {#if event.event === "started"}
-                опубликована {typeof event.version === "number" ? `v${event.version + 1}` : "версия-заглушка"}
+                {$t("dashboard.events.published")}
+                {typeof event.version === "number" ? `v${event.version + 1}` : $t("dashboard.events.stub_version")}
               {:else if event.event === "edited"}
-                создана v{event.new_version + 1}
+                {$t("dashboard.events.created")} v{event.new_version + 1}
               {:else if event.event === "stopped"}
-                бот остановлен
+                {$t("dashboard.events.bot_stopped")}
               {/if}
             </span>
           {/if}
