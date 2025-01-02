@@ -38,7 +38,10 @@
   },
   "generic": {
     "cancel": "Отмена",
-    "refresh": "Обновить"
+    "refresh": "Обновить",
+    "delete": "Удалить",
+    "error": "Ошибка",
+    "download": "Скачать"
   },
   "dashboard": {
     "status": "Статус",
@@ -66,7 +69,29 @@
       "created": "создана",
       "bot_stopped": "бот остановлен",
       "stub_version": "версия-заглушка"
-    }
+    },
+    "form_results_page": {
+      "export": "Экспорт",
+      "timestamp": "Время",
+      "user": "Пользователь:ница",
+      "responses_export": "Экспорт данных",
+      "csv_format": "Формат CSV подходит для загрузки в Excel, Google Sheets, Airtable и другие системы обработки данных.",
+      "starting_from": "Начиная с",
+      "up_to": "до",
+      "earliest": "самой ранней записи",
+      "latest": "последней записи"
+    },
+    "confirm_stop_bot": "Вы уверены что хотите бота? Он перестанет реагировать на команды и отвечать пользователь:ницам! Запустить его можно будет в любой момент из конструктора или истории версий.",
+    "stop_bot": "Остановить",
+    "confirm_delete_bot": "Вы уверены, что хотите удалить бота? Это действие дельзя отменить!",
+    "delete_bot": "Удалить",
+    "publish": "Опубликовать",
+    "instead_of": "вместо",
+    "error_starting_bot": "Ошибка при запуске бота",
+    "error_stopping_bot": "Ошибка при остановке бота",
+    "version_history": "История версий",
+    "edit": "Редактировать",
+    "open_readonly": "Посмотреть"
   },
   "components": {
     "bot_user_badge": {
@@ -75,6 +100,27 @@
     },
     "group_chat_badge": {
       "data_loading_error": "Ошибка загрузки данных чата"
+    },
+    "group_chat_select": {
+      "error_loading_available_chats": "Не получилось загрузить доступные чаты",
+      "available_chats": "Доступные чаты",
+      "chat_must_be_a_supergroup": "Чат не подходит для использования в боте, его нужно активировать",
+      "searching": "Поиск...",
+      "not_selected": "Не выбран"
+    },
+    "markdown_input": {
+      "might_be_inaccurate": "Может быть неточным",
+      "preview": "Превью",
+      "bold": "Жирный",
+      "italic": "Курсив",
+      "quote": "Цитата",
+      "link": "Ссылка",
+      "strikethrough": "Зачеркнутый",
+      "spoiler": "Спойлер"
+    },
+    "text_input": {
+      "symbols": "символов",
+      "message_might_be_split": "сообщение может быть разрезано"
     }
   }
 }

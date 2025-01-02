@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from "svelte-i18n";
   import { Accordion, AccordionItem, Spinner } from "flowbite-svelte";
   import { CloseOutline, ExclamationCircleOutline, PenOutline, TrashBinOutline } from "flowbite-svelte-icons";
   import { onDestroy } from "svelte";
@@ -87,7 +88,7 @@
       {#if selectedGroupChatId !== PLACEHOLDER_GROUP_CHAT_ID && selectedGroupChatId !== null}
         <GroupChatBadge {botId} chatId={selectedGroupChatId} />
       {:else if !isOpen}
-        <span class="text-gray-700">Не выбран</span>
+        <span class="text-gray-700">{$t("components.group_chat_select.not_selected")}</span>
       {/if}
     </div>
     <div slot="arrowdown">
@@ -104,10 +105,10 @@
         <Spinner />
       {:then}
         {#if chatsLoadError !== null}
-          <ErrorBadge title="Не получилось загрузить доступные чаты" text={chatsLoadError} />
+          <ErrorBadge title={$t("components.group_chat_select.error_loading_available_chats")} text={chatsLoadError} />
         {:else}
           <div class="flex flex-col gap-1">
-            <div class="font-bold">Доступные чаты</div>
+            <div class="font-bold">{$t("components.group_chat_select.available_chats")}</div>
             <div class="flex flex-col gap-2">
               {#each availableChats as chat (chat.id)}
                 <div class="flex flex-row items-center gap-2">
@@ -126,7 +127,7 @@
                       color="red"
                       title={{
                         id: "non-supergroup chat is forbidden",
-                        title: "Чат не подходит для использования в боте, его нужно активировать",
+                        title: $t("components.group_chat_select.chat_must_be_a_supergroup"),
                       }}
                     />
                   {/if}
@@ -149,7 +150,8 @@
                 />
                 <label for={"delete-chat-id"} class="flex flex-row gap-1">
                   <slot name="delete-chat-id-option">
-                    <TrashBinOutline size="sm" /> Удалить
+                    <TrashBinOutline size="sm" />
+                    {$t("generic.delete")}
                   </slot>
                 </label>
               </div>
@@ -157,7 +159,7 @@
             {#if isScannning}
               <p class="mt-3">
                 <Spinner size={4} class="mr-2" />
-                Поиск...
+                {$t("components.group_chat_select.searching")}
               </p>
             {/if}
           </div>

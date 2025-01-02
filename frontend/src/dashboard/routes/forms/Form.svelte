@@ -11,6 +11,7 @@
     TableHeadCell,
   } from "flowbite-svelte";
   import { FloppyDiskOutline } from "flowbite-svelte-icons";
+  import { t } from "svelte-i18n";
   import { loadFormResults, updateFormTitle } from "../../../api/formResults";
   import type { FormResultsPage } from "../../../api/types";
   import Navbar from "../../../components/Navbar.svelte";
@@ -59,7 +60,7 @@
         on:click={() => open(FormExportModal, { formInfo: page.info, botInfo: botInfo }, INFO_MODAL_OPTIONS)}
       >
         <FloppyDiskOutline class="mr-2" />
-        Экспорт
+        {$t("dashboard.form_results_page.export")}
       </Button>
     </div>
     <Pager
@@ -70,16 +71,13 @@
       let:items
     >
       <span slot="indices" let:first let:last>
-        Ответы
-        <strong>{first} - {last}</strong>
-        из
-        <strong>{page.info.total_responses}</strong>
+        <strong>{first} - {last}</strong> / <strong>{page.info.total_responses}</strong>
       </span>
       <Table hoverable shadow>
         <TableHead>
-          <TableHeadCell>Время</TableHeadCell>
+          <TableHeadCell>{$t("dashboard.form_results_page.timestamp")}</TableHeadCell>
           {#if dataHasUsers}
-            <TableHeadCell>Пользователь:ница</TableHeadCell>
+            <TableHeadCell>{$t("dashboard.form_results_page.user")}</TableHeadCell>
           {/if}
           {#each fieldIds as fieldId}
             <TableHeadCell>{page.info.field_names[fieldId] || fieldId}</TableHeadCell>

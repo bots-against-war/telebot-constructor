@@ -47,6 +47,27 @@
     },
     "group_chat_badge": {
       "data_loading_error": "Error loading chat data"
+    },
+    "group_chat_select": {
+      "available_chats": "Available chats",
+      "chat_must_be_a_supergroup": "The chat is not set up to be used with bot",
+      "error_loading_available_chats": "Failed to load available chats",
+      "not_selected": "Not selected",
+      "searching": "Searching..."
+    },
+    "markdown_input": {
+      "bold": "Bold",
+      "italic": "Italic",
+      "link": "Link",
+      "might_be_inaccurate": "Might be inaccurate",
+      "preview": "Preview",
+      "quote": "Blockquote",
+      "spoiler": "Spoiler",
+      "strikethrough": "Strikethrough"
+    },
+    "text_input": {
+      "message_might_be_split": "the message might be split",
+      "symbols": "characters"
     }
   },
   "dashboard": {
@@ -75,6 +96,24 @@
       "created": "created",
       "published": "published",
       "stub_version": "stub version"
-    }
+    },
+    "confirm_delete_bot": "Are you sure you want to delete the bot? This can't be undone!",
+    "confirm_stop_bot": "Are you sure you want to stop the bot? It will stop responding to users! You can start it back from the constructor or the version history page.",
+    "delete_bot": "Delete",
+    "edit": "Edit",
+    "error_starting_bot": "Error starting up the bot",
+    "error_stopping_bot": "Error stopping the bot",
+    "form_results_page": {
+      "csv_format": "CSV files can be imported into Excel, Google Sheets, Airtable and other spreadsheets",
+      "earliest": "the earliest",
+      "export": "Export",
+      "latest": "the latest",
+      "responses_export": "Data export",
+      "starting_from": "Starting with",
+      "timestamp": "Date and time",
+      "up_to": "until",
+      "user": "User"
+    },
+    "instead_of": "instead of"
   }
 }

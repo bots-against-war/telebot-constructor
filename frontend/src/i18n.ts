@@ -2,9 +2,16 @@ import { init, locale, register } from "svelte-i18n";
 
 const LOCALSTORAGE_KEY = "locale";
 
+const LOCALES = {
+  ru: "./../locales/ru.json",
+  en: "./../locales/en.json",
+};
+
 export function initI18n() {
-  register("ru", () => import("./../locales/ru.json"));
-  register("en", () => import("./../locales/en.json"));
+  Object.entries(LOCALES).map(([loc, file]) => {
+    register(loc, () => import(file));
+  });
+
   init({
     fallbackLocale: "ru",
     initialLocale: localStorage.getItem(LOCALSTORAGE_KEY) || "en",
