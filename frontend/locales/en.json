@@ -38,7 +38,12 @@
   },
   "generic": {
     "cancel": "Cancel",
-    "refresh": "Refresh"
+    "refresh": "Refresh",
+    "delete": "Delete",
+    "download": "Download",
+    "error": "Error",
+    "save": "Save",
+    "something_went_wrong": "Something went wrong..."
   },
   "components": {
     "bot_user_badge": {
@@ -114,6 +119,123 @@
       "up_to": "until",
       "user": "User"
     },
-    "instead_of": "instead of"
+    "instead_of": "instead of",
+    "open_readonly": "View",
+    "publish": "Publish",
+    "stop_bot": "Stop",
+    "version_history": "Version history"
+  },
+  "studio": {
+    "readme": {
+      "blocks": {
+        "cmd_1": "The main entry point to the bot's logic. It is triggered whenever the user sends a command.",
+        "cmd_2": "The <code>/start</code> command is defined for any bot. Other commands are optional, but you can configure them for key actions in your bot, such as: get help (<code>/help</code>), apply to volunteer (<code>/apply</code>), make a donation (<code>/donate</code>) and others.",
+        "content": "Sending text messages and images.",
+        "feedback": "Direct communication with bot operators who remain anonymous. It is possible to maintain anonymity for users as well.",
+        "form": "Similar to Google Forms or Airtable, but inside your bot. Set up a list of questions (with a free answer or with a choice of options), and the bot will ask them to the user in the required order. Responses can be sent to a dedicated chat and/or saved in the bot’s memory to be accessed from the dashboard.",
+        "h1": "Blocks",
+        "info": "General information about the bot, including name and description.",
+        "langselect": "Selecting the bot language. You define a list of available languages ​​- all texts in the bot must be localized in them.",
+        "menu": "Nested branching by choosing from given options.",
+        "tab_title": "Blocks"
+      },
+      "example_bot": {
+        "and": "and",
+        "connects_to_block": "is connected to",
+        "and_provides_feedback": "and handles the direct communication with bot's operator. Here you set up an admin chat and specify bot's response when the message is forwarded",
+        "another_block": "Another",
+        "answer_is_sent_from_admin_chat": "The response is sent manually from admin chat; the user receives it as a regular message",
+        "are_start_blocks": "are starting blocks",
+        "ask_the_question": "Ask your question.",
+        "bot_button_1": "Get the address",
+        "bot_button_2": "Ask a question",
+        "bot_response": "Hello! Thanks for getting in touch with us, how can we help?",
+        "contains_answer_to_1": "is connected to \"Get the address\" branch and contains the answer",
+        "contains_answer_to_2": "is connected to \"Ask a question\" branch and contains an alternate response",
+        "example_address": "72 Mountain Rd",
+        "feedback_handler_descr": "The bot forwards the question to your admin chat, where operators can see it.  They process the message and respond, the message is sent back to the user.  If necessary, they can continue chatting via the bot.",
+        "h1": "Example bot",
+        "h2": "How does it work?",
+        "h2_button": "Open as template",
+        "if_user_selects": "If the user selects",
+        "in_constructor_col": "In constructor",
+        "in_tg_col": "In Telegram",
+        "is_menu_block": "contains choice options",
+        "is_user_gets_response": "The user receives a response to their question",
+        "is_user_presses_1": "Upon selecting \"Get the address\", the user receives the info",
+        "is_user_presses_2": "Upon selecting \"Ask a question\", the user is prompted to do so",
+        "is_user_sends_msg": "The user sends a messages and is assured the operators got it",
+        "p1": "Imagine that the bot provides your address and serves as a helpdesk to ask you questions. Here's what it might look like in action:",
+        "tab_title": "Example",
+        "thanks_well_get_back_to_you": "Thanks, we'll get back to you!",
+        "user_gets_welcome_msg": "The user gets a welcome message with two buttons to choose from:",
+        "user_presses_start": "User activates the bot and presses \"Start\"",
+        "user_starts": "User starts chatting with the bot"
+      },
+      "glossary": {
+        "h1": "About Telegram bots",
+        "h2": "What is an API?",
+        "h3": "How do bots work in Telegram?",
+        "h4": "Main limitations of Telegram bots",
+        "p1": "A Telegram bot is a program that runs inside the messenger and interacts with users.  Simply put, this is an automated interlocutor configured to perform certain actions. Bots use the Telegram API to send and receive messages, manage channels or groups, and perform other functions on the platform. Users communicate with the bot as with a regular contact, and the bot responds depending on its settings and logic.",
+        "p2": "API (Application Programming Interface) is a set of rules and tools that allow programs to interact with each other. Think of the API as a menu in a restaurant: you select a dish (function or data) and the kitchen (another program) prepares it and serves it to you. You don't see the cooking process, but you know exactly what you will get in the end. An API works the same way, giving one program the ability to use the functions of another program without having to delve into its internal processes.",
+        "p3": "To communicate on Telegram, the user creates an account with a phone number and accesses it through a password and two-factor authentication. Telegram bots also have an account, but it is created through BotFather, and access is provided through a token. A token is a unique key that confirms the right to use the API and is transmitted with each request to the server. Like a personal password, the token must be protected.",
+        "p4_l1": "Can't message users first",
+        "p4_l2": "Do not have access to message history",
+        "p4_l3": "Don't have access to a user's phone number, unless explicitly requested",
+        "p4_l5": "By default have limited access to messages in group chats",
+        "p4_l6": "Can't handle files larger than 20 MB",
+        "tab_title": "Glossary"
+      },
+      "p1": "Telebot Constructor allows you to create complex and multilingual dialogues with various conditions and solutions in the language of flowcharts. In this studio, you assemble the logic of the bot from blocks, like a constructor, customizing its behavior to suit your needs.",
+      "title": "About"
+    },
+    "confirm_exit_unsaved_changes": "Exit studio? Unsaved changes will be lost.",
+    "delete_block": "Delete",
+    "delete_draft": "Delete",
+    "draft_version_found": "Unsaved version found. Restore and continue editing it?",
+    "duplicate_block": "Duplicate",
+    "errors": {
+      "config_validation_failed": "Invalid block config",
+      "error_saving_bot_config": "Error saving bot config:",
+      "failed_to_add_template_langselect": "Can't add the template, the language selection is already configured!",
+      "multiple_langselects": "The bot contains more than one language selection block",
+      "repeated_blocks": "The bot contains duplicate /commands",
+      "validation_error": "Validation error:"
+    },
+    "exit": "Exit",
+    "info": {
+      "about_descr": "Section in bot's Telegram profile",
+      "about_label": "About",
+      "changes_are_immediate": "The changes are applied immediately",
+      "error_saving_bot_info": "Error saving bot info",
+      "what_this_bot_can_do_descr": "Shown to new users, right before the /start command",
+      "what_this_bot_can_do_label": "What this bot can do?"
+    },
+    "no_changes": "No changes",
+    "open_readme": "Readme",
+    "open_templates": "Templates",
+    "readonly_mode": "Readonly",
+    "restore_draft": "Restore",
+    "save_config": {
+      "description": "Shown in the version history. Describe the changes with respect to the previous version.",
+      "message_placeholder": "Branch added, a typo is fixed in the welcome message, ...",
+      "publish_now": "Publish",
+      "title": "Comment"
+    },
+    "templates": {
+      "forms_bot_descr": "Collect reqeusts from two types of users.",
+      "forms_bot_title": "Animal shelter bot",
+      "info_bot_title": "Info-bot",
+      "info_bot_descr": "Text content with rich formatting",
+      "menu_bot_title": "Festival bot",
+      "menu_bot_descr": "Gives hints to many questions.",
+      "multilang_bot_title": "Polyglot bot",
+      "multilang_bot_descr": "Shares information in multiple languages.",
+      "select_template": "Try out",
+      "title": "Templates",
+      "tutorial_bot_descr": "A simple bot with a menu and a human operator.",
+      "tutorial_bot_title": "Tutorial bot"
+    }
   }
 }

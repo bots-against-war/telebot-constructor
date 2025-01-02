@@ -4,6 +4,7 @@
 -->
 
 <script lang="ts">
+  import { t } from "svelte-i18n";
   import { DotsHorizontalOutline, FileCopyOutline, PenOutline, TrashBinOutline } from "flowbite-svelte-icons";
   import { createEventDispatcher } from "svelte";
   import ActionIcon from "../../components/ActionIcon.svelte";
@@ -57,13 +58,13 @@
             {#if clonable}
               <ListgroupItem on:click={() => dispatch("clone", id)} class="gap-2">
                 <FileCopyOutline class="w-3 h-3 text-gray-700" />
-                Дублировать
+                {$t("studio.duplicate_block")}
               </ListgroupItem>
             {/if}
             {#if deletable}
               <ListgroupItem on:click={() => dispatch("delete", id)} class="gap-2">
                 <TrashBinOutline class="w-3 h-3 text-gray-700" />
-                Удалить
+                {$t("studio.delete_block")}
               </ListgroupItem>
             {/if}
           </Listgroup>

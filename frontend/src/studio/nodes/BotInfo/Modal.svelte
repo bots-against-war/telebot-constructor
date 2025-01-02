@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from "svelte-i18n";
   import { Avatar } from "flowbite-svelte";
   import { getBotUser, updateBotUser } from "../../../api/botUser";
   import type { TgBotUser } from "../../../api/types";
@@ -60,30 +61,30 @@
         </div>
       </div>
       <Textarea
-        label="О себе"
-        description="Текст в профиле бота"
+        label={$t("studio.info.about_label")}
+        description={$t("studio.info.about_descr")}
         required={false}
         bind:value={botUser.short_description}
         maxLength={MAX_BOT_SHORT_DESCRIPTION_LEN}
         preventExceedingMaxLength
       />
       <Textarea
-        label="Что может делать этот бот?"
-        description="Текст для новых пользовательниц, перед командой /start"
+        label={$t("studio.info.what_this_bot_can_do_label")}
+        description={$t("studio.info.what_this_bot_can_do_descr")}
         required={false}
         bind:value={botUser.description}
         maxLength={MAX_BOT_DESCRIPTION_LEN}
         preventExceedingMaxLength
       />
       {#if updateError !== null}
-        <ErrorBadge title="Ошибка сохранения деталей бота" text={updateError} />
+        <ErrorBadge title={$t("studio.info.error_saving_bot_info")} text={updateError} />
       {/if}
-      <ErrorBadge color="yellow" text="Изменения будут применены мгновенно!" />
+      <ErrorBadge color="yellow" text={$t("studio.info.changes_are_immediate")} />
       <NodeModalControls on:save={saveBotUser} autoClose={false} />
     {:else}
-      <ErrorBadge title="INTERNAL ERROR" text="INTERNAL ERROR" />
+      <ErrorBadge title="Unexpected error" text="Unexpected error" />
     {/if}
   {:catch e}
-    <ErrorBadge title="Ошибка при загрузке данных бота" text={e} />
+    <ErrorBadge title={$t("components.bot_user_badge.data_loading_error")} text={e} />
   {/await}
 </NodeModalBody>

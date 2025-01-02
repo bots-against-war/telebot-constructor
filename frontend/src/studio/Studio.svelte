@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from "svelte-i18n";
   import { Button, Heading, Spinner, Tooltip } from "flowbite-svelte";
   import { QuestionCircleOutline } from "flowbite-svelte-icons";
   import { navigate } from "svelte-routing";
@@ -248,7 +249,7 @@
       ufConfig.blocks.some((b) => !isNodeValid[getBlockId(b)]) ||
       ufConfig.entrypoints.some((e) => !isNodeValid[getEntrypointId(e)])
     ) {
-      configValidationResult = err("Проблема в одном или нескольких блоках");
+      configValidationResult = err($t("studio.errors.config_validation_failed"));
     }
     const commandCounter = ufConfig.entrypoints
       .map((ep) => ep.command?.command)
@@ -259,10 +260,10 @@
       }, {});
 
     if (Object.values(commandCounter).some((v) => v > 1)) {
-      configValidationResult = err("Бот содержит повторяющиеся /команды");
+      configValidationResult = err($t("studio.errors.repeated_blocks"));
     }
     if (ufConfig.blocks.map((b) => b.language_select).filter((ls) => ls).length > 1) {
-      configValidationResult = err("Бот содержит больше одного блока выбора языка");
+      configValidationResult = err($t("studio.errors.multiple_langselects"));
     }
   }
 
@@ -291,7 +292,7 @@
     if (res.ok) {
       savedUfConfig = clone(ufConfig);
     } else {
-      window.alert(`Error saving bot config: ${res.error}`);
+      window.alert(`${$t("studio.errors.error_saving_bot_config")} ${res.error}`);
     }
   }
 
@@ -300,9 +301,9 @@
     navigate(dashboardPath(botId));
   };
   const exitStudioWithConfirmation = withConfirmation(
-    "Вы уверены, что хотите выйти из студии? Несохранённые изменения будут потеряны.",
+    $t("studio.confirm_exit_unsaved_changes"),
     async () => exitStudio(),
-    "Выйти",
+    $t("studio.exit"),
   );
 
   const openReadmeModal = () =>
@@ -320,13 +321,13 @@
     const oldWorkingCopyUfConfig = JSON.parse(oldWorkingCopyUfConfigJson);
     if (!areEqual(oldWorkingCopyUfConfig, ufConfig)) {
       withConfirmation(
-        "Обнаружена несохранённая версия бота. Восстановить и продолжить редактирование?",
+        $t("studio.draft_version_found"),
         async () => {
           ufConfig = JSON.parse(oldWorkingCopyUfConfigJson);
           forceRerender();
         },
-        "Восстановить",
-        "Удалить",
+        $t("studio.restore_draft"),
+        $t("studio.delete_draft"),
       )();
     } else {
       console.debug("Found old working copy, but it's identical to the latest one");
@@ -335,7 +336,7 @@
 
   const applyTempalateToConfig = (template: Template) => {
     if (isMultilang && template.config.blocks.find((b) => b.language_select)) {
-      alert("Не получилось добавить шаблон: в боте уже есть блок выбора языков!");
+      alert($t("studio.errors.failed_to_add_template_langselect"));
       return;
     }
     console.debug("Applying template:", template);
@@ -379,10 +380,10 @@
         {#if readonly || !configValidationResult.ok || !isModified}
           <Tooltip placement="bottom" triggeredBy="#save-button"
             >{readonly
-              ? "Режим просмотра"
+              ? $t("studio.readonly_mode")
               : !configValidationResult.ok
-                ? "Ошибка валидации: " + getError(configValidationResult)
-                : "Нет изменений"}</Tooltip
+                ? $t("studio.errors.validation_error") + getError(configValidationResult)
+                : $t("studio.no_changes")}</Tooltip
           >
         {/if}
         <Button
@@ -393,9 +394,9 @@
           {#if isSavingBotConfig}
             <Spinner class="me-3" size="4" color="white" />
           {/if}
-          Сохранить
+          {$t("generic.save")}
         </Button>
-        <Button outline on:click={isModified ? exitStudioWithConfirmation : exitStudio}>Выйти</Button>
+        <Button outline on:click={isModified ? exitStudioWithConfirmation : exitStudio}>{$t("studio.exit")}</Button>
       </div>
     </Navbar>
   </div>
@@ -525,7 +526,7 @@
               ]}
             />
           </div>
-          <span class="px-3"> Шаблоны </span>
+          <span class="px-3">{$t("studio.open_templates")}</span>
         </button>
 
         <button
@@ -535,7 +536,7 @@
           <div class="w-10 h-10 flex justify-center items-center border-r border-r-gray-500">
             <QuestionCircleOutline class="w-5 h-5" />
           </div>
-          <span class="px-3"> Инструкции </span>
+          <span class="px-3">{$t("studio.open_readme")}</span>
         </button>
       </div>
     </div>
