@@ -160,11 +160,11 @@
           moreLinkHref={errorsPath(botId)}
         >
           {#if botInfo.last_errors.length > 0}
-            <span>
+            <div class="mb-3">
               {$t("dashboard.last_error")}: <Timestamp
                 timestamp={botInfo.last_errors[botInfo.last_errors.length - 1].timestamp}
               />
-            </span>
+            </div>
           {/if}
           <GroupChatIdSelect
             label={$t("dashboard.alert_chat")}

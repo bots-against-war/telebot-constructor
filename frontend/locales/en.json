@@ -58,7 +58,15 @@
       "chat_must_be_a_supergroup": "The chat is not set up to be used with bot",
       "error_loading_available_chats": "Failed to load available chats",
       "not_selected": "Not selected",
-      "searching": "Searching..."
+      "searching": "Searching...",
+      "how_to": {
+        "title": "How to connect a group chat?",
+        "step_1_1": "In Telegram, add your bot",
+        "step_1_2": "to a new or existing group chat",
+        "step_2": "In group chat settings, set \"Chat History For New Members\" to \"Visible\"",
+        "step_3": "After that, the chat should become available in the menu below",
+        "step_4": "If it's not, make sure that the bot is added to the right chat and inside of it, send the following command"
+      }
     },
     "markdown_input": {
       "bold": "Bold",
@@ -79,10 +87,10 @@
     "account": "Account",
     "activity": "Activity",
     "admin_chats": "Connected chats",
-    "alert_chat": "Error notifications chat",
+    "alert_chat": "Error alerts chat",
     "all_versions": "All versions",
     "bot_errors": "Bot errors",
-    "disable_alert_chat": "Disable error notifications",
+    "disable_alert_chat": "Disable error alerts",
     "form_responses": "Form responses",
     "go_to_settings": "Open",
     "settings": "Settings",

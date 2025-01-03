@@ -60,24 +60,7 @@
             bind:selectedGroupChatId={config.to_chat.chat_id}
             forbidLegacyGroups={false}
           >
-            <div slot="description">
-              <p>{$t("studio.form.chat_descr")}</p>
-              <details class="my-2">
-                <summary>{$t("studio.form.chat_howto")}</summary>
-                <List tag="ol">
-                  <Li>
-                    {$t("studio.form.chat_howto_p1_1")} (<BotUserBadge {botId} inline let:user
-                      ><code>@{user.username}</code></BotUserBadge
-                    >) {$t("studio.form.chat_howto_p1_2")}
-                  </Li>
-                  <Li>{$t("studio.form.chat_howto_p2")}</Li>
-                  <Li>
-                    {$t("studio.form.chat_howto_p3")}
-                    <BotUserBadge {botId} inline let:user><code>/discover_chat@{user.username}</code></BotUserBadge>
-                  </Li>
-                </List>
-              </details>
-            </div>
+            <p class="mb-3" slot="description">{$t("studio.form.chat_descr")}</p>
           </GroupChatIdSelect>
           <InputWrapper label={$t("studio.form.chat_feedback_mode")} required={false}>
             <Toggle bind:checked={config.to_chat.via_feedback_handler}>{$t("studio.form.chat_feedback_mode_on")}</Toggle
