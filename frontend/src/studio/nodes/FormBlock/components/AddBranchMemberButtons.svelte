@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from "svelte-i18n";
   import { Button } from "flowbite-svelte";
   import { PlusOutline } from "flowbite-svelte-icons";
   import { type ButtonProps } from "flowbite-svelte/Button.svelte";
@@ -29,16 +30,16 @@
   {#if allowAddField}
     <Button on:click={() => dispatch("add_field")} {...buttonProps}>
       <PlusOutline size="xs" class="mr-2" />
-      Поле
+      {$t("studio.form.field")}
     </Button>
   {/if}
   {#if currentSwitchField}
     <Button on:click={() => dispatch("add_branch")} {...buttonProps}>
       <PlusOutline size="xs" class="mr-2" />
       <span>
-        Ветвь с условием
+        {$t("studio.form.branch_with_condition")}
         {#if currentSwitchFieldName}
-          на "{currentSwitchFieldName}"
+          {$t("studio.form.for")} "{currentSwitchFieldName}"
         {/if}
       </span>
     </Button>

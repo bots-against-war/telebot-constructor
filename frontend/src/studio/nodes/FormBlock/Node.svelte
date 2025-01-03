@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from "svelte-i18n";
   import { Li, List } from "flowbite-svelte";
   import { Node } from "svelvet";
   import { flattenedFormFields } from "../../../api/typeUtils";
@@ -56,7 +57,10 @@
     </div>
   </NodeContent>
   <OutputAnchorsBox>
-    <OutputAnchor bind:nextBlockId={config.form_completed_next_block_id} anchorLabel="ОК" />
-    <OutputAnchor bind:nextBlockId={config.form_cancelled_next_block_id} anchorLabel="Отмена" />
+    <OutputAnchor bind:nextBlockId={config.form_completed_next_block_id} anchorLabel={$t("studio.form.ok_outcome")} />
+    <OutputAnchor
+      bind:nextBlockId={config.form_cancelled_next_block_id}
+      anchorLabel={$t("studio.form.cancel_outcome")}
+    />
   </OutputAnchorsBox>
 </Node>

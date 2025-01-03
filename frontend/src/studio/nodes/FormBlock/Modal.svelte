@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from "svelte-i18n";
   import { TabItem, Tabs } from "flowbite-svelte";
   import { flattenedFormFields } from "../../../api/typeUtils";
   import type { FormBlock, FormBranchConfig } from "../../../api/types";
@@ -70,26 +71,26 @@
 
 <NodeModalBody title={NODE_TITLE.form}>
   <div slot="description" class="text-sm text-gray-600 mt-2">
-    После успешного заполнения формы ответы пользователь:ницы сохраняются и он:а переходит по пути <strong>ОК</strong>.
-    Если в процессе заполнения он:а ввела команду <code>/cancel</code>, он:а переходит по пути <strong>Отмена</strong>.
+    {$t("studio.form.ok_outcome_cond")} <strong>$t('studio.form.ok_outcome')</strong>.
+    {@html $t("studio.form.cancel_outcome_cond")} <strong>{$t("studio.form.cancel_outcome")}</strong>.
   </div>
   <!-- NOTE: additional div is needed because Tabs have no top-level container -->
   <div>
     <Tabs style="underline" contentClass="mt-1">
-      <TabItem open title={`Поля (${flattenedFormFields(topLevelBranch.members).length})`}>
+      <TabItem open title={`${$t("studio.form.fields_tab")} (${flattenedFormFields(topLevelBranch.members).length})`}>
         <div class="mb-4">
           <LocalizableTextInput
-            placeholder={getRandomFormStartMessage()}
+            placeholder={getRandomFormStartMessage($t)}
             bind:value={editedConfig.messages.form_start}
             maxCharacters={TELEGRAM_MAX_MESSAGE_LENGTH_CHARS}
           />
         </div>
         <FormBranch isMovableUp={false} isMovableDown={false} bind:branch={topLevelBranch} />
       </TabItem>
-      <TabItem title="Ответы">
+      <TabItem title={$t("studio.form.answers_tab")}>
         <FormResultExportOptions bind:config={editedConfig.results_export} {botId} blockId={config.block_id} />
       </TabItem>
-      <TabItem title="Технические сообщения">
+      <TabItem title={$t("studio.form.messages_tab")}>
         <FormMessages bind:messages={editedConfig.messages} bind:errors={formErrorMessages} />
       </TabItem>
     </Tabs>

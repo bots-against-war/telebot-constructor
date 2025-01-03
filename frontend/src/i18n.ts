@@ -22,3 +22,14 @@ export function setLocale(l: string) {
   locale.set(l);
   localStorage.setItem(LOCALSTORAGE_KEY, l);
 }
+
+// the types are not exported from i18n, so we copy them here
+type InterpolationValues = Record<string, string | number | boolean | Date | null | undefined> | undefined;
+export interface MessageObject {
+  id: string;
+  locale?: string;
+  format?: string;
+  default?: string;
+  values?: InterpolationValues;
+}
+export type MessageFormatter = (id: string | MessageObject, options?: Omit<MessageObject, "id">) => string;

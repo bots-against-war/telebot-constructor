@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from "svelte-i18n";
   import { A, Li, List, Select, Toggle } from "flowbite-svelte";
   import type { FormResultUserAttribution, FormResultsExport } from "../../../../api/types";
   import BotUserBadge from "../../../../components/BotUserBadge.svelte";
@@ -14,42 +15,33 @@
   export let blockId: string;
 
   const userAttributionOptions: { value: FormResultUserAttribution; name: string }[] = [
-    { value: "none", name: "Не сохранять" },
-    { value: "unique_id", name: "Только анонимизированный идентификатор" },
-    { value: "name", name: "Только имя Telegram-аккаунта" },
-    { value: "full", name: "Имя и ссылку на Telegram" },
+    { value: "none", name: $t("studio.form.do_not_save_user") },
+    { value: "unique_id", name: $t("studio.form.save_anonymous") },
+    { value: "name", name: $t("studio.form.only_tg_name") },
+    { value: "full", name: $t("studio.form.tg_name_and_account") },
   ];
 </script>
 
 <div class="flex flex-col gap-5">
   <div class="flex flex-col gap-3">
-    <h3 class="font-bold">Личные данные</h3>
+    <h3 class="font-bold">{$t("studio.form.personal_data")}</h3>
     <Select placeholder="" items={userAttributionOptions} bind:value={config.user_attribution} />
     <div class="text-sm text-gray-600">
       {#if config.user_attribution == "none"}
-        Ответы будут полностью анонимны
+        {$t("studio.form.do_not_save_user_descr")}
       {:else if config.user_attribution == "unique_id"}
-        Ответы будут помечены анонимизированным идентификатором из эмоджи (например, "🚒🧸🕐🧔🏙🏣"). По нему можно
-        будет отличить ответы одно:й пользователь:ницы, но невозможно установить личные данные.
+        {$t("studio.form.save_anonymous_descr")}
       {:else if config.user_attribution == "name"}
-        К ответу будет добавлено текущее имя Telegram-аккаунта пользователь:ницы
+        {$t("studio.form.only_tg_name_descr")}
       {:else if config.user_attribution == "full"}
-        К ответу будут добавлены полные данные Telegram аккаунта пользователь:ницы: имя, @юзернейм, user id
+        {$t("studio.form.tg_name_and_account_descr")}
       {/if}
     </div>
   </div>
   <div class="flex flex-col gap-3">
-    <h3 class="font-bold">Ответы на форму</h3>
-    <Toggle bind:checked={config.echo_to_user}>Отправлять пользователь:нице</Toggle>
-    <Toggle bind:checked={config.to_store}
-      >Сохранять в&nbsp;
-      {#if config.to_store}
-        <A href={formResultsPagePath(botId, blockId)} target="_blank">конструктор</A>
-      {:else}
-        <span>конструктор</span>
-      {/if}
-      &nbsp;(можно найти на странице управления ботом)
-    </Toggle>
+    <h3 class="font-bold">{$t("studio.form.responses")}</h3>
+    <Toggle bind:checked={config.echo_to_user}>{$t("studio.form.responses_send_to_user")}</Toggle>
+    <Toggle bind:checked={config.to_store}>{$t("studio.form.responses_save_to_store")}</Toggle>
     <div class="flex flex-col gap-1">
       <Toggle
         checked={config.to_chat !== null}
@@ -60,41 +52,41 @@
           } else {
             config.to_chat = null;
           }
-        }}>Отправлять в чат</Toggle
+        }}>{$t("studio.form.responses_send_to_chat")}</Toggle
       >
       {#if config.to_chat}
         <div class="p-2 m-2 border-l-2 border-grey-600 flex flex-col gap-3">
           <GroupChatIdSelect
-            label="Чат"
+            label={$t("studio.form.chat")}
             {botId}
             bind:selectedGroupChatId={config.to_chat.chat_id}
             forbidLegacyGroups={false}
           >
             <div slot="description">
-              <p>В этот чат будут пересылаться все ответы на форму.</p>
+              <p>{$t("studio.form.chat_descr")}</p>
               <details class="my-2">
-                <summary>Как создать чат?</summary>
+                <summary>{$t("studio.form.chat_howto")}</summary>
                 <List tag="ol">
                   <Li>
-                    Откройте Telegram и добавьте вашего бота (<BotUserBadge {botId} inline let:user
+                    {$t("studio.form.chat_howto_p1_1")} (<BotUserBadge {botId} inline let:user
                       ><code>@{user.username}</code></BotUserBadge
-                    >) в новую или существующую группу
+                    >) {$t("studio.form.chat_howto_p1_2")}
                   </Li>
-                  <Li>Вернитесь в конструктор и выберите созданный чат</Li>
+                  <Li>{$t("studio.form.chat_howto_p2")}</Li>
                   <Li>
-                    Если чат не виден в списке, вернитесь в Telegram, убедитесь, что бот добавлен в чат, и отправьте в
-                    него команду
+                    {$t("studio.form.chat_howto_p3")}
                     <BotUserBadge {botId} inline let:user><code>/discover_chat@{user.username}</code></BotUserBadge>
                   </Li>
                 </List>
               </details>
             </div>
           </GroupChatIdSelect>
-          <InputWrapper label="Обратная связь через бота" required={false}>
-            <Toggle bind:checked={config.to_chat.via_feedback_handler}>Включить</Toggle>
+          <InputWrapper label={$t("studio.form.chat_feedback_mode")} required={false}>
+            <Toggle bind:checked={config.to_chat.via_feedback_handler}>{$t("studio.form.chat_feedback_mode_on")}</Toggle
+            >
             {#if config.to_chat.via_feedback_handler}
               <div class="text-sm text-gray-700">
-                Чтобы эта функция работала корректно, на этот же чат должен быть настроен блок
+                {$t("studio.form.chat_feedback_mode_warning")}
                 <BlockNameInline key={NodeTypeKey.human_operator} />!
               </div>
             {/if}
