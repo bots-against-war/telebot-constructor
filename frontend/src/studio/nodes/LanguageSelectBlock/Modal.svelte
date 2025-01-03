@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from "svelte-i18n";
   import Select from "svelte-select";
   import type { LanguageData, LanguageSelectBlock } from "../../../api/types";
   import LanguageDataComponent from "../../../components/LanguageData.svelte";
@@ -84,8 +85,8 @@
   {#key forceMenuRerenderCounter}
     {#if supportedLanguageDataList && defaultLanguage}
       <LocalizableTextInput
-        label="Сообщение"
-        description="Для меню выбора языка"
+        label={$t("studio.language_select.message_text_label")}
+        description={$t("studio.language_select.message_text_descr")}
         bind:value={prompt}
         langConfig={{
           supportedLanguageCodes: supportedLanguageDataList.map((ld) => ld.code),
@@ -96,7 +97,10 @@
     {/if}
   {/key}
 
-  <InputWrapper label="Поддерживаемые языки" description="Начните вводить код или название языка по-английски">
+  <InputWrapper
+    label={$t("studio.language_select.supported_langs_label")}
+    description={$t("studio.language_select.supported_langs_descr")}
+  >
     <Select
       itemId="code"
       placeholder=""
@@ -117,8 +121,8 @@
 
   {#key forceMenuRerenderCounter}
     <InputWrapper
-      label="Язык по умолчанию"
-      description="Используется, если пользователь:ница не выбрал:а язык"
+      label={$t("studio.language_select.default_lang_label")}
+      description={$t("studio.language_select.default_lang_descr")}
       required={false}
     >
       <Select itemId="code" placeholder="" bind:value={defaultLanguage} items={supportedLanguageDataList}>

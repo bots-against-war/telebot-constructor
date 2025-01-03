@@ -387,6 +387,26 @@
       "user_anonymization_descr": "User messages will be identified this way",
       "user_anonymization_yes_hint": "Messages from user will be tagged with an anonymized emoji identifier (⏯😫🎲📅). It is used to distinguish between users without revealing their identity.",
       "user_anonymization_no_hint": "Telegram account data will be added to messages: name, @username, user id"
+    },
+    "language_select": {
+      "default_lang_descr": "Used if the user has not selected a language",
+      "default_lang_label": "Default language",
+      "message_text_descr": "For language selection menu",
+      "message_text_label": "Text",
+      "supported_langs_descr": "Start typing language code or name (in English)",
+      "supported_langs_label": "Supported languages"
+    },
+    "menu": {
+      "back_button_label": "Back button",
+      "button_type_label": "Button type",
+      "buttons_label": "Buttons",
+      "go_up": "Go to the previous level",
+      "inline_button_help": "Inline buttons below the message are for small, dynamic menus. Telegram automatically deactivates them a few days after sending, so this type is not suitable for persistent menus.",
+      "inline_button_label": "Inline",
+      "inline_mutable": "Update messsage text and buttons when traversing the menu",
+      "message_text_label": "Text",
+      "reply_button_help": "Reply keyboard is suitable for long, branching dialog schemes. Each new nested menu is sent as a new message.",
+      "reply_button_label": "Reply keyboard"
     }
   }
 }
