@@ -356,6 +356,37 @@
         "start_3": "Please answer a few questions below.",
         "start_4": "Please fill out the form below!"
       }
+    },
+    "human_operator": {
+      "admin_chat": "Admin chat",
+      "admin_chat_descr_1": "Admin chat is a special group chat that lets you communicate with users. There, the bot will copy users' messages and copy your responses back to them. Detailed help for admin chat users is available inside the chat using the <code>/help</code> command.",
+      "admin_msgs": "Messages for admins",
+      "admin_reply_failed_to_undo_placeholder": "Failed to delete message!",
+      "admin_reply_failed_to_undo_title": "The message could not be deleted",
+      "admin_reply_ok_label": "The response has been sent to the user",
+      "admin_reply_ok_placeholder": "Message sent!",
+      "admin_reply_undo_placeholder": "The message was deleted!",
+      "admin_reply_undo_title": "On successfull /undo command",
+      "anti_spam_msg_per_min": "Messages per minute limit",
+      "anti_spam_msg_per_min_descr": "Afterwards, a \"soft ban\" is automatically applied",
+      "anti_spam_title": "Anti-spam",
+      "anti_spam_warning_placeholder": "Do not send more than {} messages per minute!",
+      "anti_spam_warning_title": "Anti-spam limit warning",
+      "more_settings": "Additional settings",
+      "reponse_placeholder": "Thank you, we'll get back to you soon!",
+      "reponse_title": "Reply to a processed message",
+      "topics_descr": "Instead of a continuous stream, messages are split by user",
+      "topics_title": "Topic mode",
+      "topics_howto_title": "Prerequisites for topic mode",
+      "topics_turn_on": "Turn on",
+      "topics_howto_p1": "In Telegram, go to admin chat setting and enable \"Topics\".",
+      "topics_howto_p2": "In the “Administrators” section, add the bot to admins and ensure it has “Manage Topics” permission.",
+      "user_anonymization_title": "Identifier",
+      "ua_opt_yes": "Anonymized",
+      "ua_opt_no": "Telegram account data",
+      "user_anonymization_descr": "User messages will be identified this way",
+      "user_anonymization_yes_hint": "Messages from user will be tagged with an anonymized emoji identifier (⏯😫🎲📅). It is used to distinguish between users without revealing their identity.",
+      "user_anonymization_no_hint": "Telegram account data will be added to messages: name, @username, user id"
     }
   }
 }

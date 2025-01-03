@@ -50,48 +50,41 @@
       </GroupChatIdSelect>
 
       <InputWrapper
-        label="Идентификатор"
+        label={$t("studio.human_operator.user_anonymization_title")}
         required={false}
-        description="Как будут помечаться сообщения пользователь:ниц, когда они пишут в бот"
+        description={$t("studio.human_operator.user_anonymization_descr")}
         let:inputId
       >
         <Select id={inputId} placeholder="" items={uaOptions} bind:value={anonymize} />
         <div class="text-sm text-gray-600">
           {#if anonymize == "yes"}
-            Сообщения пользователь:ниц будут помечены анонимизированным идентификатором из эмоджи (⏯😫🎲📅). По нему
-            можно различать пользователь:ниц, но невозможно идентифицировать их за пределами бота.
+            {$t("studio.human_operator.user_anonymization_yes_hint")}
           {:else}
-            К сообщениям будут добавлены данные Telegram аккаунта пользователь:ницы: имя, @юзернейм, user id
+            {$t("studio.human_operator.user_anonymization_no_hint")}
           {/if}
         </div>
       </InputWrapper>
 
       <InputWrapper
-        label="Режим тем"
+        label={$t("studio.human_operator.topics_title")}
         required={false}
-        description={"Вместо единого потока сообщения от разных пользователь:ниц разносятся по темам"}
+        description={$t("studio.human_operator.topics_descr")}
       >
-        <Toggle bind:checked={fhConfig.forum_topic_per_user}>Включить</Toggle>
+        <Toggle bind:checked={fhConfig.forum_topic_per_user}>{$t("studio.human_operator.topics_turn_on")}</Toggle>
         {#if fhConfig.forum_topic_per_user}
           <div class="text-sm text-gray-600">
-            <div>Чтобы обеспечить работу бота в режиме тем</div>
+            <div>{$t("studio.human_operator.topics_howto_title")}</div>
             <List>
-              <Li>
-                Включите "Темы" (Topics) в настройках рабочего чата в Telegram. Для этого перейдите в настройки
-                (Settings) и активируйте опцию "Темы" (Topics).
-              </Li>
-              <Li>
-                Там же в разделе "Администраторы" (Administrators) добавьте бота и дайте ему право "Управление темами"
-                (Manage Topics).
-              </Li>
+              <Li>{$t("studio.human_operator.topics_howto_p1")}</Li>
+              <Li>{$t("studio.human_operator.topics_howto_p2")}</Li>
             </List>
           </div>
         {/if}
       </InputWrapper>
 
       <LocalizableTextInput
-        label="Ответ на принятое сообщение"
-        placeholder="Спасибо, мы вам скоро ответим!"
+        label={$t("studio.human_operator.reponse_title")}
+        placeholder={$t("studio.human_operator.reponse_placeholder")}
         bind:value={fhConfig.messages_to_user.forwarded_to_admin_ok}
         maxCharacters={TELEGRAM_MAX_MESSAGE_LENGTH_CHARS}
       />
@@ -99,51 +92,41 @@
 
     <Accordion flush>
       <AccordionItem paddingDefault="p-3" flush>
-        <span slot="header">Дополнительные настройки</span>
+        <span slot="header">{$t("studio.human_operator.more_settings")}</span>
         <div class={blockSeqClass}>
           <div class={blockClass}>
-            <Heading tag="h6">Сообщения для админ:ок</Heading>
+            <Heading tag="h6">{$t("studio.human_operator.admin_msgs")}</Heading>
             <TextInput
-              label="Уведомление о том, что ответ админ:ки передан пользователь:нице"
-              placeholder="Сообщение переслано!"
+              label={$t("studio.human_operator.admin_reply_ok_label")}
+              placeholder={$t("studio.human_operator.admin_reply_ok_placeholder")}
               bind:value={fhConfig.messages_to_admin.copied_to_user_ok}
             />
             <TextInput
-              label="Уведомление о том, что сообщение пользователь:нице успешно удалено по команде /undo"
-              placeholder="Сообщение удалено из чата бота и пользователь:ницы!"
+              label={$t("studio.human_operator.admin_reply_undo_title")}
+              placeholder={$t("studio.human_operator.admin_reply_undo_placeholder")}
               bind:value={fhConfig.messages_to_admin.deleted_message_ok}
             />
             <TextInput
-              label="Уведомление о том, что сообщение не удалось удалить"
-              placeholder="Не получилось удалить сообщение :(!"
+              label={$t("studio.human_operator.admin_reply_failed_to_undo_title")}
+              placeholder={$t("studio.human_operator.admin_reply_failed_to_undo_placeholder")}
               bind:value={fhConfig.messages_to_admin.can_not_delete_message}
             />
           </div>
           <div class={blockClass}>
-            <Heading tag="h6">Анти-спам</Heading>
+            <Heading tag="h6">{$t("studio.human_operator.anti_spam_title")}</Heading>
             <InputWrapper
-              label="Сколько сообщений в минуту может писать пользователь:ница"
-              description={'После превышения будет примененён временный "мягкий бан"'}
+              label={$t("studio.human_operator.anti_spam_msg_per_min")}
+              description={$t("studio.human_operator.anti_spam_msg_per_min_descr")}
             >
               <NumberInput bind:value={fhConfig.max_messages_per_minute} min={1} max={60} step={1} type="number" />
             </InputWrapper>
 
             <LocalizableTextInput
-              label="Предупреждение о превышении"
-              placeholder={"Не присылайте больше {} сообщений в минуту!"}
+              label={$t("studio.human_operator.anti_spam_warning_title")}
+              placeholder={$t("studio.human_operator.anti_spam_warning_placeholder")}
               bind:value={fhConfig.messages_to_user.throttling}
               maxCharacters={TELEGRAM_MAX_MESSAGE_LENGTH_CHARS}
             />
-
-            <!-- seems like we don't really need hashtags hehe -->
-            <!-- <Toggle bind:checked={fhConfig.hashtags_in_admin_chat}>Хештеги в рабочем чате</Toggle>
-            {#if fhConfig.hashtags_in_admin_chat}
-              <TextInput
-                placeholder="#неотвечено"
-                label="Текст хештега, который навешивается на новые, неотвеченные сообщения"
-                bind:value={unanswered}
-              />
-            {/if} -->
           </div>
         </div>
       </AccordionItem>
