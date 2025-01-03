@@ -4,16 +4,16 @@
 -->
 
 <script lang="ts">
-  import { t } from "svelte-i18n";
+  import { Listgroup, ListgroupItem, Popover } from "flowbite-svelte";
   import { DotsHorizontalOutline, FileCopyOutline, PenOutline, TrashBinOutline } from "flowbite-svelte-icons";
   import { createEventDispatcher } from "svelte";
+  import { t } from "svelte-i18n";
   import ActionIcon from "../../components/ActionIcon.svelte";
   import ErrorBadge from "../../components/AlertBadge.svelte";
   import { ok, type Result } from "../../utils";
-  import { NODE_HUE, NODE_ICON, NODE_TITLE, headerColor, type NodeTypeKey } from "../nodes/display";
+  import { NODE_HUE, NODE_ICON, NODE_TITLE_KEY, headerColor, type NodeTypeKey } from "../nodes/display";
   import type { ValidationError } from "../nodes/nodeValidators";
   import { languageConfigStore, type LanguageConfig } from "../stores";
-  import { Listgroup, ListgroupItem, Popover } from "flowbite-svelte";
 
   export let id: string;
   export let key: NodeTypeKey;
@@ -45,7 +45,7 @@
   >
     <div class="flex items-center gap-2">
       <svelte:component this={NODE_ICON[key]} class="w-4 h-4" />
-      <span class="font-bold text-lg">{NODE_TITLE[key]}</span>
+      <span class="font-bold text-lg">{$t(NODE_TITLE_KEY[key])}</span>
     </div>
     <div class="flex items-center gap-0">
       <ActionIcon icon={PenOutline} on:click={() => dispatch("edit", id)} />

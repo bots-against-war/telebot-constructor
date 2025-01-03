@@ -5,11 +5,13 @@ import type {
   UserFlowConfig,
   UserFlowEntryPointConfig,
 } from "../../api/types";
+import type { MessageFormatter } from "../../i18n";
 import type { LanguageConfig } from "../stores";
 import { updateWithPrefilled } from "./FormBlock/prefill";
 
 export type ConfigFactory = (
   id: string,
+  t: MessageFormatter,
   langConfig: LanguageConfig | null,
   currentConfig: UserFlowConfig,
 ) => UserFlowEntryPointConfig | UserFlowEntryPointConfig;
@@ -26,13 +28,11 @@ export function defaultCommandEntrypoint(id: string): UserFlowEntryPointConfig {
   };
 }
 
-export function defaultContentBlockConfig(id: string): UserFlowBlockConfig {
+export function defaultContentBlockConfig(id: string, t: MessageFormatter): UserFlowBlockConfig {
   return {
     content: {
       block_id: id,
-      contents: [
-        { text: { text: "Привет! Это команда конструктора. Чем можем помочь?", markup: "markdown" }, attachments: [] },
-      ],
+      contents: [{ text: { text: t("studio.defaults.text_content"), markup: "markdown" }, attachments: [] }],
       next_block_id: null,
     },
   };
@@ -40,7 +40,7 @@ export function defaultContentBlockConfig(id: string): UserFlowBlockConfig {
 
 export const PLACEHOLDER_GROUP_CHAT_ID = 0;
 
-export function defaultHumanOperatorBlockConfig(id: string): UserFlowBlockConfig {
+export function defaultHumanOperatorBlockConfig(id: string, t: MessageFormatter): UserFlowBlockConfig {
   return {
     human_operator: {
       block_id: id,
@@ -52,12 +52,12 @@ export function defaultHumanOperatorBlockConfig(id: string): UserFlowBlockConfig
         max_messages_per_minute: 10,
         messages_to_user: {
           forwarded_to_admin_ok: "",
-          throttling: "Не присылайте больше {} сообщений в минуту!",
+          throttling: t("studio.defaults.throttling_msg"),
         },
         messages_to_admin: {
-          copied_to_user_ok: "Отправлено!",
-          deleted_message_ok: "Сообщение удалено из чата с пользователем!",
-          can_not_delete_message: "Не удалось удалить сообщение из чата с пользователем...",
+          copied_to_user_ok: t("studio.defaults.copied_to_user"),
+          deleted_message_ok: t("studio.defaults.deleted_message"),
+          can_not_delete_message: t("studio.defaults.failed_to_delete"),
         },
         hashtags_in_admin_chat: false,
         hashtag_message_rarer_than: null,
@@ -70,6 +70,7 @@ export function defaultHumanOperatorBlockConfig(id: string): UserFlowBlockConfig
 
 export function defaultMenuBlockConfig(
   id: string,
+  _: MessageFormatter,
   langConfig: LanguageConfig | null,
   currentConfig: UserFlowConfig,
 ): UserFlowBlockConfig {
@@ -124,7 +125,11 @@ export function generateFormName(): string {
   return `form-${crypto.randomUUID()}`;
 }
 
-export function defaultFormBlockConfig(id: string, langConfig: LanguageConfig | null): UserFlowBlockConfig {
+export function defaultFormBlockConfig(
+  id: string,
+  _: MessageFormatter,
+  langConfig: LanguageConfig | null,
+): UserFlowBlockConfig {
   let messages: FormMessages = {
     form_start: "",
     field_is_skippable: "",

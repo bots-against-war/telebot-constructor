@@ -7,7 +7,7 @@
   import TextInput from "../../../components/inputs/TextInput.svelte";
   import NodeModalBody from "../../components/NodeModalBody.svelte";
   import NodeModalControls from "../../components/NodeModalControls.svelte";
-  import { NODE_TITLE } from "../display";
+  import { NODE_TITLE_KEY } from "../display";
 
   export let config: CommandEntryPoint;
   export let onConfigUpdate: (newConfig: CommandEntryPoint) => any;
@@ -32,7 +32,7 @@
   }
 </script>
 
-<NodeModalBody title={NODE_TITLE.command}>
+<NodeModalBody title={$t(NODE_TITLE_KEY.command)}>
   <InputWrapper label={null} error={commandError}>
     <ButtonGroup class="w-full" size="sm">
       <InputAddon>

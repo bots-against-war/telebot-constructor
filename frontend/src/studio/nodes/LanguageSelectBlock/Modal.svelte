@@ -11,7 +11,7 @@
   import NodeModalBody from "../../components/NodeModalBody.svelte";
   import NodeModalControls from "../../components/NodeModalControls.svelte";
   import { languageConfigStore } from "../../stores";
-  import { NODE_TITLE } from "../display";
+  import { NODE_TITLE_KEY } from "../display";
 
   export let config: LanguageSelectBlock;
   export let onConfigUpdate: (newConfig: LanguageSelectBlock) => any;
@@ -81,7 +81,7 @@
   }
 </script>
 
-<NodeModalBody title={NODE_TITLE.language_select}>
+<NodeModalBody title={$t(NODE_TITLE_KEY.language_select)}>
   {#key forceMenuRerenderCounter}
     {#if supportedLanguageDataList && defaultLanguage}
       <LocalizableTextInput

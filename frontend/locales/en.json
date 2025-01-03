@@ -407,6 +407,22 @@
       "message_text_label": "Text",
       "reply_button_help": "Reply keyboard is suitable for long, branching dialog schemes. Each new nested menu is sent as a new message.",
       "reply_button_label": "Reply keyboard"
+    },
+    "defaults": {
+      "copied_to_user": "Sent!",
+      "deleted_message": "The message is deleted for the user!",
+      "failed_to_delete": "Failed to delete the message for the user...",
+      "text_content": "Hi! How can we help?",
+      "throttling_msg": "Don't send more than {} messages per minute!"
+    },
+    "node_titles": {
+      "bot_info": "Bot account",
+      "command": "Command",
+      "content": "Content",
+      "form": "Form",
+      "human_operator": "Human operator",
+      "language_select": "Language",
+      "menu": "Menu"
     }
   }
 }

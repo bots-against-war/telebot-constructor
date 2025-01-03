@@ -1,12 +1,13 @@
 <script lang="ts">
+  import { t } from "svelte-i18n";
   import { Button } from "flowbite-svelte";
-  import { NODE_HUE, NODE_ICON, NODE_TITLE, NodeTypeKey, headerColor } from "../nodes/display";
+  import { NODE_HUE, NODE_ICON, NODE_TITLE_KEY, NodeTypeKey, headerColor } from "../nodes/display";
 
   export let key: NodeTypeKey;
   export let disabled: boolean = false;
 
   $: hue = NODE_HUE[key];
-  $: title = NODE_TITLE[key];
+  $: title = $t(NODE_TITLE_KEY[key]);
   $: icon = NODE_ICON[key];
 </script>
 

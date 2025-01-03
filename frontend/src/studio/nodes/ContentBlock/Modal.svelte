@@ -9,7 +9,7 @@
   import LocalizableTextInput from "../../components/LocalizableTextInput.svelte";
   import NodeModalBody from "../../components/NodeModalBody.svelte";
   import NodeModalControls from "../../components/NodeModalControls.svelte";
-  import { NODE_TITLE } from "../display";
+  import { NODE_TITLE_KEY } from "../display";
   import Attachment from "./Attachment.svelte";
   import UploadFileButton from "./UploadFileButton.svelte";
 
@@ -53,7 +53,7 @@
   }
 </script>
 
-<NodeModalBody title={NODE_TITLE.content}>
+<NodeModalBody title={$t(NODE_TITLE_KEY.content)}>
   <LocalizableTextInput
     label={$t("studio.content.text")}
     bind:value={messageText}

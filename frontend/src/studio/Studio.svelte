@@ -43,7 +43,7 @@
     defaultMenuBlockConfig,
     type ConfigFactory,
   } from "./nodes/defaultConfigs";
-  import { NODE_HUE, NODE_ICON, NODE_TITLE, NodeTypeKey, headerColor } from "./nodes/display";
+  import { NODE_HUE, NODE_ICON, NODE_TITLE_KEY, NodeTypeKey, headerColor } from "./nodes/display";
   import { languageConfigStore } from "./stores";
   import { applyTemplate, basicShowcaseTemplate, type Template } from "./templates";
   import {
@@ -193,7 +193,7 @@
   function nodeFactory(kind: NodeKind, typeKey: NodeTypeKey, configFactory: ConfigFactory) {
     return () => {
       const nodeId = generateNodeId(kind, typeKey);
-      const config = configFactory(nodeId, $languageConfigStore, ufConfig);
+      const config = configFactory(nodeId, $t, $languageConfigStore, ufConfig);
       tentativeNode = {
         kind,
         typeKey,
@@ -549,7 +549,7 @@
     >
       <div class="flex items-center gap-2">
         <svelte:component this={NODE_ICON[tentativeNode.typeKey]} class="w-4 h-4" />
-        <span class="font-bold text-lg">{NODE_TITLE[tentativeNode.typeKey]}</span>
+        <span class="font-bold text-lg">{$t(NODE_TITLE_KEY[tentativeNode.typeKey])}</span>
       </div>
     </div>
   {/if}

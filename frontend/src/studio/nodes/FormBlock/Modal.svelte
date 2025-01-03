@@ -9,7 +9,7 @@
   import NodeModalControls from "../../components/NodeModalControls.svelte";
   import { languageConfigStore } from "../../stores";
   import { clone } from "../../utils";
-  import { NODE_TITLE } from "../display";
+  import { NODE_TITLE_KEY } from "../display";
   import FormBranch from "./components/FormBranch.svelte";
   import FormMessages from "./components/FormMessages.svelte";
   import FormResultExportOptions from "./components/FormResultExportOptions.svelte";
@@ -69,7 +69,7 @@
   }
 </script>
 
-<NodeModalBody title={NODE_TITLE.form}>
+<NodeModalBody title={$t(NODE_TITLE_KEY.form)}>
   <div slot="description" class="text-sm text-gray-600 mt-2">
     {$t("studio.form.ok_outcome_cond")} <strong>$t('studio.form.ok_outcome')</strong>.
     {@html $t("studio.form.cancel_outcome_cond")} <strong>{$t("studio.form.cancel_outcome")}</strong>.

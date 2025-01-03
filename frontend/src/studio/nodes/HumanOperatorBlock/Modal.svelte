@@ -10,7 +10,7 @@
   import NodeModalBody from "../../components/NodeModalBody.svelte";
   import NodeModalControls from "../../components/NodeModalControls.svelte";
   import { clone } from "../../utils";
-  import { NODE_TITLE } from "../display";
+  import { NODE_TITLE_KEY } from "../display";
 
   export let botId: string; // required for admin chat id rendering, and context does not propagate here
   export let config: HumanOperatorBlock;
@@ -36,7 +36,7 @@
   ];
 </script>
 
-<NodeModalBody title={NODE_TITLE.human_operator}>
+<NodeModalBody title={$t(NODE_TITLE_KEY.human_operator)}>
   <div class={blockSeqClass}>
     <div class="flex flex-col gap-6">
       <GroupChatIdSelect

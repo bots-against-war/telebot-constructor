@@ -10,7 +10,7 @@
   import SortableListInput from "../../components/SortableListInput.svelte";
   import { languageConfigStore } from "../../stores";
   import { clone } from "../../utils";
-  import { NODE_TITLE } from "../display";
+  import { NODE_TITLE_KEY } from "../display";
 
   export let config: MenuBlock;
   export let onConfigUpdate: (newConfig: MenuBlock) => any;
@@ -71,7 +71,7 @@
   ];
 </script>
 
-<NodeModalBody title={NODE_TITLE.menu}>
+<NodeModalBody title={$t(NODE_TITLE_KEY.menu)}>
   <LocalizableTextInput
     label={$t("studio.menu.message_text_label")}
     required
