@@ -10,6 +10,7 @@
   import { t } from "svelte-i18n";
   import ActionIcon from "../../components/ActionIcon.svelte";
   import ErrorBadge from "../../components/AlertBadge.svelte";
+  import type { MessageFormatter } from "../../i18n";
   import { ok, type Result } from "../../utils";
   import { NODE_HUE, NODE_ICON, NODE_TITLE_KEY, headerColor, type NodeTypeKey } from "../nodes/display";
   import type { ValidationError } from "../nodes/nodeValidators";
@@ -22,16 +23,17 @@
   export let deletable = true;
   export let clonable = true;
   export let colorOverride: string | null = null;
-  export let configValidator: (config: any, langConfig: LanguageConfig | null) => Result<null, ValidationError> = (
-    _,
-    __,
-  ) => ok(null);
+  export let configValidator: (
+    config: any,
+    langConfig: LanguageConfig | null,
+    t: MessageFormatter,
+  ) => Result<null, ValidationError> = (_, __) => ok(null);
 
   const dispatch = createEventDispatcher<{ edit: string; delete: string; clone: string }>();
 
   let configValidationResult: Result<null, ValidationError>;
   $: {
-    configValidationResult = configValidator(config, $languageConfigStore);
+    configValidationResult = configValidator(config, $languageConfigStore, $t);
     isValid = configValidationResult.ok;
   }
 

@@ -423,6 +423,32 @@
       "menu": "Меню",
       "form": "Форма",
       "bot_info": "Аккаунт бота"
+    },
+    "validation": {
+      "localized_but_no_langs": "локализован, но в боте нет выбора языков",
+      "is_empty": "не заполнен",
+      "missing_localization_to_langs": "отсутствует локализация на язык(и)",
+      "text": "текст",
+      "admin_chat_not_selected": "Не выбран рабочий чат",
+      "empty_menu": "Ни одного пункта в меню",
+      "menu_option": "пункт",
+      "no_langs": "Не выбраны поддерживаемые языки",
+      "no_default_lang": "Не выбран язык по умолчанию",
+      "default_lang_is_not_supported": "Язык по умолчанию не входит в список поддерживаемых языков",
+      "langselect_menu_prompt": "текст в сообщении-меню",
+      "form_empty": "Пустая форма",
+      "form_question_in_field": "вопрос в поле",
+      "form_untitled_field": "Не указано название поля",
+      "form_no_options": "Не указано ни одного варианта выбора в поле",
+      "form_option_text": "текст варианта",
+      "form_branch_is_empty": "Ветвь не включает ни одного поля",
+      "form_branch_has_no_condition": "Для ветви не определено условие",
+      "form_branches": "Ветви",
+      "form_no_switch_field": "без предшествующего поля-переключателя",
+      "form_condition_mismatch": "условие не соответвует предыдущему полю",
+      "form_duplicate_condition": "повторяющиеся условия",
+      "form_no_response_processing": "Не выбран ни один вариант обработки результатов формы",
+      "form_no_export_chat": "Не выбран чат для экспорта результатов"
     }
   }
 }

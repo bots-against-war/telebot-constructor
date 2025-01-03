@@ -423,6 +423,32 @@
       "human_operator": "Human operator",
       "language_select": "Language",
       "menu": "Menu"
+    },
+    "validation": {
+      "admin_chat_not_selected": "Admin chat is not selected",
+      "default_lang_is_not_supported": "Default language is not one of the supported languages",
+      "empty_menu": "Empty menu",
+      "form_branch_has_no_condition": "Form branch has no condition",
+      "form_branch_is_empty": "Empty form branch",
+      "form_branches": "Branches",
+      "form_condition_mismatch": "condition does not match the preceding field",
+      "form_duplicate_condition": "duplicate conditions",
+      "form_empty": "Empty form",
+      "form_no_export_chat": "The chat for response export is not selected",
+      "form_no_options": "Multiple choice field has no options configured",
+      "form_no_response_processing": "Form response processing is not set up",
+      "form_no_switch_field": "no preceding switch field",
+      "form_option_text": "option text",
+      "form_question_in_field": "prompt of field",
+      "form_untitled_field": "Unnamed field",
+      "is_empty": "not set",
+      "langselect_menu_prompt": "Menu message text",
+      "localized_but_no_langs": "localized, but language select is not set up",
+      "menu_option": "option",
+      "missing_localization_to_langs": "missing localization to languages",
+      "no_default_lang": "No default language",
+      "no_langs": "Supported languages not selected",
+      "text": "text"
     }
   }
 }
