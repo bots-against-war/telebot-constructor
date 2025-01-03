@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { t } from "svelte-i18n";
   import { TabItem, Tabs } from "flowbite-svelte";
+  import { t } from "svelte-i18n";
   import { flattenedFormFields } from "../../../api/typeUtils";
   import type { FormBlock, FormBranchConfig } from "../../../api/types";
   import { TELEGRAM_MAX_MESSAGE_LENGTH_CHARS } from "../../../constants";
@@ -88,7 +88,7 @@
         <FormBranch isMovableUp={false} isMovableDown={false} bind:branch={topLevelBranch} />
       </TabItem>
       <TabItem title={$t("studio.form.answers_tab")}>
-        <FormResultExportOptions bind:config={editedConfig.results_export} {botId} blockId={config.block_id} />
+        <FormResultExportOptions bind:config={editedConfig.results_export} {botId} />
       </TabItem>
       <TabItem title={$t("studio.form.messages_tab")}>
         <FormMessages bind:messages={editedConfig.messages} bind:errors={formErrorMessages} />

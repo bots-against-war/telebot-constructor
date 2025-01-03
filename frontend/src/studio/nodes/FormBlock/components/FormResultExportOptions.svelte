@@ -1,18 +1,16 @@
 <script lang="ts">
+  import { Li, List, Select, Toggle } from "flowbite-svelte";
   import { t } from "svelte-i18n";
-  import { A, Li, List, Select, Toggle } from "flowbite-svelte";
   import type { FormResultUserAttribution, FormResultsExport } from "../../../../api/types";
   import BotUserBadge from "../../../../components/BotUserBadge.svelte";
   import GroupChatIdSelect from "../../../../components/GroupChatIdSelect.svelte";
   import InputWrapper from "../../../../components/inputs/InputWrapper.svelte";
-  import { formResultsPagePath } from "../../../../routeUtils";
   import BlockNameInline from "../../../components/BlockNameInline.svelte";
   import { PLACEHOLDER_GROUP_CHAT_ID } from "../../defaultConfigs";
   import { NodeTypeKey } from "../../display";
 
   export let config: FormResultsExport;
   export let botId: string;
-  export let blockId: string;
 
   const userAttributionOptions: { value: FormResultUserAttribution; name: string }[] = [
     { value: "none", name: $t("studio.form.do_not_save_user") },
