@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from "svelte-i18n";
   import { Button, Heading } from "flowbite-svelte";
   import { RocketSolid } from "flowbite-svelte-icons";
   import { getBotVersionsPage } from "../../../api/botInfo";
@@ -26,34 +27,34 @@
   const publishBot = (verNo: number) => {
     open(ConfirmationModal, {
       text:
-        `Опубликовать v${verNo + 1}` +
-        (botInfo.running_version !== null ? ` вместо v${botInfo.running_version + 1}` : "") +
+        `${$t("dashboard.publish")} v${verNo + 1}` +
+        (botInfo.running_version !== null ? ` ${$t("dashboard.instead_of")} v${botInfo.running_version + 1}` : "") +
         "?",
       onConfirm: async () => {
         const resp = await startBot(botInfo.bot_id, { version: verNo });
         if (resp.ok) {
           botInfo.running_version = verNo;
         } else {
-          alert(`Ошибка при запуске бота: ${resp.error}`);
+          alert(`${$t("dashboard.error_starting_bot")}: ${resp.error}`);
           botInfo.running_version = null;
         }
       },
-      confirmButtonLabel: "Опубликовать",
+      confirmButtonLabel: $t("dashboard.publish"),
     });
   };
 
   const stopPuslishedBot = () => {
     open(ConfirmationModal, {
-      text: "Остановить бота? Он перестанет реагировать на команды и отвечать пользователь:ницам!",
+      text: $t("dashboard.confirm_stop_bot"),
       onConfirm: async () => {
         const resp = await stopBot(botInfo.bot_id);
         if (resp.ok) {
           botInfo.running_version = null;
         } else {
-          alert(`Ошибка при остановке бота: ${resp.error}`);
+          alert(`${$t("dashboard.error_stopping_bot")}: ${resp.error}`);
         }
       },
-      confirmButtonLabel: "Остановить",
+      confirmButtonLabel: $t("dashboard.stop_bot"),
     });
   };
 </script>
@@ -65,7 +66,7 @@
       <BreadcrumbHome />
       <BreadcrumbDashboard {botInfo} />
     </Breadcrumbs>
-    <Heading tag="h3">История версий</Heading>
+    <Heading tag="h3">{$t("dashboard.version_history")}</Heading>
 
     <Pager
       items={page.versions}
@@ -75,9 +76,7 @@
       let:items
     >
       <div slot="indices" let:first let:last>
-        <strong>{total - last + 1} - {total - first + 1}</strong>
-        из
-        <strong>{total}</strong>
+        <strong>{total - last + 1} - {total - first + 1}</strong> / <strong>{total}</strong>
       </div>
       <ol class="relative border-s border-gray-200 mt-2">
         {#each items.toReversed() as ver (ver.version)}
@@ -95,18 +94,18 @@
               </div>
               <div class="flex flex-row gap-1 items-baseline">
                 {#if ver.version === botInfo.running_version}
-                  <Button size="xs" outline color="red" on:click={stopPuslishedBot}>Остановить</Button>
+                  <Button size="xs" outline color="red" on:click={stopPuslishedBot}>{$t("dashboard.stop_bot")}</Button>
                 {:else}
-                  <Button size="xs" outline color="primary" on:click={() => publishBot(ver.version)}
-                    >Опубликовать</Button
-                  >
+                  <Button size="xs" outline color="primary" on:click={() => publishBot(ver.version)}>
+                    {$t("dashboard.publish")}
+                  </Button>
                 {/if}
                 <Button
                   size="xs"
                   outline
                   href={studioPath(botInfo.bot_id, ver.version === lastVersion ? null : ver.version)}
                 >
-                  {ver.version === lastVersion ? "Редактировать" : "Посмотреть"}
+                  {ver.version === lastVersion ? $t("dashboard.edit") : $t("dashboard.open_readonly")}
                 </Button>
               </div>
             </div>

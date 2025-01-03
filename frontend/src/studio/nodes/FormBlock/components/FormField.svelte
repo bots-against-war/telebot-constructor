@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from "svelte-i18n";
   import { Select } from "flowbite-svelte";
   import type { FormFieldConfig } from "../../../../api/types";
   import { getBaseFormFieldConfig, getDefaultFormFieldConfig } from "../utils";
@@ -12,8 +13,8 @@
   export let isMovableDown: boolean;
 
   let availableKeys = [
-    { value: "plain_text", name: "Свободный ответ" },
-    { value: "single_select", name: "Выбор" },
+    { value: "plain_text", name: $t("studio.form.freeform_response") },
+    { value: "single_select", name: $t("studio.form.choice_reponse") },
   ];
 
   let selectedKey: string;

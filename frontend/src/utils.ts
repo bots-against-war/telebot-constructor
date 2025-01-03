@@ -116,7 +116,7 @@ export function withConfirmation(
   text: string,
   onConfirm: () => Promise<any>,
   confirmButtonLabel: string,
-  cancelButtonLabel: string = "Отмена",
+  cancelButtonLabel: string | null = null,
 ) {
   const open = getModalOpener();
   return () => {

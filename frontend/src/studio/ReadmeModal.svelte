@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from "svelte-i18n";
   import {
     A,
     Button,
@@ -29,113 +30,128 @@
 </script>
 
 <section class="p-4">
-  <Heading tag="h3" class={headingClass}>О конструкторе</Heading>
+  <Heading tag="h3" class={headingClass}>{$t("studio.readme.title")}</Heading>
   <P class={pClass}>
-    Telebot Constructor позволяет создавать сложные и многоязычные диалоги с различными условиями и решениями на языке
-    блок-схем. В этой студии вы собираете логику работы бота из блоков, как конструктор, настраивая его поведение под
-    ваши нужды.
+    {$t("studio.readme.p1")}
   </P>
   <Tabs style="underline" contentClass="p-4 bg-gray-50 pt-6">
-    <TabItem open title="Пример">
-      <Heading tag="h4" class={headingClass}>Пример бота</Heading>
+    <TabItem open title={$t("studio.readme.example_bot.tab_title")}>
+      <Heading tag="h4" class={headingClass}>{$t("studio.readme.example_bot.h1")}</Heading>
       <P class={pClass}>
-        Представьте, что через ваш бот можно задать вопрос или узнать ваш адрес. Вот как это может выглядеть в работе:
+        {$t("studio.readme.example_bot.p1")}
       </P>
       <P class={pClass}>
         <div class="w-full flex flex-col gap-3">
-          <strong>Пользователь начинает работу с ботом</strong>
+          <strong>{$t("studio.readme.example_bot.user_starts")}</strong>
           <div class="bubble right">
             <code>/start</code>
           </div>
           <div class="bubble left">
-            Привет! Спасибо, что обратились к нам. Чем мы можем помочь?
+            {$t("studio.readme.example_bot.bot_response")}
             <div class="flex flex-row gap-1 w-full mt-2">
-              <div class="flex-grow border border-gray-500 w-full text-center py-1">Адрес</div>
-              <div class="flex-grow border border-gray-500 w-full text-center py-1">Вопрос</div>
+              <div class="flex-grow border border-gray-500 w-full text-center py-1">
+                {$t("studio.readme.example_bot.bot_button_1")}
+              </div>
+              <div class="flex-grow border border-gray-500 w-full text-center py-1">
+                {$t("studio.readme.example_bot.bot_button_2")}
+              </div>
             </div>
           </div>
 
-          <div class="mt-3 border-t border-gray-200 pt-3">Если пользователь выбирает <strong>Адрес</strong></div>
-          <div class="bubble left">Проспект Мира, 16</div>
+          <div class="mt-3 border-t border-gray-200 pt-3">
+            {$t("studio.readme.example_bot.if_user_selects")}
+            <strong>{$t("studio.readme.example_bot.bot_button_1")}</strong>
+          </div>
+          <div class="bubble left">{$t("studio.readme.example_bot.example_address")}</div>
 
-          <div class="mt-3 border-t border-gray-200 pt-3">Если пользователь выбирает <strong>Вопрос</strong></div>
-          <div class="bubble left">Напишите ваш вопрос.</div>
+          <div class="mt-3 border-t border-gray-200 pt-3">
+            {$t("studio.readme.example_bot.if_user_selects")}
+            <strong>{$t("studio.readme.example_bot.bot_button_2")}</strong>
+          </div>
+          <div class="bubble left">{$t("studio.readme.example_bot.ask_the_question")}</div>
           <div class="bubble right">&lt;...&gt;</div>
-          <div class="bubble left">Спасибо, мы вам скоро ответим!</div>
+          <div class="bubble left">{$t("studio.readme.example_bot.thanks_well_get_back_to_you")}</div>
           <div>
-            Бот пересылает вопрос в ваш рабочий чат, где его видят операторы. Они обрабатывают сообщение и отвечают,
-            сообщение передаётся назад пользователю. При необходимости они могут продолжить вести переписку через бот.
+            {$t("studio.readme.example_bot.feedback_handler_descr")}
           </div>
         </div>
       </P>
 
       <Heading tag="h4" class={headingClass}>
         <div class="flex flex-row justify-between items-center">
-          Как это работает?
+          {$t("studio.readme.example_bot.h2")}
           <Button
             on:click={() => {
               onShowcaseTemplate();
               close();
-            }}>Открыть шаблон</Button
+            }}>{$t("studio.readme.example_bot.h2_button")}</Button
           >
         </div>
       </Heading>
       <P class={pClass}>
         <Table noborder class="p-0 text-wrap overflow-x-visible">
           <TableHead>
-            <TableHeadCell>В Telegram</TableHeadCell>
-            <TableHeadCell>В конструкторе</TableHeadCell>
+            <TableHeadCell>{$t("studio.readme.example_bot.in_tg_col")}</TableHeadCell>
+            <TableHeadCell>{$t("studio.readme.example_bot.in_constructor_col")}</TableHeadCell>
           </TableHead>
           <TableBody tableBodyClass="divide-y">
             <TableBodyRow>
-              <TableBodyCell {tdClass}>Пользователь переходит по ссылке на бот и нажимает кнопку "Старт"</TableBodyCell>
+              <TableBodyCell {tdClass}>{$t("studio.readme.example_bot.user_presses_start")}</TableBodyCell>
               <TableBodyCell {tdClass}>
-                Блоки <BlockNameInline key={NodeTypeKey.info} /> и
-                <BlockNameInline key={NodeTypeKey.command} /> <strong>/start</strong> – это стартовые блоки, обеспечивающие
-                запуск взаимодействия
+                <BlockNameInline key={NodeTypeKey.info} />
+                {$t("studio.readme.example_bot.and")}
+                <BlockNameInline key={NodeTypeKey.command} /> <strong>/start</strong>
+                {$t("studio.readme.example_bot.are_start_blocks")}
               </TableBodyCell>
             </TableBodyRow>
             <TableBodyRow>
               <TableBodyCell {tdClass}>
-                Пользователь получает приветственное сообщение с двумя кнопками на выбор: "Адрес" и "Вопрос"
+                {$t("studio.readme.example_bot.user_gets_welcome_msg")}
+                <strong>{$t("studio.readme.example_bot.bot_button_1")}</strong>
+                {$t("studio.readme.example_bot.and")}
+                <strong>{$t("studio.readme.example_bot.bot_button_2")}</strong>
               </TableBodyCell>
               <TableBodyCell {tdClass}>
-                Блок <BlockNameInline key={NodeTypeKey.menu} /> – здесь задаются варианты выбора и поясняющий текст
-              </TableBodyCell>
-            </TableBodyRow>
-            <TableBodyRow>
-              <TableBodyCell {tdClass}>
-                Если пользователь выбирает "Адрес", он получает ответ: "Проспект Мира, 16"
-              </TableBodyCell>
-              <TableBodyCell {tdClass}>
-                Блок <BlockNameInline key={NodeTypeKey.content} /> присоединяется к условию "Адрес" и содержит текст ответа
+                <BlockNameInline key={NodeTypeKey.menu} />
+                {$t("studio.readme.example_bot.is_menu_block")}
               </TableBodyCell>
             </TableBodyRow>
             <TableBodyRow>
               <TableBodyCell {tdClass}>
-                Если пользователь выбирает "Вопрос", он получает сообщение: "Напишите ваш вопрос"
+                {$t("studio.readme.example_bot.is_user_presses_1")}
               </TableBodyCell>
               <TableBodyCell {tdClass}>
-                Другой блок <BlockNameInline key={NodeTypeKey.content} /> присоединяется к условию "Вопрос" и содержит альтернативный
-                текст
-              </TableBodyCell>
-            </TableBodyRow>
-            <TableBodyRow>
-              <TableBodyCell {tdClass}>
-                Пользователь отправляет сообщение и получает ответ: "Спасибо, мы вам скоро ответим!"
-              </TableBodyCell>
-              <TableBodyCell {tdClass}>
-                Блок <BlockNameInline key={NodeTypeKey.human_operator} /> присоединяется к блоку
-                <BlockNameInline key={NodeTypeKey.content} /> и отвечает за связь пользователя с оператор:кой бота. В этом
-                блоке выбирается рабочий чат и настраивается автоматический ответ на принятое сообщение
+                <BlockNameInline key={NodeTypeKey.content} />
+                {$t("studio.readme.example_bot.contains_answer_to_1")}
               </TableBodyCell>
             </TableBodyRow>
             <TableBodyRow>
               <TableBodyCell {tdClass}>
-                Пользователь получает ваш персональный ответ после обработки сообщения в рабочем чате
+                {$t("studio.readme.example_bot.is_user_presses_2")}
               </TableBodyCell>
               <TableBodyCell {tdClass}>
-                Ответ из рабочего чата отправляется вручную, и пользователь получает его как обычное сообщение
+                {$t("studio.readme.example_bot.another_block")}
+                <BlockNameInline key={NodeTypeKey.content} />
+                {$t("studio.readme.example_bot.contains_answer_to_2")}
+              </TableBodyCell>
+            </TableBodyRow>
+            <TableBodyRow>
+              <TableBodyCell {tdClass}>
+                {$t("studio.readme.example_bot.is_user_sends_msg")}
+              </TableBodyCell>
+              <TableBodyCell {tdClass}>
+                <BlockNameInline key={NodeTypeKey.human_operator} />
+                {$t("studio.readme.example_bot.connects_to_block")}
+                <BlockNameInline key={NodeTypeKey.content} />
+                {$t("studio.readme.example_bot.and_provides_feedback")}
+              </TableBodyCell>
+            </TableBodyRow>
+            <TableBodyRow>
+              <TableBodyCell {tdClass}>
+                {$t("studio.readme.example_bot.is_user_gets_response")}
+              </TableBodyCell>
+              <TableBodyCell {tdClass}>
+                {$t("studio.readme.example_bot.answer_is_sent_from_admin_chat")}
               </TableBodyCell>
             </TableBodyRow>
           </TableBody>
@@ -143,90 +159,68 @@
       </P>
     </TabItem>
 
-    <TabItem title="Термины">
-      <Heading tag="h4" class={headingClass}>О Telegram-ботах</Heading>
+    <TabItem title={$t("studio.readme.glossary.tab_title")}>
+      <Heading tag="h4" class={headingClass}>{$t("studio.readme.glossary.h1")}</Heading>
       <P class={pClass}>
-        Бот в Telegram — это программа, которая работает внутри мессенджера и взаимодействует с пользователями. Проще
-        говоря, это автоматизированный собеседник, настроенный на выполнение определённых действий. Боты используют
-        <A href="https://core.telegram.org/bots/api">API Telegram</A> для отправки и получения сообщений, управления каналами
-        или группами, а также выполнения других функций на платформе. Пользователи общаются с ботом, как с обычным контактом,
-        а бот отвечает в зависимости от его настроек и логики.
+        {$t("studio.readme.glossary.p1")}
       </P>
 
-      <Heading tag="h4" class={headingClass}>Что такое API?</Heading>
+      <Heading tag="h4" class={headingClass}>{$t("studio.readme.glossary.h2")}</Heading>
       <P class={pClass}>
-        API (Application Programming Interface) — это набор правил и инструментов, позволяющий программам
-        взаимодействовать друг с другом. Представьте API как меню в ресторане: вы выбираете блюдо (функцию или данные),
-        а кухня (другая программа) готовит его и подаёт вам. Вы не видите процесс приготовления, но точно знаете, что
-        получите в итоге. API работает так же, давая одной программе возможность использовать функции другой программы
-        без необходимости погружаться в её внутренние процессы.
+        {$t("studio.readme.glossary.p2")}
       </P>
 
-      <Heading tag="h4" class={headingClass}>Как боты работают в Telegram?</Heading>
-
+      <Heading tag="h4" class={headingClass}>{$t("studio.readme.glossary.h3")}</Heading>
       <P class={pClass}>
-        Чтобы общаться в Telegram, пользователь создаёт аккаунт, регистрируясь по номеру телефона, и получает доступ
-        через пароль и двухфакторную аутентификацию. Telegram-боты тоже имеют аккаунт, но он создаётся через
-        <A href="https://t.me/BotFather">BotFather</A>, а доступ предоставляется через токен. Токен — это уникальный
-        ключ, который подтверждает право на использование API и передаётся с каждым запросом к серверу. Как и личный
-        пароль, токен должен быть защищён.
+        {$t("studio.readme.glossary.p3")}
       </P>
-      <Heading tag="h4" class={headingClass}>Основные ограничения Telegram-ботов:</Heading>
 
+      <Heading tag="h4" class={headingClass}>{$t("studio.readme.glossary.h4")}</Heading>
       <P class={pClass}>
         <List>
-          <Li>Не могут писать сообщения первыми</Li>
-          <Li>Не имеют доступа к истории переписки</Li>
-          <Li>Не могут получить номер телефона пользователя без явного запроса</Li>
-          <Li>Имеют ограниченный доступ к сообщениям в группах по умолчанию</Li>
-          <Li>Не могут загружать и скачивать файлы размером более 20 Мб</Li>
+          <Li>{$t("studio.readme.glossary.p4_l1")}</Li>
+          <Li>{$t("studio.readme.glossary.p4_l2")}</Li>
+          <Li>{$t("studio.readme.glossary.p4_l3")}</Li>
+          <Li>{$t("studio.readme.glossary.p4_l5")}</Li>
+          <Li>{$t("studio.readme.glossary.p4_l6")}</Li>
         </List>
       </P>
     </TabItem>
 
-    <TabItem title="Блоки">
-      <Heading tag="h4" class={headingClass}>Блоки</Heading>
+    <TabItem title={$t("studio.readme.blocks.tab_title")}>
+      <Heading tag="h4" class={headingClass}>{$t("studio.readme.blocks.h1")}</Heading>
       <Heading tag="h5"><BlockNameInline key={NodeTypeKey.info} /></Heading>
-      <P class={pClass}>Общая информация о боте, включая имя и описание.</P>
+      <P class={pClass}>{$t("studio.readme.blocks.info")}</P>
 
       <Heading tag="h5"><BlockNameInline key={NodeTypeKey.command} /></Heading>
       <P class={pClass}>
-        Способ входа в любую ветку логики бота – срабатывает, когда пользователь присылает команду, и запускает
-        соответствующую ветку логики в любое время, независимо от предыдущих шагов.
+        {$t("studio.readme.blocks.cmd_1")}
       </P>
       <P class={pClass}>
-        Главная команда <code>/start</code> определена для любого бота. Другие команды необязательны, но вы можете
-        настроить их для ключевых действий в вашем боте, например: получить помощь (<code>/help</code>), подать заявку
-        на волонтёрство (<code>/apply</code>), сделать пожертвование (<code>/donate</code>) и другие.
+        {@html $t("studio.readme.blocks.cmd_2")}
       </P>
 
       <Heading tag="h5"><BlockNameInline key={NodeTypeKey.content} /></Heading>
-      <P class={pClass}>Отправка текствовых сообщений и картинок.</P>
+      <P class={pClass}>{$t("studio.readme.blocks.content")}</P>
 
       <Heading tag="h5"><BlockNameInline key={NodeTypeKey.human_operator} /></Heading>
       <P class={pClass}>
-        Переключение чат-бота на живое общение с операторами бота, которые остаются анонимными. Есть возможность
-        сохранения анонимности и для пользователей.
+        {$t("studio.readme.blocks.feedback")}
       </P>
 
       <Heading tag="h5"><BlockNameInline key={NodeTypeKey.language_select} /></Heading>
       <P class={pClass}>
-        Выбор языка бота с помощью меню. Вы определяете список доступных языков – все тексты в бота должны быть
-        локализованы на них.
+        {$t("studio.readme.blocks.langselect")}
       </P>
 
       <Heading tag="h5"><BlockNameInline key={NodeTypeKey.menu} /></Heading>
-      <P class={pClass}>Многоуровневое ветвление с помощью выбора из заданных вариантов.</P>
+      <P class={pClass}>{$t("studio.readme.blocks.menu")}</P>
 
       <Heading tag="h5"><BlockNameInline key={NodeTypeKey.form} /></Heading>
       <P class={pClass}>
-        Аналог Google Forms или Airtable, но внутри вашего бота: задайте список вопросов (со свободным ответом или с
-        выбором вариантов), а бот пришлёт их пользователю в нужном порядке. Ответы на формы можно прислать в ваш рабочий
-        чат и/или сохранить в память бота, где их можно будет посмотреть в дашборде.
+        {$t("studio.readme.blocks.form")}
       </P>
     </TabItem>
-
-    <TabItem title="Безопасность">TBD</TabItem>
   </Tabs>
 </section>
 

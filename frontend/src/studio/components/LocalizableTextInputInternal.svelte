@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from "svelte-i18n";
   import { TabItem, Tabs } from "flowbite-svelte";
   import { ExclamationCircleOutline } from "flowbite-svelte-icons";
   import { createEventDispatcher } from "svelte";
@@ -127,5 +128,5 @@
     {/if}
   </InputWrapper>
 {:else}
-  <AlertBadge text="Что-то пошло не так :(" />
+  <AlertBadge text={$t("generic.something_went_wrong")} />
 {/if}

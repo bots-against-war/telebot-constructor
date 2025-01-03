@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from "svelte-i18n";
   import { Spinner } from "flowbite-svelte";
   import { saveMedia } from "../../../api/media";
   import type { ContentBlock } from "../../../api/types";
@@ -8,7 +9,7 @@
   import LocalizableTextInput from "../../components/LocalizableTextInput.svelte";
   import NodeModalBody from "../../components/NodeModalBody.svelte";
   import NodeModalControls from "../../components/NodeModalControls.svelte";
-  import { NODE_TITLE } from "../display";
+  import { NODE_TITLE_KEY } from "../display";
   import Attachment from "./Attachment.svelte";
   import UploadFileButton from "./UploadFileButton.svelte";
 
@@ -52,16 +53,16 @@
   }
 </script>
 
-<NodeModalBody title={NODE_TITLE.content}>
+<NodeModalBody title={$t(NODE_TITLE_KEY.content)}>
   <LocalizableTextInput
-    label="Текст сообщения"
+    label={$t("studio.content.text")}
     bind:value={messageText}
     maxCharacters={attachments.length > 0 ? TELEGRAM_MAX_CAPTION_LENGTH_CHARS : TELEGRAM_MAX_MESSAGE_LENGTH_CHARS}
     textareaRows={10}
     markdown
     required={false}
   />
-  <InputWrapper label="Приложения" required={false}>
+  <InputWrapper label={$t("studio.content.attachments")} required={false}>
     <div class="flex flex-row gap-3 flex-wrap items-center">
       {#each attachments as attachment (attachment.image)}
         {#if attachment.image}

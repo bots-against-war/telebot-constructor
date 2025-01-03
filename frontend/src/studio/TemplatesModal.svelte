@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from "svelte-i18n";
   import { Button, Heading, P } from "flowbite-svelte";
   import { getModalCloser } from "../utils";
   import {
@@ -17,26 +18,34 @@
   const TEMPLATES_DATA = [
     {
       factory: basicShowcaseTemplate,
-      title: "Бот из инструкции",
-      description: "Простейший бот с одним ветвлением и переходом к живому оператору.",
+      title: $t("studio.templates.tutorial_bot_title"),
+      description: $t("studio.templates.tutorial_bot_descr"),
     },
     {
       factory: contentOnlyTemplate,
-      title: "Инфо-бот",
-      description: 'Пример использования сложной разметки в блоке "Контент".',
+      title: $t("studio.templates.info_bot_title"),
+      description: $t("studio.templates.info_bot_descr"),
     },
     {
       factory: formsTemplate,
-      title: "Анкеты приюта",
-      description: "Бот для сбора заявок от пользователей в двух сценариях.",
+      title: $t("studio.templates.forms_bot_title"),
+      description: $t("studio.templates.forms_bot_descr"),
     },
-    { factory: multilangTemplate, title: "Бот-полиглот", description: "Делится информацией на нескольких языках." },
-    { factory: festivalBotTemplate, title: "Фестивальный бот", description: " Дает подсказки на множество вопросов." },
+    {
+      factory: multilangTemplate,
+      title: $t("studio.templates.multilang_bot_title"),
+      description: $t("studio.templates.multilang_bot_descr"),
+    },
+    {
+      factory: festivalBotTemplate,
+      title: $t("studio.templates.menu_bot_title"),
+      description: $t("studio.templates.menu_bot_descr"),
+    },
   ];
 </script>
 
 <section class="p-4">
-  <Heading tag="h3" class="mb-5">Шаблоны</Heading>
+  <Heading tag="h3" class="mb-5">{$t("studio.templates.title")}</Heading>
   {#each TEMPLATES_DATA as { factory, title, description }}
     <div class="flex flex-row justify-between items-start gap-4 mb-3 pb-3 border-b border-gray-300 last:border-b-0">
       <P class="">
@@ -48,7 +57,7 @@
         on:click={() => {
           templateSelectedCallback(factory());
           close();
-        }}>Добавить</Button
+        }}>{$t("studio.templates.select_template")}</Button
       >
     </div>
   {/each}

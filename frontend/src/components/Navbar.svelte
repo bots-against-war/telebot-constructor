@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { _ } from "svelte-i18n";
   import { Avatar, Button, NavBrand, Navbar, Popover } from "flowbite-svelte";
   import logo from "../assets/logo.svg";
   import { loggedInUserStore } from "../globalStateStores";
@@ -32,7 +33,7 @@
             window.location.reload();
           }}
         >
-          Выйти
+          {$_("navbar.logout")}
         </Button>
       </div>
     </Popover>

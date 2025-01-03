@@ -54,14 +54,14 @@ export function headerColor(hue: number | "white"): string {
   return `hsl(${hue}, 70%, 70%)`;
 }
 
-export const NODE_TITLE: { [key in NodeTypeKey]: string } = {
-  command: "Команда",
-  content: "Контент",
-  human_operator: "Оператор:ка",
-  language_select: "Язык",
-  menu: "Меню",
-  form: "Форма",
-  info: "Аккаунт бота",
+export const NODE_TITLE_KEY: { [key in NodeTypeKey]: string } = {
+  command: "studio.node_titles.command",
+  content: "studio.node_titles.content",
+  human_operator: "studio.node_titles.human_operator",
+  language_select: "studio.node_titles.language_select",
+  menu: "studio.node_titles.menu",
+  form: "studio.node_titles.form",
+  info: "studio.node_titles.bot_info",
 };
 
 export const NODE_ICON: { [key in NodeTypeKey]: Newable<SvelteComponent> } = {

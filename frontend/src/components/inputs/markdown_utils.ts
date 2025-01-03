@@ -13,12 +13,12 @@ import type { Newable } from "ts-essentials";
 export type MarkdownEntityType = "bold" | "italic" | "strikethrough" | "spoiler" | "link" | "blockquote";
 
 export const markdownEntityData: [Newable<SvelteComponent>, MarkdownEntityType, string][] = [
-  [LetterBoldOutline, "bold", "Жирный"],
-  [LetterItalicOutline, "italic", "Курсив"],
-  [QuoteSolid, "blockquote", "Цитата"],
-  [LinkOutline, "link", "Ссылка"],
-  [TextSlashOutline, "strikethrough", "Зачеркнутый"],
-  [EyeSlashSolid, "spoiler", "Спойлер"],
+  [LetterBoldOutline, "bold", "components.markdown_input.bold"],
+  [LetterItalicOutline, "italic", "components.markdown_input.italic"],
+  [QuoteSolid, "blockquote", "components.markdown_input.quote"],
+  [LinkOutline, "link", "components.markdown_input.link"],
+  [TextSlashOutline, "strikethrough", "components.markdown_input.strikethrough"],
+  [EyeSlashSolid, "spoiler", "components.markdown_input.spoiler"],
 ];
 
 export interface MarkdownEntity {

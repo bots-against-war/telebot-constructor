@@ -1,13 +1,13 @@
 <script lang="ts">
   import { ButtonGroup, Input, InputAddon } from "flowbite-svelte";
+  import { t } from "svelte-i18n";
   import type { CommandEntryPoint } from "../../../api/types";
   import SlashIcon from "../../../components/icons/SlashIcon.svelte";
   import InputWrapper from "../../../components/inputs/InputWrapper.svelte";
   import TextInput from "../../../components/inputs/TextInput.svelte";
   import NodeModalBody from "../../components/NodeModalBody.svelte";
   import NodeModalControls from "../../components/NodeModalControls.svelte";
-  import { NODE_TITLE } from "../display";
-  import InlineCollapsible from "../../../components/InlineCollapsible.svelte";
+  import { NODE_TITLE_KEY } from "../display";
 
   export let config: CommandEntryPoint;
   export let onConfigUpdate: (newConfig: CommandEntryPoint) => any;
@@ -23,16 +23,16 @@
   let commandError: string | undefined;
   $: {
     if (!isStartCmd && command === "start") {
-      commandError = "Зарезервированная команда";
+      commandError = $t("studio.command.reserved_cmd_error");
     } else if (command.length === 0) {
-      commandError = "Команда не может быть пустой";
+      commandError = $t("studio.command.empty_cmd_error");
     } else {
       commandError = undefined;
     }
   }
 </script>
 
-<NodeModalBody title={NODE_TITLE.command}>
+<NodeModalBody title={$t(NODE_TITLE_KEY.command)}>
   <InputWrapper label={null} error={commandError}>
     <ButtonGroup class="w-full" size="sm">
       <InputAddon>
@@ -41,13 +41,12 @@
       <Input bind:value={command} disabled={isStartCmd} class="font-mono !text-lg pl-3" />
     </ButtonGroup>
   </InputWrapper>
-  <TextInput label="Описание" required={false} bind:value={descr}>
+  <TextInput label={$t("studio.command.description_label")} required={false} bind:value={descr}>
     <details slot="description">
       <summary>
-        Для меню рядом с полем ввода сообщения или подсказки при наборе "<code>/</code>".
+        {$t("studio.command.description_hint_1")} "<code>/</code>".
       </summary>
-      В многоязычных ботах это описание не переводится – советуем писать на самом популярном языке или несколько вариантов
-      в одну строчку. Например: <code>/help</code> – "помощь" или "помощь/pomoc/assistere".
+      {@html $t("studio.command.description_hint_2")}
     </details>
   </TextInput>
   <NodeModalControls saveable={commandError === undefined} on:save={updateConfig} />

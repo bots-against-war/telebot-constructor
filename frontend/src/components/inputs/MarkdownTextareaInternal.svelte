@@ -1,5 +1,6 @@
 <!-- HACK: partial copy of internal flowbite's implementation to hack markdown editor into it -->
 <script lang="ts">
+  import { t } from "svelte-i18n";
   import { Toggle, Toolbar, ToolbarGroup, Tooltip } from "flowbite-svelte";
   import { ExclamationCircleOutline } from "flowbite-svelte-icons";
   import { getContext } from "svelte";
@@ -58,7 +59,7 @@
   <div class={headerClass(true)}>
     <Toolbar embedded>
       <ToolbarGroup divClass={preview ? "pointer-events-none opacity-40" : ""}>
-        {#each markdownEntityData as [icon, type, name] (type)}
+        {#each markdownEntityData as [icon, type, key] (type)}
           <ActionIcon
             id={type}
             {icon}
@@ -68,7 +69,7 @@
             on:click={() => addMarkup(type)}
           >
             <Tooltip type="light" placement="top" triggeredBy={`#${type}`} class="p-1">
-              <MarkdownEntityTooltip {icon} {type} {name} />
+              <MarkdownEntityTooltip {icon} {type} name={$t(key)} />
             </Tooltip>
           </ActionIcon>
         {/each}
@@ -78,10 +79,10 @@
           {#if preview}
             <div class="text-red-600 text-sm flex flex-row items-center gap-1">
               <ExclamationCircleOutline />
-              <span>Может быть неточным</span>
+              <span>{$t("components.markdown_input.might_be_inaccurate")}</span>
             </div>
           {:else}
-            <span class="text-gray-600 text-sm">Превью</span>
+            <span class="text-gray-600 text-sm">{$t("components.markdown_input.preview")}</span>
           {/if}
         </Toggle>
       </ToolbarGroup>

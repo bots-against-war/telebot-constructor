@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from "svelte-i18n";
   import { Textarea } from "flowbite-svelte";
   import InputWrapper from "./InputWrapper.svelte";
   import MarkdownTextareaInternal from "./MarkdownTextareaInternal.svelte";
@@ -30,9 +31,10 @@
   {/if}
   {#if maxLength !== null && value.length / maxLength > 0.5}
     <span class="text-xs {value.length > maxLength ? 'text-red-600' : 'text-gray-500'}">
-      {value.length} / {maxLength} символов
+      {value.length} / {maxLength}
+      {$t("components.text_input.symbols")}
       {#if value.length > maxLength && !preventExceedingMaxLength}
-        – сообщение может быть разрезано
+        – {$t("components.text_input.message_might_be_split")}
       {/if}
     </span>
   {/if}

@@ -1,9 +1,10 @@
 <script lang="ts">
-  import { headerColor, NODE_HUE, NODE_TITLE, NodeTypeKey } from "../nodes/display";
+  import { t } from "svelte-i18n";
+  import { headerColor, NODE_HUE, NODE_TITLE_KEY, NodeTypeKey } from "../nodes/display";
 
   export let key: NodeTypeKey;
 </script>
 
 <strong class="px-1 py-0.25 rounded-none" style="background-color: {headerColor(NODE_HUE[key])}"
-  >{NODE_TITLE[key]}</strong
+  >{$t(NODE_TITLE_KEY[key])}</strong
 >

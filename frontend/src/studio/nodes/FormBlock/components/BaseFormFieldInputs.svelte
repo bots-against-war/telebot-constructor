@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from "svelte-i18n";
   import { Toggle } from "flowbite-svelte";
   import type { BaseFormFieldConfig } from "../../../../api/types";
   import EditableText from "../../../../components/inputs/EditableText.svelte";
@@ -9,7 +10,7 @@
   import { getRandomContent as getRandomFormExampleContent } from "../content";
   export let config: BaseFormFieldConfig;
 
-  let exampleContent = getRandomFormExampleContent();
+  let exampleContent = getRandomFormExampleContent($t);
   let syncNameWithPrompt = config.name === localizableTextToString(config.prompt, $languageConfigStore);
   $: {
     if (syncNameWithPrompt) {
@@ -42,5 +43,5 @@
     maxCharacters={TELEGRAM_MAX_MESSAGE_LENGTH_CHARS}
     on:languageChanged
   />
-  <Toggle bind:checked={config.is_required} size="small">Обязательное</Toggle>
+  <Toggle bind:checked={config.is_required} size="small">{$t("studio.form.required")}</Toggle>
 </div>

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from "svelte-i18n";
   import { Avatar, Listgroup, ListgroupItem, Popover, Spinner } from "flowbite-svelte";
   import { ArrowUpRightFromSquareOutline, DotsHorizontalOutline, RefreshOutline } from "flowbite-svelte-icons";
   import { getBotUser } from "../api/botUser";
@@ -56,7 +57,7 @@
     {#if res.ok}
       <slot user={res.data} />
     {:else}
-      <ErrorBadge title="Ошибка загрузки данных о боте" text={res.error} />
+      <ErrorBadge title={$t("components.bot_user_badge.data_loading_error")} text={res.error} />
     {/if}
   {/await}
 {:else}
@@ -86,7 +87,7 @@
                 class="gap-2"
               >
                 <RefreshOutline class="w-3 h-3 text-gray-700" />
-                Обновить
+                {$t("generic.refresh")}
               </ListgroupItem>
               <ListgroupItem
                 href={`https://t.me/${res.data.username}`}
@@ -94,13 +95,13 @@
                 attrs={{ target: "_blank" }}
               >
                 <ArrowUpRightFromSquareOutline class="w-3 h-3 text-gray-700" />
-                Перейти
+                {$t("components.bot_user_badge.go_to_bot")}
               </ListgroupItem>
             </Listgroup>
           </Popover>
         </div>
       {:else}
-        <ErrorBadge title="Ошибка загрузки данных о боте" text={res.error} />
+        <ErrorBadge title={$t("components.bot_user_badge.data_loading_error")} text={res.error} />
       {/if}
     {/await}
   </DataBadge>
