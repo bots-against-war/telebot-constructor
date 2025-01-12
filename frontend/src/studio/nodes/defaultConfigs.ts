@@ -5,7 +5,7 @@ import type {
   UserFlowConfig,
   UserFlowEntryPointConfig,
 } from "../../api/types";
-import type { MessageFormatter } from "../../i18n";
+import type { I18NLocale, MessageFormatter } from "../../i18n";
 import type { LanguageConfig } from "../stores";
 import { updateWithPrefilled } from "./FormBlock/prefill";
 
@@ -14,9 +14,10 @@ export type ConfigFactory = (
   t: MessageFormatter,
   langConfig: LanguageConfig | null,
   currentConfig: UserFlowConfig,
+  locale: I18NLocale,
 ) => UserFlowEntryPointConfig | UserFlowEntryPointConfig;
 
-export function defaultCommandEntrypoint(id: string): UserFlowEntryPointConfig {
+export const defaultCommandEntrypoint: ConfigFactory = (id: string): UserFlowEntryPointConfig => {
   return {
     command: {
       entrypoint_id: id,
@@ -26,9 +27,9 @@ export function defaultCommandEntrypoint(id: string): UserFlowEntryPointConfig {
       next_block_id: null,
     },
   };
-}
+};
 
-export function defaultContentBlockConfig(id: string, t: MessageFormatter): UserFlowBlockConfig {
+export const defaultContentBlockConfig: ConfigFactory = (id: string, t: MessageFormatter): UserFlowBlockConfig => {
   return {
     content: {
       block_id: id,
@@ -36,11 +37,14 @@ export function defaultContentBlockConfig(id: string, t: MessageFormatter): User
       next_block_id: null,
     },
   };
-}
+};
 
 export const PLACEHOLDER_GROUP_CHAT_ID = 0;
 
-export function defaultHumanOperatorBlockConfig(id: string, t: MessageFormatter): UserFlowBlockConfig {
+export const defaultHumanOperatorBlockConfig: ConfigFactory = (
+  id: string,
+  t: MessageFormatter,
+): UserFlowBlockConfig => {
   return {
     human_operator: {
       block_id: id,
@@ -66,14 +70,14 @@ export function defaultHumanOperatorBlockConfig(id: string, t: MessageFormatter)
       },
     },
   };
-}
+};
 
-export function defaultMenuBlockConfig(
+export const defaultMenuBlockConfig: ConfigFactory = (
   id: string,
   _: MessageFormatter,
   langConfig: LanguageConfig | null,
   currentConfig: UserFlowConfig,
-): UserFlowBlockConfig {
+): UserFlowBlockConfig => {
   const topMechanismOccurrences = currentConfig.blocks
     .map((bc) => (bc.menu ? bc.menu.menu.config.mechanism : null))
     .filter((mb) => mb !== null)
@@ -103,9 +107,9 @@ export function defaultMenuBlockConfig(
       },
     },
   };
-}
+};
 
-export function defaultLanguageSelectBlockConfig(id: string): UserFlowBlockConfig {
+export const defaultLanguageSelectBlockConfig: ConfigFactory = (id: string): UserFlowBlockConfig => {
   return {
     language_select: {
       block_id: id,
@@ -119,17 +123,19 @@ export function defaultLanguageSelectBlockConfig(id: string): UserFlowBlockConfi
       language_selected_next_block_id: null,
     },
   };
-}
+};
 
 export function generateFormName(): string {
   return `form-${crypto.randomUUID()}`;
 }
 
-export function defaultFormBlockConfig(
+export const defaultFormBlockConfig: ConfigFactory = (
   id: string,
-  _: MessageFormatter,
+  t: MessageFormatter,
   langConfig: LanguageConfig | null,
-): UserFlowBlockConfig {
+  _: UserFlowConfig,
+  locale: I18NLocale,
+): UserFlowBlockConfig => {
   let messages: FormMessages = {
     form_start: "",
     field_is_skippable: "",
@@ -138,7 +144,7 @@ export function defaultFormBlockConfig(
     unsupported_command: "",
     cancel_command_is: "",
   };
-  [messages] = updateWithPrefilled(messages, langConfig);
+  [messages] = updateWithPrefilled(messages, langConfig, t, locale);
   return {
     form: {
       block_id: id,
@@ -155,4 +161,4 @@ export function defaultFormBlockConfig(
       form_completed_next_block_id: null,
     },
   };
-}
+};

@@ -33,3 +33,5 @@ export interface MessageObject {
   values?: InterpolationValues;
 }
 export type MessageFormatter = (id: string | MessageObject, options?: Omit<MessageObject, "id">) => string;
+
+export type I18NLocale = string | null | undefined;

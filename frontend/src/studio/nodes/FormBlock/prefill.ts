@@ -1,4 +1,5 @@
 import { type FormMessages } from "../../../api/types";
+import type { I18NLocale, MessageFormatter } from "../../../i18n";
 import type { LocalizableText } from "../../../types";
 import type { LanguageConfig } from "../../stores";
 import { clone } from "../../utils";
@@ -62,36 +63,39 @@ export function savePrefilledMessages(update: PrefilledMessages) {
   localStorage.setItem(PREFILLED_FORM_MESSAGES_KEY, JSON.stringify(merged));
 }
 
-// constructor's interface lang, NOT the default bot langauge from LanguageConfig
-const DEFAULT_LANGUAGE = "ru";
-
 export function prefilledMessage(
   prefilledMessages: PrefilledMessages,
   key: PrefillableKey,
   langConfig: LanguageConfig | null,
+  locale: I18NLocale,
 ): LocalizableText {
+  const messages = prefilledMessages[key] || {};
   if (langConfig === null) {
-    return (prefilledMessages[key] || {})[DEFAULT_LANGUAGE] || "";
+    return (locale && locale in messages ? messages[locale] : messages["en"]) || "";
   } else {
     return Object.fromEntries(
-      langConfig.supportedLanguageCodes.map((supportedLang) => [
-        supportedLang,
-        (prefilledMessages[key] || {})[supportedLang] || "",
-      ]),
+      langConfig.supportedLanguageCodes.map((supportedLang) => [supportedLang, messages[supportedLang] || ""]),
     );
   }
 }
 
-export function updateWithPrefilled<T>(messages: T, langConfig: LanguageConfig | null): [T, string[]] {
+// T must be a string -> LocalizableText object, but I can't figure out how to express it correctly in TS... :(
+export function updateWithPrefilled<T>(
+  messages: T,
+  langConfig: LanguageConfig | null,
+  t: MessageFormatter,
+  locale: I18NLocale,
+): [T, string[]] {
   // console.debug(`Prefilling ${JSON.stringify(messages)}`);
   const prefilledMessages = getPrefilledMessages();
   const messagesCopy = clone(messages);
   const prefilledKeys: string[] = [];
   for (const key of PREFILLABLE_KEYS) {
     // @ts-expect-error
-    if (key in messagesCopy && !validateLocalizableText(messagesCopy[key], "", langConfig).ok) {
+    if (key in messagesCopy && !validateLocalizableText(messagesCopy[key], "", langConfig, t).ok) {
+      const pm = prefilledMessage(prefilledMessages, key, langConfig, locale);
       // @ts-expect-error
-      messagesCopy[key] = prefilledMessage(prefilledMessages, key, langConfig);
+      messagesCopy[key] = pm;
       prefilledKeys.push(key);
     }
   }

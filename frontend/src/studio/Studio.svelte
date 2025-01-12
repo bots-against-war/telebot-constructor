@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { t } from "svelte-i18n";
+  import { locale, t } from "svelte-i18n";
   import { Button, Heading, Spinner, Tooltip } from "flowbite-svelte";
   import { QuestionCircleOutline } from "flowbite-svelte-icons";
   import { navigate } from "svelte-routing";
@@ -193,7 +193,7 @@
   function nodeFactory(kind: NodeKind, typeKey: NodeTypeKey, configFactory: ConfigFactory) {
     return () => {
       const nodeId = generateNodeId(kind, typeKey);
-      const config = configFactory(nodeId, $t, $languageConfigStore, ufConfig);
+      const config = configFactory(nodeId, $t, $languageConfigStore, ufConfig, $locale);
       tentativeNode = {
         kind,
         typeKey,

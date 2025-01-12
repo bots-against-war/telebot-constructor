@@ -1,6 +1,6 @@
 <script lang="ts">
   import { TabItem, Tabs } from "flowbite-svelte";
-  import { t } from "svelte-i18n";
+  import { locale, t } from "svelte-i18n";
   import { flattenedFormFields } from "../../../api/typeUtils";
   import type { FormBlock, FormBranchConfig } from "../../../api/types";
   import { TELEGRAM_MAX_MESSAGE_LENGTH_CHARS } from "../../../constants";
@@ -65,13 +65,15 @@
     [formErrorMessages] = updateWithPrefilled(
       { ...newErrorMessagesFromFields, ...formErrorMessages },
       $languageConfigStore,
+      $t,
+      $locale,
     );
   }
 </script>
 
 <NodeModalBody title={$t(NODE_TITLE_KEY.form)}>
   <div slot="description" class="text-sm text-gray-600 mt-2">
-    {$t("studio.form.ok_outcome_cond")} <strong>$t('studio.form.ok_outcome')</strong>.
+    {$t("studio.form.ok_outcome_cond")} <strong>{$t("studio.form.ok_outcome")}</strong>.
     {@html $t("studio.form.cancel_outcome_cond")} <strong>{$t("studio.form.cancel_outcome")}</strong>.
   </div>
   <!-- NOTE: additional div is needed because Tabs have no top-level container -->
