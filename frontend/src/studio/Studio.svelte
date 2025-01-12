@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { locale, t } from "svelte-i18n";
   import { Button, Heading, Spinner, Tooltip } from "flowbite-svelte";
   import { QuestionCircleOutline } from "flowbite-svelte-icons";
+  import { locale, t } from "svelte-i18n";
   import { navigate } from "svelte-routing";
   import { Svelvet } from "svelvet";
   import { saveBotConfig } from "../api/botConfig";
