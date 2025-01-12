@@ -14,8 +14,10 @@
   );
 
   let rendered: string;
+  let renderedFull: string;
 
   function renderTimestamp() {
+    renderedFull = $date(dt, { format: "long" }) + " " + $time(dt, { format: "medium" });
     const now = new Date();
     const deltaMin = (now.getTime() - dt.getTime()) / (1000 * 60);
     // NOTE: sometimes when we send something to the server and receive a timestamp it can be slightly in the future
@@ -62,4 +64,4 @@
   });
 </script>
 
-<time title={dt.toLocaleString()} datetime={dt.toISOString()} class={timeClass}>{rendered}</time>
+<time title={renderedFull} datetime={dt.toISOString()} class={timeClass}>{rendered}</time>
