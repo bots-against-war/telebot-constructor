@@ -97,6 +97,7 @@ async def test_prefilled_messages(
             "only_one_media_message_allowed_error_msg",
             "bad_attachment_type_error_msg",
             "please_use_inline_menu",
+            "anti_spam_warning",
         ]
 
         assert all(["/skip" in msg for msg in resp_json["field_is_skippable"].values()])
