@@ -195,7 +195,7 @@ async def send_telegram_alert(
     """
     try:
         text = telegram_html_escape(message)
-        pre_text = "\n\n".join(t for t in (traceback, error_data) if t is not None)
+        pre_text = "\n".join(t for t in (traceback, error_data) if t is not None)
         if pre_text:
             text += "\n\n<pre>" + telegram_html_escape(pre_text) + "</pre>"
         await bot.send_message(chat_id=alerts_chat_id, text=text, parse_mode="HTML", auto_split_message=False)
@@ -206,7 +206,7 @@ async def send_telegram_alert(
             if traceback is not None:
                 text += "\n\n" + traceback
             if error_data is not None:
-                text += "\n\n" + error_data
+                text += "\n" + error_data
             body = io.StringIO(initial_value=text)
             filename_raw = header if traceback is None else traceback.splitlines()[-1]
             filename = NOT_LETTERS_RE.sub("-", filename_raw)

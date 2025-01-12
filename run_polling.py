@@ -18,6 +18,7 @@ from telebot_constructor.auth.telegram_auth import TelegramAuth
 from telebot_constructor.store.media import (
     AwsS3Credentials,
     AwsS3MediaStore,
+    FilesystemMediaStore,
     MediaStore,
 )
 from telebot_constructor.telegram_files_downloader import (
@@ -85,14 +86,16 @@ async def main() -> None:
     else:
         raise ValueError(f"Unexpected auth type: {auth_type!r}")
 
-    media_store: MediaStore | None = None
     try:
-        media_store = AwsS3MediaStore(
+        media_store: MediaStore = AwsS3MediaStore(
             credentials=AwsS3Credentials.model_validate_json(os.environ["MEDIA_STORE_AWS_S3_CREDENTIALS"])
         )
         logging.info("AWS S3 media store set up")
     except Exception:
-        logging.info("Error setting up AWS S3 media store, running without it")
+        media_dir = Path(".media").absolute()
+        media_dir.mkdir(exist_ok=True)
+        media_store = FilesystemMediaStore(media_dir)
+        logging.info("Filesystem media store set up")
 
     app = TelebotConstructorApp(
         redis=redis,

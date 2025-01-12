@@ -1,7 +1,6 @@
 import collections
-from pathlib import Path
 import sys
-
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).parent.parent
 FRONTEND_SRC = PROJECT_ROOT / "frontend/src"
