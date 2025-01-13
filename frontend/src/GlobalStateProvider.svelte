@@ -1,11 +1,11 @@
 <script lang="ts">
   import LoadingScreen from "./components/LoadingScreen.svelte";
 
-  import { availableLanguagesStore, loggedInUserStore } from "./globalStateStores";
-  import { getAvailableLanguages, fetchPrefilledMessages, getLoggedInUser } from "./api/misc";
-  import { err, ok, type Result } from "./utils";
+  import { fetchPrefilledMessages, getAvailableLanguages, getLoggedInUser } from "./api/misc";
   import FatalError from "./components/FatalError.svelte";
-  import { getPrefilledMessages, savePrefilledMessages } from "./studio/nodes/FormBlock/prefill";
+  import { availableLanguagesStore, loggedInUserStore } from "./globalStateStores";
+  import { loadPrefilledMessages, savePrefilledMessages } from "./studio/nodes/FormBlock/prefill";
+  import { err, ok, type Result } from "./utils";
 
   async function loadGlobalState(): Promise<Result<null>> {
     // 1. available language list
@@ -30,7 +30,7 @@
     // 2. prefilled messages
     // TODO: now we always fetch prefilled messages anew, because they're sometimes updated on backend;
     // we need to turn it off after public releas
-    if (true || Object.keys(getPrefilledMessages()).length === 0) {
+    if (true || Object.keys(loadPrefilledMessages()).length === 0) {
       const res = await fetchPrefilledMessages();
       if (res.ok) {
         console.debug("Loaded prefilled messages, will save to localStorage", res);

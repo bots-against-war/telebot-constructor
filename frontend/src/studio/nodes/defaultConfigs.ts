@@ -1,13 +1,7 @@
-import type {
-  FormMessages,
-  MenuMechanism,
-  UserFlowBlockConfig,
-  UserFlowConfig,
-  UserFlowEntryPointConfig,
-} from "../../api/types";
+import type { MenuMechanism, UserFlowBlockConfig, UserFlowConfig, UserFlowEntryPointConfig } from "../../api/types";
 import type { I18NLocale, MessageFormatter } from "../../i18n";
 import type { LanguageConfig } from "../stores";
-import { updateWithPrefilled } from "./FormBlock/prefill";
+import { loadPrefilledMessages, prefilledMessage, type PrefillableKey } from "./FormBlock/prefill";
 
 export type ConfigFactory = (
   id: string,
@@ -44,6 +38,9 @@ export const PLACEHOLDER_GROUP_CHAT_ID = 0;
 export const defaultHumanOperatorBlockConfig: ConfigFactory = (
   id: string,
   t: MessageFormatter,
+  langConfig: LanguageConfig | null,
+  _: UserFlowConfig,
+  locale: I18NLocale,
 ): UserFlowBlockConfig => {
   return {
     human_operator: {
@@ -56,7 +53,7 @@ export const defaultHumanOperatorBlockConfig: ConfigFactory = (
         max_messages_per_minute: 10,
         messages_to_user: {
           forwarded_to_admin_ok: "",
-          throttling: t("studio.defaults.throttling_msg"),
+          throttling: prefilledMessage(loadPrefilledMessages(), "anti_spam_warning", langConfig, locale),
         },
         messages_to_admin: {
           copied_to_user_ok: t("studio.defaults.copied_to_user"),
@@ -136,21 +133,21 @@ export const defaultFormBlockConfig: ConfigFactory = (
   _: UserFlowConfig,
   locale: I18NLocale,
 ): UserFlowBlockConfig => {
-  let messages: FormMessages = {
-    form_start: "",
-    field_is_skippable: "",
-    field_is_not_skippable: "",
-    please_enter_correct_value: "",
-    unsupported_command: "",
-    cancel_command_is: "",
-  };
-  [messages] = updateWithPrefilled(messages, langConfig, t, locale);
+  const pm = loadPrefilledMessages();
+  const prefilledMessage_ = (key: PrefillableKey) => prefilledMessage(pm, key, langConfig, locale);
   return {
     form: {
       block_id: id,
       members: [],
       form_name: generateFormName(),
-      messages: messages,
+      messages: {
+        form_start: "",
+        field_is_skippable: prefilledMessage_("field_is_skippable"),
+        field_is_not_skippable: prefilledMessage_("field_is_not_skippable"),
+        please_enter_correct_value: prefilledMessage_("please_enter_correct_value"),
+        unsupported_command: prefilledMessage_("unsupported_command"),
+        cancel_command_is: prefilledMessage_("cancel_command_is"),
+      },
       results_export: {
         user_attribution: "none",
         echo_to_user: true,

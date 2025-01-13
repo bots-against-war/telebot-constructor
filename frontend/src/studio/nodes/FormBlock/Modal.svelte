@@ -14,7 +14,7 @@
   import FormMessages from "./components/FormMessages.svelte";
   import FormResultExportOptions from "./components/FormResultExportOptions.svelte";
   import { getRandomFormStartMessage } from "./content";
-  import { updateWithPrefilled, type FormErrorMessages } from "./prefill";
+  import { updatedWithPrefilled, type FormErrorMessages } from "./prefill";
 
   export let config: FormBlock;
   export let botId: string;
@@ -22,8 +22,9 @@
 
   function updateConfig() {
     editedConfig.members = topLevelBranch.members;
-    // inserting global error values back into form fields
 
+    editedConfig.messages = formMessages;
+    // inserting global error values back into form fields
     for (const fieldConfig of flattenedFormFields(editedConfig.members)) {
       if (fieldConfig.plain_text) {
         fieldConfig.plain_text.empty_text_error_msg = formErrorMessages.empty_text_error_msg || "";
@@ -62,13 +63,16 @@
     }
     // setting new keys on form error messages from fields
     // also, prefilling it with default values for new keys
-    [formErrorMessages] = updateWithPrefilled(
+    formErrorMessages = updatedWithPrefilled(
       { ...newErrorMessagesFromFields, ...formErrorMessages },
       $languageConfigStore,
       $t,
       $locale,
     );
   }
+
+  let formMessages = config.messages;
+  formMessages = updatedWithPrefilled(formMessages, $languageConfigStore, $t, $locale);
 </script>
 
 <NodeModalBody title={$t(NODE_TITLE_KEY.form)}>
@@ -93,7 +97,7 @@
         <FormResultExportOptions bind:config={editedConfig.results_export} {botId} />
       </TabItem>
       <TabItem title={$t("studio.form.messages_tab")}>
-        <FormMessages bind:messages={editedConfig.messages} bind:errors={formErrorMessages} />
+        <FormMessages bind:messages={formMessages} bind:errors={formErrorMessages} />
       </TabItem>
     </Tabs>
   </div>

@@ -8,15 +8,15 @@
   import {
     PREFILLABLE_FORM_ERROR_KEYS,
     PREFILLABLE_FORM_MESSAGE_KEYS,
-    updateWithPrefilled,
+    updatedWithPrefilled,
     type FormErrorMessages,
   } from "../prefill";
 
   export let messages: FormMessages;
   export let errors: FormErrorMessages;
 
-  [messages] = updateWithPrefilled(messages, $languageConfigStore, $t, $locale);
-  [errors] = updateWithPrefilled(errors, $languageConfigStore, $t, $locale);
+  messages = updatedWithPrefilled(messages, $languageConfigStore, $t, $locale);
+  errors = updatedWithPrefilled(errors, $languageConfigStore, $t, $locale);
 </script>
 
 {#if Object.keys(errors).length > 0}

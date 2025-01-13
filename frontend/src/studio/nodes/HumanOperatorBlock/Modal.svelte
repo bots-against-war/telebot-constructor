@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Accordion, AccordionItem, Heading, Li, List, NumberInput, Select, Toggle } from "flowbite-svelte";
-  import { t } from "svelte-i18n";
+  import { locale, t } from "svelte-i18n";
   import type { HumanOperatorBlock } from "../../../api/types";
   import GroupChatIdSelect from "../../../components/GroupChatIdSelect.svelte";
   import InputWrapper from "../../../components/inputs/InputWrapper.svelte";
@@ -9,8 +9,10 @@
   import LocalizableTextInput from "../../components/LocalizableTextInput.svelte";
   import NodeModalBody from "../../components/NodeModalBody.svelte";
   import NodeModalControls from "../../components/NodeModalControls.svelte";
+  import { languageConfigStore } from "../../stores";
   import { clone } from "../../utils";
   import { NODE_TITLE_KEY } from "../display";
+  import { applyPrefilledMessage, loadPrefilledMessages } from "../FormBlock/prefill";
 
   export let botId: string; // required for admin chat id rendering, and context does not propagate here
   export let config: HumanOperatorBlock;
@@ -34,6 +36,15 @@
     { value: "yes", name: $t("studio.human_operator.ua_opt_yes") },
     { value: "no", name: $t("studio.human_operator.ua_opt_no") },
   ];
+
+  fhConfig.messages_to_user.throttling = applyPrefilledMessage(
+    loadPrefilledMessages(),
+    "anti_spam_warning",
+    $languageConfigStore,
+    $t,
+    $locale,
+    fhConfig.messages_to_user.throttling,
+  );
 </script>
 
 <NodeModalBody title={$t(NODE_TITLE_KEY.human_operator)}>
