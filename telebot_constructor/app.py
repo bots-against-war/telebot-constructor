@@ -1203,6 +1203,9 @@ class TelebotConstructorApp:
                 return web.Response(
                     body=static_file_content(self.static_files_dir / static_file_path),
                     content_type=mime_type,
+                    headers={
+                        hdrs.CACHE_CONTROL: "private, max-age=2628000",  # ~month
+                    },
                 )
             else:
                 # if not static file -- must be an app route, so authenticate and serve
@@ -1216,6 +1219,9 @@ class TelebotConstructorApp:
                 return web.Response(
                     body=static_file_content(self.static_files_dir / "index.html"),
                     content_type="text/html",
+                    headers={
+                        hdrs.CACHE_CONTROL: "private, max-age=31536000",  # ~year
+                    },
                 )
 
         # endregion
