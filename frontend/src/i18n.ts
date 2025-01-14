@@ -3,8 +3,8 @@ import { init, locale, register } from "svelte-i18n";
 const LOCALSTORAGE_KEY = "locale";
 
 const LOCALES = {
-  ru: "./../locales/ru.json",
-  en: "./../locales/en.json",
+  ru: "./../public/locales/ru.json",
+  en: "./../public/locales/en.json",
 };
 
 export function initI18n() {

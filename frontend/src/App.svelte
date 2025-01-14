@@ -1,18 +1,18 @@
 <script lang="ts">
-  import { A } from "flowbite-svelte";
-  import { isLoading } from "svelte-i18n";
   import { setContext } from "svelte";
+  import { isLoading } from "svelte-i18n";
   import { links, Route, Router } from "svelte-routing";
   import Modal from "svelte-simple-modal";
   import GlobalStateProvider from "./GlobalStateProvider.svelte";
+  import LoadingScreen from "./components/LoadingScreen.svelte";
   import BotInfoLoader from "./dashboard/BotInfoLoader.svelte";
   import BotListingLoader from "./dashboard/BotListingLoader.svelte";
   import ErrorsLoader from "./dashboard/routes/errors/ErrorsLoader.svelte";
   import FormLoader from "./dashboard/routes/forms/FormLoader.svelte";
   import SettingsLoader from "./dashboard/routes/settings/SettingsLoader.svelte";
   import VersionsLoader from "./dashboard/routes/versions/VersionsLoader.svelte";
+  import { initI18n } from "./i18n";
   import {
-    botListingPath,
     dashboardPath,
     errorsPath,
     formResultsPagePath,
@@ -21,8 +21,6 @@
     versionsPagePath,
   } from "./routeUtils";
   import StudioLoader from "./studio/StudioLoader.svelte";
-  import { initI18n } from "./i18n";
-  import LoadingScreen from "./components/LoadingScreen.svelte";
 
   initI18n();
 
