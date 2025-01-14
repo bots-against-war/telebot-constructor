@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onDestroy } from "svelte";
-  import { _, date, locale, time } from "svelte-i18n";
+  import { date, locale, t, time } from "svelte-i18n";
 
   export let timestamp: string | number; // ISO string or epoch time in SECONDS (i.e. Python backend format)
   export let timeClass: string = "text-gray-500";
@@ -24,16 +24,16 @@
     // due to different clocks; so here we allow times up to 10 sec in the future to be "now"
     if (!alwaysAbsolute && -1 / 6 < deltaMin && deltaMin < 60 * 24) {
       if (deltaMin < 1 / 6) {
-        rendered = $_("timestamp.now");
+        rendered = $t("timestamp.now");
         return 5;
       } else if (deltaMin < 1) {
-        rendered = `${Math.round(deltaMin * 60)} ${$_("timestamp.sec")}`;
+        rendered = `${Math.round(deltaMin * 60)} ${$t("timestamp.sec")}`;
         return 5;
       } else if (deltaMin < 59) {
-        rendered = `${Math.round(deltaMin)} ${$_("timestamp.min")}`;
+        rendered = `${Math.round(deltaMin)} ${$t("timestamp.min")}`;
         return 30;
       } else {
-        rendered = `${Math.round(deltaMin / 60)} ${$_("timestamp.hrs")}`;
+        rendered = `${Math.round(deltaMin / 60)} ${$t("timestamp.hrs")}`;
         return null;
       }
     } else {

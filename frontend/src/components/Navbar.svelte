@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { _ } from "svelte-i18n";
   import { Avatar, Button, NavBrand, Navbar, Popover } from "flowbite-svelte";
+  import { t } from "svelte-i18n";
   import logo from "../assets/logo.svg";
   import { loggedInUserStore } from "../globalStateStores";
   import { botListingPath } from "../routeUtils";
@@ -33,7 +33,7 @@
             window.location.reload();
           }}
         >
-          {$_("navbar.logout")}
+          {$t("navbar.logout")}
         </Button>
       </div>
     </Popover>
