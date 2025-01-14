@@ -1,16 +1,15 @@
-import { init, locale, register } from "svelte-i18n";
+import { addMessages, init, locale } from "svelte-i18n";
+import en from "../locales/en.json";
+import ru from "../locales/ru.json";
 
 const LOCALSTORAGE_KEY = "locale";
 
-const LOCALES = {
-  ru: "./../public/locales/ru.json",
-  en: "./../public/locales/en.json",
-};
-
 export function initI18n() {
-  Object.entries(LOCALES).map(([loc, file]) => {
-    register(loc, () => import(file));
-  });
+  addMessages("ru", ru);
+  addMessages("en", en);
+  // NOTE: when adding more locales, consider async loading with register
+  // this will require copying locales to "public" dir and setting up
+  // static file serving on backend)
 
   init({
     fallbackLocale: "en",
