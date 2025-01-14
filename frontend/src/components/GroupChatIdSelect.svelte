@@ -16,6 +16,7 @@
   export let selectedGroupChatId: number | string | null;
   export let forbidLegacyGroups: boolean = true;
   export let allowEmptyState: boolean = false;
+  export let description: string | null = null;
 
   // auto-open if not selected initially
   let isOpen = !allowEmptyState && (selectedGroupChatId === PLACEHOLDER_GROUP_CHAT_ID || selectedGroupChatId === null);
@@ -79,7 +80,7 @@
   const chatLabel = (chat: TgGroupChat) => `group-chat-${chat.id}`;
 </script>
 
-<InputWrapper {label} required={!allowEmptyState}>
+<InputWrapper {label} {description} required={!allowEmptyState}>
   <Accordion flush>
     <AccordionItem
       bind:open={isOpen}

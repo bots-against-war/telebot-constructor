@@ -56,12 +56,11 @@
         <div class="p-2 m-2 border-l-2 border-grey-600 flex flex-col gap-3">
           <GroupChatIdSelect
             label={$t("studio.form.chat")}
+            description={$t("studio.form.chat_descr")}
             {botId}
             bind:selectedGroupChatId={config.to_chat.chat_id}
             forbidLegacyGroups={false}
-          >
-            <p class="mb-3" slot="description">{$t("studio.form.chat_descr")}</p>
-          </GroupChatIdSelect>
+          />
           <InputWrapper label={$t("studio.form.chat_feedback_mode")} required={false}>
             <Toggle bind:checked={config.to_chat.via_feedback_handler}>{$t("studio.form.chat_feedback_mode_on")}</Toggle
             >
