@@ -13,14 +13,14 @@ export function initI18n() {
   });
 
   init({
-    fallbackLocale: "ru",
+    fallbackLocale: "en",
     initialLocale: localStorage.getItem(LOCALSTORAGE_KEY) || "en",
   });
 }
 
-export function setLocale(l: string) {
-  locale.set(l);
-  localStorage.setItem(LOCALSTORAGE_KEY, l);
+export function setLocale(loc: string) {
+  locale.set(loc);
+  localStorage.setItem(LOCALSTORAGE_KEY, loc);
 }
 
 // the types are not exported from i18n, so we copy them here
