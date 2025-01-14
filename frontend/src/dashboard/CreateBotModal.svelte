@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { _ } from "svelte-i18n";
   import { A, Button, Li, List } from "flowbite-svelte";
+  import { t } from "svelte-i18n";
   import { navigate } from "svelte-routing";
   import { slugify } from "transliteration";
   import { saveBotConfig } from "../api/botConfig";
@@ -34,7 +34,7 @@
     isCreating = true;
     let tokenValidationError = getError(await validateBotToken(botToken));
     if (tokenValidationError !== null) {
-      errorTitle = $_("listing.newbot.incorrect_token_error");
+      errorTitle = $t("listing.newbot.incorrect_token_error");
       error = tokenValidationError;
       isCreating = false;
       return;
@@ -58,7 +58,7 @@
     let newTokenSecretRes = await createBotTokenSecret(botId, botToken);
     let newTokenSaveErr = getError(newTokenSecretRes);
     if (newTokenSaveErr !== null) {
-      errorTitle = "$_('listing.newbot.failed_to_save_token_error')";
+      errorTitle = $t("listing.newbot.failed_to_save_token_error");
       error = newTokenSaveErr;
       isCreating = false;
       return;
@@ -72,7 +72,7 @@
             command: {
               entrypoint_id: DEFAULT_START_COMMAND_ENTRYPOINT_ID,
               command: "start",
-              short_description: $_("listing.newbot.start_cmd_description"),
+              short_description: $t("listing.newbot.start_cmd_description"),
               next_block_id: null,
             },
           },
@@ -97,7 +97,7 @@
       closeModal();
     } else if (!res1.ok) {
       isCreating = false;
-      errorTitle = $_("listing.newbot.generic_saving_error");
+      errorTitle = $t("listing.newbot.generic_saving_error");
       error = getError(res1);
     }
   }
@@ -106,35 +106,35 @@
 <div class="flex flex-col gap-4">
   <TextInput
     bind:value={botDisplayNameInput}
-    label={$_("listing.newbot.botname")}
-    description={$_("listing.newbot.botname_description")}
-    placeholder={$_("listing.newbot.botname_placeholder")}
-    error={userClickedCreate && !botDisplayNameInput ? $_("listing.newbot.bot_name_cannot_be_empty_error") : null}
+    label={$t("listing.newbot.botname")}
+    description={$t("listing.newbot.botname_description")}
+    placeholder={$t("listing.newbot.botname_placeholder")}
+    error={userClickedCreate && !botDisplayNameInput ? $t("listing.newbot.bot_name_cannot_be_empty_error") : null}
   />
   <PasswordInput
     bind:value={botTokenInput}
-    label={$_("listing.newbot.token")}
-    error={userClickedCreate && !botTokenInput ? $_("listing.newbot.token_cannot_be_empty_error") : null}
+    label={$t("listing.newbot.token")}
+    error={userClickedCreate && !botTokenInput ? $t("listing.newbot.token_cannot_be_empty_error") : null}
     placeholder="123456789:ABCDEFGHIJKLMOPQRSTUVWXYZabcdefghij"
   >
     <svelte:fragment slot="description">
-      <p>{$_("listing.newbot.howto.p1")}</p>
+      <p>{$t("listing.newbot.howto.p1")}</p>
       <List class="mb-2 marker:text-gray-600">
-        <Li>{$_("listing.newbot.howto.p2")} <A href="https://t.me/BotFather">@BotFather</A></Li>
-        <Li>{$_("listing.newbot.howto.p3")} <code>/newbot</code></Li>
-        <Li>{$_("listing.newbot.howto.p4")}</Li>
-        <Li>{$_("listing.newbot.howto.p5")}</Li>
+        <Li>{$t("listing.newbot.howto.p2")} <A href="https://t.me/BotFather">@BotFather</A></Li>
+        <Li>{$t("listing.newbot.howto.p3")} <code>/newbot</code></Li>
+        <Li>{$t("listing.newbot.howto.p4")}</Li>
+        <Li>{$t("listing.newbot.howto.p5")}</Li>
       </List>
     </svelte:fragment>
   </PasswordInput>
   {#if error !== null}
-    <ErrorBadge title={errorTitle || $_("listing.newbot.generic_error")} text={error} />
+    <ErrorBadge title={errorTitle || $t("listing.newbot.generic_error")} text={error} />
   {/if}
   <div>
     <Button on:click={createNewBot}>
       <ButtonLoadingSpinner loading={isCreating} />
-      {$_("listing.create")}
+      {$t("listing.create")}
     </Button>
-    <Button outline on:click={closeModal}>{$_("generic.cancel")}</Button>
+    <Button outline on:click={closeModal}>{$t("generic.cancel")}</Button>
   </div>
 </div>
