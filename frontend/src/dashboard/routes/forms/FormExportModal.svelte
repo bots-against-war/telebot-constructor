@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from "svelte-i18n";
   import { A, Button, Heading } from "flowbite-svelte";
   import { apiUrl } from "../../../api/config";
   import type { BotInfo, FormInfo } from "../../../api/types";
@@ -31,20 +32,19 @@
 </script>
 
 <div class="flex flex-col gap-2">
-  <Heading tag="h3">Экспорт данных</Heading>
+  <Heading tag="h3">{$t("dashboard.form_results_page.responses_export")}</Heading>
   <div class="text-sm text-gray-600 mt-2">
-    Формат <A href="https://en.wikipedia.org/wiki/Comma-separated_values" target="_blank">CSV</A> подходит для загрузки в
-    Excel, Google Sheets, Airtable и другие системы обработки данных.
+    {$t("dashboard.form_results_page.csv_format")}
   </div>
   <div class="flex flex-row gap-4">
     <div>
-      <Heading tag="h6">Начиная с</Heading>
-      <OptionalDate bind:date={minDate} defaultLabel="самой ранней записи" />
+      <Heading tag="h6">{$t("dashboard.form_results_page.starting_from")}</Heading>
+      <OptionalDate bind:date={minDate} defaultLabel={$t("dashboard.form_results_page.earliest")} />
     </div>
     <div>
-      <Heading tag="h6">до</Heading>
-      <OptionalDate bind:date={maxDate} defaultLabel="последней записи" />
+      <Heading tag="h6">{$t("dashboard.form_results_page.up_to")}</Heading>
+      <OptionalDate bind:date={maxDate} defaultLabel={$t("dashboard.form_results_page.latest")} />
     </div>
   </div>
-  <Button href={exportLink} download="something.csv">Скачать</Button>
+  <Button href={exportLink} download="something.csv">{$t("generic.download")}</Button>
 </div>

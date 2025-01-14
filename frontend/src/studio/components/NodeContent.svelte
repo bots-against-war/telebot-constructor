@@ -4,15 +4,17 @@
 -->
 
 <script lang="ts">
+  import { Listgroup, ListgroupItem, Popover } from "flowbite-svelte";
   import { DotsHorizontalOutline, FileCopyOutline, PenOutline, TrashBinOutline } from "flowbite-svelte-icons";
   import { createEventDispatcher } from "svelte";
+  import { t } from "svelte-i18n";
   import ActionIcon from "../../components/ActionIcon.svelte";
   import ErrorBadge from "../../components/AlertBadge.svelte";
+  import type { MessageFormatter } from "../../i18n";
   import { ok, type Result } from "../../utils";
-  import { NODE_HUE, NODE_ICON, NODE_TITLE, headerColor, type NodeTypeKey } from "../nodes/display";
+  import { NODE_HUE, NODE_ICON, NODE_TITLE_KEY, headerColor, type NodeTypeKey } from "../nodes/display";
   import type { ValidationError } from "../nodes/nodeValidators";
   import { languageConfigStore, type LanguageConfig } from "../stores";
-  import { Listgroup, ListgroupItem, Popover } from "flowbite-svelte";
 
   export let id: string;
   export let key: NodeTypeKey;
@@ -21,16 +23,17 @@
   export let deletable = true;
   export let clonable = true;
   export let colorOverride: string | null = null;
-  export let configValidator: (config: any, langConfig: LanguageConfig | null) => Result<null, ValidationError> = (
-    _,
-    __,
-  ) => ok(null);
+  export let configValidator: (
+    config: any,
+    langConfig: LanguageConfig | null,
+    t: MessageFormatter,
+  ) => Result<null, ValidationError> = (_, __) => ok(null);
 
   const dispatch = createEventDispatcher<{ edit: string; delete: string; clone: string }>();
 
   let configValidationResult: Result<null, ValidationError>;
   $: {
-    configValidationResult = configValidator(config, $languageConfigStore);
+    configValidationResult = configValidator(config, $languageConfigStore, $t);
     isValid = configValidationResult.ok;
   }
 
@@ -44,7 +47,7 @@
   >
     <div class="flex items-center gap-2">
       <svelte:component this={NODE_ICON[key]} class="w-4 h-4" />
-      <span class="font-bold text-lg">{NODE_TITLE[key]}</span>
+      <span class="font-bold text-lg">{$t(NODE_TITLE_KEY[key])}</span>
     </div>
     <div class="flex items-center gap-0">
       <ActionIcon icon={PenOutline} on:click={() => dispatch("edit", id)} />
@@ -57,13 +60,13 @@
             {#if clonable}
               <ListgroupItem on:click={() => dispatch("clone", id)} class="gap-2">
                 <FileCopyOutline class="w-3 h-3 text-gray-700" />
-                Дублировать
+                {$t("studio.duplicate_block")}
               </ListgroupItem>
             {/if}
             {#if deletable}
               <ListgroupItem on:click={() => dispatch("delete", id)} class="gap-2">
                 <TrashBinOutline class="w-3 h-3 text-gray-700" />
-                Удалить
+                {$t("studio.delete_block")}
               </ListgroupItem>
             {/if}
           </Listgroup>

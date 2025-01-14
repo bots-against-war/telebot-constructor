@@ -32,8 +32,8 @@ class BotError(pydantic.BaseModel):
         exc_type, exc, tb = sys.exc_info()
         if exc_type is not None and exc is not None and tb is not None:
             bot_error.exc_type = exc_type.__name__
-            bot_error.exc_data = "".join(traceback.format_exception_only(exc))
-            bot_error.exc_traceback = "".join(traceback.format_tb(tb))
+            bot_error.exc_data = "".join(traceback.format_exception_only(exc)).strip()
+            bot_error.exc_traceback = "".join(traceback.format_tb(tb)).strip()
 
         return bot_error
 
@@ -45,12 +45,12 @@ class BotError(pydantic.BaseModel):
             exc_type_str = None
 
         try:
-            exc_traceback: str | None = "".join(traceback.format_tb(record.exc_info[2]))  # type: ignore
+            exc_traceback: str | None = "".join(traceback.format_tb(record.exc_info[2])).strip()  # type: ignore
         except Exception:
             exc_traceback = None
 
         try:
-            exc_data: str | None = "".join(traceback.format_exception_only(record.exc_info[1]))  # type: ignore
+            exc_data: str | None = "".join(traceback.format_exception_only(record.exc_info[1])).strip()  # type: ignore
         except Exception:
             exc_data = None
 

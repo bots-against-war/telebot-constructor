@@ -8,6 +8,7 @@ import type {
   MenuBlock,
   SingleSelectFormFieldConfig,
 } from "../../api/types";
+import type { MessageFormatter } from "../../i18n";
 import type { LocalizableText } from "../../types";
 import { err, ok, type Result } from "../../utils";
 import type { LanguageConfig } from "../stores";
@@ -24,35 +25,29 @@ export function validateLocalizableText(
   text: LocalizableText,
   textName: string,
   langConfig: LanguageConfig | null,
+  t: MessageFormatter,
   allowEmptyTexts: boolean = false,
 ): Result<null, ValidationError> {
   if (langConfig === null) {
     if (typeof text === "object") {
       return err({
-        error: `${capitalize(textName)}: задана локализация (${Object.keys(text).join(
-          ", ",
-        )}), но в боте нет выбора языков`,
+        error: `${capitalize(textName)}: ${t("studio.validation.localized_but_no_langs")}`,
       });
     } else if (text.length === 0) {
-      return err({ error: `Не заполнен ${textName}` });
+      return err({ error: `${capitalize(textName)}: ${t("studio.validation.is_empty")}` });
     }
   } else if (langConfig !== null) {
     let missingLanguages: string[];
     if (typeof text === "string") {
       missingLanguages = langConfig.supportedLanguageCodes;
     } else {
-      missingLanguages = langConfig.supportedLanguageCodes.filter((lang) => {
-        // filtering out missing and empty localizations
-        if (allowEmptyTexts) {
-          return text[lang] === undefined;
-        } else {
-          return !text[lang];
-        }
-      });
+      missingLanguages = langConfig.supportedLanguageCodes.filter((lang) =>
+        allowEmptyTexts ? text[lang] === undefined : !text[lang],
+      );
     }
     if (missingLanguages.length > 0) {
       return err({
-        error: `${capitalize(textName)}: отсутствует локализация на язык(и): ${missingLanguages.join(", ")}`,
+        error: `${capitalize(textName)}: ${t("studio.validation.missing_localization_to_langs")}: ${missingLanguages.join(", ")}`,
       });
     } else {
       return ok(null);
@@ -74,11 +69,15 @@ function mergeResults(results: Result<null, ValidationError>[]): Result<null, Va
 export function validateContentBlock(
   config: ContentBlock,
   langConfig: LanguageConfig | null,
+  t: MessageFormatter,
 ): Result<null, ValidationError> {
   const textValidationResults: Result<null, ValidationError>[] = config.contents.map((content, idx) => {
     let res: Result<null, ValidationError> = ok(null);
     if (content.text) {
-      res = mergeResults([res, validateLocalizableText(content.text.text, `текст #${idx + 1}`, langConfig, true)]);
+      res = mergeResults([
+        res,
+        validateLocalizableText(content.text.text, `${t("studio.validation.text")} #${idx + 1}`, langConfig, t, true),
+      ]);
     }
     if (content.attachments) {
       // TODO: attachments validation
@@ -91,46 +90,55 @@ export function validateContentBlock(
 export function validateHumanOperatorBlock(
   config: HumanOperatorBlock,
   langConfig: LanguageConfig | null,
+  t: MessageFormatter,
 ): Result<null, ValidationError> {
   const results: Result<null, ValidationError>[] = [];
 
   if (config.feedback_handler_config.admin_chat_id === PLACEHOLDER_GROUP_CHAT_ID) {
-    results.push(err({ error: "Не выбран рабочий чат" }));
+    results.push(err({ error: t("studio.validation.admin_chat_not_selected") }));
   }
   results.push(
     validateLocalizableText(
       config.feedback_handler_config.messages_to_user.forwarded_to_admin_ok,
-      "ответ на успешно принятое сообщение",
+      t("studio.human_operator.reponse_title"),
       langConfig,
+      t,
     ),
   );
   results.push(
     validateLocalizableText(
       config.feedback_handler_config.messages_to_user.throttling,
-      "предупреждение, что сообщений слишком много",
+      t("studio.human_operator.anti_spam_warning_title"),
       langConfig,
+      t,
     ),
   );
 
   return mergeResults(results);
 }
 
-export function validateMenuBlock(config: MenuBlock, langConfig: LanguageConfig | null): Result<null, ValidationError> {
+export function validateMenuBlock(
+  config: MenuBlock,
+  langConfig: LanguageConfig | null,
+
+  t: MessageFormatter,
+): Result<null, ValidationError> {
   const results: Result<null, ValidationError>[] = [];
-  results.push(validateLocalizableText(config.menu.text, "текст сообщения с меню", langConfig));
+  results.push(validateLocalizableText(config.menu.text, t("studio.menu.message_text_label"), langConfig, t));
   if (config.menu.config.back_label !== null) {
-    results.push(validateLocalizableText(config.menu.config.back_label, 'текст на кнопке "назад"', langConfig));
+    results.push(
+      validateLocalizableText(config.menu.config.back_label, t("studio.menu.back_button_label"), langConfig, t),
+    );
   }
 
   if (config.menu.items.length === 0) {
-    results.push(err({ error: "Ни одного пункта в меню" }));
+    results.push(err({ error: t("studio.validation.empty_menu") }));
   }
 
   for (const [idx, item] of config.menu.items.entries()) {
-    results.push(validateLocalizableText(item.label, `пункт #${idx + 1}`, langConfig));
-    // if (!item.next_block_id) {
-    //   results.push(err({ error: `Для пункта #${idx + 1} не выбран следующий блок` }));
-    // }
+    results.push(
+      validateLocalizableText(item.label, `${t("studio.validation.menu_option")} #${idx + 1}`, langConfig, t),
+    );
   }
 
   return mergeResults(results);
@@ -139,22 +147,32 @@ export function validateMenuBlock(config: MenuBlock, langConfig: LanguageConfig 
 export function validateLanguageSelectBlock(
   config: LanguageSelectBlock,
   langConfig: LanguageConfig | null,
+  t: MessageFormatter,
 ): Result<null, ValidationError> {
   if (config.supported_languages.length === 0) {
-    return err({ error: "Не выбраны поддерживаемые языки" });
+    return err({ error: t("studio.validation.no_langs") });
   } else if (!config.default_language) {
-    return err({ error: "Не выбран язык по умолчанию" });
+    return err({ error: t("studio.validation.no_default_lang") });
   } else if (!config.supported_languages.includes(config.default_language)) {
-    return err({ error: "Язык по умолчанию не входит в список поддерживаемых языков" });
+    return err({ error: t("studio.validation.default_lang_is_not_supported") });
   } else {
-    return validateLocalizableText(config.menu_config.propmt, "текст в сообщении-меню", langConfig);
+    return validateLocalizableText(
+      config.menu_config.propmt,
+      t("studio.validation.langselect_menu_prompt"),
+      langConfig,
+      t,
+    );
   }
 }
 
-export function validateFormBlock(config: FormBlock, langConfig: LanguageConfig | null): Result<null, ValidationError> {
+export function validateFormBlock(
+  config: FormBlock,
+  langConfig: LanguageConfig | null,
+  t: MessageFormatter,
+): Result<null, ValidationError> {
   const results: Result<null, ValidationError>[] = [];
   if (config.members.length === 0) {
-    results.push(err({ error: "Пустая форма" }));
+    results.push(err({ error: t("studio.validation.form_empty") }));
   }
   results.push(
     ...flattenedFormFields(config.members).flatMap((field, idx) => {
@@ -163,20 +181,26 @@ export function validateFormBlock(config: FormBlock, langConfig: LanguageConfig 
       const fieldBaseConfig = getBaseFormFieldConfig(field);
       const promptValidationResult = validateLocalizableText(
         fieldBaseConfig.prompt,
-        `вопрос в поле #${idx}`,
+        `${t("studio.validation.form_question_in_field")} #${idx}`,
         langConfig,
+        t,
       );
       resultfForField.push(promptValidationResult);
       if (promptValidationResult.ok && fieldBaseConfig.name.length === 0) {
-        resultfForField.push(err({ error: `Не указано название поля #${idx}` }));
+        resultfForField.push(err({ error: `${t("studio.validation.form_untitled_field")} #${idx}` }));
       }
       if (field.single_select) {
         if (field.single_select.options.length === 0) {
-          resultfForField.push(err({ error: `Не указано ни одного варианта выбора в поле #${idx}` }));
+          resultfForField.push(err({ error: `${t("studio.validation.form_no_options")} #${idx}` }));
         }
         resultfForField.push(
           ...field.single_select.options.map((eo, optionIdx) =>
-            validateLocalizableText(eo.label, `текст варианта #${optionIdx + 1} в поле #${idx}`, langConfig),
+            validateLocalizableText(
+              eo.label,
+              `${t("studio.validation.form_option_text")} #${optionIdx + 1} (#${idx})`,
+              langConfig,
+              t,
+            ),
           ),
         );
       }
@@ -188,10 +212,10 @@ export function validateFormBlock(config: FormBlock, langConfig: LanguageConfig 
     idx += 1; //  1-based indexing
     if (!member.branch) return ok(null);
     if (member.branch.members.length === 0) {
-      return err({ error: `Ветвь #${idx} не включает ни одного поля` });
+      return err({ error: t("studio.validation.form_branch_is_empty") });
     }
     if (!member.branch.condition_match_value) {
-      return err({ error: `Для ветви #${idx} не задано условие` });
+      return err({ error: t("studio.validation.form_branch_has_no_condition") });
     }
     return ok(null);
   });
@@ -202,20 +226,21 @@ export function validateFormBlock(config: FormBlock, langConfig: LanguageConfig 
   let currentBranches: [FormBranchConfig, number][] = [];
 
   function validateCurrentBranches(): Result<null, ValidationError> {
-    let branchIndices = currentBranches.map(([_, branchIdx]) => `#${branchIdx + 1}`).join(", ");
+    const branchIndices = currentBranches.map(([_, branchIdx]) => `#${branchIdx + 1}`).join(", ");
+    const branchTitle = `${t("studio.validation.form_branches")} ${branchIndices}`;
     if (currentBranches.length === 0) return ok(null);
     if (currentSwitchField === null)
-      return err({ error: `Ветви (${branchIndices}) без предшествующего поля-переключателя` });
+      return err({ error: `${branchTitle} ${t("studio.validation.form_no_switch_field")}` });
     const currentSwitchOptionIds = currentSwitchField.options.map((o) => o.id);
     const branchConditionOptionIds = currentBranches.map(([b]) => b.condition_match_value || ""); // || "" is for type safety, every branch is validated to have non-empty value
     if (branchConditionOptionIds.some((optId) => !currentSwitchOptionIds.includes(optId))) {
       return err({
-        error: `Невалидная конфигурация ветвей ${branchIndices}: условие не соответвует полю-переключателю`,
+        error: `${branchTitle}: ${t("studio.validation.form_condition_mismatch")}`,
       });
     }
     if (new Set(branchConditionOptionIds).size !== branchConditionOptionIds.length) {
       return err({
-        error: `Ветви ${branchIndices} содержат повторяющиеся условия`,
+        error: `${branchTitle}: ${t("studio.validation.form_duplicate_condition")}`,
       });
     }
     return ok(null);
@@ -237,14 +262,14 @@ export function validateFormBlock(config: FormBlock, langConfig: LanguageConfig 
 
   results.push(
     ...Object.entries(config.messages).map(([key, text]) =>
-      validateLocalizableText(text, `текст сообщения "${formMessageName(key)}"`, langConfig),
+      validateLocalizableText(text, formMessageName(key, t), langConfig, t),
     ),
   );
   if (!(config.results_export.echo_to_user || config.results_export.to_chat || config.results_export.to_store)) {
-    results.push(err({ error: "Не выбран ни один вариант обработки результатов формы" }));
+    results.push(err({ error: t("studio.validation.form_no_response_processing") }));
   }
   if (config.results_export.to_chat !== null && config.results_export.to_chat.chat_id === PLACEHOLDER_GROUP_CHAT_ID) {
-    results.push(err({ error: "Не выбран чат для экспорта результатов" }));
+    results.push(err({ error: t("studio.validation.form_no_export_chat") }));
   }
   return mergeResults(results);
 }

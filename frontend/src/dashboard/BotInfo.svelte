@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t, _ } from "svelte-i18n";
   import { Button, Heading } from "flowbite-svelte";
   import { ArrowRightOutline, RocketSolid } from "flowbite-svelte-icons";
   import { updateBotDisplayName } from "../api/botInfo";
@@ -58,15 +59,15 @@
         <Heading tag="h3">{editedDisplayName}</Heading>
       </EditableText>
       <Button href={studioPath(botId, null)}>
-        <strong>Конструктор</strong>
+        <strong>{$t("dashboard.to_studio")}</strong>
         <ArrowRightOutline class="w-5 h-5 ml-2" strokeWidth="3" />
       </Button>
     </div>
     <div class="flex flex-row mt-6 gap-5">
       <div class="flex-1 flex flex-col gap-4">
-        <BotInfoCard moreLinkHref={versionsPagePath(botId)} moreLinkTitle="Все версии">
+        <BotInfoCard moreLinkHref={versionsPagePath(botId)} moreLinkTitle={$t("dashboard.all_versions")}>
           <div class="flex items-center justify-between pb-3 w-full">
-            <span class="text-lg font-bold text-gray-900">Статус</span>
+            <span class="text-lg font-bold text-gray-900">{$t("dashboard.status")}</span>
             <div
               class="flex items-center gap-2 px-3 py-2 border {runningVersionInfo !== null
                 ? 'text-green-600'
@@ -76,23 +77,24 @@
                 <JumpingIcon>
                   <RocketSolid class="w-5 h-5" />
                 </JumpingIcon>
-                <strong>Работает</strong>
+                <strong>{$t("dashboard.running")}</strong>
               {:else}
                 <RocketSolid class="w-5 h-5" />
-                <strong>Остановлен</strong>
+                <strong>{$t("dashboard.stopped")}</strong>
               {/if}
             </div>
           </div>
           {#if runningVersionInfo !== null}
             <div class="flex flex-col gap-1 mb-1">
-              <span>Запущена версия</span>
+              <span>{$t("dashboard.running_version")}</span>
               <BotVersionInfoBadge ver={runningVersionInfo} />
             </div>
           {/if}
           {#if runningVersionInfo === null || runningVersionInfo.version !== lastVersionInfo.version}
             <div class="flex flex-col gap-1 mb-1">
               <span>
-                Последняя версия {#if runningVersionInfo !== null}
+                {$t("dashboard.last_version")}
+                {#if runningVersionInfo !== null}
                   (<strong>+{lastVersionInfo.version - runningVersionInfo.version}</strong>)
                 {/if}
               </span>
@@ -101,12 +103,12 @@
           {/if}
         </BotInfoCard>
 
-        <BotInfoCard title="Аккаунт">
+        <BotInfoCard title={$t("dashboard.account")}>
           <BotUserBadge {botId} />
         </BotInfoCard>
 
         {#if botInfo.admin_chat_ids.length > 0}
-          <BotInfoCard title="Рабочие чаты">
+          <BotInfoCard title={$t("dashboard.admin_chats")}>
             <div class="flex flex-col gap-2">
               {#each botInfo.admin_chat_ids as admin_chat_id}
                 <GroupChatBadge {botId} chatId={admin_chat_id} />
@@ -116,7 +118,7 @@
         {/if}
 
         {#if botInfo.forms_with_responses.length > 0}
-          <BotInfoCard title="Ответы на формы">
+          <BotInfoCard title={$t("dashboard.form_responses")}>
             {#each botInfo.forms_with_responses as formInfo}
               <div class="border-gray-300 border-l border-b last:border-b-0 px-3 py-4 hover:bg-gray-100">
                 <a href={formResultsPagePath(botId, formInfo.form_block_id)} class="flex flex-row justify-between">
@@ -128,7 +130,7 @@
                     {/if}
                   </span>
                   <span class="text-gray-500 text-nowrap">
-                    Ответы ({formInfo.total_responses})
+                    ({formInfo.total_responses})
                   </span>
                 </a>
               </div>
@@ -136,32 +138,42 @@
           </BotInfoCard>
         {/if}
 
-        <BotInfoCard title="Управление" moreLinkTitle="Перейти" moreLinkHref={settingsPath(botId)}></BotInfoCard>
+        <BotInfoCard
+          title={$t("dashboard.settings")}
+          moreLinkTitle={$t("dashboard.go_to_settings")}
+          moreLinkHref={settingsPath(botId)}
+        ></BotInfoCard>
       </div>
       <div class="flex-1 flex flex-col gap-4">
-        <BotInfoCard title="Статистика">
+        <BotInfoCard title={$t("dashboard.stats")}>
           <strong class="text-2xl">🚧👷🏗️🚧</strong>
-          <span>В разработке</span>
+          <span>{$t("dashboard.under_construction")}</span>
         </BotInfoCard>
 
-        <BotInfoCard title="Активность">
+        <BotInfoCard title={$t("dashboard.activity")}>
           <BotEventList events={botInfo.last_events} />
         </BotInfoCard>
 
-        <BotInfoCard title="Ошибки бота" moreLinkTitle="Все ошибки" moreLinkHref={errorsPath(botId)}>
+        <BotInfoCard
+          title={$t("dashboard.bot_errors")}
+          moreLinkTitle={$t("dashboard.open_all_errors")}
+          moreLinkHref={errorsPath(botId)}
+        >
           {#if botInfo.last_errors.length > 0}
-            <span>
-              Последняя: <Timestamp timestamp={botInfo.last_errors[botInfo.last_errors.length - 1].timestamp} />
-            </span>
+            <div class="mb-3">
+              {$t("dashboard.last_error")}: <Timestamp
+                timestamp={botInfo.last_errors[botInfo.last_errors.length - 1].timestamp}
+              />
+            </div>
           {/if}
           <GroupChatIdSelect
-            label="Алерт-чат"
+            label={$t("dashboard.alert_chat")}
             {botId}
             bind:selectedGroupChatId={editedAlertChatId}
             allowEmptyState
             forbidLegacyGroups={false}
           >
-            <svelte:fragment slot="delete-chat-id-option">Отключить алерт-чат</svelte:fragment>
+            <svelte:fragment slot="delete-chat-id-option">{$t("dashboard.disable_alert_chat")}</svelte:fragment>
           </GroupChatIdSelect>
         </BotInfoCard>
       </div>

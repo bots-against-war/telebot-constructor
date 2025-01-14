@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Accordion, AccordionItem, Heading, Li, List, NumberInput, Select, Toggle } from "flowbite-svelte";
+  import { locale, t } from "svelte-i18n";
   import type { HumanOperatorBlock } from "../../../api/types";
-  import BotUserBadge from "../../../components/BotUserBadge.svelte";
   import GroupChatIdSelect from "../../../components/GroupChatIdSelect.svelte";
   import InputWrapper from "../../../components/inputs/InputWrapper.svelte";
   import TextInput from "../../../components/inputs/TextInput.svelte";
@@ -9,8 +9,10 @@
   import LocalizableTextInput from "../../components/LocalizableTextInput.svelte";
   import NodeModalBody from "../../components/NodeModalBody.svelte";
   import NodeModalControls from "../../components/NodeModalControls.svelte";
+  import { languageConfigStore } from "../../stores";
   import { clone } from "../../utils";
-  import { NODE_TITLE } from "../display";
+  import { NODE_TITLE_KEY } from "../display";
+  import { applyPrefilledMessage, loadPrefilledMessages } from "../FormBlock/prefill";
 
   export let botId: string; // required for admin chat id rendering, and context does not propagate here
   export let config: HumanOperatorBlock;
@@ -31,86 +33,69 @@
   type YesNo = "yes" | "no";
   let anonymize: YesNo = config.feedback_handler_config.anonimyze_users ? "yes" : "no";
   const uaOptions: { value: YesNo; name: string }[] = [
-    { value: "yes", name: "Анонимизированный" },
-    { value: "no", name: "Данные Telegram-аккаунта" },
+    { value: "yes", name: $t("studio.human_operator.ua_opt_yes") },
+    { value: "no", name: $t("studio.human_operator.ua_opt_no") },
   ];
+
+  fhConfig.messages_to_user.throttling = applyPrefilledMessage(
+    loadPrefilledMessages(),
+    "anti_spam_warning",
+    $languageConfigStore,
+    $t,
+    $locale,
+    fhConfig.messages_to_user.throttling,
+  );
 </script>
 
-<NodeModalBody title={NODE_TITLE.human_operator}>
+<NodeModalBody title={$t(NODE_TITLE_KEY.human_operator)}>
   <div class={blockSeqClass}>
     <div class="flex flex-col gap-6">
-      <GroupChatIdSelect label="Рабочий чат" {botId} bind:selectedGroupChatId={fhConfig.admin_chat_id}>
-        <div slot="description">
-          <p>
-            Рабочий, или админ-чат — это специальный чат, через который вы будете общаться с пользователь:ницами. Бот
-            будет копировать их сообщения и передавать ваши ответы. Подробные инструкции по его работе доступны внутри
-            самого чата по команде <code>/help</code>.
-          </p>
-          <details class="my-2">
-            <summary> Как создать рабочий чат?</summary>
-            <List tag="ol">
-              <Li>
-                Откройте Telegram и добавьте вашего бота (<BotUserBadge {botId} inline let:user
-                  ><code>@{user.username}</code></BotUserBadge
-                >) в новую или существующую группу
-              </Li>
-              <Li>
-                Перейдите в настройки (Settings) группы. В разделе "История чата" (Chat History) выберите "Доступна"
-                (Visible). Это необходимо для активации чата в конструкторе
-              </Li>
-              <Li>Вернитесь в конструктор и выберите созданный чат</Li>
-              <Li>
-                Если чат не виден в списке, вернитесь в Telegram, убедитесь, что бот добавлен в чат, и отправьте команду
-                <BotUserBadge {botId} inline let:user><code>/discover_chat@{user.username}</code></BotUserBadge>
-              </Li>
-            </List>
-          </details>
-        </div>
+      <GroupChatIdSelect
+        label={$t("studio.human_operator.admin_chat")}
+        {botId}
+        bind:selectedGroupChatId={fhConfig.admin_chat_id}
+      >
+        <p slot="description">
+          {@html $t("studio.human_operator.admin_chat_descr_1")}
+        </p>
       </GroupChatIdSelect>
 
       <InputWrapper
-        label="Идентификатор"
+        label={$t("studio.human_operator.user_anonymization_title")}
         required={false}
-        description="Как будут помечаться сообщения пользователь:ниц, когда они пишут в бот"
+        description={$t("studio.human_operator.user_anonymization_descr")}
         let:inputId
       >
         <Select id={inputId} placeholder="" items={uaOptions} bind:value={anonymize} />
         <div class="text-sm text-gray-600">
           {#if anonymize == "yes"}
-            Сообщения пользователь:ниц будут помечены анонимизированным идентификатором из эмоджи (⏯😫🎲📅). По нему
-            можно различать пользователь:ниц, но невозможно идентифицировать их за пределами бота.
+            {$t("studio.human_operator.user_anonymization_yes_hint")}
           {:else}
-            К сообщениям будут добавлены данные Telegram аккаунта пользователь:ницы: имя, @юзернейм, user id
+            {$t("studio.human_operator.user_anonymization_no_hint")}
           {/if}
         </div>
       </InputWrapper>
 
       <InputWrapper
-        label="Режим тем"
+        label={$t("studio.human_operator.topics_title")}
         required={false}
-        description={"Вместо единого потока сообщения от разных пользователь:ниц разносятся по темам"}
+        description={$t("studio.human_operator.topics_descr")}
       >
-        <Toggle bind:checked={fhConfig.forum_topic_per_user}>Включить</Toggle>
+        <Toggle bind:checked={fhConfig.forum_topic_per_user}>{$t("studio.human_operator.topics_turn_on")}</Toggle>
         {#if fhConfig.forum_topic_per_user}
           <div class="text-sm text-gray-600">
-            <div>Чтобы обеспечить работу бота в режиме тем</div>
+            <div>{$t("studio.human_operator.topics_howto_title")}</div>
             <List>
-              <Li>
-                Включите "Темы" (Topics) в настройках рабочего чата в Telegram. Для этого перейдите в настройки
-                (Settings) и активируйте опцию "Темы" (Topics).
-              </Li>
-              <Li>
-                Там же в разделе "Администраторы" (Administrators) добавьте бота и дайте ему право "Управление темами"
-                (Manage Topics).
-              </Li>
+              <Li>{$t("studio.human_operator.topics_howto_p1")}</Li>
+              <Li>{$t("studio.human_operator.topics_howto_p2")}</Li>
             </List>
           </div>
         {/if}
       </InputWrapper>
 
       <LocalizableTextInput
-        label="Ответ на принятое сообщение"
-        placeholder="Спасибо, мы вам скоро ответим!"
+        label={$t("studio.human_operator.reponse_title")}
+        placeholder={$t("studio.human_operator.reponse_placeholder")}
         bind:value={fhConfig.messages_to_user.forwarded_to_admin_ok}
         maxCharacters={TELEGRAM_MAX_MESSAGE_LENGTH_CHARS}
       />
@@ -118,51 +103,41 @@
 
     <Accordion flush>
       <AccordionItem paddingDefault="p-3" flush>
-        <span slot="header">Дополнительные настройки</span>
+        <span slot="header">{$t("studio.human_operator.more_settings")}</span>
         <div class={blockSeqClass}>
           <div class={blockClass}>
-            <Heading tag="h6">Сообщения для админ:ок</Heading>
+            <Heading tag="h6">{$t("studio.human_operator.admin_msgs")}</Heading>
             <TextInput
-              label="Уведомление о том, что ответ админ:ки передан пользователь:нице"
-              placeholder="Сообщение переслано!"
+              label={$t("studio.human_operator.admin_reply_ok_label")}
+              placeholder={$t("studio.human_operator.admin_reply_ok_placeholder")}
               bind:value={fhConfig.messages_to_admin.copied_to_user_ok}
             />
             <TextInput
-              label="Уведомление о том, что сообщение пользователь:нице успешно удалено по команде /undo"
-              placeholder="Сообщение удалено из чата бота и пользователь:ницы!"
+              label={$t("studio.human_operator.admin_reply_undo_title")}
+              placeholder={$t("studio.human_operator.admin_reply_undo_placeholder")}
               bind:value={fhConfig.messages_to_admin.deleted_message_ok}
             />
             <TextInput
-              label="Уведомление о том, что сообщение не удалось удалить"
-              placeholder="Не получилось удалить сообщение :(!"
+              label={$t("studio.human_operator.admin_reply_failed_to_undo_title")}
+              placeholder={$t("studio.human_operator.admin_reply_failed_to_undo_placeholder")}
               bind:value={fhConfig.messages_to_admin.can_not_delete_message}
             />
           </div>
           <div class={blockClass}>
-            <Heading tag="h6">Анти-спам</Heading>
+            <Heading tag="h6">{$t("studio.human_operator.anti_spam_title")}</Heading>
             <InputWrapper
-              label="Сколько сообщений в минуту может писать пользователь:ница"
-              description={'После превышения будет примененён временный "мягкий бан"'}
+              label={$t("studio.human_operator.anti_spam_msg_per_min")}
+              description={$t("studio.human_operator.anti_spam_msg_per_min_descr")}
             >
               <NumberInput bind:value={fhConfig.max_messages_per_minute} min={1} max={60} step={1} type="number" />
             </InputWrapper>
 
             <LocalizableTextInput
-              label="Предупреждение о превышении"
-              placeholder={"Не присылайте больше {} сообщений в минуту!"}
+              label={$t("studio.human_operator.anti_spam_warning_title")}
+              placeholder={$t("studio.human_operator.anti_spam_warning_placeholder")}
               bind:value={fhConfig.messages_to_user.throttling}
               maxCharacters={TELEGRAM_MAX_MESSAGE_LENGTH_CHARS}
             />
-
-            <!-- seems like we don't really need hashtags hehe -->
-            <!-- <Toggle bind:checked={fhConfig.hashtags_in_admin_chat}>Хештеги в рабочем чате</Toggle>
-            {#if fhConfig.hashtags_in_admin_chat}
-              <TextInput
-                placeholder="#неотвечено"
-                label="Текст хештега, который навешивается на новые, неотвеченные сообщения"
-                bind:value={unanswered}
-              />
-            {/if} -->
           </div>
         </div>
       </AccordionItem>

@@ -1,4 +1,5 @@
 import { type FormMessages } from "../../../api/types";
+import type { I18NLocale, MessageFormatter } from "../../../i18n";
 import type { LocalizableText } from "../../../types";
 import type { LanguageConfig } from "../../stores";
 import { clone } from "../../utils";
@@ -38,14 +39,18 @@ export const PREFILLABLE_FORM_MESSAGE_KEYS: PrefillableFormMessageKey[] = [
   "unsupported_command",
 ];
 
-type PrefillableKey = PrefillableFormMessageKey | PrefillableFormErrorKey;
-const PREFILLABLE_KEYS: PrefillableKey[] = [...PREFILLABLE_FORM_MESSAGE_KEYS, ...PREFILLABLE_FORM_ERROR_KEYS];
+export type PrefillableKey = PrefillableFormMessageKey | PrefillableFormErrorKey | "anti_spam_warning";
+const PREFILLABLE_KEYS: PrefillableKey[] = [
+  ...PREFILLABLE_FORM_MESSAGE_KEYS,
+  ...PREFILLABLE_FORM_ERROR_KEYS,
+  "anti_spam_warning",
+];
 
 export type PrefilledMessages = Partial<Record<PrefillableKey, { [k: string]: string }>>;
 
 const PREFILLED_FORM_MESSAGES_KEY = "prefilledFormMessages";
 
-export function getPrefilledMessages(): PrefilledMessages {
+export function loadPrefilledMessages(): PrefilledMessages {
   const dump = localStorage.getItem(PREFILLED_FORM_MESSAGES_KEY);
   if (!dump) {
     return {};
@@ -54,7 +59,7 @@ export function getPrefilledMessages(): PrefilledMessages {
 }
 
 export function savePrefilledMessages(update: PrefilledMessages) {
-  const existing = getPrefilledMessages();
+  const existing = loadPrefilledMessages();
   const merged: PrefilledMessages = {};
   for (const key of PREFILLABLE_KEYS) {
     merged[key] = { ...(existing[key] || {}), ...(update[key] || {}) };
@@ -62,39 +67,56 @@ export function savePrefilledMessages(update: PrefilledMessages) {
   localStorage.setItem(PREFILLED_FORM_MESSAGES_KEY, JSON.stringify(merged));
 }
 
-// constructor's interface lang, NOT the default bot langauge from LanguageConfig
-const DEFAULT_LANGUAGE = "ru";
-
 export function prefilledMessage(
   prefilledMessages: PrefilledMessages,
   key: PrefillableKey,
   langConfig: LanguageConfig | null,
+  locale: I18NLocale,
 ): LocalizableText {
+  const messages = prefilledMessages[key] || {};
   if (langConfig === null) {
-    return (prefilledMessages[key] || {})[DEFAULT_LANGUAGE] || "";
+    // no languages in the bot's config = try to fallback to interface language
+    return (locale ? messages[locale] : null) || messages["en"] || "";
   } else {
     return Object.fromEntries(
-      langConfig.supportedLanguageCodes.map((supportedLang) => [
-        supportedLang,
-        (prefilledMessages[key] || {})[supportedLang] || "",
-      ]),
+      langConfig.supportedLanguageCodes.map((supportedLang) => [supportedLang, messages[supportedLang] || ""]),
     );
   }
 }
 
-export function updateWithPrefilled<T>(messages: T, langConfig: LanguageConfig | null): [T, string[]] {
-  // console.debug(`Prefilling ${JSON.stringify(messages)}`);
-  const prefilledMessages = getPrefilledMessages();
-  const messagesCopy = clone(messages);
-  const prefilledKeys: string[] = [];
+export function applyPrefilledMessage(
+  pm: PrefilledMessages,
+  key: PrefillableKey,
+  langConfig: LanguageConfig | null,
+  t: MessageFormatter,
+  locale: I18NLocale,
+  existing: LocalizableText,
+): LocalizableText {
+  if (validateLocalizableText(existing, "", langConfig, t).ok) return existing;
+
+  const prefill = prefilledMessage(pm, key, langConfig, locale);
+  if (typeof prefill == "string") {
+    return prefill;
+  } else {
+    return { ...prefill, ...(existing instanceof Object ? existing : {}) };
+  }
+}
+
+// T must be a string -> LocalizableText object, but I can't figure out how to express it correctly in TS... :(
+export function updatedWithPrefilled<T>(
+  messages: T,
+  langConfig: LanguageConfig | null,
+  t: MessageFormatter,
+  locale: I18NLocale,
+): T {
+  console.debug(`Prefilling...`, messages);
+  const pm = loadPrefilledMessages();
+  const messagesOut = clone(messages) as { [k: string]: LocalizableText };
   for (const key of PREFILLABLE_KEYS) {
-    // @ts-expect-error
-    if (key in messagesCopy && !validateLocalizableText(messagesCopy[key], "", langConfig).ok) {
-      // @ts-expect-error
-      messagesCopy[key] = prefilledMessage(prefilledMessages, key, langConfig);
-      prefilledKeys.push(key);
+    if (key in messagesOut) {
+      messagesOut[key] = applyPrefilledMessage(pm, key, langConfig, t, locale, messagesOut[key]);
     }
   }
-  // console.debug(`Prefilling result: ${JSON.stringify(messagesCopy)}, keys ${prefilledKeys}`);
-  return [messagesCopy, prefilledKeys];
+  console.debug(`Updated with prefilled messages`, messagesOut);
+  return messagesOut as T;
 }

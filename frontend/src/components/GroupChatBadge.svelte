@@ -3,6 +3,7 @@
     Caches stuff in localStorage for fewer backend calls.
 -->
 <script lang="ts">
+  import { t } from "svelte-i18n";
   import { Avatar, Listgroup, ListgroupItem, Popover } from "flowbite-svelte";
   import { DotsHorizontalOutline, RefreshOutline } from "flowbite-svelte-icons";
   import { getGroupChatData } from "../api/groupChats";
@@ -88,13 +89,13 @@
                 class="gap-2"
               >
                 <RefreshOutline class="w-3 h-3 text-gray-700" />
-                Обновить
+                {$t("generic.refresh")}
               </ListgroupItem>
             </Listgroup>
           </Popover>
         </div>
       {:else}
-        <ErrorBadge title="Ошибка загрузки данных чата" text={chatRes.error} />
+        <ErrorBadge title={$t("components.group_chat_badge.data_loading_error")} text={chatRes.error} />
       {/if}
     {/await}
   </div>

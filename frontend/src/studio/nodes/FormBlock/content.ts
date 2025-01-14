@@ -1,4 +1,5 @@
 import { type FormMessages } from "../../../api/types";
+import { type MessageFormatter } from "../../../i18n";
 import type { FormErrorMessages } from "./prefill";
 
 interface FormExampleContent {
@@ -8,137 +9,147 @@ interface FormExampleContent {
 
 export const EXAMPLE_CONTENT: FormExampleContent[] = [
   {
-    name: "Имя",
-    prompt: "Введите ваше имя.",
+    name: "studio.form.placeholders.01_name",
+    prompt: "studio.form.placeholders.01_prompt",
   },
   {
-    name: "Возраст",
-    prompt: "Сколько вам лет?",
+    name: "studio.form.placeholders.02_name",
+    prompt: "studio.form.placeholders.02_prompt",
   },
   {
-    name: "Email",
-    prompt: "Укажите ваш адрес электронной почты.",
+    name: "studio.form.placeholders.03_name",
+    prompt: "studio.form.placeholders.03_prompt",
   },
   {
-    name: "Город",
-    prompt: "Укажите ваш текущий город проживания.",
+    name: "studio.form.placeholders.04_name",
+    prompt: "studio.form.placeholders.04_prompt",
   },
   {
-    name: "Занятие",
-    prompt: "Какая у вас профессия или род деятельности?",
+    name: "studio.form.placeholders.05_name",
+    prompt: "studio.form.placeholders.05_prompt",
   },
   {
-    name: "Оценка",
-    prompt: "Поставьте оценку от 1 до 10, где 1 - очень плохо, 10 - отлично.",
+    name: "studio.form.placeholders.06_name",
+    prompt: "studio.form.placeholders.06_prompt",
   },
   {
-    name: "Любимый цвет",
-    prompt: "Какой у вас любимый цвет?",
+    name: "studio.form.placeholders.07_name",
+    prompt: "studio.form.placeholders.07_prompt",
   },
   {
-    name: "Комментарий",
-    prompt: "Есть ли у вас какие-либо дополнительные комментарии или пожелания?",
+    name: "studio.form.placeholders.08_name",
+    prompt: "studio.form.placeholders.08_prompt",
   },
   {
-    name: "Любимое животное",
-    prompt: "Какое ваше любимое животное?",
+    name: "studio.form.placeholders.09_name",
+    prompt: "studio.form.placeholders.09_prompt",
   },
   {
-    name: "Любимый фильм",
-    prompt: "Назовите ваш любимый фильм.",
+    name: "studio.form.placeholders.10_name",
+    prompt: "studio.form.placeholders.10_prompt",
   },
   {
-    name: "Любимая книга",
-    prompt: "Какая ваша любимая книга?",
+    name: "studio.form.placeholders.11_name",
+    prompt: "studio.form.placeholders.11_prompt",
   },
   {
-    name: "Любимый вид спорта",
-    prompt: "Какой ваш любимый вид спорта?",
+    name: "studio.form.placeholders.12_name",
+    prompt: "studio.form.placeholders.12_prompt",
   },
   {
-    name: "Любимая еда",
-    prompt: "Какое ваше любимое блюдо?",
+    name: "studio.form.placeholders.13_name",
+    prompt: "studio.form.placeholders.13_prompt",
   },
   {
-    name: "Любимый цветок",
-    prompt: "Какой ваш любимый цветок?",
+    name: "studio.form.placeholders.14_name",
+    prompt: "studio.form.placeholders.14_prompt",
   },
   {
-    name: "Любимый эпизод SW",
-    prompt: 'Назовите ваш любимый эпизод "Звездных Войн".',
+    name: "studio.form.placeholders.15_name",
+    prompt: "studio.form.placeholders.15_prompt",
   },
   {
-    name: "Путешествия",
-    prompt: "Какие места вы мечтаете посетить в будущем?",
+    name: "studio.form.placeholders.16_name",
+    prompt: "studio.form.placeholders.16_prompt",
   },
   {
-    name: "Хобби",
-    prompt: "У вас есть какие-либо увлечения или хобби? Опишите их.",
+    name: "studio.form.placeholders.17_name",
+    prompt: "studio.form.placeholders.17_prompt",
   },
   {
-    name: "Суперспособность",
-    prompt: "Если бы у вас была суперспособность, какую бы вы выбрали?",
+    name: "studio.form.placeholders.18_name",
+    prompt: "studio.form.placeholders.18_prompt",
   },
 ];
 
-export function getRandomContent(): FormExampleContent {
+export function getRandomContent(t: MessageFormatter): FormExampleContent {
   const idx = Math.floor(Math.random() * EXAMPLE_CONTENT.length);
-  return EXAMPLE_CONTENT[idx];
+  const keys = EXAMPLE_CONTENT[idx];
+  return {
+    name: t(keys.name),
+    prompt: t(keys.prompt),
+  };
 }
 
-const EXAMPLE_START_MESSAGES: string[] = [
-  "Пожалуйста, уделите немного времени, чтобы ответить на несколько важных вопросов.",
-  "Пожалуйста, заполните эту краткую анкету и мы ответим вам в течение нескольких дней.",
-  "Ответьте, пожалуйста, на несколько вопросов ниже.",
-  "Пожалуйста, заполните форму ниже!",
+const EXAMPLE_START_MESSAGE_KEYS: string[] = [
+  "studio.form.placeholders.start_1",
+  "studio.form.placeholders.start_2",
+  "studio.form.placeholders.start_3",
+  "studio.form.placeholders.start_4",
 ];
 
-export function getRandomFormStartMessage(): string {
-  const idx = Math.floor(Math.random() * EXAMPLE_START_MESSAGES.length);
-  return EXAMPLE_START_MESSAGES[idx];
+export function getRandomFormStartMessage(t: MessageFormatter): string {
+  const idx = Math.floor(Math.random() * EXAMPLE_START_MESSAGE_KEYS.length);
+  return t(EXAMPLE_START_MESSAGE_KEYS[idx]);
 }
 
-export function formMessageName(key: keyof FormMessages | keyof FormErrorMessages | string): string {
+export function formMessageName(
+  key: keyof FormMessages | keyof FormErrorMessages | string,
+  t: MessageFormatter,
+): string {
   switch (key) {
     case "form_start":
-      return "Начальное сообщение";
+      return t("studio.form.messages.form_start");
     case "cancel_command_is":
-      return "О команде выхода из формы";
+      return t("studio.form.messages.cancel_cmd");
     case "field_is_skippable":
-      return "О необязательном поле";
+      return t("studio.form.messages.field_is_skippable");
     case "field_is_not_skippable":
-      return "Об обязательном поле";
+      return t("studio.form.messages.field_isnt_skippable");
     case "please_enter_correct_value":
-      return "При некорректном значении в ответ";
+      return t("studio.form.messages.enter_correct_value");
     case "unsupported_command":
-      return "При неподдерживаемой команде";
+      return t("studio.form.messages.unsupported_cmd");
     case "empty_text_error_msg":
-      return "Прислано сообщение без текста";
+      return t("studio.form.messages.empty_text_error");
     case "not_an_integer_error_msg":
-      return "Невалидное число";
+      return t("studio.form.messages.invalid_number_error");
     case "not_an_integer_list_error_msg":
-      return "Невалидный список чисел";
+      return t("studio.form.messages.invalid_number_list_error");
     case "bad_time_format_msg":
-      return "Невалидная дата";
+      return t("studio.form.messages.invalid_date_error");
     case "invalid_enum_error_msg":
-      return "Невалидный вариант ответа";
+      return t("studio.form.messages.invalid_enum_error");
     case "attachments_expected_error_msg":
-      return "Нет вложений";
+      return t("studio.form.messages.no_attachment_error");
     case "only_one_media_message_allowed_error_msg":
-      return "Больше одного сообщения с вложениями";
+      return t("studio.form.messages.too_many_attachments_error");
     case "bad_attachment_type_error_msg":
-      return "Неподдерживаемый тип вложений";
+      return t("studio.form.messages.unsupported_attachment_error");
     case "please_use_inline_menu":
-      return "Сообщение вместо использования меню";
+      return t("studio.form.messages.use_inline_menu_error");
     default:
       return key;
   }
 }
 
-export function formMessageDescription(key: keyof FormMessages | keyof FormErrorMessages | string): string | null {
+export function formMessageDescription(
+  key: keyof FormMessages | keyof FormErrorMessages | string,
+  t: MessageFormatter,
+): string | null {
   switch (key) {
     case "field_is_not_skippable":
-      return "Если пользователь:ница присылает команду /skip на обязательное поле";
+      return t("studio.form.messages.field_isnt_skippable_descr");
     default:
       return null;
   }

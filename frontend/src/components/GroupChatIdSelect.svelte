@@ -1,18 +1,22 @@
 <script lang="ts">
-  import { Accordion, AccordionItem, Spinner } from "flowbite-svelte";
+  import { Accordion, AccordionItem, Li, List, Spinner } from "flowbite-svelte";
   import { CloseOutline, ExclamationCircleOutline, PenOutline, TrashBinOutline } from "flowbite-svelte-icons";
   import { onDestroy } from "svelte";
+  import { t } from "svelte-i18n";
   import { getAvailableGroupChats, startGroupChatDiscovery, stopGroupChatDiscovery } from "../api/groupChats";
   import type { TgGroupChat } from "../api/types";
   import { PLACEHOLDER_GROUP_CHAT_ID } from "../studio/nodes/defaultConfigs";
   import ErrorBadge from "./AlertBadge.svelte";
+  import BotUserBadge from "./BotUserBadge.svelte";
   import GroupChatBadge from "./GroupChatBadge.svelte";
+  import InputWrapper from "./inputs/InputWrapper.svelte";
 
   export let label: string;
   export let botId: string;
   export let selectedGroupChatId: number | string | null;
   export let forbidLegacyGroups: boolean = true;
   export let allowEmptyState: boolean = false;
+  export let description: string | null = null;
 
   // auto-open if not selected initially
   let isOpen = !allowEmptyState && (selectedGroupChatId === PLACEHOLDER_GROUP_CHAT_ID || selectedGroupChatId === null);
@@ -76,93 +80,127 @@
   const chatLabel = (chat: TgGroupChat) => `group-chat-${chat.id}`;
 </script>
 
-<Accordion flush>
-  <AccordionItem
-    bind:open={isOpen}
-    paddingFlush="py-2"
-    class="flex items-center justify-between w-full font-medium text-left"
-  >
-    <div slot="header" class="text-gray-900 text-sm">
-      <div class="font-bold mb-2">{label}</div>
-      {#if selectedGroupChatId !== PLACEHOLDER_GROUP_CHAT_ID && selectedGroupChatId !== null}
-        <GroupChatBadge {botId} chatId={selectedGroupChatId} />
-      {:else if !isOpen}
-        <span class="text-gray-700">Не выбран</span>
-      {/if}
-    </div>
-    <div slot="arrowdown">
-      <PenOutline size="sm" />
-    </div>
-    <div slot="arrowup">
-      <CloseOutline size="sm" />
-    </div>
-
-    <!-- accordion body -->
-    <div class="my-1 text-sm font-medium text-gray-900">
-      <slot name="description" />
-      {#await availableGroupChatsLoadedPromise}
-        <Spinner />
-      {:then}
-        {#if chatsLoadError !== null}
-          <ErrorBadge title="Не получилось загрузить доступные чаты" text={chatsLoadError} />
+<InputWrapper {label} {description} required={!allowEmptyState}>
+  <Accordion flush>
+    <AccordionItem
+      bind:open={isOpen}
+      paddingFlush="pb-2"
+      borderBottomClass="border-none"
+      class="flex items-center justify-between w-full font-medium text-left border-none"
+    >
+      <div slot="header" class="text-gray-900 text-sm">
+        {#if selectedGroupChatId !== PLACEHOLDER_GROUP_CHAT_ID && selectedGroupChatId !== null}
+          <GroupChatBadge {botId} chatId={selectedGroupChatId} />
         {:else}
-          <div class="flex flex-col gap-1">
-            <div class="font-bold">Доступные чаты</div>
-            <div class="flex flex-col gap-2">
-              {#each availableChats as chat (chat.id)}
+          <span class="text-gray-600">{$t("components.group_chat_select.not_selected")}</span>
+        {/if}
+      </div>
+      <div slot="arrowdown">
+        <PenOutline size="sm" />
+      </div>
+      <div slot="arrowup">
+        <CloseOutline size="sm" />
+      </div>
+
+      <!-- accordion body -->
+      <div class="text-sm font-medium text-gray-900 p-2 bg-gray-50">
+        <div class="gap-2">
+          <slot name="description" />
+          <slot name="howto">
+            <details class="my-2">
+              <summary>{$t("components.group_chat_select.how_to.title")}</summary>
+              <List tag="ol">
+                <Li>
+                  {$t("components.group_chat_select.how_to.step_1_1")} (<BotUserBadge {botId} inline let:user
+                    ><code>@{user.username}</code></BotUserBadge
+                  >) {$t("components.group_chat_select.how_to.step_1_2")}
+                </Li>
+                {#if forbidLegacyGroups}
+                  <Li>
+                    {$t("components.group_chat_select.how_to.step_2")}
+                  </Li>
+                {/if}
+                <Li>{$t("components.group_chat_select.how_to.step_3")}</Li>
+                <Li>
+                  {$t("components.group_chat_select.how_to.step_4")}
+                  <BotUserBadge {botId} inline let:user><code>/discover_chat@{user.username}</code></BotUserBadge>
+                </Li>
+              </List>
+            </details>
+          </slot>
+        </div>
+
+        {#await availableGroupChatsLoadedPromise}
+          <Spinner />
+        {:then}
+          {#if chatsLoadError !== null}
+            <ErrorBadge
+              title={$t("components.group_chat_select.error_loading_available_chats")}
+              text={chatsLoadError}
+            />
+          {:else}
+            <div class="flex flex-col gap-1">
+              <div class="font-bold">{$t("components.group_chat_select.available_chats")}</div>
+              <div class="flex flex-col gap-2">
+                {#each availableChats as chat (chat.id)}
+                  <div class="flex flex-row items-center gap-2">
+                    <input
+                      type="radio"
+                      id={chatLabel(chat)}
+                      bind:group={selectedGroupChatId}
+                      on:change={async () => {
+                        isOpen = false;
+                      }}
+                      value={chat.id}
+                      disabled={forbidLegacyGroups && chat.type === "group"}
+                    />
+                    {#if forbidLegacyGroups && chat.type === "group"}
+                      <ExclamationCircleOutline
+                        color="red"
+                        title={{
+                          id: "non-supergroup chat is forbidden",
+                          title: $t("components.group_chat_select.chat_must_be_a_supergroup"),
+                        }}
+                      />
+                    {/if}
+                    <label
+                      for={chatLabel(chat)}
+                      class={forbidLegacyGroups && chat.type === "group" ? "opacity-50" : ""}
+                    >
+                      <GroupChatBadge {botId} chatId={chat.id} chatData={chat} />
+                    </label>
+                  </div>
+                {/each}
+              </div>
+              {#if allowEmptyState}
                 <div class="flex flex-row items-center gap-2">
                   <input
                     type="radio"
-                    id={chatLabel(chat)}
-                    bind:group={selectedGroupChatId}
+                    id={"delete-chat-id"}
                     on:change={async () => {
+                      selectedGroupChatId = null;
                       isOpen = false;
                     }}
-                    value={chat.id}
-                    disabled={forbidLegacyGroups && chat.type === "group"}
+                    value={"delete-chat-id"}
                   />
-                  {#if forbidLegacyGroups && chat.type === "group"}
-                    <ExclamationCircleOutline
-                      color="red"
-                      title={{
-                        id: "non-supergroup chat is forbidden",
-                        title: "Чат не подходит для использования в боте, его нужно активировать",
-                      }}
-                    />
-                  {/if}
-                  <label for={chatLabel(chat)} class={forbidLegacyGroups && chat.type === "group" ? "opacity-50" : ""}>
-                    <GroupChatBadge {botId} chatId={chat.id} chatData={chat} />
+                  <label for={"delete-chat-id"} class="flex flex-row gap-1">
+                    <slot name="delete-chat-id-option">
+                      <TrashBinOutline size="sm" />
+                      {$t("generic.delete")}
+                    </slot>
                   </label>
                 </div>
-              {/each}
+              {/if}
+              {#if isScannning}
+                <p class="mt-3">
+                  <Spinner size={4} class="mr-2" />
+                  {$t("components.group_chat_select.searching")}
+                </p>
+              {/if}
             </div>
-            {#if allowEmptyState}
-              <div class="flex flex-row items-center gap-2">
-                <input
-                  type="radio"
-                  id={"delete-chat-id"}
-                  on:change={async () => {
-                    selectedGroupChatId = null;
-                    isOpen = false;
-                  }}
-                  value={"delete-chat-id"}
-                />
-                <label for={"delete-chat-id"} class="flex flex-row gap-1">
-                  <slot name="delete-chat-id-option">
-                    <TrashBinOutline size="sm" /> Удалить
-                  </slot>
-                </label>
-              </div>
-            {/if}
-            {#if isScannning}
-              <p class="mt-3">
-                <Spinner size={4} class="mr-2" />
-                Поиск...
-              </p>
-            {/if}
-          </div>
-        {/if}
-      {/await}
-    </div>
-  </AccordionItem>
-</Accordion>
+          {/if}
+        {/await}
+      </div>
+    </AccordionItem>
+  </Accordion>
+</InputWrapper>

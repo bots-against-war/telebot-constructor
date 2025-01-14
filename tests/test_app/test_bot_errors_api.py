@@ -82,9 +82,9 @@ async def test_bot_level_errors(
             + f"{user_id}, 'is_bot': False, 'first_name': 'john pork'"
         )
         assert error["exc_type"] == "RuntimeError"
-        assert error["exc_data"] == "RuntimeError: User entered the error block (self.block_id='error-block')\n"
+        assert error["exc_data"] == "RuntimeError: User entered the error block (self.block_id='error-block')"
         assert error["exc_traceback"].endswith(
-            'raise RuntimeError(f"User entered the error block ({self.block_id=!r})")\n'
+            'raise RuntimeError(f"User entered the error block ({self.block_id=!r})")'
         )
 
     resp = await client.get("/api/info/mybot")

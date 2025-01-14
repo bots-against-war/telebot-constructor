@@ -1,5 +1,6 @@
 <script lang="ts">
   import { Heading } from "flowbite-svelte";
+  import { t } from "svelte-i18n";
   import type { BotError } from "../../../api/types";
   import Timestamp from "../../../components/Timestamp.svelte";
 
@@ -10,7 +11,7 @@
 
 <div>
   <Timestamp timestamp={error.timestamp} />
-  <Heading tag="h5">Ошибка</Heading>
+  <Heading tag="h5">{$t("generic.error")}</Heading>
   <p class="mt-3">
     <code>
       {error.message}

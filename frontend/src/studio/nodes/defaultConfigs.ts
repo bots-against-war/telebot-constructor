@@ -1,20 +1,17 @@
-import type {
-  FormMessages,
-  MenuMechanism,
-  UserFlowBlockConfig,
-  UserFlowConfig,
-  UserFlowEntryPointConfig,
-} from "../../api/types";
+import type { MenuMechanism, UserFlowBlockConfig, UserFlowConfig, UserFlowEntryPointConfig } from "../../api/types";
+import type { I18NLocale, MessageFormatter } from "../../i18n";
 import type { LanguageConfig } from "../stores";
-import { updateWithPrefilled } from "./FormBlock/prefill";
+import { loadPrefilledMessages, prefilledMessage, type PrefillableKey } from "./FormBlock/prefill";
 
 export type ConfigFactory = (
   id: string,
+  t: MessageFormatter,
   langConfig: LanguageConfig | null,
   currentConfig: UserFlowConfig,
+  locale: I18NLocale,
 ) => UserFlowEntryPointConfig | UserFlowEntryPointConfig;
 
-export function defaultCommandEntrypoint(id: string): UserFlowEntryPointConfig {
+export const defaultCommandEntrypoint: ConfigFactory = (id: string): UserFlowEntryPointConfig => {
   return {
     command: {
       entrypoint_id: id,
@@ -24,23 +21,27 @@ export function defaultCommandEntrypoint(id: string): UserFlowEntryPointConfig {
       next_block_id: null,
     },
   };
-}
+};
 
-export function defaultContentBlockConfig(id: string): UserFlowBlockConfig {
+export const defaultContentBlockConfig: ConfigFactory = (id: string, t: MessageFormatter): UserFlowBlockConfig => {
   return {
     content: {
       block_id: id,
-      contents: [
-        { text: { text: "Привет! Это команда конструктора. Чем можем помочь?", markup: "markdown" }, attachments: [] },
-      ],
+      contents: [{ text: { text: t("studio.defaults.text_content"), markup: "markdown" }, attachments: [] }],
       next_block_id: null,
     },
   };
-}
+};
 
 export const PLACEHOLDER_GROUP_CHAT_ID = 0;
 
-export function defaultHumanOperatorBlockConfig(id: string): UserFlowBlockConfig {
+export const defaultHumanOperatorBlockConfig: ConfigFactory = (
+  id: string,
+  t: MessageFormatter,
+  langConfig: LanguageConfig | null,
+  _: UserFlowConfig,
+  locale: I18NLocale,
+): UserFlowBlockConfig => {
   return {
     human_operator: {
       block_id: id,
@@ -52,12 +53,12 @@ export function defaultHumanOperatorBlockConfig(id: string): UserFlowBlockConfig
         max_messages_per_minute: 10,
         messages_to_user: {
           forwarded_to_admin_ok: "",
-          throttling: "Не присылайте больше {} сообщений в минуту!",
+          throttling: prefilledMessage(loadPrefilledMessages(), "anti_spam_warning", langConfig, locale),
         },
         messages_to_admin: {
-          copied_to_user_ok: "Отправлено!",
-          deleted_message_ok: "Сообщение удалено из чата с пользователем!",
-          can_not_delete_message: "Не удалось удалить сообщение из чата с пользователем...",
+          copied_to_user_ok: t("studio.defaults.copied_to_user"),
+          deleted_message_ok: t("studio.defaults.deleted_message"),
+          can_not_delete_message: t("studio.defaults.failed_to_delete"),
         },
         hashtags_in_admin_chat: false,
         hashtag_message_rarer_than: null,
@@ -66,13 +67,14 @@ export function defaultHumanOperatorBlockConfig(id: string): UserFlowBlockConfig
       },
     },
   };
-}
+};
 
-export function defaultMenuBlockConfig(
+export const defaultMenuBlockConfig: ConfigFactory = (
   id: string,
+  _: MessageFormatter,
   langConfig: LanguageConfig | null,
   currentConfig: UserFlowConfig,
-): UserFlowBlockConfig {
+): UserFlowBlockConfig => {
   const topMechanismOccurrences = currentConfig.blocks
     .map((bc) => (bc.menu ? bc.menu.menu.config.mechanism : null))
     .filter((mb) => mb !== null)
@@ -102,9 +104,9 @@ export function defaultMenuBlockConfig(
       },
     },
   };
-}
+};
 
-export function defaultLanguageSelectBlockConfig(id: string): UserFlowBlockConfig {
+export const defaultLanguageSelectBlockConfig: ConfigFactory = (id: string): UserFlowBlockConfig => {
   return {
     language_select: {
       block_id: id,
@@ -118,28 +120,34 @@ export function defaultLanguageSelectBlockConfig(id: string): UserFlowBlockConfi
       language_selected_next_block_id: null,
     },
   };
-}
+};
 
 export function generateFormName(): string {
   return `form-${crypto.randomUUID()}`;
 }
 
-export function defaultFormBlockConfig(id: string, langConfig: LanguageConfig | null): UserFlowBlockConfig {
-  let messages: FormMessages = {
-    form_start: "",
-    field_is_skippable: "",
-    field_is_not_skippable: "",
-    please_enter_correct_value: "",
-    unsupported_command: "",
-    cancel_command_is: "",
-  };
-  [messages] = updateWithPrefilled(messages, langConfig);
+export const defaultFormBlockConfig: ConfigFactory = (
+  id: string,
+  t: MessageFormatter,
+  langConfig: LanguageConfig | null,
+  _: UserFlowConfig,
+  locale: I18NLocale,
+): UserFlowBlockConfig => {
+  const pm = loadPrefilledMessages();
+  const prefilledMessage_ = (key: PrefillableKey) => prefilledMessage(pm, key, langConfig, locale);
   return {
     form: {
       block_id: id,
       members: [],
       form_name: generateFormName(),
-      messages: messages,
+      messages: {
+        form_start: "",
+        field_is_skippable: prefilledMessage_("field_is_skippable"),
+        field_is_not_skippable: prefilledMessage_("field_is_not_skippable"),
+        please_enter_correct_value: prefilledMessage_("please_enter_correct_value"),
+        unsupported_command: prefilledMessage_("unsupported_command"),
+        cancel_command_is: prefilledMessage_("cancel_command_is"),
+      },
       results_export: {
         user_attribution: "none",
         echo_to_user: true,
@@ -150,4 +158,4 @@ export function defaultFormBlockConfig(id: string, langConfig: LanguageConfig | 
       form_completed_next_block_id: null,
     },
   };
-}
+};

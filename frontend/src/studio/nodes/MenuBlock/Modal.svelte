@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from "svelte-i18n";
   import { Select, Toggle } from "flowbite-svelte";
   import type { MenuBlock, MenuItem, MenuMechanism } from "../../../api/types";
   import InputWrapper from "../../../components/inputs/InputWrapper.svelte";
@@ -9,7 +10,7 @@
   import SortableListInput from "../../components/SortableListInput.svelte";
   import { languageConfigStore } from "../../stores";
   import { clone } from "../../utils";
-  import { NODE_TITLE } from "../display";
+  import { NODE_TITLE_KEY } from "../display";
 
   export let config: MenuBlock;
   export let onConfigUpdate: (newConfig: MenuBlock) => any;
@@ -60,19 +61,19 @@
   }
   const buttonTypeSelectItems: ButtonTypeSelectItem[] = [
     {
-      name: "Под сообщением",
+      name: $t("studio.menu.inline_button_label"),
       value: "inline",
     },
     {
-      name: "Кастомная клавиатура",
+      name: $t("studio.menu.reply_button_label"),
       value: "reply",
     },
   ];
 </script>
 
-<NodeModalBody title={NODE_TITLE.menu}>
+<NodeModalBody title={$t(NODE_TITLE_KEY.menu)}>
   <LocalizableTextInput
-    label="Текст"
+    label={$t("studio.menu.message_text_label")}
     required
     markdown
     bind:value={editedConfig.menu.text}
@@ -81,35 +82,32 @@
       selectedLang = event.detail;
     }}
   />
-  <InputWrapper label="Тип кнопок" required={false}>
+  <InputWrapper label={$t("studio.menu.button_type_label")} required={false}>
     <Select placeholder="" items={buttonTypeSelectItems} bind:value={selectedButtonType} />
     <div class="text-sm text-gray-600">
       {#if selectedButtonType == "inline"}
         <Toggle class="my-2" size="small" bind:checked={mutableInlineButtons}>
-          Обновлять текст и кнопки при переходе между уровнями
+          {$t("studio.menu.inline_mutable")}
         </Toggle>
         <p>
-          <a target="_blank" href="https://core.telegram.org/bots/features#inline-keyboards">Кнопки под сообщением</a>
-          хорошо подходят для небольших, динамичных меню. Telegram автоматически деактивирует кнопки через несколько дней
-          после отправки, поэтому этот тип не подойдёт для меню, которое должно использоваться в течение долгого времени.
+          {$t("studio.menu.inline_button_help")}
         </p>
       {:else}
-        <a target="_blank" href="https://core.telegram.org/bots/features#keyboards">Кастомная клавиатура</a> подходит для
-        длинных разветвленных диалоговых схем. Каждый новый уровень отправляется новым сообщением.
+        {$t("studio.menu.reply_button_help")}
       {/if}
     </div>
   </InputWrapper>
   <SortableListInput
-    label="Кнопки"
+    label={$t("studio.menu.buttons_label")}
     bind:options={editedConfig.menu.items}
     optionConstructor={newMenuItem}
     {selectedLang}
   />
-  <Toggle bind:checked={addBackButton}>Выход на предыдущий уровень</Toggle>
+  <Toggle bind:checked={addBackButton}>{$t("studio.menu.go_up")}</Toggle>
   {#if addBackButton}
     <LocalizableTextInput
       required
-      label={'Кнопка "назад"'}
+      label={$t("studio.menu.back_button_label")}
       bind:value={backButtonLabel}
       maxCharacters={TELEGRAM_MAX_MESSAGE_LENGTH_CHARS}
     />

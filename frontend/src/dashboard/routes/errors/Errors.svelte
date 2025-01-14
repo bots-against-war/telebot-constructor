@@ -1,10 +1,7 @@
 <script lang="ts">
-  import truncate from "@svackages/truncate";
   import { Heading } from "flowbite-svelte";
-  import { FileCodeOutline } from "flowbite-svelte-icons";
   import { loadErrors as loadBotErrors } from "../../../api/errors";
   import type { BotErrorsPage } from "../../../api/types";
-  import ActionIcon from "../../../components/ActionIcon.svelte";
   import Navbar from "../../../components/Navbar.svelte";
   import Page from "../../../components/Page.svelte";
   import PageContent from "../../../components/PageContent.svelte";
@@ -15,6 +12,7 @@
   import Breadcrumbs from "../../../components/breadcrumbs/Breadcrumbs.svelte";
   import { convert, getModalOpener, INFO_MODAL_OPTIONS, truncateText } from "../../../utils";
   import BotErrorModal from "./BotErrorModal.svelte";
+  import { t } from "svelte-i18n";
 
   export let page: BotErrorsPage;
 
@@ -28,7 +26,7 @@
       <BreadcrumbHome />
       <BreadcrumbDashboard botInfo={page.bot_info} />
     </Breadcrumbs>
-    <Heading tag="h3">Ошибки</Heading>
+    <Heading tag="h3">{$t("dashboard.bot_errors")}</Heading>
     <Pager
       items={page.errors}
       loader={async (offset, count) =>

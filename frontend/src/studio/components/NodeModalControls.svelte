@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from "svelte-i18n";
   import { Button } from "flowbite-svelte";
   import { createEventDispatcher } from "svelte";
   import { getModalCloser, sleep } from "../../utils";
@@ -40,7 +41,7 @@
       }
     }}
   >
-    Сохранить
+    {$t("generic.save")}
   </Button>
-  <Button outline on:click={close}>Отмена</Button>
+  <Button outline on:click={close}>{$t("generic.cancel")}</Button>
 </div>

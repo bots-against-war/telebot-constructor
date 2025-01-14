@@ -2,6 +2,7 @@ import abc
 import logging
 import mimetypes
 import uuid
+from pathlib import Path
 from typing import Any
 
 import aiobotocore.client  # type: ignore
@@ -196,3 +197,37 @@ class UserSpecificMediaStore:
 
     async def load_media(self, media_id: MediaId) -> Media | None:
         return await self.media_store.load_media(owner_id=self.owner_id, media_id=media_id)
+
+
+class FilesystemMediaStore(MediaStore):
+    def __init__(self, dir: Path) -> None:
+        self._dir = dir
+        assert self._dir.exists(), f"{self._dir} does not exist"
+        assert self._dir.is_dir(), f"{self._dir} is not a directory"
+
+    def _filename(self, owner_id: str, media_id: MediaId) -> Path:
+        owner_dir = self._dir / owner_id
+        owner_dir.mkdir(exist_ok=True)
+        return owner_dir / media_id
+
+    async def save_media(self, owner_id: str, media: Media) -> MediaId | None:
+        media_id = str(uuid.uuid4())
+        self._filename(owner_id, media_id).write_bytes(media.content)
+        return media_id
+
+    async def load_media(self, owner_id: str, media_id: MediaId) -> Media | None:
+        filename = self._filename(owner_id, media_id)
+        if not filename.exists():
+            return None
+        else:
+            return Media(
+                content=filename.read_bytes(),
+                filename=None,
+            )
+
+    async def delete_media(self, owner_id: str, media_id: MediaId) -> bool:
+        filename = self._filename(owner_id, media_id)
+        if not filename.exists():
+            return False
+        filename.unlink()
+        return True

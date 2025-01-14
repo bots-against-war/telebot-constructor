@@ -108,12 +108,14 @@ class TelebotConstructorApp:
         static_files_dir: Path = Path(__file__).parent / "static",
         telegram_files_downloader: Optional[TelegramFilesDownloader] = None,
         media_store: MediaStore | None = None,
+        add_swagger: bool = False,
     ) -> None:
         self.auth = auth
         self.secret_store = secret_store
         self.static_files_dir = static_files_dir
         logger.info(f"Will serve static frontend files from {self.static_files_dir.absolute()}")
         self.redis = redis
+        self.add_swagger = add_swagger
 
         self.telegram_files_downloader = telegram_files_downloader or InmemoryCacheTelegramFilesDownloader()
         self.store = TelebotConstructorStore(redis)
@@ -1221,7 +1223,8 @@ class TelebotConstructorApp:
 
         app.add_routes(routes)
         await self.auth.setup_routes(app)
-        setup_swagger(app=app, swagger_url="/api/swagger")
+        if self.add_swagger:
+            setup_swagger(app=app, swagger_url="/api/swagger")
         setup_cors(app)
         setup_debugging(app)
         return app
