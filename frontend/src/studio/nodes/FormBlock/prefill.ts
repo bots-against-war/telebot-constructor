@@ -75,7 +75,8 @@ export function prefilledMessage(
 ): LocalizableText {
   const messages = prefilledMessages[key] || {};
   if (langConfig === null) {
-    return (locale && locale in messages ? messages[locale] : messages["en"]) || "";
+    // no languages in the bot's config = try to fallback to interface language
+    return (locale ? messages[locale] : null) || messages["en"] || "";
   } else {
     return Object.fromEntries(
       langConfig.supportedLanguageCodes.map((supportedLang) => [supportedLang, messages[supportedLang] || ""]),
@@ -92,6 +93,7 @@ export function applyPrefilledMessage(
   existing: LocalizableText,
 ): LocalizableText {
   if (validateLocalizableText(existing, "", langConfig, t).ok) return existing;
+
   const prefill = prefilledMessage(pm, key, langConfig, locale);
   if (typeof prefill == "string") {
     return prefill;
