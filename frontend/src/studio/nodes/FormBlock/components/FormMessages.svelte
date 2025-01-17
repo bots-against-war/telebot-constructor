@@ -1,22 +1,13 @@
 <script lang="ts">
-  import { locale, t } from "svelte-i18n";
+  import { t } from "svelte-i18n";
   import type { FormMessages } from "../../../../api/types";
   import { TELEGRAM_MAX_MESSAGE_LENGTH_CHARS } from "../../../../constants";
   import LocalizableTextInput from "../../../components/LocalizableTextInput.svelte";
-  import { languageConfigStore } from "../../../stores";
   import { formMessageDescription, formMessageName } from "../content";
-  import {
-    PREFILLABLE_FORM_ERROR_KEYS,
-    PREFILLABLE_FORM_MESSAGE_KEYS,
-    updatedWithPrefilled,
-    type FormErrorMessages,
-  } from "../prefill";
+  import { PREFILLABLE_FORM_ERROR_KEYS, PREFILLABLE_FORM_MESSAGE_KEYS, type FormErrorMessages } from "../prefill";
 
   export let messages: FormMessages;
   export let errors: FormErrorMessages;
-
-  messages = updatedWithPrefilled(messages, $languageConfigStore, $t, $locale);
-  errors = updatedWithPrefilled(errors, $languageConfigStore, $t, $locale);
 </script>
 
 {#if Object.keys(errors).length > 0}

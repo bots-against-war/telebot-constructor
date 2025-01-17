@@ -87,7 +87,7 @@
         <div class="mb-4">
           <LocalizableTextInput
             placeholder={getRandomFormStartMessage($t)}
-            bind:value={editedConfig.messages.form_start}
+            bind:value={formMessages.form_start}
             maxCharacters={TELEGRAM_MAX_MESSAGE_LENGTH_CHARS}
           />
         </div>
