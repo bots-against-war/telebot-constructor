@@ -9,9 +9,6 @@ const config = {
   darkMode: "class",
   theme: {
     extend: {
-      gridTemplateColumns: {
-        sidebar: "max(250px, 0.2vw) 1fr",
-      },
       colors: {
         // zinc
         primary: {
