@@ -1,9 +1,9 @@
 /** @type {import('tailwindcss').Config}*/
 const config = {
   content: [
-    "./frontend/src/**/*.{html,js,svelte,ts}",
-    "./node_modules/flowbite-svelte-icons/**/*.{html,js,svelte,ts}",
-    "./node_modules/flowbite-svelte/**/*.{html,js,svelte,ts}",
+    "./src/**/*.{html,js,svelte,ts}",
+    "../node_modules/flowbite-svelte-icons/**/*.{html,js,svelte,ts}",
+    "../node_modules/flowbite-svelte/**/*.{html,js,svelte,ts}",
   ],
   plugins: [require("flowbite/plugin")],
   darkMode: "class",

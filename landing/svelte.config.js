@@ -15,30 +15,30 @@ const paths = base
     }
   : {};
 
-console.log(`Path arg: ${JSON.stringify(paths)}`);
+console.log(`Building landing with paths option: ${JSON.stringify(paths)}`);
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
   preprocess: vitePreprocess(),
   kit: {
     adapter: adapter({
-      pages: "landing/build",
-      assets: "landing/build",
+      pages: "dist",
+      assets: "dist",
       fallback: undefined,
       precompress: false,
       strict: true,
     }),
     alias: {
-      frontend: "frontend/src",
+      $frontend: "../frontend/src",
     },
     paths,
     appDir: "landing-assets",
     files: {
-      assets: "landing/static",
-      routes: "landing/src/routes",
-      appTemplate: "landing/src/app.html",
+      assets: "static",
+      routes: "src/routes",
+      appTemplate: "src/app.html",
     },
-    outDir: "landing/build-kit",
+    outDir: "build-kit",
   },
 };
 

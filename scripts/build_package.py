@@ -11,8 +11,10 @@ ROOT_DIR = Path(__file__).parent.parent
 print(f"Root dir: {ROOT_DIR.absolute()}")
 
 STATIC_FILES_DIR = ROOT_DIR / "telebot_constructor/static"
-FRONTEND_BUILD_DIR = ROOT_DIR / "frontend/dist"
-LANDING_BUILD_DIR = ROOT_DIR / "landing/build"
+FRONTEND_DIR = ROOT_DIR / "frontend"
+FRONTEND_BUILD_DIR = FRONTEND_DIR / "dist"
+LANDING_DIR = ROOT_DIR / "landing"
+LANDING_BUILD_DIR = LANDING_DIR / "dist"
 
 
 def print_cmd(cmd: list[str]) -> None:
@@ -42,22 +44,36 @@ for path, content in zip(paths, processed_contents):
 
 
 print(delimiter)
-print("Building frontend")
-vite_cmd = ["npx", "vite", "build", "frontend", "--base", BASE_PATH]
+print("Building main frontend")
+vite_cmd = ["npx", "vite", "build", "--base", BASE_PATH]
 print_cmd(vite_cmd)
-subprocess.run(vite_cmd, env={"GIT_COMMIT_ID": version, **os.environ}, check=True)
-
-
-print(delimiter)
-build_landing_cmd = ["python", "scripts/build_landing.py", "--base", BASE_PATH]
-print_cmd(build_landing_cmd)
-subprocess.run(build_landing_cmd, env={**os.environ}, check=True)
+subprocess.run(vite_cmd, env={"GIT_COMMIT_ID": version, **os.environ}, check=True, cwd=FRONTEND_DIR)
 
 
 print(delimiter)
 print("Copying frontend build artifacts to the /static dir inside Python package")
 shutil.rmtree(STATIC_FILES_DIR, ignore_errors=True)
 shutil.copytree(FRONTEND_BUILD_DIR, STATIC_FILES_DIR)
+
+
+print(delimiter)
+print(f"Building landing page")
+vite2_cmd = ["npx", "vite", "build"]
+print("Running\n$ " + " ".join(vite2_cmd))
+subprocess.run(vite2_cmd, env={"BASE_PATH": BASE_PATH, **os.environ}, check=True, cwd=LANDING_DIR)
+
+
+print("Copying landing build artifacts to the /static dir inside Python package")
+for src in LANDING_BUILD_DIR.iterdir():
+    dest_name = src.name if src.name != "index.html" else "landing.html"
+    dest = STATIC_FILES_DIR / dest_name
+    print(f"    {src.relative_to(ROOT_DIR)} => {dest.relative_to(ROOT_DIR)}")
+    if src.is_dir():
+        shutil.rmtree(dest, ignore_errors=True)
+        shutil.copytree(src, dest)
+    else:
+        dest.unlink(missing_ok=True)
+        shutil.copy(src, dest)
 
 
 print(delimiter)

@@ -1,7 +1,11 @@
 <script lang="ts">
-  import GridPlusColored from "frontend/components/icons/GridPlusColored.svelte";
+  import { Button, Heading } from "flowbite-svelte";
+  import Icon from "$frontend/components/icons/GridPlusColored.svelte";
 </script>
 
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation</p>
-<GridPlusColored colors={["red", "blue", "green"]} />
+<div class="flex flex-row justify-between">
+  <Heading>Hello world!</Heading>
+  <Button>Log in</Button>
+</div>
+<p class="text-red-500">Text example 1 2 3 4 5</p>
+<Icon colors={["red", "green", "blue"]} />
