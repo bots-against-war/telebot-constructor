@@ -107,3 +107,4 @@ We use:
 - `svelvet` (nodes/connections engine), see [docs](https://svelvet.mintlify.app/introduction)
 - `flowbite-icons-svelte` for icons, see [catalog](https://flowbite-svelte-icons.vercel.app/solid)
 - `svelte-i18n` for internationalization
+- `svelte-kit` to prerender a separate static page for landing

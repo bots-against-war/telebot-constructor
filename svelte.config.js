@@ -25,6 +25,9 @@ const config = {
       appTemplate: "landing/src/app.html",
     },
     outDir: "landing/build-kit",
+    alias: {
+      frontend: "frontend/src",
+    },
   },
 };
 
