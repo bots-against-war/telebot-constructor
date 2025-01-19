@@ -7,6 +7,16 @@
 import adapter from "@sveltejs/adapter-static";
 import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 
+let base = process.env.BASE_PATH;
+const paths = base
+  ? {
+      base: base,
+      relative: false,
+    }
+  : {};
+
+console.log(`Path arg: ${JSON.stringify(paths)}`);
+
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
   preprocess: vitePreprocess(),
@@ -18,16 +28,17 @@ const config = {
       precompress: false,
       strict: true,
     }),
-    appDir: ".landing-app",
+    alias: {
+      frontend: "frontend/src",
+    },
+    paths,
+    appDir: "landing-assets",
     files: {
       assets: "landing/static",
       routes: "landing/src/routes",
       appTemplate: "landing/src/app.html",
     },
     outDir: "landing/build-kit",
-    alias: {
-      frontend: "frontend/src",
-    },
   },
 };
 
