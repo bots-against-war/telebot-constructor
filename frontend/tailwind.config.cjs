@@ -1,4 +1,4 @@
-import flowbiteThemeExtend from "../flowbite-theme-extend";
+import theme from "../tailwind-theme";
 /** @type {import('tailwindcss').Config}*/
 const config = {
   content: [
@@ -8,9 +8,7 @@ const config = {
   ],
   plugins: [require("flowbite/plugin")],
   darkMode: "class",
-  theme: {
-    extend: flowbiteThemeExtend,
-  },
+  theme,
 };
 
 module.exports = config;
